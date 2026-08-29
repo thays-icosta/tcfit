@@ -1,0 +1,70 @@
+{
+  "expo": {
+    "name": "TcFit",
+    "slug": "TcFit",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "tcfit",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.costathays.tcfit",
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0A0A",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0A0A0A",
+          "dark": {
+            "backgroundColor": "#0A0A0A"
+          }
+        }
+      ],
+      "expo-video",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permitir acesso à galeria para anexar laudos e fotos de avaliação física.",
+          "cameraPermission": "Permitir acesso à câmera para fotografar laudos de avaliação física."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "802c85ca-f453-4e0a-8d67-13bd37ffbe58"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/802c85ca-f453-4e0a-8d67-13bd37ffbe58"
+    }
+  }
+}
