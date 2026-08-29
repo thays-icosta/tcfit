@@ -21,7 +21,9 @@ export default function OnboardingScreen({ onFinish }) {
 
   const handleNext = () => {
     if (currentIndex < SLIDES.length - 1) {
-      scrollRef.current?.scrollTo({ x: width * (currentIndex + 1), animated: true });
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      scrollRef.current?.scrollTo({ x: width * nextIndex, animated: true });
     } else {
       onFinish();
     }
@@ -54,10 +56,10 @@ export default function OnboardingScreen({ onFinish }) {
       </View>
 
       <View style={styles.bottomRow}>
-        <TouchableOpacity onPress={onFinish}>
+        <TouchableOpacity style={styles.skipButton} hitSlop={12} onPress={onFinish}>
           <Text style={styles.skipText}>Pular</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+        <TouchableOpacity style={styles.nextButton} hitSlop={12} onPress={handleNext}>
           <Text style={styles.nextButtonText}>{currentIndex === SLIDES.length - 1 ? 'Começar' : 'Próximo'}</Text>
         </TouchableOpacity>
       </View>
@@ -75,6 +77,7 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#292524' },
   dotActive: { backgroundColor: '#f97316', width: 20 },
   bottomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 32, paddingBottom: 50 },
+  skipButton: { paddingVertical: 10, paddingHorizontal: 6 },
   skipText: { color: '#737373', fontSize: 14, fontWeight: '600' },
   nextButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 32 },
   nextButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },

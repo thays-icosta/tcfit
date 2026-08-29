@@ -13,6 +13,21 @@ const CATEGORIES = [
   { value: 'outro', label: 'Outro', color: '#737373' },
 ];
 
+function toDateInputValue(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+const webDateInputStyle = {
+  flex: 1,
+  backgroundColor: '#0a0a0a',
+  border: '1px solid #292524',
+  borderRadius: 10,
+  padding: 12,
+  color: '#f5f5f5',
+  fontSize: 14,
+  fontFamily: 'inherit',
+};
+
 function addMonths(dateStr, n) {
   const d = new Date(dateStr + 'T00:00:00');
   d.setMonth(d.getMonth() + n);
@@ -342,19 +357,34 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
               </View>
 
               <Text style={styles.modalLabel}>Vencimento</Text>
-              <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-                <Text style={styles.dateButtonText}>{dueDate.toLocaleDateString('pt-BR')}</Text>
-              </TouchableOpacity>
-              {showDatePicker && (
-                <DateTimePicker
-                  value={dueDate}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  onChange={(event, date) => {
-                    setShowDatePicker(Platform.OS === 'ios');
-                    if (date) setDueDate(date);
+              {Platform.OS === 'web' ? (
+                <input
+                  type="date"
+                  value={toDateInputValue(dueDate)}
+                  onChange={(e) => {
+                    if (!e.target.value) return;
+                    const [y, m, d] = e.target.value.split('-').map(Number);
+                    setDueDate(new Date(y, m - 1, d));
                   }}
+                  style={webDateInputStyle}
                 />
+              ) : (
+                <>
+                  <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+                    <Text style={styles.dateButtonText}>{dueDate.toLocaleDateString('pt-BR')}</Text>
+                  </TouchableOpacity>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={dueDate}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                      onChange={(event, date) => {
+                        setShowDatePicker(Platform.OS === 'ios');
+                        if (date) setDueDate(date);
+                      }}
+                    />
+                  )}
+                </>
               )}
 
               <Text style={styles.modalLabel}>Descrição (opcional)</Text>

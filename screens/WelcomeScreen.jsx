@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Platform, Linking, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const ANDROID_APK_URL = 'https://expo.dev/artifacts/eas/5QoXnBD_OkS2B8xqN_dmjlzahh2boTA54JmrbAYXa4o.apk';
+const ANDROID_APK_URL = 'https://github.com/thays-icosta/tcfit/releases/download/v1.0.0-android/tcfit-latest.apk';
 
 export default function WelcomeScreen({ onExplore, onLogin }) {
   const [showIosGuide, setShowIosGuide] = useState(false);

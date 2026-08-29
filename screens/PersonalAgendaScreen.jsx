@@ -7,6 +7,29 @@ const STATUS_LABELS = { agendado: 'Agendado', concluido: 'Concluído', cancelado
 const DAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const QUICK_FOCUS_OPTIONS = ['Superiores', 'Inferiores', 'Perna Completa', 'Peito e Tríceps', 'Costas e Bíceps', 'Ombro', 'Full Body', 'Avaliação Física'];
 
+function pad2(n) {
+  return String(n).padStart(2, '0');
+}
+
+function toDateInputValue(d) {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+function toTimeInputValue(d) {
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+const webInputStyle = {
+  flex: 1,
+  backgroundColor: '#0a0a0a',
+  border: '1px solid #292524',
+  borderRadius: 10,
+  padding: 12,
+  color: '#f5f5f5',
+  fontSize: 14,
+  fontFamily: 'inherit',
+};
+
 function buildUpcomingDays(count = 14) {
   const days = [];
   const base = new Date();
@@ -303,44 +326,75 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
               </ScrollView>
 
               <Text style={styles.modalLabel}>Data e horário</Text>
-              <View style={styles.dateTimeRow}>
-                <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowDatePicker(true)}>
-                  <Text style={styles.dateTimeButtonText}>{selectedDate.toLocaleDateString('pt-BR')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowTimePicker(true)}>
-                  <Text style={styles.dateTimeButtonText}>{selectedDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</Text>
-                </TouchableOpacity>
-              </View>
+              {Platform.OS === 'web' ? (
+                <View style={styles.dateTimeRow}>
+                  <input
+                    type="date"
+                    value={toDateInputValue(selectedDate)}
+                    onChange={(e) => {
+                      if (!e.target.value) return;
+                      const [y, m, d] = e.target.value.split('-').map(Number);
+                      const newDate = new Date(selectedDate);
+                      newDate.setFullYear(y, m - 1, d);
+                      setSelectedDate(newDate);
+                    }}
+                    style={webInputStyle}
+                  />
+                  <input
+                    type="time"
+                    value={toTimeInputValue(selectedDate)}
+                    onChange={(e) => {
+                      if (!e.target.value) return;
+                      const [h, min] = e.target.value.split(':').map(Number);
+                      const newDate = new Date(selectedDate);
+                      newDate.setHours(h, min);
+                      setSelectedDate(newDate);
+                    }}
+                    style={webInputStyle}
+                  />
+                </View>
+              ) : (
+                <>
+                  <View style={styles.dateTimeRow}>
+                    <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowDatePicker(true)}>
+                      <Text style={styles.dateTimeButtonText}>{selectedDate.toLocaleDateString('pt-BR')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowTimePicker(true)}>
+                      <Text style={styles.dateTimeButtonText}>{selectedDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</Text>
+                    </TouchableOpacity>
+                  </View>
 
-              {showDatePicker && (
-                <DateTimePicker
-                  value={selectedDate}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  onChange={(event, date) => {
-                    setShowDatePicker(Platform.OS === 'ios');
-                    if (date) {
-                      const newDate = new Date(selectedDate);
-                      newDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
-                      setSelectedDate(newDate);
-                    }
-                  }}
-                />
-              )}
-              {showTimePicker && (
-                <DateTimePicker
-                  value={selectedDate}
-                  mode="time"
-                  display="default"
-                  onChange={(event, date) => {
-                    setShowTimePicker(false);
-                    if (date) {
-                      const newDate = new Date(selectedDate);
-                      newDate.setHours(date.getHours(), date.getMinutes());
-                      setSelectedDate(newDate);
-                    }
-                  }}
-                />
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={selectedDate}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                      onChange={(event, date) => {
+                        setShowDatePicker(Platform.OS === 'ios');
+                        if (date) {
+                          const newDate = new Date(selectedDate);
+                          newDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+                          setSelectedDate(newDate);
+                        }
+                      }}
+                    />
+                  )}
+                  {showTimePicker && (
+                    <DateTimePicker
+                      value={selectedDate}
+                      mode="time"
+                      display="default"
+                      onChange={(event, date) => {
+                        setShowTimePicker(false);
+                        if (date) {
+                          const newDate = new Date(selectedDate);
+                          newDate.setHours(date.getHours(), date.getMinutes());
+                          setSelectedDate(newDate);
+                        }
+                      }}
+                    />
+                  )}
+                </>
               )}
 
               <Text style={styles.modalLabel}>Duração (minutos)</Text>

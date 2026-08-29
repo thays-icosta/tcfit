@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Image, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import AddExerciseModal from './AddExerciseModal';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
@@ -366,8 +367,12 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         text: 'Remover',
         style: 'destructive',
         onPress: async () => {
-          await supabase.from('workout_exercises').delete().eq('id', itemId);
-          loadItems(activeWorkoutId);
+          setItems((prev) => prev.filter((it) => it.id !== itemId));
+          const { error } = await supabase.from('workout_exercises').delete().eq('id', itemId);
+          if (error) {
+            Alert.alert('Erro ao remover', error.message);
+            loadItems(activeWorkoutId);
+          }
         },
       },
     ]);
@@ -497,13 +502,24 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       {workouts.length > 0 && (
         <Text style={styles.hintText}>Segure uma aba pra renomear, duplicar ou excluir</Text>
       )}
-      <TouchableOpacity style={styles.createFichaButton} onPress={() => setShowCreateFichaModal(true)}>
-        <Text style={styles.createFichaButtonText}>+ Criar Nova Ficha</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.templateButton} onPress={handleOpenTemplatePicker}>
-        <Text style={styles.templateButtonText}>⚡ Aplicar Template Pronto</Text>
-      </TouchableOpacity>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.actionsRow} contentContainerStyle={styles.actionsRowContent}>
+        <TouchableOpacity style={styles.actionChip} onPress={() => setShowCreateFichaModal(true)}>
+          <Text style={styles.actionChipText}>+ Nova Ficha</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionChip} onPress={handleOpenTemplatePicker}>
+          <Text style={styles.actionChipText}>⚡ Template</Text>
+        </TouchableOpacity>
+        {activeWorkoutId && items.length > 0 && (
+          <TouchableOpacity style={styles.actionChip} onPress={handleOpenReplicate}>
+            <Text style={styles.actionChipText}>📋 Aplicar a todos</Text>
+          </TouchableOpacity>
+        )}
+        {activeWorkoutId && (
+          <TouchableOpacity style={styles.actionChip} onPress={handleOpenSendModal}>
+            <Text style={styles.actionChipText}>📤 Enviar p/ outro aluno</Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
 
       {!activeWorkoutId ? (
         <Text style={styles.emptyText}>Cria uma ficha acima pra começar.</Text>
@@ -541,17 +557,6 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
             <Text style={styles.addExerciseButtonText}>+ Adicionar Exercício</Text>
           </TouchableOpacity>
 
-          <View style={styles.secondaryButtonRow}>
-            {items.length > 0 && (
-              <TouchableOpacity style={styles.replicateButton} onPress={handleOpenReplicate}>
-                <Text style={styles.replicateButtonText}>📋 Aplicar a todos</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity style={styles.sendButton} onPress={handleOpenSendModal}>
-              <Text style={styles.sendButtonText}>📤 Enviar p/ outro aluno</Text>
-            </TouchableOpacity>
-          </View>
-
           <ScrollView style={{ flex: 1 }}>
             <Text style={styles.sectionTitle}>Exercícios da ficha ({items.length})</Text>
             {items.length === 0 ? (
@@ -559,10 +564,14 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
             ) : (
               items.map((item, index) => {
                 const hasVideo = !!item.exercises?.video_url;
-                const summaryLine = `${item.sets || 3}x ${item.reps || '-'} · ${METHOD_LABELS[item.execution_method] || item.execution_method}${item.rest_time_seconds != null ? ` · Descanso: ${item.rest_time_seconds}s` : ''}`;
-                const extraBadges = [];
-                if (item.load_kg != null) extraBadges.push(`${item.load_kg}kg`);
-                if (item.cadence) extraBadges.push(item.cadence);
+                const metrics = [
+                  { label: 'Séries', value: item.sets || 3 },
+                  { label: 'Reps', value: item.reps || '-' },
+                ];
+                if (item.load_kg != null) metrics.push({ label: 'Carga', value: `${item.load_kg}kg` });
+                if (item.cadence) metrics.push({ label: 'Cadência', value: item.cadence });
+                else metrics.push({ label: 'Método', value: METHOD_LABELS[item.execution_method] || item.execution_method });
+                if (item.rest_time_seconds != null) metrics.push({ label: 'Descanso', value: `${item.rest_time_seconds}s` });
 
                 return (
                   <View key={item.id} style={styles.exerciseCard}>
@@ -586,24 +595,31 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
                     </TouchableOpacity>
 
                     <View style={styles.exerciseInfo}>
-                      <Text style={styles.exerciseName}>{item.exercises?.name}</Text>
-                      <Text style={styles.exerciseSummary}>{summaryLine}</Text>
-                      {extraBadges.length > 0 && (
-                        <Text style={styles.exerciseExtra}>{extraBadges.join(' · ')}</Text>
-                      )}
-                      {item.notes ? <Text style={styles.exerciseNotes}>📝 {item.notes}</Text> : null}
-                    </View>
+                      <View style={styles.exerciseHeaderRow}>
+                        <Text style={styles.exerciseName}>{item.exercises?.name}</Text>
+                        <View style={styles.exerciseHeaderActions}>
+                          <TouchableOpacity hitSlop={10} onPress={() => handleMove(index, -1)} disabled={index === 0}>
+                            <Text style={[styles.moveArrow, index === 0 && styles.moveArrowDisabled]}>▲</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity hitSlop={10} onPress={() => handleMove(index, 1)} disabled={index === items.length - 1}>
+                            <Text style={[styles.moveArrow, index === items.length - 1 && styles.moveArrowDisabled]}>▼</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity hitSlop={10} onPress={() => handleRemoveItem(item.id)}>
+                            <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
 
-                    <View style={styles.exerciseActionsRow}>
-                      <TouchableOpacity onPress={() => handleMove(index, -1)} disabled={index === 0}>
-                        <Text style={[styles.moveArrow, index === 0 && styles.moveArrowDisabled]}>▲</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => handleMove(index, 1)} disabled={index === items.length - 1}>
-                        <Text style={[styles.moveArrow, index === items.length - 1 && styles.moveArrowDisabled]}>▼</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => handleRemoveItem(item.id)}>
-                        <Text style={styles.removeX}>✕</Text>
-                      </TouchableOpacity>
+                      <View style={styles.metricsGrid}>
+                        {metrics.map((m) => (
+                          <View key={m.label} style={styles.metricPill}>
+                            <Text style={styles.metricValue}>{m.value}</Text>
+                            <Text style={styles.metricLabel}>{m.label}</Text>
+                          </View>
+                        ))}
+                      </View>
+
+                      {item.notes ? <Text style={styles.exerciseNotes}>📝 {item.notes}</Text> : null}
                     </View>
                   </View>
                 );
@@ -781,10 +797,10 @@ const styles = StyleSheet.create({
   fichaTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   fichaTabTextActive: { color: '#0a0a0a' },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 8 },
-  createFichaButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 10 },
-  createFichaButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
-  templateButton: { backgroundColor: 'rgba(168,85,247,0.12)', borderWidth: 1, borderColor: '#a855f7', borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
-  templateButtonText: { color: '#a855f7', fontSize: 12, fontWeight: '700' },
+  actionsRow: { marginBottom: 14 },
+  actionsRowContent: { paddingHorizontal: 16, gap: 8 },
+  actionChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
+  actionChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   suggestionsLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginTop: 14, marginBottom: 8 },
   suggestionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   suggestionChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
@@ -795,19 +811,14 @@ const styles = StyleSheet.create({
   phaseBadgeCurrent: { backgroundColor: 'rgba(168,85,247,0.15)' },
   phaseBadgeText: { color: '#a855f7', fontSize: 11, fontWeight: '700' },
   phaseSelectorPlaceholder: { color: '#525252', fontSize: 11, textDecorationLine: 'underline' },
-  summaryCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 12 },
-  summaryTitle: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8 },
-  summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  summaryBadge: { backgroundColor: '#0a0a0a', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', minWidth: 60 },
-  summaryBadgeCount: { color: '#f97316', fontSize: 16, fontWeight: '700' },
-  summaryBadgeLabel: { color: '#a3a3a3', fontSize: 9, textTransform: 'capitalize', marginTop: 1 },
+  summaryCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 8, marginHorizontal: 16, marginBottom: 8 },
+  summaryTitle: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 6 },
+  summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  summaryBadge: { backgroundColor: '#0a0a0a', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', minWidth: 50 },
+  summaryBadgeCount: { color: '#f97316', fontSize: 13, fontWeight: '700' },
+  summaryBadgeLabel: { color: '#a3a3a3', fontSize: 8, textTransform: 'capitalize', marginTop: 1 },
   addExerciseButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 8 },
   addExerciseButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
-  secondaryButtonRow: { flexDirection: 'row', gap: 8, marginHorizontal: 16, marginBottom: 16 },
-  replicateButton: { flex: 1, borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
-  replicateButtonText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  sendButton: { flex: 1, backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
-  sendButtonText: { color: '#3b82f6', fontSize: 11, fontWeight: '700' },
   sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
   exerciseCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden' },
   exerciseThumbWrap: { width: '100%', height: 100, position: 'relative' },
@@ -817,14 +828,16 @@ const styles = StyleSheet.create({
   playOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' },
   playOverlayText: { color: '#f5f5f5', fontSize: 32 },
   exerciseInfo: { padding: 12 },
-  exerciseName: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
-  exerciseSummary: { color: '#f97316', fontSize: 11, marginTop: 3 },
-  exerciseExtra: { color: '#a3a3a3', fontSize: 10, marginTop: 2 },
-  exerciseNotes: { color: '#737373', fontSize: 10, marginTop: 4, fontStyle: 'italic' },
-  exerciseActionsRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, paddingHorizontal: 12, paddingBottom: 10 },
-  moveArrow: { color: '#f97316', fontSize: 14 },
+  exerciseHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, gap: 8 },
+  exerciseName: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', flex: 1 },
+  exerciseHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  exerciseNotes: { color: '#737373', fontSize: 10, marginTop: 8, fontStyle: 'italic' },
+  moveArrow: { color: '#525252', fontSize: 12 },
   moveArrowDisabled: { color: '#292524' },
-  removeX: { color: '#ef4444', fontSize: 16 },
+  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  metricPill: { backgroundColor: '#0a0a0a', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', minWidth: 56 },
+  metricValue: { color: '#f97316', fontSize: 15, fontWeight: '800' },
+  metricLabel: { color: '#525252', fontSize: 8, textTransform: 'uppercase', marginTop: 1 },
   saveButton: { backgroundColor: '#f97316', margin: 16, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
