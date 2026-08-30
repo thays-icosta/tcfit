@@ -206,10 +206,10 @@ export default function RecipeManagerScreen({ personalId, onClose }) {
 
           <Text style={styles.label}>Macronutrientes (porção)</Text>
           <View style={styles.macroFormRow}>
-            <TextInput style={[styles.input, { flex: 1 }]} keyboardType="decimal-pad" placeholder="kcal" placeholderTextColor="#525252" value={kcal} onChangeText={setKcal} />
-            <TextInput style={[styles.input, { flex: 1 }]} keyboardType="decimal-pad" placeholder="prot(g)" placeholderTextColor="#525252" value={protein} onChangeText={setProtein} />
-            <TextInput style={[styles.input, { flex: 1 }]} keyboardType="decimal-pad" placeholder="carbo(g)" placeholderTextColor="#525252" value={carbs} onChangeText={setCarbs} />
-            <TextInput style={[styles.input, { flex: 1 }]} keyboardType="decimal-pad" placeholder="gord(g)" placeholderTextColor="#525252" value={fat} onChangeText={setFat} />
+            <TextInput style={[styles.input, styles.macroFormInput]} keyboardType="decimal-pad" placeholder="kcal" placeholderTextColor="#525252" value={kcal} onChangeText={setKcal} />
+            <TextInput style={[styles.input, styles.macroFormInput]} keyboardType="decimal-pad" placeholder="prot(g)" placeholderTextColor="#525252" value={protein} onChangeText={setProtein} />
+            <TextInput style={[styles.input, styles.macroFormInput]} keyboardType="decimal-pad" placeholder="carbo(g)" placeholderTextColor="#525252" value={carbs} onChangeText={setCarbs} />
+            <TextInput style={[styles.input, styles.macroFormInput]} keyboardType="decimal-pad" placeholder="gord(g)" placeholderTextColor="#525252" value={fat} onChangeText={setFat} />
           </View>
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
@@ -288,7 +288,8 @@ const styles = StyleSheet.create({
   categoryChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
   categoryChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
   categoryChipTextActive: { color: '#0a0a0a' },
-  macroFormRow: { flexDirection: 'row', gap: 6 },
+  macroFormRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  macroFormInput: { width: '46%', flexGrow: 1 },
   saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
   saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
 });

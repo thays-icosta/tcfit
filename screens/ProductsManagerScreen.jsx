@@ -420,13 +420,15 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                       <Text style={styles.addonTagText}>UPSELL ATIVO</Text>
                     </View>
                   )}
-                  <View style={styles.productActionsRow}>
-                    <TouchableOpacity onPress={() => setPreviewProduct(p)}>
+                  <View style={styles.productActionsPrimaryRow}>
+                    <TouchableOpacity style={styles.productActionChip} onPress={() => setPreviewProduct(p)}>
                       <Text style={styles.previewLink}>👁️ Ver como Aluno</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleOpenManage(p)}>
+                    <TouchableOpacity style={styles.productActionChip} onPress={() => handleOpenManage(p)}>
                       <Text style={styles.manageLink}>📂 Ver Conteúdo</Text>
                     </TouchableOpacity>
+                  </View>
+                  <View style={styles.productActionsRow}>
                     <TouchableOpacity onPress={() => handleOpenEdit(p)}>
                       <Text style={styles.editLink}>Editar</Text>
                     </TouchableOpacity>
@@ -460,7 +462,9 @@ const styles = StyleSheet.create({
   productMeta: { color: '#737373', fontSize: 10, marginTop: 2 },
   addonTag: { alignSelf: 'flex-start', backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginTop: 10 },
   addonTagText: { color: '#22c55e', fontSize: 9, fontWeight: '800' },
-  productActionsRow: { flexDirection: 'row', gap: 16, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  productActionsPrimaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  productActionChip: { backgroundColor: '#0a0a0a', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
+  productActionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 10 },
   previewLink: { color: '#a855f7', fontSize: 12, fontWeight: '700' },
   manageLink: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
   previewSectionLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 10 },
