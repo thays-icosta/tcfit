@@ -17,10 +17,12 @@ function typeMeta(value) {
 
 export default function ProductsManagerScreen({ personalId, onClose }) {
   const [products, setProducts] = useState([]);
+  const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [managingProduct, setManagingProduct] = useState(null);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -30,6 +32,11 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [deliveryValue, setDeliveryValue] = useState('');
   const [showAsAddon, setShowAsAddon] = useState(false);
   const [active, setActive] = useState(true);
+  const [selectedRecipeIds, setSelectedRecipeIds] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [grants, setGrants] = useState([]);
+  const [loadingGrants, setLoadingGrants] = useState(false);
+  const [grantingStudentId, setGrantingStudentId] = useState(null);
 
   const loadProducts = async () => {
     const { data } = await supabase.from('products').select('*').eq('personal_id', personalId).order('created_at', { ascending: false });
@@ -37,9 +44,21 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setLoading(false);
   };
 
+  const loadRecipes = async () => {
+    const { data } = await supabase.from('recipes').select('id, title').eq('personal_id', personalId).order('title');
+    setRecipes(data || []);
+  };
+
   useEffect(() => {
     loadProducts();
+    loadRecipes();
   }, []);
+
+  const toggleSelectedRecipe = (recipeId) => {
+    setSelectedRecipeIds((prev) =>
+      prev.includes(recipeId) ? prev.filter((id) => id !== recipeId) : [...prev, recipeId]
+    );
+  };
 
   const resetForm = () => {
     setEditingId(null);
@@ -51,6 +70,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setDeliveryValue('');
     setShowAsAddon(false);
     setActive(true);
+    setSelectedRecipeIds([]);
   };
 
   const handleOpenNew = () => {
@@ -68,6 +88,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setDeliveryValue(product.delivery_value || '');
     setShowAsAddon(product.show_as_addon || false);
     setActive(product.active !== false);
+    setSelectedRecipeIds(product.recipe_ids || []);
     setShowForm(true);
   };
 
@@ -88,6 +109,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       show_as_addon: showAsAddon,
       active,
       product_key: type,
+      recipe_ids: selectedRecipeIds,
     };
 
     let error;
@@ -106,6 +128,39 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     }
   };
 
+  const handleOpenManage = async (product) => {
+    setManagingProduct(product);
+    setLoadingGrants(true);
+    const [{ data: studentRows }, { data: grantRows }] = await Promise.all([
+      supabase.from('users').select('id, name').eq('personal_id', personalId).eq('role', 'aluno').order('name'),
+      supabase.from('product_grants').select('id, student_id, users!product_grants_student_id_fkey (name)').eq('product_id', product.id),
+    ]);
+    setStudents(studentRows || []);
+    setGrants(grantRows || []);
+    setLoadingGrants(false);
+  };
+
+  const handleGrantAccess = async (studentId) => {
+    if (!managingProduct) return;
+    setGrantingStudentId(studentId);
+    const { error } = await supabase.from('product_grants').insert({
+      product_id: managingProduct.id,
+      student_id: studentId,
+      personal_id: personalId,
+    });
+    if (error) {
+      showAlert('Erro ao liberar acesso', error.message);
+    } else {
+      await handleOpenManage(managingProduct);
+    }
+    setGrantingStudentId(null);
+  };
+
+  const handleRevokeAccess = async (grantId) => {
+    await supabase.from('product_grants').delete().eq('id', grantId);
+    if (managingProduct) await handleOpenManage(managingProduct);
+  };
+
   const handleDelete = (productId) => {
     showAlert('Excluir produto', 'Tem certeza?', [
       { text: 'Cancelar', style: 'cancel' },
@@ -119,6 +174,70 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       },
     ]);
   };
+
+  if (managingProduct) {
+    const linkedRecipes = recipes.filter((r) => (managingProduct.recipe_ids || []).includes(r.id));
+
+    return (
+      <View style={styles.container}>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => setManagingProduct(null)}>
+            <Text style={styles.closeText}>← Voltar</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>{managingProduct.name}</Text>
+        </View>
+
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+          <Text style={styles.label}>Receitas incluídas</Text>
+          {linkedRecipes.length === 0 ? (
+            <Text style={styles.helperText}>Nenhuma receita vinculada. Edite o produto pra adicionar.</Text>
+          ) : (
+            <View style={styles.recipeChecklist}>
+              {linkedRecipes.map((r) => (
+                <View key={r.id} style={styles.recipeCheckRow}>
+                  <Ionicons name="restaurant-outline" size={14} color="#f97316" />
+                  <Text style={styles.recipeCheckLabel}>{r.title}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <Text style={[styles.label, { marginTop: 24 }]}>Liberar acesso pra aluno</Text>
+          <Text style={styles.helperText}>Depois que o aluno comprar (fora do app, via WhatsApp/Pix), libere o acesso aqui pra ele ver as receitas na aba de Receitas dele.</Text>
+
+          {loadingGrants ? (
+            <ActivityIndicator color="#f97316" style={{ marginTop: 16 }} />
+          ) : students.length === 0 ? (
+            <Text style={styles.helperText}>Você ainda não tem alunos.</Text>
+          ) : (
+            <View style={{ marginTop: 10 }}>
+              {students.map((s) => {
+                const grant = grants.find((g) => g.student_id === s.id);
+                return (
+                  <View key={s.id} style={styles.studentGrantRow}>
+                    <Text style={styles.studentGrantName}>{s.name}</Text>
+                    {grant ? (
+                      <TouchableOpacity onPress={() => handleRevokeAccess(grant.id)}>
+                        <Text style={styles.revokeLink}>✓ Liberado — Revogar</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity onPress={() => handleGrantAccess(s.id)} disabled={grantingStudentId === s.id}>
+                        {grantingStudentId === s.id ? (
+                          <ActivityIndicator color="#f97316" size="small" />
+                        ) : (
+                          <Text style={styles.grantLink}>Liberar acesso</Text>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    );
+  }
 
   if (showForm) {
     return (
@@ -171,8 +290,27 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
             autoCapitalize="none"
           />
 
+          <Text style={styles.label}>Conteúdo do Produto (Receitas Incluídas)</Text>
+          {recipes.length === 0 ? (
+            <Text style={styles.helperText}>Você ainda não cadastrou receitas em “Gerenciar Receitas”.</Text>
+          ) : (
+            <View style={styles.recipeChecklist}>
+              {recipes.map((r) => {
+                const checked = selectedRecipeIds.includes(r.id);
+                return (
+                  <TouchableOpacity key={r.id} style={styles.recipeCheckRow} onPress={() => toggleSelectedRecipe(r.id)}>
+                    <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
+                      {checked && <Ionicons name="checkmark" size={13} color="#0a0a0a" />}
+                    </View>
+                    <Text style={styles.recipeCheckLabel}>{r.title}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
           <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Exibir como oferta complementar no checkout da consultoria/treinos prontos</Text>
+            <Text style={styles.switchLabel}>Exibir na Vitrine Pública (Landing Page) — aparece como oferta complementar no checkout</Text>
             <Switch value={showAsAddon} onValueChange={setShowAsAddon} trackColor={{ false: '#292524', true: '#22c55e' }} thumbColor="#f5f5f5" />
           </View>
 
@@ -230,6 +368,9 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                     </View>
                   )}
                   <View style={styles.productActionsRow}>
+                    <TouchableOpacity onPress={() => handleOpenManage(p)}>
+                      <Text style={styles.manageLink}>📂 Ver Conteúdo</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleOpenEdit(p)}>
                       <Text style={styles.editLink}>Editar</Text>
                     </TouchableOpacity>
@@ -264,8 +405,13 @@ const styles = StyleSheet.create({
   addonTag: { alignSelf: 'flex-start', backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginTop: 10 },
   addonTagText: { color: '#22c55e', fontSize: 9, fontWeight: '800' },
   productActionsRow: { flexDirection: 'row', gap: 16, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  manageLink: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
   editLink: { color: '#3b82f6', fontSize: 12, fontWeight: '700' },
   deleteLink: { fontSize: 12, color: '#ef4444', fontWeight: '700' },
+  studentGrantRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8 },
+  studentGrantName: { color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
+  grantLink: { color: '#f97316', fontSize: 12, fontWeight: '700' },
+  revokeLink: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 14 },
   typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   typeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
@@ -282,6 +428,12 @@ const styles = StyleSheet.create({
   deliveryTypeChipActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
   deliveryTypeChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', textAlign: 'center' },
   deliveryTypeChipTextActive: { color: '#0a0a0a' },
+  helperText: { color: '#525252', fontSize: 11 },
+  recipeChecklist: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 8 },
+  recipeCheckRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingHorizontal: 6 },
+  checkbox: { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: '#292524', alignItems: 'center', justifyContent: 'center' },
+  checkboxChecked: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  recipeCheckLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flexShrink: 1 },
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 },
   switchLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flexShrink: 1, marginRight: 8 },
   saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },

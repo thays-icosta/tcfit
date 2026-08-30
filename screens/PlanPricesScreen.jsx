@@ -27,6 +27,7 @@ export default function PlanPricesScreen({ onClose }) {
         nameInput: p.plan_name || '',
         durationInput: p.duration_label || '',
         isFeatured: p.is_featured || false,
+        isPublic: p.is_public !== false,
       }))
     );
     setLoading(false);
@@ -53,6 +54,7 @@ export default function PlanPricesScreen({ onClose }) {
         bulletsInput: '',
         messageInput: 'Olá! Gostaria de contratar o plano {plano}.',
         isFeatured: false,
+        isPublic: true,
       },
     ]);
   };
@@ -86,6 +88,7 @@ export default function PlanPricesScreen({ onClose }) {
         bullets: plan.bulletsInput.trim() || null,
         whatsapp_message: plan.messageInput.trim() || null,
         is_featured: plan.isFeatured,
+        is_public: plan.isPublic,
       };
       if (plan.isNew) {
         await supabase.from('plan_prices').insert(payload);
@@ -181,11 +184,21 @@ export default function PlanPricesScreen({ onClose }) {
           <Text style={styles.smallHint}>Use {'{plano}'} onde quiser que apareça o nome do plano.</Text>
 
           <View style={styles.featuredRow}>
-            <Text style={styles.featuredLabel}>Destacar como "MAIS RECOMENDADO"</Text>
+            <Text style={styles.featuredLabel}>Destacar como “MAIS RECOMENDADO”</Text>
             <Switch
               value={plan.isFeatured}
               onValueChange={(v) => handleChange(plan.plan_key, 'isFeatured', v)}
               trackColor={{ false: '#292524', true: '#a855f7' }}
+              thumbColor="#f5f5f5"
+            />
+          </View>
+
+          <View style={styles.featuredRow}>
+            <Text style={styles.featuredLabel}>Exibir na Vitrine Pública (Landing Page)</Text>
+            <Switch
+              value={plan.isPublic}
+              onValueChange={(v) => handleChange(plan.plan_key, 'isPublic', v)}
+              trackColor={{ false: '#292524', true: '#22c55e' }}
               thumbColor="#f5f5f5"
             />
           </View>

@@ -21,7 +21,7 @@ export default function PlansScreen({ onBack, onLogin }) {
 
   useEffect(() => {
     (async () => {
-      const { data: plansData } = await supabase.from('plan_prices').select('*').order('plan_key');
+      const { data: plansData } = await supabase.from('plan_prices').select('*').eq('is_public', true).order('plan_key');
       setPlans(plansData || []);
 
       const { data: templatesData } = await supabase
@@ -156,6 +156,11 @@ export default function PlansScreen({ onBack, onLogin }) {
 
         {loading ? (
           <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
+        ) : plans.filter((p) => p.plan_name).length === 0 && templates.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Ionicons name="time-outline" size={32} color="#525252" />
+            <Text style={styles.emptyText}>Em breve novos planos disponíveis! Entre em contato pra saber mais.</Text>
+          </View>
         ) : (
           <>
             {plans.filter((p) => p.plan_name).map((plan, i) => renderPlanCard(plan, i))}
@@ -247,6 +252,8 @@ const styles = StyleSheet.create({
   backText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
   title: { color: '#f5f5f5', fontSize: 24, fontWeight: '800', textAlign: 'center', marginTop: 10 },
   subtitle: { color: '#a3a3a3', fontSize: 13, textAlign: 'center', marginTop: 6, marginBottom: 24 },
+  emptyBox: { alignItems: 'center', gap: 12, paddingHorizontal: 32, paddingVertical: 40 },
+  emptyText: { color: '#a3a3a3', fontSize: 14, textAlign: 'center', lineHeight: 20 },
   planCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 18, padding: 20, alignItems: 'center', marginBottom: 16 },
   planCardHighlight: { borderColor: '#a855f7', borderWidth: 1.5 },
   badge: { position: 'absolute', top: -10, backgroundColor: '#a855f7', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },

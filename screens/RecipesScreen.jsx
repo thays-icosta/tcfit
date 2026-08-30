@@ -16,6 +16,7 @@ const CATEGORIES = [
 
 export default function RecipesScreen({ studentId, hasFullAccess, onClose }) {
   const [recipes, setRecipes] = useState([]);
+  const [unlockedIds, setUnlockedIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState('todas');
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -24,11 +25,23 @@ export default function RecipesScreen({ studentId, hasFullAccess, onClose }) {
     (async () => {
       const { data } = await supabase.from('recipes').select('*').order('created_at', { ascending: false });
       setRecipes(data || []);
+
+      if (studentId) {
+        const { data: grantRows } = await supabase
+          .from('product_grants')
+          .select('products (recipe_ids)')
+          .eq('student_id', studentId);
+        const ids = new Set();
+        (grantRows || []).forEach((g) => (g.products?.recipe_ids || []).forEach((id) => ids.add(id)));
+        setUnlockedIds(ids);
+      }
+
       setLoading(false);
     })();
-  }, []);
+  }, [studentId]);
 
   const filtered = categoryFilter === 'todas' ? recipes : recipes.filter((r) => r.category === categoryFilter);
+  const hasAccessTo = (recipe) => hasFullAccess || unlockedIds.has(recipe.id);
 
   const handleWantGuide = () => {
     const message = 'Olá! Vi o Guia de Receitas Fitness no app e gostaria de saber como ter acesso completo.';
@@ -39,7 +52,7 @@ export default function RecipesScreen({ studentId, hasFullAccess, onClose }) {
     return (
       <RecipeDetailScreen
         recipe={selectedRecipe}
-        studentId={hasFullAccess ? studentId : null}
+        studentId={hasAccessTo(selectedRecipe) ? studentId : null}
         onClose={() => setSelectedRecipe(null)}
       />
     );
@@ -54,7 +67,7 @@ export default function RecipesScreen({ studentId, hasFullAccess, onClose }) {
         <Text style={styles.title}>Guia de Receitas Fitness</Text>
       </View>
 
-      {!hasFullAccess && (
+      {!hasFullAccess && unlockedIds.size === 0 && (
         <TouchableOpacity style={styles.premiumBanner} onPress={handleWantGuide}>
           <Ionicons name="lock-closed-outline" size={16} color="#eab308" />
           <Text style={styles.premiumBannerText}>Conteúdo Premium — toque pra desbloquear o guia completo</Text>
@@ -80,32 +93,35 @@ export default function RecipesScreen({ studentId, hasFullAccess, onClose }) {
           {filtered.length === 0 ? (
             <Text style={styles.emptyText}>Nenhuma receita nessa categoria ainda.</Text>
           ) : (
-            filtered.map((recipe) => (
-              <TouchableOpacity
-                key={recipe.id}
-                style={styles.recipeCard}
-                onPress={() => hasFullAccess ? setSelectedRecipe(recipe) : handleWantGuide()}
-              >
-                {recipe.photo_url ? (
-                  <Image source={{ uri: recipe.photo_url }} style={styles.recipeThumb} />
-                ) : (
-                  <View style={styles.recipeThumbPlaceholder}>
-                    <Text style={{ fontSize: 20 }}>🍽️</Text>
+            filtered.map((recipe) => {
+              const unlocked = hasAccessTo(recipe);
+              return (
+                <TouchableOpacity
+                  key={recipe.id}
+                  style={styles.recipeCard}
+                  onPress={() => unlocked ? setSelectedRecipe(recipe) : handleWantGuide()}
+                >
+                  {recipe.photo_url ? (
+                    <Image source={{ uri: recipe.photo_url }} style={styles.recipeThumb} />
+                  ) : (
+                    <View style={styles.recipeThumbPlaceholder}>
+                      <Text style={{ fontSize: 20 }}>🍽️</Text>
+                    </View>
+                  )}
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.recipeTitle} numberOfLines={1}>{recipe.title}</Text>
+                    <Text style={styles.recipeMeta}>
+                      {recipe.prep_time_minutes != null ? `${recipe.prep_time_minutes}min · ` : ''}{Math.round(recipe.calories_kcal || 0)}kcal
+                    </Text>
                   </View>
-                )}
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={styles.recipeTitle} numberOfLines={1}>{recipe.title}</Text>
-                  <Text style={styles.recipeMeta}>
-                    {recipe.prep_time_minutes != null ? `${recipe.prep_time_minutes}min · ` : ''}{Math.round(recipe.calories_kcal || 0)}kcal
-                  </Text>
-                </View>
-                {!hasFullAccess && (
-                  <View style={styles.lockBadge}>
-                    <Ionicons name="lock-closed-outline" size={14} color="#eab308" />
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))
+                  {!unlocked && (
+                    <View style={styles.lockBadge}>
+                      <Ionicons name="lock-closed-outline" size={14} color="#eab308" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })
           )}
         </ScrollView>
       )}
