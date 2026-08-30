@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Image, Platform } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -87,6 +88,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
   const [uploadingReport, setUploadingReport] = useState(false);
 
   const [scanning, setScanning] = useState(false);
+  const webFileInputRef = useRef(null);
 
   const [protocol, setProtocol] = useState('pollock3');
   const [sex, setSex] = useState('M');
@@ -221,10 +223,10 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
       if (!data?.data) throw new Error('A IA não retornou dados.');
 
       applyScanResult(data.data);
-      Alert.alert('Relatório analisado!', 'Confira os campos preenchidos e ajuste o que precisar antes de salvar.');
+      showAlert('Relatório analisado!', 'Confira os campos preenchidos e ajuste o que precisar antes de salvar.');
     } catch (e) {
       console.log('Erro ao escanear relatório com IA:', e.message);
-      Alert.alert(
+      showAlert(
         'Não foi possível ler a imagem com IA',
         `${e.message}\n\nVerifique a chave da OpenAI configurada no Supabase, ou preencha os campos manualmente.`
       );
@@ -237,7 +239,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
       ? await ImagePicker.requestCameraPermissionsAsync()
       : await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Permissão necessária', fromCamera ? 'Precisamos da câmera para tirar a foto do laudo.' : 'Precisamos de acesso à galeria para escolher a foto do laudo.');
+      showAlert('Permissão necessária', fromCamera ? 'Precisamos da câmera para tirar a foto do laudo.' : 'Precisamos de acesso à galeria para escolher a foto do laudo.');
       return;
     }
 
@@ -254,16 +256,40 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
       );
       await runScan(manipulated.base64);
     } catch (e) {
-      Alert.alert('Erro ao processar imagem', e.message || 'Tente novamente ou preencha manualmente.');
+      showAlert('Erro ao processar imagem', e.message || 'Tente novamente ou preencha manualmente.');
     }
   };
 
   const handleScanReport = () => {
+    if (Platform.OS === 'web') {
+      webFileInputRef.current?.click();
+      return;
+    }
     Alert.alert('Escanear Relatório com IA', 'Como você quer enviar a imagem do laudo?', [
       { text: 'Tirar Foto', onPress: () => pickAndScanImage(true) },
       { text: 'Escolher da Galeria', onPress: () => pickAndScanImage(false) },
       { text: 'Cancelar', style: 'cancel' },
     ]);
+  };
+
+  const handleWebFileSelected = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const manipulated = await ImageManipulator.manipulateAsync(
+        objectUrl,
+        [{ resize: { width: 1000 } }],
+        { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+      );
+      await runScan(manipulated.base64);
+    } catch (e) {
+      showAlert('Erro ao processar imagem', e.message || 'Tente novamente ou preencha manualmente.');
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
   };
 
   const buildSegmentalPayload = () => {
@@ -425,6 +451,15 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
             )}
           </TouchableOpacity>
           <Text style={styles.scanHint}>Tire uma foto (ou escolha da galeria) do laudo de bioimpedância e a IA preenche os campos abaixo pra você conferir.</Text>
+          {Platform.OS === 'web' && (
+            <input
+              ref={webFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleWebFileSelected}
+              style={{ display: 'none' }}
+            />
+          )}
 
           <Text style={styles.label}>Peso (kg) *</Text>
           <TextInput style={styles.input} placeholder="ex: 70.4" placeholderTextColor="#525252" keyboardType="decimal-pad" value={weight} onChangeText={setWeight} />
