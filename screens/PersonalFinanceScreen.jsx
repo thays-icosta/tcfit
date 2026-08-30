@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Modal, Linking, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Modal, Linking, Switch } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 
 const CATEGORIES = [
   { value: 'treino', label: 'Treino', color: '#f97316' },
@@ -102,11 +103,11 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
 
   const handleConfirmAdd = async () => {
     if (!selectedStudent) {
-      Alert.alert('Ops', 'Escolhe o aluno primeiro.');
+      showAlert('Ops', 'Escolhe o aluno primeiro.');
       return;
     }
     if (!amount || isNaN(Number(amount))) {
-      Alert.alert('Ops', 'Digita um valor válido.');
+      showAlert('Ops', 'Digita um valor válido.');
       return;
     }
     setSaving(true);
@@ -121,7 +122,7 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
     });
     setSaving(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       setShowAddModal(false);
       loadData();
@@ -134,7 +135,7 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
       .update({ paid: true, paid_at: new Date().toISOString() })
       .eq('id', payment.id);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
       return;
     }
     if (payment.is_recurring) {
@@ -152,7 +153,7 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
   };
 
   const handleDelete = (paymentId) => {
-    Alert.alert('Excluir cobrança', 'Tem certeza?', [
+    showAlert('Excluir cobrança', 'Tem certeza?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Excluir',
@@ -168,7 +169,7 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
   const handleWhatsAppCharge = (payment) => {
     const phone = payment.users?.phone;
     if (!phone) {
-      Alert.alert('Sem telefone cadastrado', 'Esse aluno ainda não tem um número de WhatsApp salvo no perfil dele.');
+      showAlert('Sem telefone cadastrado', 'Esse aluno ainda não tem um número de WhatsApp salvo no perfil dele.');
       return;
     }
     const cleanPhone = phone.replace(/\D/g, '');

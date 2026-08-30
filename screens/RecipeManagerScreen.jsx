@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -85,7 +86,7 @@ export default function RecipeManagerScreen({ personalId, onClose }) {
   const handlePickPhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Permissão necessária', 'Autorize o acesso às fotos.');
+      showAlert('Permissão necessária', 'Autorize o acesso às fotos.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -105,14 +106,14 @@ export default function RecipeManagerScreen({ personalId, onClose }) {
       setPhotoUrl(data.publicUrl);
     } catch {
       setPhotoUrl(null);
-      Alert.alert('Não deu pra enviar a foto', 'Sem problema, você pode salvar a receita sem foto e adicionar depois.');
+      showAlert('Não deu pra enviar a foto', 'Sem problema, você pode salvar a receita sem foto e adicionar depois.');
     }
     setUploadingPhoto(false);
   };
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert('Ops', 'Digita o título da receita.');
+      showAlert('Ops', 'Digita o título da receita.');
       return;
     }
     setSaving(true);
@@ -139,7 +140,7 @@ export default function RecipeManagerScreen({ personalId, onClose }) {
 
     setSaving(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       setShowForm(false);
       resetForm();
@@ -148,7 +149,7 @@ export default function RecipeManagerScreen({ personalId, onClose }) {
   };
 
   const handleDelete = (recipeId) => {
-    Alert.alert('Excluir receita', 'Tem certeza?', [
+    showAlert('Excluir receita', 'Tem certeza?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Excluir',

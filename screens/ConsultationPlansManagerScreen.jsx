@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Switch } from 'react-native';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 
 export default function ConsultationPlansManagerScreen({ personalId, onClose }) {
   const [plans, setPlans] = useState([]);
@@ -61,7 +62,7 @@ export default function ConsultationPlansManagerScreen({ personalId, onClose }) 
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Ops', 'Digita o nome do plano (ex: "Mensal", "Trimestral").');
+      showAlert('Ops', 'Digita o nome do plano (ex: "Mensal", "Trimestral").');
       return;
     }
     setSaving(true);
@@ -85,7 +86,7 @@ export default function ConsultationPlansManagerScreen({ personalId, onClose }) 
     }
     setSaving(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       setShowForm(false);
       resetForm();
@@ -94,7 +95,7 @@ export default function ConsultationPlansManagerScreen({ personalId, onClose }) 
   };
 
   const handleDelete = (planId) => {
-    Alert.alert('Excluir plano', 'Tem certeza?', [
+    showAlert('Excluir plano', 'Tem certeza?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Excluir',

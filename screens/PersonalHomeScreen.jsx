@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, Alert, Share, Modal, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, Share, Modal, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from './supabaseClient';
@@ -11,6 +11,7 @@ import TemplateBuilderScreen from './TemplateBuilderScreen';
 import RecipeManagerScreen from './RecipeManagerScreen';
 import FoodCatalogScreen from './FoodCatalogScreen';
 import AlunoDetailScreen from './AlunoDetailScreen';
+import { showAlert } from './alertUtils';
 
 export default function PersonalHomeScreen({ user, onLogout }) {
   const [students, setStudents] = useState([]);
@@ -44,7 +45,7 @@ export default function PersonalHomeScreen({ user, onLogout }) {
         message: `Olá! Baixe o app e use meu código de convite: ${user.id}`,
       });
     } catch (e) {
-      Alert.alert('Erro', 'Não foi possível abrir o compartilhamento.');
+      showAlert('Erro', 'Não foi possível abrir o compartilhamento.');
     }
   };
 
@@ -76,7 +77,7 @@ export default function PersonalHomeScreen({ user, onLogout }) {
       .eq('role', 'aluno');
 
     if (error) {
-      Alert.alert('Erro ao carregar alunos', error.message);
+      showAlert('Erro ao carregar alunos', error.message);
     }
     if (!error) setStudents(data || []);
 
@@ -192,7 +193,7 @@ export default function PersonalHomeScreen({ user, onLogout }) {
   if (showFoodCatalog) {
     return (
       <FoodCatalogScreen
-        onAddFood={() => Alert.alert('Catálogo de Alimentos', 'Esse é o catálogo geral usado nas dietas. Pra montar a dieta de um aluno específico, acesse o perfil dele.')}
+        onAddFood={() => showAlert('Catálogo de Alimentos', 'Esse é o catálogo geral usado nas dietas. Pra montar a dieta de um aluno específico, acesse o perfil dele.')}
         onClose={() => setShowFoodCatalog(false)}
       />
     );

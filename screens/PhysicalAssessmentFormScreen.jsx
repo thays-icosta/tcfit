@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Image, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Platform } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -178,7 +178,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
       setReportIsPdf(isPdf);
       setReportFileName(file.name || (isPdf ? 'laudo.pdf' : 'laudo.jpg'));
     } catch (e) {
-      Alert.alert('Erro ao enviar laudo', e.message || 'Erro desconhecido');
+      showAlert('Erro ao enviar laudo', e.message || 'Erro desconhecido');
     }
     setUploadingReport(false);
   };
@@ -265,7 +265,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
       webFileInputRef.current?.click();
       return;
     }
-    Alert.alert('Escanear Relatório com IA', 'Como você quer enviar a imagem do laudo?', [
+    showAlert('Escanear Relatório com IA', 'Como você quer enviar a imagem do laudo?', [
       { text: 'Tirar Foto', onPress: () => pickAndScanImage(true) },
       { text: 'Escolher da Galeria', onPress: () => pickAndScanImage(false) },
       { text: 'Cancelar', style: 'cancel' },
@@ -309,7 +309,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
 
   const handleSaveBioimpedancia = async () => {
     if (!weight.trim()) {
-      Alert.alert('Ops', 'Pelo menos o peso é obrigatório.');
+      showAlert('Ops', 'Pelo menos o peso é obrigatório.');
       return;
     }
     setSaving(true);
@@ -337,15 +337,15 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
     }
     setSaving(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
-      Alert.alert('Avaliação registrada!', `Peso do ${studentName} atualizado para ${weight}kg.`, [{ text: 'OK', onPress: onClose }]);
+      showAlert('Avaliação registrada!', `Peso do ${studentName} atualizado para ${weight}kg.`, [{ text: 'OK', onPress: onClose }]);
     }
   };
 
   const handleSaveDobras = async () => {
     if (!weight.trim() || !age.trim() || !computed) {
-      Alert.alert('Ops', `Preenche peso, idade e ${is7 ? 'as sete' : 'as três'} dobras pra calcular.`);
+      showAlert('Ops', `Preenche peso, idade e ${is7 ? 'as sete' : 'as três'} dobras pra calcular.`);
       return;
     }
     setSaving(true);
@@ -387,9 +387,9 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
     }
     setSaving(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
-      Alert.alert('Avaliação registrada!', `% de gordura calculada: ${computed.bodyFatPct.toFixed(1)}%`, [{ text: 'OK', onPress: onClose }]);
+      showAlert('Avaliação registrada!', `% de gordura calculada: ${computed.bodyFatPct.toFixed(1)}%`, [{ text: 'OK', onPress: onClose }]);
     }
   };
 

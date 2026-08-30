@@ -9,6 +9,7 @@ import FoodCatalogScreen from './FoodCatalogScreen';
 import AlunoAgendaScreen from './AlunoAgendaScreen';
 import ChatScreen from './ChatScreen';
 import RecipesScreen from './RecipesScreen';
+import { showAlert } from './alertUtils';
 
 const MEAL_OPTIONS = [
   { value: 'cafe', label: 'Café da manhã' },
@@ -251,7 +252,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   };
 
   const handleDeleteEntry = (entryId) => {
-    Alert.alert('Remover registro', 'Tem certeza?', [
+    showAlert('Remover registro', 'Tem certeza?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Remover',
@@ -279,10 +280,10 @@ export default function AlunoHomeScreen({ user, onLogout }) {
     });
     setRegisteringKey(null);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       setDiaryRefreshKey((k) => k + 1);
-      Alert.alert('Registrado!', `${option.food_name} adicionado ao seu diário de hoje.`);
+      showAlert('Registrado!', `${option.food_name} adicionado ao seu diário de hoje.`);
     }
   };
 
@@ -304,7 +305,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
     if (!personalPixKey) return;
     await Clipboard.setStringAsync(personalPixKey);
     setPixCopied(true);
-    Alert.alert('Copiado!', 'Chave Pix copiada com sucesso!');
+    showAlert('Copiado!', 'Chave Pix copiada com sucesso!');
     setTimeout(() => setPixCopied(false), 2500);
   };
 
@@ -336,7 +337,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
     try {
       await Linking.openURL(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`);
     } catch (e) {
-      Alert.alert('Erro', 'Não foi possível abrir o WhatsApp.');
+      showAlert('Erro', 'Não foi possível abrir o WhatsApp.');
     }
   };
 

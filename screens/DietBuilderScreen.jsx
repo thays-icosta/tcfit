@@ -4,6 +4,8 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { supabase } from './supabaseClient';
 import DietMealsDetailScreen from './DietMealsDetailScreen';
+import { showAlert } from './alertUtils';
+import PromptModal from './PromptModal';
 
 function mapMealNameToType(name) {
   const n = (name || '').toLowerCase();
@@ -132,6 +134,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
   const [adherenceTrend, setAdherenceTrend] = useState([]);
 
   const [newDietName, setNewDietName] = useState('');
+  const [renamingDiet, setRenamingDiet] = useState(null);
 
   const [goalKcal, setGoalKcal] = useState('');
   const [goalProtein, setGoalProtein] = useState('');
@@ -276,7 +279,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
 
   const handleCreateDiet = async () => {
     if (!newDietName.trim()) {
-      Alert.alert('Ops', 'Dá um nome pra dieta (ex: "Cutting - Fase 1").');
+      showAlert('Ops', 'Dá um nome pra dieta (ex: "Cutting - Fase 1").');
       return;
     }
     const { data, error } = await supabase
@@ -285,7 +288,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
       .select()
       .single();
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
       return;
     }
     setNewDietName('');
@@ -294,22 +297,19 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
   };
 
   const handleRenameDiet = (diet) => {
-    Alert.prompt(
-      'Renomear dieta',
-      'Digite o novo nome:',
-      async (newName) => {
-        if (!newName || !newName.trim()) return;
-        const { error } = await supabase.from('diets').update({ name: newName.trim() }).eq('id', diet.id);
-        if (error) Alert.alert('Erro', error.message);
-        else loadDiets();
-      },
-      'plain-text',
-      diet.name
-    );
+    setRenamingDiet(diet);
+  };
+
+  const handleConfirmRenameDiet = async (newName) => {
+    const diet = renamingDiet;
+    setRenamingDiet(null);
+    const { error } = await supabase.from('diets').update({ name: newName }).eq('id', diet.id);
+    if (error) showAlert('Erro', error.message);
+    else loadDiets();
   };
 
   const handleDeleteDiet = (diet) => {
-    Alert.alert(
+    showAlert(
       'Excluir dieta',
       `Tem certeza que quer excluir "${diet.name}"? Todas as refeições dela também serão removidas.`,
       [
@@ -320,7 +320,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
           onPress: async () => {
             const { error } = await supabase.from('diets').update({ active: false }).eq('id', diet.id);
             if (error) {
-              Alert.alert('Erro', error.message);
+              showAlert('Erro', error.message);
             } else {
               if (activeDietId === diet.id) setActiveDietId(null);
               await loadDiets();
@@ -332,7 +332,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
   };
 
   const handleLongPressDiet = (diet) => {
-    Alert.alert(
+    showAlert(
       diet.name,
       'O que você quer fazer com essa dieta?',
       [
@@ -356,7 +356,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
       .eq('id', activeDietId);
     setSavingGoals(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       loadDiets();
     }
@@ -365,7 +365,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
   const handleGeneratePdf = async () => {
     setShowExportModal(false);
     if (meals.length === 0) {
-      Alert.alert('Ops', 'Adiciona pelo menos uma refeição antes de gerar o PDF.');
+      showAlert('Ops', 'Adiciona pelo menos uma refeição antes de gerar o PDF.');
       return;
     }
     setGeneratingPdf(true);
@@ -390,17 +390,17 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
       if (canShare) {
         await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Compartilhar plano alimentar' });
       } else {
-        Alert.alert('PDF gerado', 'O compartilhamento não está disponível nesse dispositivo, mas o PDF foi criado.');
+        showAlert('PDF gerado', 'O compartilhamento não está disponível nesse dispositivo, mas o PDF foi criado.');
       }
     } catch (e) {
-      Alert.alert('Erro ao gerar PDF', e.message);
+      showAlert('Erro ao gerar PDF', e.message);
     }
     setGeneratingPdf(false);
   };
 
   const handleOpenSendModal = async () => {
     if (meals.length === 0) {
-      Alert.alert('Ops', 'Essa dieta ainda não tem refeições cadastradas.');
+      showAlert('Ops', 'Essa dieta ainda não tem refeições cadastradas.');
       return;
     }
     setSelectedTargets([]);
@@ -427,7 +427,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
 
   const handleConfirmSendDiet = async () => {
     if (selectedTargets.length === 0) {
-      Alert.alert('Ops', 'Escolhe pelo menos um aluno.');
+      showAlert('Ops', 'Escolhe pelo menos um aluno.');
       return;
     }
     setSendingDiet(true);
@@ -506,7 +506,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
 
     setSendingDiet(false);
     setShowSendModal(false);
-    Alert.alert('Enviado!', `Dieta copiada para ${successCount} aluno${successCount !== 1 ? 's' : ''}.`);
+    showAlert('Enviado!', `Dieta copiada para ${successCount} aluno${successCount !== 1 ? 's' : ''}.`);
   };
 
   const dayTotals = meals.reduce(
@@ -715,6 +715,15 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
       <TouchableOpacity style={styles.saveButton} onPress={onClose}>
         <Text style={styles.saveButtonText}>Salvar Dieta</Text>
       </TouchableOpacity>
+
+      <PromptModal
+        visible={!!renamingDiet}
+        title="Renomear dieta"
+        subtitle="Digite o novo nome:"
+        initialValue={renamingDiet?.name}
+        onCancel={() => setRenamingDiet(null)}
+        onSubmit={handleConfirmRenameDiet}
+      />
 
       <Modal visible={showExportModal} transparent animationType="fade" onRequestClose={() => setShowExportModal(false)}>
         <View style={styles.modalOverlay}>

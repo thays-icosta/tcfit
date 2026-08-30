@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator } from 'react-native';
 import { supabase } from './supabaseClient';
 import BarcodeScannerScreen from './BarcodeScannerScreen';
+import { showAlert } from './alertUtils';
 
 const CATEGORY_CHIPS = [
   { value: 'todos', label: 'Todos' },
@@ -61,7 +62,7 @@ export default function FoodCatalogScreen({ onAddFood, onClose, recentForStudent
     setLoading(true);
     const { data, error } = await supabase.from('foods').select('*').order('name');
     if (error) {
-      Alert.alert('Erro ao carregar alimentos', error.message);
+      showAlert('Erro ao carregar alimentos', error.message);
     }
     setAllFoods(data || []);
     setLoading(false);
@@ -173,7 +174,7 @@ export default function FoodCatalogScreen({ onAddFood, onClose, recentForStudent
       .single();
 
     if (error) {
-      Alert.alert('Erro ao salvar produto', error.message);
+      showAlert('Erro ao salvar produto', error.message);
       return;
     }
 
@@ -194,7 +195,7 @@ export default function FoodCatalogScreen({ onAddFood, onClose, recentForStudent
 
   const handleSaveNewFood = async () => {
     if (!newFoodName.trim() || !newFoodKcal.trim()) {
-      Alert.alert('Ops', 'Preenche pelo menos o nome e as calorias.');
+      showAlert('Ops', 'Preenche pelo menos o nome e as calorias.');
       return;
     }
     setSavingNewFood(true);
@@ -212,7 +213,7 @@ export default function FoodCatalogScreen({ onAddFood, onClose, recentForStudent
       .single();
     setSavingNewFood(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
       return;
     }
     await loadFoods();

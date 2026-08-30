@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, TextInput } from 'react-native';
 import { supabase } from './supabaseClient';
 import CreatePeriodizationScreen from './CreatePeriodizationScreen';
 import { getPhaseForWeekIndex, loadPeriodizationPlan } from './periodizationUtils';
+import { showAlert } from './alertUtils';
 
 const PHASE_COLORS = ['#f97316', '#a855f7', '#3b82f6', '#22c55e', '#eab308', '#ef4444', '#ec4899', '#14b8a6'];
 const PX_PER_WEEK = 40;
@@ -195,7 +196,7 @@ export default function WeeklyPeriodizationScreen({ studentId, studentName, pers
     setSavingNote(false);
     setEditingNote(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       loadData();
     }

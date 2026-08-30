@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Image, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Switch } from 'react-native';
 import { supabase } from './supabaseClient';
 import AddExerciseModal from './AddExerciseModal';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
+import { showAlert } from './alertUtils';
 
 const METHOD_LABELS = {
   'tradicional': 'Tradicional',
@@ -71,7 +72,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
 
   const handleCreateTemplate = async () => {
     if (!newTemplateName.trim()) {
-      Alert.alert('Ops', 'Dá um nome pro template (ex: "Hipertrofia Full Body").');
+      showAlert('Ops', 'Dá um nome pro template (ex: "Hipertrofia Full Body").');
       return;
     }
     const { data, error } = await supabase
@@ -80,7 +81,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       .select()
       .single();
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
       return;
     }
     setNewTemplateName('');
@@ -89,7 +90,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   };
 
   const handleDeleteTemplate = (template) => {
-    Alert.alert('Excluir template', `Tem certeza que quer excluir "${template.name}"?`, [
+    showAlert('Excluir template', `Tem certeza que quer excluir "${template.name}"?`, [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Excluir',
@@ -115,16 +116,16 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       .eq('id', activeTemplateId);
     setSavingMeta(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       loadTemplates();
-      Alert.alert('Salvo!', editIsPublic ? 'Esse template já aparece na vitrine de vendas.' : 'Informações atualizadas.');
+      showAlert('Salvo!', editIsPublic ? 'Esse template já aparece na vitrine de vendas.' : 'Informações atualizadas.');
     }
   };
 
   const handleConfirmAddExercise = async (exercise, config) => {
     if (!activeTemplateId) {
-      Alert.alert('Ops', 'Cria ou seleciona um template primeiro.');
+      showAlert('Ops', 'Cria ou seleciona um template primeiro.');
       return;
     }
     const { data: maxRow } = await supabase
@@ -142,7 +143,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       ...config,
     });
     if (error) {
-      Alert.alert('Erro ao adicionar', error.message);
+      showAlert('Erro ao adicionar', error.message);
     } else {
       setShowAddModal(false);
       loadItems(activeTemplateId);
@@ -150,7 +151,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   };
 
   const handleRemoveItem = (itemId) => {
-    Alert.alert('Remover exercício', 'Tem certeza?', [
+    showAlert('Remover exercício', 'Tem certeza?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Remover',

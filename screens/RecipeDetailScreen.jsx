@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 
 const MEAL_OPTIONS = [
   { value: 'cafe', label: 'Café da manhã' },
@@ -29,9 +30,9 @@ export default function RecipeDetailScreen({ recipe, studentId, onClose }) {
     setAdding(null);
     setShowMealPicker(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
-      Alert.alert('Adicionado!', `${recipe.title} foi para o seu diário de hoje.`);
+      showAlert('Adicionado!', `${recipe.title} foi para o seu diário de hoje.`);
     }
   };
 

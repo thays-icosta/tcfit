@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking, Alert, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 
 const WHATSAPP_NUMBER = '5537998231382';
 const ICONS = ['barbell-outline', 'restaurant-outline', 'sparkles-outline', 'flash-outline', 'trophy-outline'];
@@ -73,7 +74,7 @@ export default function PlansScreen({ onBack, onLogin }) {
     if (!paymentInfo?.pixKey) return;
     await Clipboard.setStringAsync(paymentInfo.pixKey);
     setPixCopied(true);
-    Alert.alert('Copiado!', 'Chave Pix copiada com sucesso!');
+    showAlert('Copiado!', 'Chave Pix copiada com sucesso!');
     setTimeout(() => setPixCopied(false), 2500);
   };
 
@@ -97,7 +98,7 @@ export default function PlansScreen({ onBack, onLogin }) {
     try {
       await Linking.openURL(url);
     } catch (e) {
-      Alert.alert('Erro', 'Não foi possível abrir o WhatsApp.');
+      showAlert('Erro', 'Não foi possível abrir o WhatsApp.');
     }
   };
 

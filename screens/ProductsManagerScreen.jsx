@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 
 const TYPES = [
   { value: 'ebook_receitas', label: 'Guia de Receitas / E-book', icon: 'book-outline' },
@@ -72,7 +73,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert('Ops', 'Digita o título do produto.');
+      showAlert('Ops', 'Digita o título do produto.');
       return;
     }
     setSaving(true);
@@ -97,7 +98,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     }
     setSaving(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       setShowForm(false);
       resetForm();
@@ -106,7 +107,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   };
 
   const handleDelete = (productId) => {
-    Alert.alert('Excluir produto', 'Tem certeza?', [
+    showAlert('Excluir produto', 'Tem certeza?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Excluir',

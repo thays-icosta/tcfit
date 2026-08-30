@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator } from 'react-native';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 
 export default function ForgotPasswordScreen({ onClose }) {
   const [email, setEmail] = useState('');
@@ -9,14 +10,14 @@ export default function ForgotPasswordScreen({ onClose }) {
 
   const handleSendReset = async () => {
     if (!email.trim() || !email.includes('@')) {
-      Alert.alert('Ops', 'Digita um e-mail válido.');
+      showAlert('Ops', 'Digita um e-mail válido.');
       return;
     }
     setSending(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
     setSending(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       setSent(true);
     }

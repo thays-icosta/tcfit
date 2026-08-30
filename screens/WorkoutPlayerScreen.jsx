@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Vibration, Image, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, InputAccessoryView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Vibration, Image, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, InputAccessoryView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { supabase } from './supabaseClient';
 import { loadPeriodizationPlan, getCurrentPhase } from './periodizationUtils';
+import { showAlert } from './alertUtils';
 
 function parseReps(repsStr) {
   if (!repsStr) return 10;
@@ -189,7 +190,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit }) {
           userRow = { weight_kg: parsed.weight };
           pastSetsData = parsed.pastSets;
         } else {
-          Alert.alert('Sem conexão', 'Essa ficha ainda não foi aberta com internet, então não temos os dados salvos localmente. Conecta à internet uma vez pra baixar a ficha.');
+          showAlert('Sem conexão', 'Essa ficha ainda não foi aberta com internet, então não temos os dados salvos localmente. Conecta à internet uma vez pra baixar a ficha.');
           onExit();
           return;
         }
@@ -324,7 +325,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit }) {
   };
 
   const handleExit = () => {
-    Alert.alert(
+    showAlert(
       'Sair sem finalizar?',
       'O treino não vai ficar marcado como concluído.',
       [
@@ -405,7 +406,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit }) {
 
   const handleSavePse = async () => {
     if (selectedPse == null) {
-      Alert.alert('Ops', 'Escolhe como foi o treino primeiro.');
+      showAlert('Ops', 'Escolhe como foi o treino primeiro.');
       return;
     }
     Keyboard.dismiss();

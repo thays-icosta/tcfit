@@ -2,6 +2,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, ScrollView, Image, KeyboardAvoidingView, Platform } from 'react-native';
 import { supabase } from './supabaseClient';
 import ForgotPasswordScreen from './ForgotPasswordScreen';
+import { showAlert } from './alertUtils';
 
 export default function AuthScreen({ onAuthenticated, onBack }) {
   const [mode, setMode] = useState('login');
@@ -15,15 +16,15 @@ export default function AuthScreen({ onAuthenticated, onBack }) {
 
   const handleAuth = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Ops', 'Preenche e-mail e senha.');
+      showAlert('Ops', 'Preenche e-mail e senha.');
       return;
     }
     if (mode === 'signup' && !name.trim()) {
-      Alert.alert('Ops', 'Preenche seu nome.');
+      showAlert('Ops', 'Preenche seu nome.');
       return;
     }
     if (mode === 'signup' && role === 'aluno' && !inviteCode.trim()) {
-      Alert.alert('Ops', 'Preenche o código de convite do seu personal.');
+      showAlert('Ops', 'Preenche o código de convite do seu personal.');
       return;
     }
 
@@ -36,7 +37,7 @@ export default function AuthScreen({ onAuthenticated, onBack }) {
       });
       setLoading(false);
       if (error) {
-        Alert.alert('Erro ao entrar', error.message);
+        showAlert('Erro ao entrar', error.message);
       } else {
         onAuthenticated();
       }
@@ -56,9 +57,9 @@ export default function AuthScreen({ onAuthenticated, onBack }) {
       });
       setLoading(false);
       if (error) {
-        Alert.alert('Erro ao cadastrar', error.message);
+        showAlert('Erro ao cadastrar', error.message);
       } else {
-        Alert.alert('Conta criada!', 'Verifica seu e-mail se precisar confirmar, e depois faz login.', [
+        showAlert('Conta criada!', 'Verifica seu e-mail se precisar confirmar, e depois faz login.', [
           { text: 'OK', onPress: () => setMode('login') },
         ]);
       }

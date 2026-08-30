@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Image, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import AddExerciseModal from './AddExerciseModal';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { loadPeriodizationPlan, getCurrentPhase } from './periodizationUtils';
+import { showAlert } from './alertUtils';
+import PromptModal from './PromptModal';
 
 const FICHA_NAME_SUGGESTIONS = [
   'Treino A - Quadríceps',
@@ -53,6 +55,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const [newFichaName, setNewFichaName] = useState('');
   const [saving, setSaving] = useState(false);
   const [showCreateFichaModal, setShowCreateFichaModal] = useState(false);
+  const [renamingWorkout, setRenamingWorkout] = useState(null);
 
   const loadWorkouts = async () => {
     const { data } = await supabase
@@ -100,7 +103,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
   const handleCreateFicha = async () => {
     if (!newFichaName.trim()) {
-      Alert.alert('Ops', 'Dá um nome pra ficha (ex: "1 MMII ÊNFASE").');
+      showAlert('Ops', 'Dá um nome pra ficha (ex: "1 MMII ÊNFASE").');
       return;
     }
     const currentPhase = getCurrentPhase(periodizationPlan, periodizationPhases);
@@ -116,7 +119,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       .select()
       .single();
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
       return;
     }
     setNewFichaName('');
@@ -126,22 +129,19 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   };
 
   const handleRenameFicha = (workout) => {
-    Alert.prompt(
-      'Renomear ficha',
-      'Digite o novo nome:',
-      async (newName) => {
-        if (!newName || !newName.trim()) return;
-        const { error } = await supabase.from('workouts').update({ name: newName.trim() }).eq('id', workout.id);
-        if (error) Alert.alert('Erro', error.message);
-        else loadWorkouts();
-      },
-      'plain-text',
-      workout.name
-    );
+    setRenamingWorkout(workout);
+  };
+
+  const handleConfirmRename = async (newName) => {
+    const workout = renamingWorkout;
+    setRenamingWorkout(null);
+    const { error } = await supabase.from('workouts').update({ name: newName }).eq('id', workout.id);
+    if (error) showAlert('Erro', error.message);
+    else loadWorkouts();
   };
 
   const handleDeleteFicha = (workout) => {
-    Alert.alert(
+    showAlert(
       'Excluir ficha',
       `Tem certeza que quer excluir "${workout.name}"? Todos os exercícios dela também serão removidos.`,
       [
@@ -152,7 +152,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
           onPress: async () => {
             const { error } = await supabase.from('workouts').update({ active: false }).eq('id', workout.id);
             if (error) {
-              Alert.alert('Erro', error.message);
+              showAlert('Erro', error.message);
             } else {
               if (activeWorkoutId === workout.id) setActiveWorkoutId(null);
               await loadWorkouts();
@@ -172,7 +172,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       .single();
 
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
       setSaving(false);
       return;
     }
@@ -190,11 +190,11 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     setSaving(false);
     await loadWorkouts();
     setActiveWorkoutId(newWorkout.id);
-    Alert.alert('Feito!', `Ficha duplicada como "${newWorkout.name}".`);
+    showAlert('Feito!', `Ficha duplicada como "${newWorkout.name}".`);
   };
 
   const handleLongPressFicha = (workout) => {
-    Alert.alert(
+    showAlert(
       workout.name,
       'O que você quer fazer com essa ficha?',
       [
@@ -211,7 +211,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     const { error } = await supabase.from('workouts').update({ phase_id: phaseId }).eq('id', activeWorkoutId);
     setShowPhasePicker(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       loadWorkouts();
     }
@@ -219,11 +219,11 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
   const handleOpenSendModal = async () => {
     if (!activeWorkoutId) {
-      Alert.alert('Ops', 'Seleciona uma ficha primeiro.');
+      showAlert('Ops', 'Seleciona uma ficha primeiro.');
       return;
     }
     if (items.length === 0) {
-      Alert.alert('Ops', 'Essa ficha ainda não tem exercícios.');
+      showAlert('Ops', 'Essa ficha ainda não tem exercícios.');
       return;
     }
     setSelectedTargets([]);
@@ -250,7 +250,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
   const handleConfirmSend = async () => {
     if (selectedTargets.length === 0) {
-      Alert.alert('Ops', 'Escolhe pelo menos um aluno.');
+      showAlert('Ops', 'Escolhe pelo menos um aluno.');
       return;
     }
     setSendingCopy(true);
@@ -278,7 +278,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
     setSendingCopy(false);
     setShowSendModal(false);
-    Alert.alert('Enviado!', `Ficha copiada para ${successCount} aluno${successCount !== 1 ? 's' : ''}.`);
+    showAlert('Enviado!', `Ficha copiada para ${successCount} aluno${successCount !== 1 ? 's' : ''}.`);
   };
 
   const handleOpenTemplatePicker = async () => {
@@ -311,7 +311,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
     if (error || !newWorkout) {
       setApplyingTemplateId(null);
-      Alert.alert('Erro', error?.message || 'Não foi possível aplicar o template.');
+      showAlert('Erro', error?.message || 'Não foi possível aplicar o template.');
       return;
     }
 
@@ -329,12 +329,12 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     setShowTemplatePicker(false);
     await loadWorkouts();
     setActiveWorkoutId(newWorkout.id);
-    Alert.alert('Aplicado!', `Ficha "${template.name}" criada com ${templateItems?.length || 0} exercício(s) a partir do template.`);
+    showAlert('Aplicado!', `Ficha "${template.name}" criada com ${templateItems?.length || 0} exercício(s) a partir do template.`);
   };
 
   const handleConfirmAddExercise = async (exercise, config) => {
     if (!activeWorkoutId) {
-      Alert.alert('Ops', 'Cria ou seleciona uma ficha primeiro.');
+      showAlert('Ops', 'Cria ou seleciona uma ficha primeiro.');
       return;
     }
 
@@ -353,7 +353,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       ...config,
     });
     if (error) {
-      Alert.alert('Erro ao adicionar', error.message);
+      showAlert('Erro ao adicionar', error.message);
     } else {
       setShowAddModal(false);
       loadItems(activeWorkoutId);
@@ -361,7 +361,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   };
 
   const handleRemoveItem = (itemId) => {
-    Alert.alert('Remover exercício', 'Tem certeza?', [
+    showAlert('Remover exercício', 'Tem certeza?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Remover',
@@ -370,7 +370,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
           setItems((prev) => prev.filter((it) => it.id !== itemId));
           const { error } = await supabase.from('workout_exercises').delete().eq('id', itemId);
           if (error) {
-            Alert.alert('Erro ao remover', error.message);
+            showAlert('Erro ao remover', error.message);
             loadItems(activeWorkoutId);
           }
         },
@@ -390,7 +390,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
   const handleOpenReplicate = () => {
     if (items.length === 0) {
-      Alert.alert('Ops', 'Ainda não tem exercício nessa ficha pra aplicar valores.');
+      showAlert('Ops', 'Ainda não tem exercício nessa ficha pra aplicar valores.');
       return;
     }
     setShowReplicateModal(true);
@@ -411,7 +411,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     setReplicating(false);
     setShowReplicateModal(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       loadItems(activeWorkoutId);
     }
@@ -632,6 +632,15 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       <TouchableOpacity style={styles.saveButton} onPress={onClose}>
         <Text style={styles.saveButtonText}>Salvar Ficha</Text>
       </TouchableOpacity>
+
+      <PromptModal
+        visible={!!renamingWorkout}
+        title="Renomear ficha"
+        subtitle="Digite o novo nome:"
+        initialValue={renamingWorkout?.name}
+        onCancel={() => setRenamingWorkout(null)}
+        onSubmit={handleConfirmRename}
+      />
 
       <Modal visible={showCreateFichaModal} transparent animationType="fade" onRequestClose={() => setShowCreateFichaModal(false)}>
         <View style={styles.modalOverlay}>

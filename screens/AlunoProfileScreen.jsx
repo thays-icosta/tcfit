@@ -8,6 +8,7 @@ import { supabase } from './supabaseClient';
 import PhysicalAssessmentHistoryScreen from './PhysicalAssessmentHistoryScreen';
 import VolumeSummaryScreen from './VolumeSummaryScreen';
 import WeeklyPeriodizationScreen from './WeeklyPeriodizationScreen';
+import { showAlert } from './alertUtils';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -69,7 +70,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Permissão necessária', 'Autorize o acesso às fotos pra escolher uma imagem de perfil.');
+        showAlert('Permissão necessária', 'Autorize o acesso às fotos pra escolher uma imagem de perfil.');
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -81,7 +82,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
       if (result.canceled) return;
 
       if (!result.assets || result.assets.length === 0 || !result.assets[0].base64) {
-        Alert.alert('Ops', 'Não conseguimos ler os dados dessa imagem. Tenta escolher outra foto.');
+        showAlert('Ops', 'Não conseguimos ler os dados dessa imagem. Tenta escolher outra foto.');
         return;
       }
 
@@ -99,16 +100,16 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
       const finalUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
       await supabase.from('users').update({ avatar_url: finalUrl }).eq('id', user.id);
       setAvatarUrl(finalUrl);
-      Alert.alert('Foto atualizada!', 'Sua foto de perfil foi salva com sucesso.');
+      showAlert('Foto atualizada!', 'Sua foto de perfil foi salva com sucesso.');
     } catch (e) {
-      Alert.alert('Erro ao enviar foto', e.message || 'Erro desconhecido');
+      showAlert('Erro ao enviar foto', e.message || 'Erro desconhecido');
     }
     setUploadingAvatar(false);
   };
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Ops', 'O nome não pode ficar vazio.');
+      showAlert('Ops', 'O nome não pode ficar vazio.');
       return;
     }
     setSaving(true);
@@ -122,9 +123,9 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
       .eq('id', user.id);
     setSaving(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
-      Alert.alert('Salvo!', 'Seu perfil foi atualizado.', [{ text: 'OK', onPress: onClose }]);
+      showAlert('Salvo!', 'Seu perfil foi atualizado.', [{ text: 'OK', onPress: onClose }]);
     }
   };
 
@@ -141,7 +142,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
   const handleSaveReminder = async () => {
     const match = reminderTime.match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
     if (!match) {
-      Alert.alert('Ops', 'Digita um horário válido no formato HH:MM (ex: 18:30).');
+      showAlert('Ops', 'Digita um horário válido no formato HH:MM (ex: 18:30).');
       return;
     }
     const hour = Number(match[1]);
@@ -152,7 +153,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
     const { status } = await Notifications.requestPermissionsAsync();
     if (status !== 'granted') {
       setSavingReminder(false);
-      Alert.alert('Permissão necessária', 'Pra receber lembretes, autorize notificações pro app nas configurações do celular.');
+      showAlert('Permissão necessária', 'Pra receber lembretes, autorize notificações pro app nas configurações do celular.');
       return;
     }
 
@@ -176,37 +177,37 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
       }).eq('id', user.id);
 
       setSavingReminder(false);
-      Alert.alert('Lembrete ativado!', `Você vai receber um aviso todo dia às ${match[1].padStart(2, '0')}:${match[2]}.`);
+      showAlert('Lembrete ativado!', `Você vai receber um aviso todo dia às ${match[1].padStart(2, '0')}:${match[2]}.`);
     } catch (e) {
       setSavingReminder(false);
-      Alert.alert('Erro ao agendar', e.message);
+      showAlert('Erro ao agendar', e.message);
     }
   };
 
   const handleChangePassword = async () => {
     if (!newPassword || newPassword.length < 6) {
-      Alert.alert('Ops', 'A senha precisa ter pelo menos 6 caracteres.');
+      showAlert('Ops', 'A senha precisa ter pelo menos 6 caracteres.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert('Ops', 'As senhas não coincidem.');
+      showAlert('Ops', 'As senhas não coincidem.');
       return;
     }
     setSavingPassword(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setSavingPassword(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       setShowPasswordModal(false);
       setNewPassword('');
       setConfirmPassword('');
-      Alert.alert('Senha alterada!', 'Sua senha foi atualizada com sucesso.');
+      showAlert('Senha alterada!', 'Sua senha foi atualizada com sucesso.');
     }
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
+    showAlert(
       'Excluir minha conta',
       'Essa ação é permanente. Todos os seus treinos, dietas, avaliações e mensagens serão apagados pra sempre. Tem certeza?',
       [
@@ -232,7 +233,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
     const { error } = await supabase.rpc('delete_own_account');
     setDeletingAccount(false);
     if (error) {
-      Alert.alert('Erro ao excluir conta', error.message);
+      showAlert('Erro ao excluir conta', error.message);
     } else {
       await supabase.auth.signOut();
       if (onLogout) onLogout();

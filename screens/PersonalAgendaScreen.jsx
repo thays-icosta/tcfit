@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Modal, Platform, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Modal, Platform, Image } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 
 const STATUS_LABELS = { agendado: 'Agendado', concluido: 'Concluído', cancelado: 'Cancelado' };
 const DAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -135,7 +136,7 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
 
   const handleConfirmAppointment = async () => {
     if (!selectedStudent) {
-      Alert.alert('Ops', 'Escolhe o aluno primeiro.');
+      showAlert('Ops', 'Escolhe o aluno primeiro.');
       return;
     }
     setSaving(true);
@@ -152,7 +153,7 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
       const { error } = await supabase.from('appointments').update(payload).eq('id', editingAppointmentId);
       setSaving(false);
       if (error) {
-        Alert.alert('Erro', error.message);
+        showAlert('Erro', error.message);
       } else {
         setShowAddModal(false);
         loadAppointments();
@@ -164,7 +165,7 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
       });
       setSaving(false);
       if (error) {
-        Alert.alert('Erro', error.message);
+        showAlert('Erro', error.message);
       } else {
         setShowAddModal(false);
         loadAppointments();
@@ -174,12 +175,12 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
 
   const handleUpdateStatus = async (appointmentId, status) => {
     const { error } = await supabase.from('appointments').update({ status }).eq('id', appointmentId);
-    if (error) Alert.alert('Erro', error.message);
+    if (error) showAlert('Erro', error.message);
     else loadAppointments();
   };
 
   const handleDelete = (appointmentId) => {
-    Alert.alert('Excluir agendamento', 'Tem certeza?', [
+    showAlert('Excluir agendamento', 'Tem certeza?', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Excluir',

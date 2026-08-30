@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, InputAccessoryView } from 'react-native';
 import { supabase } from './supabaseClient';
 import FoodCatalogScreen from './FoodCatalogScreen';
+import { showAlert } from './alertUtils';
 
 const KEYBOARD_TOOLBAR_ID = 'dietDetailKeyboardToolbar';
 
@@ -42,7 +43,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
 
   const handleAddMeal = async () => {
     if (!newMealName.trim()) {
-      Alert.alert('Ops', 'Dá um nome pra refeição (ex: "Café da manhã").');
+      showAlert('Ops', 'Dá um nome pra refeição (ex: "Café da manhã").');
       return;
     }
     Keyboard.dismiss();
@@ -55,7 +56,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
     });
     setSavingMeal(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       setNewMealName('');
       setNewMealTime('');
@@ -65,7 +66,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
   };
 
   const handleRemoveMeal = (mealId) => {
-    Alert.alert('Remover refeição', 'Tem certeza? Os alimentos dela também serão removidos.', [
+    showAlert('Remover refeição', 'Tem certeza? Os alimentos dela também serão removidos.', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Remover',
@@ -81,7 +82,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
   const handleAddFoodManual = async (mealId) => {
     const value = foodInputs[mealId];
     if (!value || !value.trim()) {
-      Alert.alert('Ops', 'Digita o nome do alimento primeiro.');
+      showAlert('Ops', 'Digita o nome do alimento primeiro.');
       return;
     }
     Keyboard.dismiss();
@@ -94,7 +95,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
     });
     setSavingFoodFor(null);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       setFoodInputs((prev) => ({ ...prev, [mealId]: '' }));
       setManualAddFor(null);
@@ -135,7 +136,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
   const handleAddSubstituteManual = async (dietMealFoodId) => {
     const value = substituteInputs[dietMealFoodId];
     if (!value || !value.trim()) {
-      Alert.alert('Ops', 'Digita o nome do substituto primeiro.');
+      showAlert('Ops', 'Digita o nome do substituto primeiro.');
       return;
     }
     Keyboard.dismiss();
@@ -148,7 +149,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
     });
     setSavingSubstituteFor(null);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
       setSubstituteInputs((prev) => ({ ...prev, [dietMealFoodId]: '' }));
       loadMeals();

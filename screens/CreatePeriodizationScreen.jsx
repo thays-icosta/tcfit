@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -49,7 +50,7 @@ export default function CreatePeriodizationScreen({ studentId, studentName, pers
 
   const handleAddPhase = () => {
     if (!newPhaseName.trim() || !newPhaseWeeks.trim()) {
-      Alert.alert('Ops', 'Preenche o nome e a duração da fase.');
+      showAlert('Ops', 'Preenche o nome e a duração da fase.');
       return;
     }
     setPhases((prev) => [...prev, { tempId: uuidv4(), name: newPhaseName.trim(), weeks: newPhaseWeeks.trim() }]);
@@ -75,11 +76,11 @@ export default function CreatePeriodizationScreen({ studentId, studentName, pers
 
   const handleSave = async () => {
     if (!totalWeeksNum || totalWeeksNum <= 0) {
-      Alert.alert('Ops', 'Define a duração total do plano em semanas.');
+      showAlert('Ops', 'Define a duração total do plano em semanas.');
       return;
     }
     if (phases.length === 0) {
-      Alert.alert('Ops', 'Adiciona pelo menos uma fase.');
+      showAlert('Ops', 'Adiciona pelo menos uma fase.');
       return;
     }
     setSaving(true);
@@ -96,7 +97,7 @@ export default function CreatePeriodizationScreen({ studentId, studentName, pers
         .single();
       if (error) {
         setSaving(false);
-        Alert.alert('Erro', error.message);
+        showAlert('Erro', error.message);
         return;
       }
       planId = newPlan.id;
@@ -113,9 +114,9 @@ export default function CreatePeriodizationScreen({ studentId, studentName, pers
 
     setSaving(false);
     if (insertError) {
-      Alert.alert('Erro', insertError.message);
+      showAlert('Erro', insertError.message);
     } else {
-      Alert.alert('Salvo!', 'O plano de periodização foi salvo.');
+      showAlert('Salvo!', 'O plano de periodização foi salvo.');
     }
   };
 

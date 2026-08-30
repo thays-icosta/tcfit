@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert, Modal, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Modal, Switch } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 
 const SEGMENT_META = {
   braco_direito: { label: 'Braço Direito', area: 'armr' },
@@ -485,10 +486,10 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
       if (canShare) {
         await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Compartilhar relatório' });
       } else {
-        Alert.alert('PDF gerado', 'O compartilhamento não está disponível nesse dispositivo, mas o PDF foi criado.');
+        showAlert('PDF gerado', 'O compartilhamento não está disponível nesse dispositivo, mas o PDF foi criado.');
       }
     } catch (e) {
-      Alert.alert('Erro ao gerar PDF', e.message);
+      showAlert('Erro ao gerar PDF', e.message);
     }
     setGeneratingPdf(false);
   };
@@ -556,7 +557,7 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
             {latest?.report_url && (
               <TouchableOpacity
                 style={styles.attachmentLink}
-                onPress={() => Alert.alert('Laudo anexado', 'Abra o link a seguir no navegador do celular: ' + latest.report_url)}
+                onPress={() => showAlert('Laudo anexado', 'Abra o link a seguir no navegador do celular: ' + latest.report_url)}
               >
                 <Text style={styles.attachmentLinkText}>📎 Ver laudo anexado da última avaliação</Text>
               </TouchableOpacity>

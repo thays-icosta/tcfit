@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator, Alert, ScrollView, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator, ScrollView, Switch } from 'react-native';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -61,7 +62,7 @@ export default function PlanPricesScreen({ onClose }) {
       setPlans((prev) => prev.filter((p) => p.plan_key !== planKey));
       return;
     }
-    Alert.alert('Excluir plano', 'Tem certeza? Ele vai sumir da vitrine.', [
+    showAlert('Excluir plano', 'Tem certeza? Ele vai sumir da vitrine.', [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Excluir',
@@ -93,7 +94,7 @@ export default function PlanPricesScreen({ onClose }) {
       }
     }
     setSaving(false);
-    Alert.alert('Salvo!', 'Os planos de consultoria foram atualizados na vitrine.', [{ text: 'OK', onPress: loadPlans }]);
+    showAlert('Salvo!', 'Os planos de consultoria foram atualizados na vitrine.', [{ text: 'OK', onPress: loadPlans }]);
   };
 
   const handleSaveWithLoading = async () => {

@@ -5,6 +5,7 @@ import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { getYoutubeVideoId, getYoutubeThumbnailUrl } from './youtubeUtils';
+import { showAlert } from './alertUtils';
 
 const MUSCLE_OPTIONS = ['peito', 'costas', 'ombro', 'biceps', 'triceps', 'abdomen', 'quadriceps', 'isquiotibiais', 'gluteo', 'panturrilha', 'aerobico'];
 const EQUIPMENT_OPTIONS = ['halter', 'barra', 'maquina', 'peso_corporal'];
@@ -32,7 +33,7 @@ export default function CustomExerciseFormScreen({ personalId, onClose, onCreate
   const handlePickVideo = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Permissão necessária', 'Autorize o acesso às fotos e vídeos.');
+      showAlert('Permissão necessária', 'Autorize o acesso às fotos e vídeos.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'], quality: 0.7 });
@@ -42,7 +43,7 @@ export default function CustomExerciseFormScreen({ personalId, onClose, onCreate
     try {
       const info = await FileSystem.getInfoAsync(asset.uri, { size: true });
       if (info.exists && info.size > MAX_VIDEO_BYTES) {
-        Alert.alert('Vídeo muito grande', 'O vídeo precisa ter no máximo 30MB. Escolhe um menor ou grava com qualidade reduzida.');
+        showAlert('Vídeo muito grande', 'O vídeo precisa ter no máximo 30MB. Escolhe um menor ou grava com qualidade reduzida.');
         return;
       }
 
@@ -58,14 +59,14 @@ export default function CustomExerciseFormScreen({ personalId, onClose, onCreate
       const { data } = supabase.storage.from('exercise-videos').getPublicUrl(fileName);
       setVideoUrl(data.publicUrl);
     } catch (e) {
-      Alert.alert('Erro ao enviar vídeo', e.message || 'Tente um vídeo menor ou tente novamente.');
+      showAlert('Erro ao enviar vídeo', e.message || 'Tente um vídeo menor ou tente novamente.');
     }
     setUploadingVideo(false);
   };
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Ops', 'Dá um nome pro exercício primeiro.');
+      showAlert('Ops', 'Dá um nome pro exercício primeiro.');
       return;
     }
     setSaving(true);
@@ -80,9 +81,9 @@ export default function CustomExerciseFormScreen({ personalId, onClose, onCreate
     });
     setSaving(false);
     if (error) {
-      Alert.alert('Erro', error.message);
+      showAlert('Erro', error.message);
     } else {
-      Alert.alert('Exercício criado!', `"${name}" foi adicionado aos seus exercícios.`, [
+      showAlert('Exercício criado!', `"${name}" foi adicionado aos seus exercícios.`, [
         { text: 'OK', onPress: () => { onCreated(); onClose(); } },
       ]);
     }
