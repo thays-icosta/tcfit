@@ -23,6 +23,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [managingProduct, setManagingProduct] = useState(null);
+  const [previewProduct, setPreviewProduct] = useState(null);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -174,6 +175,58 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       },
     ]);
   };
+
+  if (previewProduct) {
+    const meta = typeMeta(previewProduct.type);
+    const previewRecipes = recipes.filter((r) => (previewProduct.recipe_ids || []).includes(r.id));
+
+    return (
+      <View style={styles.container}>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => setPreviewProduct(null)}>
+            <Text style={styles.closeText}>← Voltar</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>Ver como Aluno</Text>
+        </View>
+
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+          <Text style={styles.previewSectionLabel}>Card de Venda Público (Visitante)</Text>
+          <View style={styles.saleCard}>
+            <View style={styles.saleIconCircle}>
+              <Ionicons name={meta.icon} size={28} color="#f97316" />
+            </View>
+            <Text style={styles.saleName}>{previewProduct.name}</Text>
+            {previewProduct.description ? <Text style={styles.saleDescription}>{previewProduct.description}</Text> : null}
+            <Text style={styles.salePrice}>
+              {previewProduct.price != null ? `R$ ${Number(previewProduct.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
+            </Text>
+            <View style={styles.saleButton}>
+              <Text style={styles.saleButtonText}>Quero Comprar</Text>
+            </View>
+          </View>
+
+          <Text style={[styles.previewSectionLabel, { marginTop: 28 }]}>Área do Aluno (Depois de Liberado)</Text>
+          <Text style={styles.helperText}>É assim que aparece na aba de Receitas do aluno depois que você libera o acesso:</Text>
+
+          {previewRecipes.length === 0 ? (
+            <Text style={styles.helperText}>Nenhuma receita vinculada a esse produto ainda.</Text>
+          ) : (
+            <View style={styles.previewRecipeList}>
+              {previewRecipes.map((r) => (
+                <View key={r.id} style={styles.previewRecipeRow}>
+                  <View style={styles.previewRecipeThumb}>
+                    <Text style={{ fontSize: 18 }}>🍽️</Text>
+                  </View>
+                  <Text style={styles.previewRecipeTitle}>{r.title}</Text>
+                  <Ionicons name="lock-open-outline" size={16} color="#22c55e" />
+                </View>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    );
+  }
 
   if (managingProduct) {
     const linkedRecipes = recipes.filter((r) => (managingProduct.recipe_ids || []).includes(r.id));
@@ -368,6 +421,9 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                     </View>
                   )}
                   <View style={styles.productActionsRow}>
+                    <TouchableOpacity onPress={() => setPreviewProduct(p)}>
+                      <Text style={styles.previewLink}>👁️ Ver como Aluno</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleOpenManage(p)}>
                       <Text style={styles.manageLink}>📂 Ver Conteúdo</Text>
                     </TouchableOpacity>
@@ -405,7 +461,20 @@ const styles = StyleSheet.create({
   addonTag: { alignSelf: 'flex-start', backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginTop: 10 },
   addonTagText: { color: '#22c55e', fontSize: 9, fontWeight: '800' },
   productActionsRow: { flexDirection: 'row', gap: 16, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  previewLink: { color: '#a855f7', fontSize: 12, fontWeight: '700' },
   manageLink: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
+  previewSectionLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 10 },
+  saleCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 20, alignItems: 'center' },
+  saleIconCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  saleName: { color: '#f5f5f5', fontSize: 17, fontWeight: '800', textAlign: 'center' },
+  saleDescription: { color: '#a3a3a3', fontSize: 12, textAlign: 'center', marginTop: 8, lineHeight: 18 },
+  salePrice: { color: '#f97316', fontSize: 20, fontWeight: '800', marginTop: 14 },
+  saleButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 32, marginTop: 16 },
+  saleButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
+  previewRecipeList: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 8 },
+  previewRecipeRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingHorizontal: 6 },
+  previewRecipeThumb: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
+  previewRecipeTitle: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flex: 1 },
   editLink: { color: '#3b82f6', fontSize: 12, fontWeight: '700' },
   deleteLink: { fontSize: 12, color: '#ef4444', fontWeight: '700' },
   studentGrantRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8 },
