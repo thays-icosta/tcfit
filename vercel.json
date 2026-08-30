@@ -1,8 +1,8 @@
 {
   "buildCommand": "npx expo export -p web",
   "outputDirectory": "dist",
-  "cleanUrls": true,
   "rewrites": [
-    { "source": "/exercicio/:id", "destination": "/exercicio/[id].html" }
+    { "source": "/exercicio/:id", "destination": "/exercicio/[id].html" },
+    { "source": "/bem-vindo", "destination": "/bem-vindo.html" }
   ]
 }
