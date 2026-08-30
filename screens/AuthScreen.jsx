@@ -1,16 +1,16 @@
 ﻿import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, ScrollView, Image, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator, ScrollView, Image, KeyboardAvoidingView, Platform } from 'react-native';
 import { supabase } from './supabaseClient';
 import ForgotPasswordScreen from './ForgotPasswordScreen';
 import { showAlert } from './alertUtils';
 
-export default function AuthScreen({ onAuthenticated, onBack }) {
-  const [mode, setMode] = useState('login');
-  const [role, setRole] = useState('personal');
+export default function AuthScreen({ onAuthenticated, onBack, initialMode, initialRole, initialInviteCode }) {
+  const [mode, setMode] = useState(initialMode === 'signup' ? 'signup' : 'login');
+  const [role, setRole] = useState(initialRole === 'aluno' ? 'aluno' : 'personal');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [inviteCode, setInviteCode] = useState('');
+  const [inviteCode, setInviteCode] = useState(initialInviteCode || '');
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 

@@ -12,7 +12,7 @@ import { supabase } from '../../screens/supabaseClient';
 
 export default function HomeTab() {
   const navigation = useNavigation();
-  const params = useGlobalSearchParams<{ view?: string }>();
+  const params = useGlobalSearchParams<{ view?: string; mode?: string; role?: string; invite?: string }>();
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -100,7 +100,15 @@ export default function HomeTab() {
       return <PlansScreen onBack={() => setAuthView('welcome')} onLogin={() => setAuthView('auth')} />;
     }
     if (authView === 'auth') {
-      return <AuthScreen onAuthenticated={() => {}} onBack={() => setAuthView('welcome')} />;
+      return (
+        <AuthScreen
+          onAuthenticated={() => {}}
+          onBack={() => setAuthView('welcome')}
+          initialMode={params.mode}
+          initialRole={params.role}
+          initialInviteCode={params.invite}
+        />
+      );
     }
     return <WelcomeScreen onExplore={() => setAuthView('plans')} onLogin={() => setAuthView('auth')} />;
   }
