@@ -255,7 +255,7 @@ export default function WeeklyPeriodizationScreen({ studentId, studentName, pers
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : (
-        <ScrollView>
+        <ScrollView style={{ flex: 1 }}>
           <View style={styles.chartCard}>
             <Text style={styles.chartTitle}>Ciclo de treino {plan ? `(${plan.total_weeks} semanas)` : '(últimas 8 semanas)'}</Text>
 

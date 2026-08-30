@@ -101,7 +101,7 @@ export default function PersonalDashboardScreen({ personalId, onClose, onSelectS
       ) : totalStudents === 0 ? (
         <Text style={styles.emptyText}>Convide alunos pra começar a ver estatísticas aqui.</Text>
       ) : (
-        <ScrollView>
+        <ScrollView style={{ flex: 1 }}>
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>{totalStudents}</Text>

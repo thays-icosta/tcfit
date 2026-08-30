@@ -522,7 +522,7 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
             )}
           </TouchableOpacity>
 
-          <ScrollView>
+          <ScrollView style={{ flex: 1 }}>
             {latest && previous && (
               <View style={styles.comparisonCard}>
                 <Text style={styles.comparisonTitle}>Última avaliação vs anterior</Text>

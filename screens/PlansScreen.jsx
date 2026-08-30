@@ -150,7 +150,7 @@ export default function PlansScreen({ onBack, onLogin }) {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
         <Text style={styles.title}>Protocolos & Consultoria</Text>
         <Text style={styles.subtitle}>Escolha o plano ideal pra sua rotina</Text>
 

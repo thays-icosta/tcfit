@@ -167,7 +167,7 @@ export default function VolumeSummaryScreen({ studentId, studentName, onClose })
         {loadingDetail ? (
           <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
         ) : (
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
             <Text style={styles.sectionTitle}>Exercícios</Text>
             {exercises.map((ex) => (
               <View key={ex.name} style={styles.detailExerciseRow}>
@@ -210,7 +210,7 @@ export default function VolumeSummaryScreen({ studentId, studentName, onClose })
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : (
-        <ScrollView>
+        <ScrollView style={{ flex: 1 }}>
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>{period === 'semana' ? `${frequencyDays}/7` : sessionsList.length}</Text>

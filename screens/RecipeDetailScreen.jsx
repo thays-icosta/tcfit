@@ -44,7 +44,7 @@ export default function RecipeDetailScreen({ recipe, studentId, onClose }) {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
         {recipe.photo_url ? (
           <Image source={{ uri: recipe.photo_url }} style={styles.photo} />
         ) : (

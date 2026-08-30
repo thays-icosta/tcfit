@@ -47,7 +47,7 @@ export default function StudentWorkoutHistoryScreen({ studentId, studentName, on
       ) : sessions.length === 0 ? (
         <Text style={styles.emptyText}>Nenhum treino finalizado ainda.</Text>
       ) : (
-        <ScrollView>
+        <ScrollView style={{ flex: 1 }}>
           {sessions.map((s) => {
             const durationMin = s.finished_at
               ? Math.round((new Date(s.finished_at) - new Date(s.started_at)) / 60000)

@@ -118,7 +118,7 @@ export default function ConsultationPlansManagerScreen({ personalId, onClose }) 
           <Text style={styles.title}>{editingId ? 'Editar Plano' : 'Novo Plano'}</Text>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           <Text style={styles.label}>Nome do plano</Text>
           <TextInput style={styles.input} placeholder="ex: Mensal, Trimestral, Semestral, Anual" placeholderTextColor="#525252" value={name} onChangeText={setName} />
 
@@ -174,7 +174,7 @@ export default function ConsultationPlansManagerScreen({ personalId, onClose }) 
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           {plans.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum plano cadastrado ainda.</Text>
           ) : (

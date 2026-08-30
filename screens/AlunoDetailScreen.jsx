@@ -210,7 +210,7 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : (
-        <ScrollView>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }}>
           <Text style={styles.blockLabel}>Último treino</Text>
           {!lastSession ? (
             <Text style={styles.emptyText}>Nenhum treino finalizado ainda.</Text>

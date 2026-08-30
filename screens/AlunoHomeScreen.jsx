@@ -502,7 +502,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
               </ScrollView>
             )}
 
-            <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
               {loadingMeals ? (
                 <ActivityIndicator color="#f97316" style={{ marginTop: 10 }} />
               ) : mealsForActiveDiet.length === 0 ? (
@@ -596,7 +596,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
             </ScrollView>
           </>
         ) : (
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
             <View style={styles.hojeCard}>
               <TouchableOpacity style={styles.hojeHeader} onPress={() => setHojeExpanded(!hojeExpanded)}>
                 <Text style={styles.hojeTitle}>Hoje</Text>

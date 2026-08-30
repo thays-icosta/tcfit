@@ -172,7 +172,7 @@ export default function RecipeManagerScreen({ personalId, onClose }) {
           <Text style={styles.title}>{editingId ? 'Editar Receita' : 'Nova Receita'}</Text>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           <TouchableOpacity style={styles.photoPicker} onPress={handlePickPhoto} disabled={uploadingPhoto}>
             {uploadingPhoto ? (
               <ActivityIndicator color="#f97316" />
@@ -236,7 +236,7 @@ export default function RecipeManagerScreen({ personalId, onClose }) {
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           {recipes.length === 0 ? (
             <Text style={styles.emptyText}>Nenhuma receita cadastrada ainda.</Text>
           ) : (

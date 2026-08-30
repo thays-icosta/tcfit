@@ -89,7 +89,7 @@ export default function RecipesScreen({ studentId, hasFullAccess, onClose }) {
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           {filtered.length === 0 ? (
             <Text style={styles.emptyText}>Nenhuma receita nessa categoria ainda.</Text>
           ) : (

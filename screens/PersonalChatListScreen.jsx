@@ -82,7 +82,7 @@ export default function PersonalChatListScreen({ personalId, onClose }) {
       ) : students.length === 0 ? (
         <Text style={styles.emptyText}>Convide alunos pra começar a trocar mensagens.</Text>
       ) : (
-        <ScrollView>
+        <ScrollView style={{ flex: 1 }}>
           {students.map((s) => (
             <TouchableOpacity key={s.id} style={styles.row} onPress={() => setOpenChatWith(s)}>
               <View style={styles.avatarCircle}>

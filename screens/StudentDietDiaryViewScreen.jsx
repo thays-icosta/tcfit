@@ -86,7 +86,7 @@ export default function StudentDietDiaryViewScreen({ studentId, studentName, onC
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
       ) : (
-        <ScrollView>
+        <ScrollView style={{ flex: 1 }}>
           {goals ? (
             <View style={styles.goalsCard}>
               <GoalBar label="Calorias" consumed={totals.kcal} goal={goals.goal_kcal} unit="kcal" color="#f97316" />

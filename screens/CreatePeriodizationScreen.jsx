@@ -139,7 +139,7 @@ export default function CreatePeriodizationScreen({ studentId, studentName, pers
 
       {studentName && <Text style={styles.studentLabel}>{studentName}</Text>}
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
         <View style={styles.card}>
           <Text style={styles.cardLabel}>Duração total do plano (semanas)</Text>
           <TextInput

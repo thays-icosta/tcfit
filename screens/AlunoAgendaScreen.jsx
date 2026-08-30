@@ -143,7 +143,7 @@ export default function AlunoAgendaScreen({ studentId, onClose }) {
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : (
-        <ScrollView>
+        <ScrollView style={{ flex: 1 }}>
           {remindersReady && !dayFilter && (
             <Text style={styles.reminderHint}>🔔 Você vai receber um lembrete 1 hora antes de cada sessão.</Text>
           )}

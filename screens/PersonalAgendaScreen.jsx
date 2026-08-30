@@ -250,7 +250,7 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : (
-        <ScrollView>
+        <ScrollView style={{ flex: 1 }}>
           <Text style={styles.sectionTitle}>{listTitle}</Text>
 
           {displayList.length === 0 ? (
@@ -310,7 +310,7 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
       <Modal visible={showAddModal} transparent animationType="slide" onRequestClose={() => setShowAddModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
-            <ScrollView>
+            <ScrollView style={{ flex: 1 }}>
               <Text style={styles.modalTitle}>{editingAppointmentId ? 'Editar Agendamento' : 'Novo Agendamento'}</Text>
 
               <Text style={styles.modalLabel}>Aluno</Text>

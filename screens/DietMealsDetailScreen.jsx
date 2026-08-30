@@ -217,7 +217,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
             <Text style={styles.title}>{dietName}</Text>
           </View>
 
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
             {!showAddMealForm ? (
               <TouchableOpacity style={styles.addMealButton} onPress={() => setShowAddMealForm(true)}>
                 <Text style={styles.addMealButtonText}>+ Adicionar Refeição</Text>

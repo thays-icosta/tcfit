@@ -271,7 +271,7 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
             ))}
           </View>
 
-          <ScrollView>
+          <ScrollView style={{ flex: 1 }}>
             {displayList.length === 0 ? (
               <Text style={styles.emptyText}>Nenhuma cobrança nessa categoria.</Text>
             ) : (
@@ -321,7 +321,7 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
       <Modal visible={showAddModal} transparent animationType="slide" onRequestClose={() => setShowAddModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
-            <ScrollView>
+            <ScrollView style={{ flex: 1 }}>
               <Text style={styles.modalTitle}>Nova Cobrança</Text>
 
               {!filterStudentId && (

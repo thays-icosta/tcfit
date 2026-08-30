@@ -187,7 +187,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           <Text style={styles.title}>{managingProduct.name}</Text>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           <Text style={styles.label}>Receitas incluídas</Text>
           {linkedRecipes.length === 0 ? (
             <Text style={styles.helperText}>Nenhuma receita vinculada. Edite o produto pra adicionar.</Text>
@@ -249,7 +249,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           <Text style={styles.title}>{editingId ? 'Editar Produto' : 'Novo Produto'}</Text>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           <Text style={styles.label}>Tipo</Text>
           <View style={styles.typeRow}>
             {TYPES.map((t) => (
@@ -345,7 +345,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           {products.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum produto cadastrado ainda.</Text>
           ) : (
