@@ -72,7 +72,7 @@ export default function PersonalHomeScreen({ user, onLogout }) {
   const loadStudents = async () => {
     const { data, error } = await supabase
       .from('users')
-      .select('id, name, email, avatar_url')
+      .select('id, name, email, avatar_url, access_level')
       .eq('personal_id', user.id)
       .eq('role', 'aluno');
 

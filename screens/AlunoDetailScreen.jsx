@@ -18,10 +18,25 @@ function getRpeTag(pse) {
   return { label: 'Intenso', color: '#ef4444' };
 }
 
+const ACCESS_LEVELS = [
+  { value: 'plataforma_base', label: 'Plataforma Base' },
+  { value: 'consultoria_vip', label: 'Consultoria VIP' },
+];
+
 export default function AlunoDetailScreen({ student, personalId, onClose }) {
   const [lastSession, setLastSession] = useState(null);
   const [diaryTotals, setDiaryTotals] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [accessLevel, setAccessLevel] = useState(student.access_level || 'plataforma_base');
+  const [savingAccessLevel, setSavingAccessLevel] = useState(false);
+
+  const handleChangeAccessLevel = async (level) => {
+    if (level === accessLevel) return;
+    setSavingAccessLevel(true);
+    const { error } = await supabase.from('users').update({ access_level: level }).eq('id', student.id);
+    setSavingAccessLevel(false);
+    if (!error) setAccessLevel(level);
+  };
 
   const [buildingFor, setBuildingFor] = useState(false);
   const [dietBuildingFor, setDietBuildingFor] = useState(false);
@@ -178,6 +193,21 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
         <Text style={styles.studentEmail}>{student.email}</Text>
       </View>
 
+      <View style={styles.accessLevelBox}>
+        <Text style={styles.accessLevelLabel}>Nível de acesso {savingAccessLevel && '(salvando...)'}</Text>
+        <View style={styles.accessLevelRow}>
+          {ACCESS_LEVELS.map((lvl) => (
+            <TouchableOpacity
+              key={lvl.value}
+              style={[styles.accessLevelChip, accessLevel === lvl.value && styles.accessLevelChipActive]}
+              onPress={() => handleChangeAccessLevel(lvl.value)}
+            >
+              <Text style={[styles.accessLevelChipText, accessLevel === lvl.value && styles.accessLevelChipTextActive]}>{lvl.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
       <View style={styles.actionsGrid}>
         <TouchableOpacity style={styles.actionButton} onPress={() => setBuildingFor(true)}>
           <Ionicons name="barbell-outline" size={22} color="#f97316" />
@@ -271,6 +301,13 @@ const styles = StyleSheet.create({
   avatarLetter: { color: '#f97316', fontSize: 26, fontWeight: '800' },
   studentName: { color: '#f5f5f5', fontSize: 19, fontWeight: '800' },
   studentEmail: { color: '#737373', fontSize: 12, marginTop: 2 },
+  accessLevelBox: { marginBottom: 16 },
+  accessLevelLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
+  accessLevelRow: { flexDirection: 'row', gap: 8 },
+  accessLevelChip: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  accessLevelChipActive: { backgroundColor: '#a855f7', borderColor: '#a855f7' },
+  accessLevelChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
+  accessLevelChipTextActive: { color: '#0a0a0a' },
   actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 12 },
   actionButton: { width: '48%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 8 },
   actionLabel: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', marginTop: 6 },

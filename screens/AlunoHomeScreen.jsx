@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, FlatList, ScrollView, Image, Alert, TextInput, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, FlatList, ScrollView, Image, TextInput, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from './supabaseClient';
@@ -9,6 +9,7 @@ import FoodCatalogScreen from './FoodCatalogScreen';
 import AlunoAgendaScreen from './AlunoAgendaScreen';
 import ChatScreen from './ChatScreen';
 import RecipesScreen from './RecipesScreen';
+import AlunoProductsScreen from './AlunoProductsScreen';
 import { showAlert } from './alertUtils';
 
 const MEAL_OPTIONS = [
@@ -66,6 +67,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const [playingWorkout, setPlayingWorkout] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showRecipes, setShowRecipes] = useState(false);
+  const [showProducts, setShowProducts] = useState(false);
   const [addingFoodForMeal, setAddingFoodForMeal] = useState(null);
   const [showMealPicker, setShowMealPicker] = useState(false);
   const [diaryRefreshKey, setDiaryRefreshKey] = useState(0);
@@ -375,6 +377,16 @@ export default function AlunoHomeScreen({ user, onLogout }) {
         studentId={user.id}
         hasFullAccess={studentType === 'consultoria'}
         onClose={() => setShowRecipes(false)}
+      />
+    );
+  }
+
+  if (showProducts) {
+    return (
+      <AlunoProductsScreen
+        studentId={user.id}
+        personalId={personalId}
+        onClose={() => setShowProducts(false)}
       />
     );
   }
@@ -726,7 +738,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={styles.topRow}>
         <TouchableOpacity onPress={() => setShowProfile(true)} style={styles.topRowLeft}>
           <View style={styles.ownAvatarCircle}>
@@ -824,13 +836,17 @@ export default function AlunoHomeScreen({ user, onLogout }) {
           <TouchableOpacity style={styles.recipesBanner} onPress={() => setShowRecipes(true)}>
             <Text style={styles.recipesBannerText}>🍽️ Guia de Receitas Fitness</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity style={styles.productsBanner} onPress={() => setShowProducts(true)}>
+            <Text style={styles.productsBannerText}>🛍️ Conteúdos e Produtos</Text>
+          </TouchableOpacity>
         </>
       )}
 
       <TouchableOpacity style={styles.button} onPress={onLogout}>
         <Text style={styles.buttonText}>Sair</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -867,6 +883,8 @@ const styles = StyleSheet.create({
   gridCardSubtitle: { color: '#737373', fontSize: 10, marginTop: 4, textAlign: 'center' },
   recipesBanner: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 12 },
   recipesBannerText: { color: '#f97316', fontSize: 13, fontWeight: '700' },
+  productsBanner: { backgroundColor: 'rgba(168,85,247,0.12)', borderWidth: 1, borderColor: '#a855f7', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 12 },
+  productsBannerText: { color: '#a855f7', fontSize: 13, fontWeight: '700' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12 },
   button: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 24 },
   buttonText: { color: '#f97316', fontSize: 15, fontWeight: '700' },

@@ -46,6 +46,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [selectedRecipeIds, setSelectedRecipeIds] = useState([]);
   const [coverImageUrl, setCoverImageUrl] = useState(null);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [requiredAccessLevel, setRequiredAccessLevel] = useState(null);
   const [students, setStudents] = useState([]);
   const [grants, setGrants] = useState([]);
   const [loadingGrants, setLoadingGrants] = useState(false);
@@ -85,6 +86,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setActive(true);
     setSelectedRecipeIds([]);
     setCoverImageUrl(null);
+    setRequiredAccessLevel(null);
   };
 
   const handlePickCoverImage = async () => {
@@ -126,6 +128,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setActive(product.active !== false);
     setSelectedRecipeIds(product.recipe_ids || []);
     setCoverImageUrl(product.cover_image_url || null);
+    setRequiredAccessLevel(product.required_access_level || null);
     setShowForm(true);
   };
 
@@ -148,6 +151,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       product_key: type,
       recipe_ids: selectedRecipeIds,
       cover_image_url: coverImageUrl,
+      required_access_level: requiredAccessLevel,
     };
 
     let error;
@@ -409,6 +413,29 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
             </View>
           )}
 
+          <Text style={styles.label}>Nível mínimo de acesso</Text>
+          <Text style={styles.helperText}>Alunos com esse nível (ou o “Consultoria VIP”) já veem esse conteúdo liberado sem precisar de liberação manual. Deixe em “Nenhum” pra liberar só manualmente em “Ver Conteúdo”.</Text>
+          <View style={styles.accessLevelFormRow}>
+            <TouchableOpacity
+              style={[styles.accessLevelFormChip, requiredAccessLevel === null && styles.accessLevelFormChipActive]}
+              onPress={() => setRequiredAccessLevel(null)}
+            >
+              <Text style={[styles.accessLevelFormChipText, requiredAccessLevel === null && styles.accessLevelFormChipTextActive]}>Nenhum</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.accessLevelFormChip, requiredAccessLevel === 'plataforma_base' && styles.accessLevelFormChipActive]}
+              onPress={() => setRequiredAccessLevel('plataforma_base')}
+            >
+              <Text style={[styles.accessLevelFormChipText, requiredAccessLevel === 'plataforma_base' && styles.accessLevelFormChipTextActive]}>Plataforma Base</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.accessLevelFormChip, requiredAccessLevel === 'consultoria_vip' && styles.accessLevelFormChipActive]}
+              onPress={() => setRequiredAccessLevel('consultoria_vip')}
+            >
+              <Text style={[styles.accessLevelFormChipText, requiredAccessLevel === 'consultoria_vip' && styles.accessLevelFormChipTextActive]}>Consultoria VIP</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>Exibir na Vitrine Pública (Landing Page) — aparece como oferta complementar no checkout</Text>
             <Switch value={showAsAddon} onValueChange={setShowAsAddon} trackColor={{ false: '#292524', true: '#22c55e' }} thumbColor="#f5f5f5" />
@@ -575,6 +602,11 @@ const styles = StyleSheet.create({
   deliveryTypeChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', textAlign: 'center' },
   deliveryTypeChipTextActive: { color: '#0a0a0a' },
   helperText: { color: '#525252', fontSize: 11 },
+  accessLevelFormRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  accessLevelFormChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  accessLevelFormChipActive: { backgroundColor: '#a855f7', borderColor: '#a855f7' },
+  accessLevelFormChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
+  accessLevelFormChipTextActive: { color: '#0a0a0a' },
   recipeChecklist: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 8 },
   recipeCheckRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingHorizontal: 6 },
   checkbox: { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: '#292524', alignItems: 'center', justifyContent: 'center' },
