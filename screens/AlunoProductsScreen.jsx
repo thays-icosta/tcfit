@@ -4,14 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import RecipeDetailScreen from './RecipeDetailScreen';
+import { hasAccessByLevel } from './accessLevel';
 
 const WHATSAPP_NUMBER = '5537998231382';
-
-function hasAccessByLevel(myLevel, requiredLevel) {
-  if (!requiredLevel) return false;
-  if (requiredLevel === 'plataforma_base') return true;
-  return myLevel === 'consultoria_vip';
-}
 
 export default function AlunoProductsScreen({ studentId, personalId, onClose }) {
   const [products, setProducts] = useState([]);

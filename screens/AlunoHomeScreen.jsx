@@ -10,7 +10,10 @@ import AlunoAgendaScreen from './AlunoAgendaScreen';
 import ChatScreen from './ChatScreen';
 import RecipesScreen from './RecipesScreen';
 import AlunoProductsScreen from './AlunoProductsScreen';
+import AlunoDownloadsScreen from './AlunoDownloadsScreen';
+import AlunoTabBar from './AlunoTabBar';
 import { showAlert } from './alertUtils';
+import { hasAccessByLevel, HOME_CATEGORIES } from './accessLevel';
 
 const MEAL_OPTIONS = [
   { value: 'cafe', label: 'Café da manhã' },
@@ -65,7 +68,6 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const [nextDuePayment, setNextDuePayment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [playingWorkout, setPlayingWorkout] = useState(null);
-  const [showProfile, setShowProfile] = useState(false);
   const [showRecipes, setShowRecipes] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
   const [addingFoodForMeal, setAddingFoodForMeal] = useState(null);
@@ -76,6 +78,9 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const [partnerBrands, setPartnerBrands] = useState([]);
   const [showPartnersSection, setShowPartnersSection] = useState(false);
   const [copiedCouponId, setCopiedCouponId] = useState(null);
+  const [activeTab, setActiveTab] = useState('inicio');
+  const [categorizedProducts, setCategorizedProducts] = useState([]);
+  const [unlockedProductIds, setUnlockedProductIds] = useState(new Set());
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -104,7 +109,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const loadData = async () => {
     const { data: myRow } = await supabase
       .from('users')
-      .select('personal_id, avatar_url, student_type')
+      .select('personal_id, avatar_url, student_type, access_level')
       .eq('id', user.id)
       .single();
 
@@ -132,6 +137,19 @@ export default function AlunoHomeScreen({ user, onLogout }) {
         .eq('active', true)
         .order('created_at', { ascending: false });
       setPartnerBrands(brandRows || []);
+
+      const [{ data: productRows }, { data: grantRows }] = await Promise.all([
+        supabase.from('products').select('*').eq('personal_id', myRow.personal_id).eq('active', true).not('category', 'is', null),
+        supabase.from('product_grants').select('product_id').eq('student_id', user.id),
+      ]);
+      const level = myRow?.access_level || 'plataforma_base';
+      const grantedIds = new Set((grantRows || []).map((g) => g.product_id));
+      const unlocked = new Set();
+      (productRows || []).forEach((p) => {
+        if (grantedIds.has(p.id) || hasAccessByLevel(level, p.required_access_level)) unlocked.add(p.id);
+      });
+      setUnlockedProductIds(unlocked);
+      setCategorizedProducts(productRows || []);
     }
 
     const { data: workoutRows } = await supabase
@@ -336,7 +354,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
 
   const handleOpenChatFor = (message) => {
     setChatPrefill(message || '');
-    setMode('chat');
+    setActiveTab('comunidade');
   };
 
   const handleRealizarPagamento = async () => {
@@ -381,19 +399,6 @@ export default function AlunoHomeScreen({ user, onLogout }) {
     );
   }
 
-  if (showProfile) {
-    return (
-      <AlunoProfileScreen
-        user={user}
-        onLogout={onLogout}
-        onClose={() => {
-          setShowProfile(false);
-          loadData();
-        }}
-      />
-    );
-  }
-
   if (showRecipes) {
     return (
       <RecipesScreen
@@ -410,27 +415,6 @@ export default function AlunoHomeScreen({ user, onLogout }) {
         studentId={user.id}
         personalId={personalId}
         onClose={() => setShowProducts(false)}
-      />
-    );
-  }
-
-  if (mode === 'agenda') {
-    return <AlunoAgendaScreen studentId={user.id} onClose={() => setMode(null)} />;
-  }
-
-  if (mode === 'chat' && personalId) {
-    return (
-      <ChatScreen
-        personalId={personalId}
-        studentId={user.id}
-        currentUserId={user.id}
-        otherName={personalName}
-        otherAvatarUrl={personalAvatarUrl}
-        initialMessage={chatPrefill}
-        onClose={() => {
-          setMode(null);
-          setChatPrefill('');
-        }}
       />
     );
   }
@@ -760,10 +744,79 @@ export default function AlunoHomeScreen({ user, onLogout }) {
     );
   }
 
+  if (activeTab === 'planner') {
+    return (
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <AlunoAgendaScreen studentId={user.id} onClose={() => setActiveTab('inicio')} />
+        </View>
+        <AlunoTabBar activeTab={activeTab} onChange={setActiveTab} />
+      </View>
+    );
+  }
+
+  if (activeTab === 'downloads') {
+    return (
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <AlunoDownloadsScreen studentId={user.id} personalId={personalId} />
+        </View>
+        <AlunoTabBar activeTab={activeTab} onChange={setActiveTab} />
+      </View>
+    );
+  }
+
+  if (activeTab === 'comunidade') {
+    return (
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          {personalId ? (
+            <ChatScreen
+              personalId={personalId}
+              studentId={user.id}
+              currentUserId={user.id}
+              otherName={personalName}
+              otherAvatarUrl={personalAvatarUrl}
+              initialMessage={chatPrefill}
+              onClose={() => {
+                setActiveTab('inicio');
+                setChatPrefill('');
+              }}
+            />
+          ) : (
+            <View style={styles.container}>
+              <Text style={styles.emptyText}>Você ainda não tem um personal vinculado.</Text>
+            </View>
+          )}
+        </View>
+        <AlunoTabBar activeTab={activeTab} onChange={setActiveTab} />
+      </View>
+    );
+  }
+
+  if (activeTab === 'perfil') {
+    return (
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <AlunoProfileScreen
+            user={user}
+            onLogout={onLogout}
+            onClose={() => {
+              setActiveTab('inicio');
+              loadData();
+            }}
+          />
+        </View>
+        <AlunoTabBar activeTab={activeTab} onChange={setActiveTab} />
+      </View>
+    );
+  }
+
   return (
+    <View style={{ flex: 1 }}>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={styles.topRow}>
-        <TouchableOpacity onPress={() => setShowProfile(true)} style={styles.topRowLeft}>
+        <TouchableOpacity onPress={() => setActiveTab('perfil')} style={styles.topRowLeft}>
           <View style={styles.ownAvatarCircle}>
             {ownAvatarUrl ? (
               <Image key={ownAvatarUrl} source={{ uri: ownAvatarUrl }} style={styles.ownAvatarImage} resizeMode="cover" />
@@ -776,8 +829,8 @@ export default function AlunoHomeScreen({ user, onLogout }) {
             <Text style={styles.greeting}>Olá, {user?.name}!</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => handleOpenChatFor('')}>
-          <Ionicons name="calendar-outline" size={20} color="#a3a3a3" onPress={() => setMode('agenda')} />
+        <TouchableOpacity style={styles.iconButton} onPress={() => setActiveTab('comunidade')}>
+          <Ionicons name="chatbubbles-outline" size={20} color="#a3a3a3" />
         </TouchableOpacity>
       </View>
 
@@ -864,6 +917,40 @@ export default function AlunoHomeScreen({ user, onLogout }) {
             <Text style={styles.productsBannerText}>🛍️ Conteúdos e Produtos</Text>
           </TouchableOpacity>
 
+          {HOME_CATEGORIES.map((cat) => {
+            const items = categorizedProducts.filter((p) => p.category === cat.value);
+            if (items.length === 0) return null;
+            return (
+              <View key={cat.value} style={styles.partnersSection}>
+                <Text style={styles.sectionTitle}>{cat.label}</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+                  {items.map((p) => {
+                    const unlocked = unlockedProductIds.has(p.id);
+                    return (
+                      <TouchableOpacity key={p.id} style={styles.categoryCard} onPress={() => setShowProducts(true)}>
+                        <View style={styles.categoryCoverWrap}>
+                          {p.cover_image_url ? (
+                            <Image source={{ uri: p.cover_image_url }} style={styles.categoryCoverImage} resizeMode="cover" />
+                          ) : (
+                            <View style={styles.categoryCoverPlaceholder}>
+                              <Ionicons name={p.type === 'treino_template' ? 'barbell-outline' : 'book-outline'} size={22} color="#f97316" />
+                            </View>
+                          )}
+                          {!unlocked && (
+                            <View style={styles.categoryLockOverlay}>
+                              <Ionicons name="lock-closed" size={16} color="#f5f5f5" />
+                            </View>
+                          )}
+                        </View>
+                        <Text style={styles.categoryCardName} numberOfLines={2}>{p.name}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            );
+          })}
+
           {showPartnersSection && partnerBrands.length > 0 && (
             <View style={styles.partnersSection}>
               <Text style={styles.sectionTitle}>Marcas Parceiras</Text>
@@ -902,6 +989,8 @@ export default function AlunoHomeScreen({ user, onLogout }) {
         <Text style={styles.buttonText}>Sair</Text>
       </TouchableOpacity>
     </ScrollView>
+    <AlunoTabBar activeTab={activeTab} onChange={setActiveTab} />
+    </View>
   );
 }
 
@@ -941,6 +1030,12 @@ const styles = StyleSheet.create({
   productsBanner: { backgroundColor: 'rgba(168,85,247,0.12)', borderWidth: 1, borderColor: '#a855f7', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 12 },
   productsBannerText: { color: '#a855f7', fontSize: 13, fontWeight: '700' },
   partnersSection: { marginTop: 20 },
+  categoryCard: { width: 100 },
+  categoryCoverWrap: { width: 100, height: 80, borderRadius: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', overflow: 'hidden', marginBottom: 6, position: 'relative' },
+  categoryCoverImage: { width: '100%', height: '100%' },
+  categoryCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  categoryLockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
+  categoryCardName: { color: '#f5f5f5', fontSize: 11, fontWeight: '600' },
   partnerCard: { width: 130, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 12, alignItems: 'center' },
   partnerLogoWrap: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 8 },
   partnerLogoImage: { width: '100%', height: '100%' },

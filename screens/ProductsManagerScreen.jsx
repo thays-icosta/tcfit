@@ -6,6 +6,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
+import { HOME_CATEGORIES } from './accessLevel';
 
 const TYPES = [
   { value: 'ebook_receitas', label: 'Guia de Receitas / E-book', icon: 'book-outline' },
@@ -50,6 +51,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [requiredAccessLevel, setRequiredAccessLevel] = useState(null);
+  const [category, setCategory] = useState(null);
   const [students, setStudents] = useState([]);
   const [grants, setGrants] = useState([]);
   const [loadingGrants, setLoadingGrants] = useState(false);
@@ -99,6 +101,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setCoverImageUrl(null);
     setRequiredAccessLevel(null);
     setSelectedTemplateId(null);
+    setCategory(null);
   };
 
   const handlePickCoverImage = async () => {
@@ -163,6 +166,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setCoverImageUrl(product.cover_image_url || null);
     setRequiredAccessLevel(product.required_access_level || null);
     setSelectedTemplateId(product.template_id || null);
+    setCategory(product.category || null);
     setShowForm(true);
   };
 
@@ -191,6 +195,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       cover_image_url: coverImageUrl,
       required_access_level: requiredAccessLevel,
       template_id: type === 'treino_template' ? selectedTemplateId : null,
+      category,
     };
 
     let error;
@@ -546,6 +551,26 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
             >
               <Text style={[styles.accessLevelFormChipText, requiredAccessLevel === 'consultoria_vip' && styles.accessLevelFormChipTextActive]}>Consultoria VIP</Text>
             </TouchableOpacity>
+          </View>
+
+          <Text style={styles.label}>Categoria na Home do Aluno</Text>
+          <Text style={styles.helperText}>Define em qual seção esse produto aparece na tela inicial do aluno.</Text>
+          <View style={styles.accessLevelFormRow}>
+            <TouchableOpacity
+              style={[styles.accessLevelFormChip, category === null && styles.accessLevelFormChipActive]}
+              onPress={() => setCategory(null)}
+            >
+              <Text style={[styles.accessLevelFormChipText, category === null && styles.accessLevelFormChipTextActive]}>Sem categoria</Text>
+            </TouchableOpacity>
+            {HOME_CATEGORIES.map((c) => (
+              <TouchableOpacity
+                key={c.value}
+                style={[styles.accessLevelFormChip, category === c.value && styles.accessLevelFormChipActive]}
+                onPress={() => setCategory(c.value)}
+              >
+                <Text style={[styles.accessLevelFormChipText, category === c.value && styles.accessLevelFormChipTextActive]}>{c.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
           <View style={styles.switchRow}>
