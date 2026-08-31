@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, Share, Modal, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Share, Modal, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from './supabaseClient';
@@ -200,7 +200,7 @@ export default function PersonalHomeScreen({ user, onLogout }) {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => setShowProfile(true)}>
@@ -288,43 +288,38 @@ export default function PersonalHomeScreen({ user, onLogout }) {
       ) : students.length === 0 ? (
         <Text style={styles.emptyText}>Nenhum aluno ainda. Toque em "+ Convidar Aluno" pra começar.</Text>
       ) : (
-        <FlatList
-          data={students}
-          keyExtractor={(item) => item.id}
-          style={{ width: '100%' }}
-          renderItem={({ item }) => {
-            const done = completedToday[item.id];
-            const daysSince = daysSinceLastTrained[item.id];
-            const showAlert = !done && (daysSince === null || daysSince >= 3);
-            return (
-              <TouchableOpacity style={styles.studentCard} onPress={() => setDetailFor(item)}>
-                <View style={styles.avatarCircle}>
-                  {item.avatar_url ? (
-                    <Image source={{ uri: item.avatar_url }} style={styles.avatarImage} />
-                  ) : (
-                    <Text style={styles.avatarLetter}>{item.name?.charAt(0).toUpperCase() || '?'}</Text>
-                  )}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.studentName}>{item.name}</Text>
-                  <Text style={styles.studentEmail}>{item.email}</Text>
-                </View>
-                <View style={styles.statusTag}>
-                  <View style={[styles.statusDot, done ? styles.statusDotDone : styles.statusDotPending]} />
-                  <Text style={styles.statusTagText}>{done ? 'Treinou hoje' : 'Ainda não treinou'}</Text>
-                  {showAlert && (
-                    <View style={styles.alertTag}>
-                      <Text style={styles.alertTagText}>
-                        {daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </TouchableOpacity>
-            );
-          }}
-        />
+        students.map((item) => {
+          const done = completedToday[item.id];
+          const daysSince = daysSinceLastTrained[item.id];
+          const showAlert = !done && (daysSince === null || daysSince >= 3);
+          return (
+            <TouchableOpacity key={item.id} style={styles.studentCard} onPress={() => setDetailFor(item)}>
+              <View style={styles.avatarCircle}>
+                {item.avatar_url ? (
+                  <Image source={{ uri: item.avatar_url }} style={styles.avatarImage} />
+                ) : (
+                  <Text style={styles.avatarLetter}>{item.name?.charAt(0).toUpperCase() || '?'}</Text>
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.studentName}>{item.name}</Text>
+                <Text style={styles.studentEmail}>{item.email}</Text>
+              </View>
+              <View style={styles.statusTag}>
+                <View style={[styles.statusDot, done ? styles.statusDotDone : styles.statusDotPending]} />
+                <Text style={styles.statusTagText}>{done ? 'Treinou hoje' : 'Ainda não treinou'}</Text>
+                {showAlert && (
+                  <View style={styles.alertTag}>
+                    <Text style={styles.alertTagText}>
+                      {daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </TouchableOpacity>
+          );
+        })
       )}
 
       <TouchableOpacity style={styles.button} onPress={onLogout}>
@@ -351,7 +346,7 @@ export default function PersonalHomeScreen({ user, onLogout }) {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 

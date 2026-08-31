@@ -425,6 +425,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
           <FlatList
             data={workouts}
             keyExtractor={(item) => item.id}
+            style={{ flex: 1 }}
             contentContainerStyle={{ paddingHorizontal: 16 }}
             renderItem={({ item }) => {
               const done = completedToday[item.id];

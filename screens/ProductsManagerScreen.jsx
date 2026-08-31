@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Switch, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 
@@ -13,6 +15,14 @@ const TYPES = [
 
 function typeMeta(value) {
   return TYPES.find((t) => t.value === value) || TYPES[3];
+}
+
+function uuidv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 export default function ProductsManagerScreen({ personalId, onClose }) {
@@ -34,6 +44,8 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [showAsAddon, setShowAsAddon] = useState(false);
   const [active, setActive] = useState(true);
   const [selectedRecipeIds, setSelectedRecipeIds] = useState([]);
+  const [coverImageUrl, setCoverImageUrl] = useState(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [students, setStudents] = useState([]);
   const [grants, setGrants] = useState([]);
   const [loadingGrants, setLoadingGrants] = useState(false);
@@ -72,6 +84,29 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setShowAsAddon(false);
     setActive(true);
     setSelectedRecipeIds([]);
+    setCoverImageUrl(null);
+  };
+
+  const handlePickCoverImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      showAlert('Permissão necessária', 'Autorize o acesso às fotos.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.6, base64: true });
+    if (result.canceled || !result.assets?.[0]?.base64) return;
+
+    setUploadingCover(true);
+    try {
+      const fileName = `${uuidv4()}.jpg`;
+      const { error } = await supabase.storage.from('product-covers').upload(fileName, decode(result.assets[0].base64), { contentType: 'image/jpeg' });
+      if (error) throw error;
+      const { data } = supabase.storage.from('product-covers').getPublicUrl(fileName);
+      setCoverImageUrl(data.publicUrl);
+    } catch {
+      showAlert('Não deu pra enviar a capa', 'Sem problema, você pode salvar o produto sem foto e adicionar depois.');
+    }
+    setUploadingCover(false);
   };
 
   const handleOpenNew = () => {
@@ -90,6 +125,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setShowAsAddon(product.show_as_addon || false);
     setActive(product.active !== false);
     setSelectedRecipeIds(product.recipe_ids || []);
+    setCoverImageUrl(product.cover_image_url || null);
     setShowForm(true);
   };
 
@@ -111,6 +147,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       active,
       product_key: type,
       recipe_ids: selectedRecipeIds,
+      cover_image_url: coverImageUrl,
     };
 
     let error;
@@ -303,6 +340,16 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
         </View>
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+          <TouchableOpacity style={styles.coverPicker} onPress={handlePickCoverImage} disabled={uploadingCover}>
+            {uploadingCover ? (
+              <ActivityIndicator color="#f97316" />
+            ) : coverImageUrl ? (
+              <Image source={{ uri: coverImageUrl }} style={styles.coverPreview} resizeMode="cover" />
+            ) : (
+              <Text style={styles.coverPickerText}>📷 Adicionar foto de capa</Text>
+            )}
+          </TouchableOpacity>
+
           <Text style={styles.label}>Tipo</Text>
           <View style={styles.typeRow}>
             {TYPES.map((t) => (
@@ -402,43 +449,54 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           {products.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum produto cadastrado ainda.</Text>
           ) : (
-            products.map((p) => {
-              const meta = typeMeta(p.type);
-              return (
-                <View key={p.id} style={styles.productCard}>
-                  <View style={styles.productCardTop}>
-                    <View style={styles.productIconCircle}>
-                      <Ionicons name={meta.icon} size={18} color="#f97316" />
+            <View style={styles.productGrid}>
+              {products.map((p) => {
+                const meta = typeMeta(p.type);
+                return (
+                  <View key={p.id} style={styles.productGridCard}>
+                    <View style={styles.productCoverWrap}>
+                      {p.cover_image_url ? (
+                        <Image source={{ uri: p.cover_image_url }} style={styles.productCoverImage} resizeMode="cover" />
+                      ) : (
+                        <View style={styles.productCoverPlaceholder}>
+                          <Ionicons name={meta.icon} size={28} color="#f97316" />
+                        </View>
+                      )}
+                      {p.show_as_addon && (
+                        <View style={styles.addonTagOverlay}>
+                          <Text style={styles.addonTagText}>UPSELL</Text>
+                        </View>
+                      )}
+                      {!p.active && (
+                        <View style={styles.inactiveOverlay}>
+                          <Text style={styles.inactiveOverlayText}>INATIVO</Text>
+                        </View>
+                      )}
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.productName}>{p.name}{!p.active ? ' (inativo)' : ''}</Text>
-                      <Text style={styles.productMeta}>{meta.label} · {p.price != null ? `R$ ${Number(p.price).toFixed(2)}` : 'Consulte'}</Text>
+
+                    <View style={styles.productGridInfo}>
+                      <Text style={styles.productGridName} numberOfLines={2}>{p.name}</Text>
+                      <Text style={styles.productGridPrice}>{p.price != null ? `R$ ${Number(p.price).toFixed(2)}` : 'Consulte'}</Text>
+
+                      <View style={styles.productGridActions}>
+                        <TouchableOpacity hitSlop={6} onPress={() => setPreviewProduct(p)}>
+                          <Ionicons name="eye-outline" size={18} color="#a855f7" />
+                        </TouchableOpacity>
+                        <TouchableOpacity hitSlop={6} onPress={() => handleOpenManage(p)}>
+                          <Ionicons name="folder-outline" size={18} color="#22c55e" />
+                        </TouchableOpacity>
+                        <TouchableOpacity hitSlop={6} onPress={() => handleOpenEdit(p)}>
+                          <Ionicons name="create-outline" size={18} color="#3b82f6" />
+                        </TouchableOpacity>
+                        <TouchableOpacity hitSlop={6} onPress={() => handleDelete(p.id)}>
+                          <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </View>
-                  {p.show_as_addon && (
-                    <View style={styles.addonTag}>
-                      <Text style={styles.addonTagText}>UPSELL ATIVO</Text>
-                    </View>
-                  )}
-                  <View style={styles.productActionsPrimaryRow}>
-                    <TouchableOpacity style={styles.productActionChip} onPress={() => setPreviewProduct(p)}>
-                      <Text style={styles.previewLink}>👁️ Ver como Aluno</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.productActionChip} onPress={() => handleOpenManage(p)}>
-                      <Text style={styles.manageLink}>📂 Ver Conteúdo</Text>
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.productActionsRow}>
-                    <TouchableOpacity onPress={() => handleOpenEdit(p)}>
-                      <Text style={styles.editLink}>Editar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDelete(p.id)}>
-                      <Text style={styles.deleteLink}>🗑️ Excluir</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })
+                );
+              })}
+            </View>
           )}
         </ScrollView>
       )}
@@ -461,12 +519,24 @@ const styles = StyleSheet.create({
   productName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
   productMeta: { color: '#737373', fontSize: 10, marginTop: 2 },
   addonTag: { alignSelf: 'flex-start', backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginTop: 10 },
-  addonTagText: { color: '#22c55e', fontSize: 9, fontWeight: '800' },
+  addonTagText: { color: '#0a0a0a', fontSize: 9, fontWeight: '800' },
   productActionsPrimaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
   productActionChip: { backgroundColor: '#0a0a0a', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   productActionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 10 },
   previewLink: { color: '#a855f7', fontSize: 12, fontWeight: '700' },
   manageLink: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
+  productGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  productGridCard: { width: '47%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, overflow: 'hidden' },
+  productCoverWrap: { width: '100%', height: 100, backgroundColor: '#0a0a0a', position: 'relative' },
+  productCoverImage: { width: '100%', height: '100%' },
+  productCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  addonTagOverlay: { position: 'absolute', top: 8, left: 8, backgroundColor: 'rgba(34,197,94,0.9)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  inactiveOverlay: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.75)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  inactiveOverlayText: { color: '#a3a3a3', fontSize: 8, fontWeight: '800' },
+  productGridInfo: { padding: 10 },
+  productGridName: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', minHeight: 32 },
+  productGridPrice: { color: '#f97316', fontSize: 15, fontWeight: '800', marginTop: 6 },
+  productGridActions: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
   previewSectionLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 10 },
   saleCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 20, alignItems: 'center' },
   saleIconCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
@@ -486,6 +556,9 @@ const styles = StyleSheet.create({
   grantLink: { color: '#f97316', fontSize: 12, fontWeight: '700' },
   revokeLink: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 14 },
+  coverPicker: { height: 140, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 6, overflow: 'hidden' },
+  coverPreview: { width: '100%', height: '100%' },
+  coverPickerText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
   typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   typeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
   typeChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },

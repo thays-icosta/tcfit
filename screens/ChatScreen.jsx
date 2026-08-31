@@ -108,6 +108,7 @@ export default function ChatScreen({ personalId, studentId, currentUserId, other
           ref={listRef}
           data={messages}
           keyExtractor={(item) => item.id}
+          style={{ flex: 1 }}
           contentContainerStyle={{ padding: 16 }}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
           ListEmptyComponent={<Text style={styles.emptyText}>Nenhuma mensagem ainda. Diga oi! 👋</Text>}
