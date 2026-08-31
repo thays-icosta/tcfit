@@ -8,6 +8,7 @@ import PlanPricesScreen from './PlanPricesScreen';
 import RecipeManagerScreen from './RecipeManagerScreen';
 import TemplateBuilderScreen from './TemplateBuilderScreen';
 import ProductsManagerScreen from './ProductsManagerScreen';
+import PartnerBrandsManagerScreen from './PartnerBrandsManagerScreen';
 import { showAlert } from './alertUtils';
 
 const BRAND_COLOR_PRESETS = ['#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ef4444', '#eab308', '#ec4899', '#14b8a6'];
@@ -24,6 +25,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
   const [showRecipeManager, setShowRecipeManager] = useState(false);
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
   const [showProductsManager, setShowProductsManager] = useState(false);
+  const [showPartnerBrands, setShowPartnerBrands] = useState(false);
   const [studentCount, setStudentCount] = useState(0);
 
   const [brandingExpanded, setBrandingExpanded] = useState(true);
@@ -238,6 +240,10 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
     return <ProductsManagerScreen personalId={user.id} onClose={() => setShowProductsManager(false)} />;
   }
 
+  if (showPartnerBrands) {
+    return <PartnerBrandsManagerScreen personalId={user.id} onClose={() => setShowPartnerBrands(false)} />;
+  }
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -315,6 +321,13 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
             <Ionicons name="restaurant-outline" size={22} color="#f97316" />
           </View>
           <Text style={styles.shortcutText}>Gerenciar Receitas</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowPartnerBrands(true)}>
+          <View style={styles.shortcutIconCircle}>
+            <Ionicons name="pricetags-outline" size={22} color="#f97316" />
+          </View>
+          <Text style={styles.shortcutText}>Marcas Parceiras</Text>
         </TouchableOpacity>
       </View>
 

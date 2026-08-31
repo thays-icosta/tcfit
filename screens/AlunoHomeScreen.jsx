@@ -73,6 +73,9 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const [diaryRefreshKey, setDiaryRefreshKey] = useState(0);
   const [registeringKey, setRegisteringKey] = useState(null);
   const [pixCopied, setPixCopied] = useState(false);
+  const [partnerBrands, setPartnerBrands] = useState([]);
+  const [showPartnersSection, setShowPartnersSection] = useState(false);
+  const [copiedCouponId, setCopiedCouponId] = useState(null);
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -112,7 +115,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
     if (myRow?.personal_id) {
       const { data: personalRow } = await supabase
         .from('users')
-        .select('name, avatar_url, phone, pix_key, payment_link')
+        .select('name, avatar_url, phone, pix_key, payment_link, show_partners_section')
         .eq('id', myRow.personal_id)
         .single();
       setPersonalName(personalRow?.name || null);
@@ -120,6 +123,15 @@ export default function AlunoHomeScreen({ user, onLogout }) {
       setPersonalPhone(personalRow?.phone || null);
       setPersonalPixKey(personalRow?.pix_key || null);
       setPersonalPaymentLink(personalRow?.payment_link || null);
+      setShowPartnersSection(personalRow?.show_partners_section !== false);
+
+      const { data: brandRows } = await supabase
+        .from('partner_brands')
+        .select('id, name, logo_url, coupon_code, affiliate_link')
+        .eq('personal_id', myRow.personal_id)
+        .eq('active', true)
+        .order('created_at', { ascending: false });
+      setPartnerBrands(brandRows || []);
     }
 
     const { data: workoutRows } = await supabase
@@ -309,6 +321,17 @@ export default function AlunoHomeScreen({ user, onLogout }) {
     setPixCopied(true);
     showAlert('Copiado!', 'Chave Pix copiada com sucesso!');
     setTimeout(() => setPixCopied(false), 2500);
+  };
+
+  const handleCopyCoupon = async (brand) => {
+    if (brand.coupon_code) {
+      await Clipboard.setStringAsync(brand.coupon_code);
+      setCopiedCouponId(brand.id);
+      setTimeout(() => setCopiedCouponId((prev) => (prev === brand.id ? null : prev)), 2500);
+    }
+    if (brand.affiliate_link) {
+      Linking.openURL(brand.affiliate_link).catch(() => {});
+    }
   };
 
   const handleOpenChatFor = (message) => {
@@ -840,6 +863,38 @@ export default function AlunoHomeScreen({ user, onLogout }) {
           <TouchableOpacity style={styles.productsBanner} onPress={() => setShowProducts(true)}>
             <Text style={styles.productsBannerText}>🛍️ Conteúdos e Produtos</Text>
           </TouchableOpacity>
+
+          {showPartnersSection && partnerBrands.length > 0 && (
+            <View style={styles.partnersSection}>
+              <Text style={styles.sectionTitle}>Marcas Parceiras</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+                {partnerBrands.map((b) => (
+                  <View key={b.id} style={styles.partnerCard}>
+                    <View style={styles.partnerLogoWrap}>
+                      {b.logo_url ? (
+                        <Image source={{ uri: b.logo_url }} style={styles.partnerLogoImage} resizeMode="contain" />
+                      ) : (
+                        <Ionicons name="pricetag-outline" size={20} color="#f97316" />
+                      )}
+                    </View>
+                    <Text style={styles.partnerName} numberOfLines={1}>{b.name}</Text>
+                    {b.coupon_code ? (
+                      <TouchableOpacity style={styles.partnerCouponButton} onPress={() => handleCopyCoupon(b)}>
+                        <Ionicons name={copiedCouponId === b.id ? 'checkmark-outline' : 'copy-outline'} size={12} color="#f97316" />
+                        <Text style={styles.partnerCouponButtonText}>
+                          {copiedCouponId === b.id ? 'Copiado!' : b.coupon_code}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : b.affiliate_link ? (
+                      <TouchableOpacity style={styles.partnerCouponButton} onPress={() => handleCopyCoupon(b)}>
+                        <Text style={styles.partnerCouponButtonText}>Ver oferta</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
         </>
       )}
 
@@ -885,6 +940,13 @@ const styles = StyleSheet.create({
   recipesBannerText: { color: '#f97316', fontSize: 13, fontWeight: '700' },
   productsBanner: { backgroundColor: 'rgba(168,85,247,0.12)', borderWidth: 1, borderColor: '#a855f7', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 12 },
   productsBannerText: { color: '#a855f7', fontSize: 13, fontWeight: '700' },
+  partnersSection: { marginTop: 20 },
+  partnerCard: { width: 130, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 12, alignItems: 'center' },
+  partnerLogoWrap: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 8 },
+  partnerLogoImage: { width: '100%', height: '100%' },
+  partnerName: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', marginBottom: 8, textAlign: 'center' },
+  partnerCouponButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(249,115,22,0.12)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 6 },
+  partnerCouponButtonText: { color: '#f97316', fontSize: 10, fontWeight: '800' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12 },
   button: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 24 },
   buttonText: { color: '#f97316', fontSize: 15, fontWeight: '700' },
