@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Image, Linking, Modal, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
-import { showAlert } from './alertUtils';
 import RecipeDetailScreen from './RecipeDetailScreen';
+import ProgramDetailScreen from './ProgramDetailScreen';
 import { hasAccessByLevel } from './accessLevel';
 
 const WHATSAPP_NUMBER = '5537998231382';
@@ -11,28 +11,24 @@ const WHATSAPP_NUMBER = '5537998231382';
 export default function AlunoProductsScreen({ studentId, personalId, onClose }) {
   const [products, setProducts] = useState([]);
   const [recipes, setRecipes] = useState([]);
-  const [templates, setTemplates] = useState([]);
-  const [addedWorkoutProductIds, setAddedWorkoutProductIds] = useState(new Set());
   const [unlockedProductIds, setUnlockedProductIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
-  const [addingWorkout, setAddingWorkout] = useState(false);
+  const [openProgram, setOpenProgram] = useState(null);
 
   useEffect(() => {
     (async () => {
-      const [{ data: myRow }, { data: productRows }, { data: grantRows }, { data: existingWorkouts }] = await Promise.all([
+      const [{ data: myRow }, { data: productRows }, { data: grantRows }] = await Promise.all([
         supabase.from('users').select('access_level').eq('id', studentId).single(),
         personalId
           ? supabase.from('products').select('*').eq('personal_id', personalId).eq('active', true).order('created_at', { ascending: false })
           : Promise.resolve({ data: [] }),
         supabase.from('product_grants').select('product_id').eq('student_id', studentId),
-        supabase.from('workouts').select('product_id').eq('student_id', studentId).not('product_id', 'is', null),
       ]);
 
       const level = myRow?.access_level || 'plataforma_base';
       setProducts(productRows || []);
-      setAddedWorkoutProductIds(new Set((existingWorkouts || []).map((w) => w.product_id)));
 
       const grantedIds = new Set((grantRows || []).map((g) => g.product_id));
       const unlocked = new Set();
@@ -42,12 +38,8 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
       setUnlockedProductIds(unlocked);
 
       if (personalId) {
-        const [{ data: recipeRows }, { data: templateRows }] = await Promise.all([
-          supabase.from('recipes').select('id, title').eq('personal_id', personalId),
-          supabase.from('workout_templates').select('id, name').eq('personal_id', personalId),
-        ]);
+        const { data: recipeRows } = await supabase.from('recipes').select('id, title').eq('personal_id', personalId);
         setRecipes(recipeRows || []);
-        setTemplates(templateRows || []);
       }
 
       setLoading(false);
@@ -59,39 +51,20 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
     Linking.openURL(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`).catch(() => {});
   };
 
-  const handleAddWorkoutFromTemplate = async (product) => {
-    if (!product.template_id || addedWorkoutProductIds.has(product.id)) return;
-    setAddingWorkout(true);
-    try {
-      const { data: templateItems } = await supabase
-        .from('workout_template_exercises')
-        .select('exercise_id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes')
-        .eq('template_id', product.template_id);
-
-      const templateName = templates.find((t) => t.id === product.template_id)?.name || product.name;
-      const { data: newWorkout, error } = await supabase
-        .from('workouts')
-        .insert({ student_id: studentId, personal_id: personalId, name: templateName, active: true, product_id: product.id })
-        .select()
-        .single();
-
-      if (error || !newWorkout) throw error || new Error('no workout');
-
-      if (templateItems && templateItems.length > 0) {
-        const copies = templateItems.map((it) => ({ ...it, workout_id: newWorkout.id }));
-        await supabase.from('workout_exercises').insert(copies);
-      }
-
-      setAddedWorkoutProductIds((prev) => new Set(prev).add(product.id));
-      showAlert('Ficha adicionada!', 'Confira na aba de Treinos.');
-    } catch {
-      showAlert('Ops', 'Não deu pra adicionar a ficha agora. Tenta de novo.');
-    }
-    setAddingWorkout(false);
-  };
-
   if (selectedRecipe) {
     return <RecipeDetailScreen recipe={selectedRecipe} studentId={studentId} onClose={() => setSelectedRecipe(null)} />;
+  }
+
+  if (openProgram) {
+    return (
+      <ProgramDetailScreen
+        product={openProgram}
+        studentId={studentId}
+        personalId={personalId}
+        unlocked={unlockedProductIds.has(openProgram.id)}
+        onClose={() => setOpenProgram(null)}
+      />
+    );
   }
 
   const linkedRecipes = selectedProduct ? recipes.filter((r) => (selectedProduct.recipe_ids || []).includes(r.id)) : [];
@@ -117,7 +90,11 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
               {products.map((p) => {
                 const unlocked = unlockedProductIds.has(p.id);
                 return (
-                  <TouchableOpacity key={p.id} style={styles.card} onPress={() => setSelectedProduct(p)}>
+                  <TouchableOpacity
+                    key={p.id}
+                    style={styles.card}
+                    onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setSelectedProduct(p))}
+                  >
                     <View style={styles.coverWrap}>
                       {p.cover_image_url ? (
                         <Image source={{ uri: p.cover_image_url }} style={styles.coverImage} resizeMode="cover" />
@@ -157,74 +134,42 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
 
               {selectedUnlocked ? (
                 <>
-                  {selectedProduct?.type === 'treino_template' ? (
+                  {linkedRecipes.length > 0 && (
                     <>
                       <Text style={styles.modalSectionLabel}>O que está incluso</Text>
-                      <View style={styles.includedRow}>
-                        <Ionicons name="barbell-outline" size={16} color="#f97316" />
-                        <Text style={styles.includedRowText}>
-                          {templates.find((t) => t.id === selectedProduct.template_id)?.name || selectedProduct.name}
-                        </Text>
-                      </View>
-                      {addedWorkoutProductIds.has(selectedProduct.id) ? (
-                        <View style={styles.addedBox}>
-                          <Ionicons name="checkmark-circle" size={18} color="#22c55e" />
-                          <Text style={styles.addedBoxText}>Ficha já está na sua aba de Treinos</Text>
-                        </View>
-                      ) : (
-                        <TouchableOpacity
-                          style={styles.unlockButton}
-                          onPress={() => handleAddWorkoutFromTemplate(selectedProduct)}
-                          disabled={addingWorkout}
-                        >
-                          {addingWorkout ? (
-                            <ActivityIndicator color="#0a0a0a" />
-                          ) : (
-                            <Text style={styles.unlockButtonText}>🏋️ Adicionar Ficha aos Meus Treinos</Text>
-                          )}
+                      {linkedRecipes.map((r) => (
+                        <TouchableOpacity key={r.id} style={styles.includedRow} onPress={() => setSelectedRecipe(r)}>
+                          <Ionicons name="restaurant-outline" size={16} color="#f97316" />
+                          <Text style={styles.includedRowText}>{r.title}</Text>
+                          <Text style={styles.chevron}>›</Text>
                         </TouchableOpacity>
-                      )}
+                      ))}
                     </>
-                  ) : (
+                  )}
+                  {selectedProduct?.delivery_type === 'arquivo' && selectedProduct?.delivery_value && (
                     <>
-                      {linkedRecipes.length > 0 && (
-                        <>
-                          <Text style={styles.modalSectionLabel}>O que está incluso</Text>
-                          {linkedRecipes.map((r) => (
-                            <TouchableOpacity key={r.id} style={styles.includedRow} onPress={() => setSelectedRecipe(r)}>
-                              <Ionicons name="restaurant-outline" size={16} color="#f97316" />
-                              <Text style={styles.includedRowText}>{r.title}</Text>
-                              <Text style={styles.chevron}>›</Text>
-                            </TouchableOpacity>
-                          ))}
-                        </>
+                      {Platform.OS === 'web' && selectedProduct.delivery_value.toLowerCase().includes('.pdf') && (
+                        <iframe
+                          src={selectedProduct.delivery_value}
+                          style={{ width: '100%', height: 340, border: 'none', borderRadius: 12, marginBottom: 10, background: '#0a0a0a' }}
+                          title="Pré-visualização do PDF"
+                        />
                       )}
-                      {selectedProduct?.delivery_type === 'arquivo' && selectedProduct?.delivery_value && (
-                        <>
-                          {Platform.OS === 'web' && selectedProduct.delivery_value.toLowerCase().includes('.pdf') && (
-                            <iframe
-                              src={selectedProduct.delivery_value}
-                              style={{ width: '100%', height: 340, border: 'none', borderRadius: 12, marginBottom: 10, background: '#0a0a0a' }}
-                              title="Pré-visualização do PDF"
-                            />
-                          )}
-                          <TouchableOpacity
-                            style={styles.unlockButton}
-                            onPress={() => Linking.openURL(selectedProduct.delivery_value).catch(() => {})}
-                          >
-                            <Text style={styles.unlockButtonText}>
-                              {selectedProduct.delivery_value.toLowerCase().includes('.pdf') ? '📄 Abrir E-book em PDF' : '📥 Abrir Arquivo'}
-                            </Text>
-                          </TouchableOpacity>
-                        </>
-                      )}
-                      {selectedProduct?.delivery_type === 'chave' && selectedProduct?.delivery_value && (
-                        <View style={styles.keyBox}>
-                          <Text style={styles.keyBoxLabel}>Chave de liberação</Text>
-                          <Text style={styles.keyBoxValue}>{selectedProduct.delivery_value}</Text>
-                        </View>
-                      )}
+                      <TouchableOpacity
+                        style={styles.unlockButton}
+                        onPress={() => Linking.openURL(selectedProduct.delivery_value).catch(() => {})}
+                      >
+                        <Text style={styles.unlockButtonText}>
+                          {selectedProduct.delivery_value.toLowerCase().includes('.pdf') ? '📄 Abrir E-book em PDF' : '📥 Abrir Arquivo'}
+                        </Text>
+                      </TouchableOpacity>
                     </>
+                  )}
+                  {selectedProduct?.delivery_type === 'chave' && selectedProduct?.delivery_value && (
+                    <View style={styles.keyBox}>
+                      <Text style={styles.keyBoxLabel}>Chave de liberação</Text>
+                      <Text style={styles.keyBoxValue}>{selectedProduct.delivery_value}</Text>
+                    </View>
                   )}
                 </>
               ) : (

@@ -11,3 +11,16 @@ export const HOME_CATEGORIES = [
   { value: 'modulo_corrida', label: 'Módulo Corrida' },
   { value: 'treino_extra', label: 'Treinos Extras' },
 ];
+
+export const PROGRAM_LEVELS = [
+  { value: 'iniciante', label: 'Iniciante' },
+  { value: 'intermediario', label: 'Intermediário' },
+  { value: 'avancado', label: 'Avançado' },
+];
+
+export const PROGRAM_GOALS = [
+  { value: 'emagrecimento', label: 'Emagrecimento' },
+  { value: 'ganho_de_massa', label: 'Ganho de Massa' },
+  { value: 'definicao', label: 'Definição' },
+  { value: 'condicionamento', label: 'Condicionamento' },
+];

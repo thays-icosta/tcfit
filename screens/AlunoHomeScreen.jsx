@@ -12,8 +12,9 @@ import RecipesScreen from './RecipesScreen';
 import AlunoProductsScreen from './AlunoProductsScreen';
 import AlunoDownloadsScreen from './AlunoDownloadsScreen';
 import AlunoTabBar from './AlunoTabBar';
+import ProgramDetailScreen from './ProgramDetailScreen';
 import { showAlert } from './alertUtils';
-import { hasAccessByLevel, HOME_CATEGORIES } from './accessLevel';
+import { hasAccessByLevel, HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
 
 const MEAL_OPTIONS = [
   { value: 'cafe', label: 'Café da manhã' },
@@ -81,6 +82,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('inicio');
   const [categorizedProducts, setCategorizedProducts] = useState([]);
   const [unlockedProductIds, setUnlockedProductIds] = useState(new Set());
+  const [openProgram, setOpenProgram] = useState(null);
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -415,6 +417,18 @@ export default function AlunoHomeScreen({ user, onLogout }) {
         studentId={user.id}
         personalId={personalId}
         onClose={() => setShowProducts(false)}
+      />
+    );
+  }
+
+  if (openProgram) {
+    return (
+      <ProgramDetailScreen
+        product={openProgram}
+        studentId={user.id}
+        personalId={personalId}
+        unlocked={unlockedProductIds.has(openProgram.id)}
+        onClose={() => setOpenProgram(null)}
       />
     );
   }
@@ -927,7 +941,11 @@ export default function AlunoHomeScreen({ user, onLogout }) {
                   {items.map((p) => {
                     const unlocked = unlockedProductIds.has(p.id);
                     return (
-                      <TouchableOpacity key={p.id} style={styles.categoryCard} onPress={() => setShowProducts(true)}>
+                      <TouchableOpacity
+                        key={p.id}
+                        style={styles.categoryCard}
+                        onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setShowProducts(true))}
+                      >
                         <View style={styles.categoryCoverWrap}>
                           {p.cover_image_url ? (
                             <Image source={{ uri: p.cover_image_url }} style={styles.categoryCoverImage} resizeMode="cover" />
@@ -943,6 +961,11 @@ export default function AlunoHomeScreen({ user, onLogout }) {
                           )}
                         </View>
                         <Text style={styles.categoryCardName} numberOfLines={2}>{p.name}</Text>
+                        {(p.level || p.goal) && (
+                          <Text style={styles.categoryCardMeta} numberOfLines={1}>
+                            {[PROGRAM_LEVELS.find((l) => l.value === p.level)?.label, PROGRAM_GOALS.find((g) => g.value === p.goal)?.label].filter(Boolean).join(' · ')}
+                          </Text>
+                        )}
                       </TouchableOpacity>
                     );
                   })}
@@ -1030,12 +1053,13 @@ const styles = StyleSheet.create({
   productsBanner: { backgroundColor: 'rgba(168,85,247,0.12)', borderWidth: 1, borderColor: '#a855f7', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 12 },
   productsBannerText: { color: '#a855f7', fontSize: 13, fontWeight: '700' },
   partnersSection: { marginTop: 20 },
-  categoryCard: { width: 100 },
-  categoryCoverWrap: { width: 100, height: 80, borderRadius: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', overflow: 'hidden', marginBottom: 6, position: 'relative' },
+  categoryCard: { width: 110 },
+  categoryCoverWrap: { width: 110, height: 150, borderRadius: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', overflow: 'hidden', marginBottom: 6, position: 'relative' },
   categoryCoverImage: { width: '100%', height: '100%' },
   categoryCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   categoryLockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
   categoryCardName: { color: '#f5f5f5', fontSize: 11, fontWeight: '600' },
+  categoryCardMeta: { color: '#737373', fontSize: 9, fontWeight: '600', marginTop: 2 },
   partnerCard: { width: 130, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 12, alignItems: 'center' },
   partnerLogoWrap: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 8 },
   partnerLogoImage: { width: '100%', height: '100%' },

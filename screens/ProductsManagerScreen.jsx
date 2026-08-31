@@ -6,7 +6,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
-import { HOME_CATEGORIES } from './accessLevel';
+import { HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
 
 const TYPES = [
   { value: 'ebook_receitas', label: 'Guia de Receitas / E-book', icon: 'book-outline' },
@@ -57,7 +57,10 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [loadingGrants, setLoadingGrants] = useState(false);
   const [grantingStudentId, setGrantingStudentId] = useState(null);
   const [templates, setTemplates] = useState([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
+  const [selectedTemplateIds, setSelectedTemplateIds] = useState([]);
+  const [linkedTemplates, setLinkedTemplates] = useState([]);
+  const [level, setLevel] = useState(null);
+  const [goal, setGoal] = useState(null);
 
   const loadProducts = async () => {
     const { data } = await supabase.from('products').select('*').eq('personal_id', personalId).order('created_at', { ascending: false });
@@ -87,6 +90,12 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     );
   };
 
+  const toggleSelectedTemplate = (templateId) => {
+    setSelectedTemplateIds((prev) =>
+      prev.includes(templateId) ? prev.filter((id) => id !== templateId) : [...prev, templateId]
+    );
+  };
+
   const resetForm = () => {
     setEditingId(null);
     setTitle('');
@@ -100,8 +109,10 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setSelectedRecipeIds([]);
     setCoverImageUrl(null);
     setRequiredAccessLevel(null);
-    setSelectedTemplateId(null);
+    setSelectedTemplateIds([]);
     setCategory(null);
+    setLevel(null);
+    setGoal(null);
   };
 
   const handlePickCoverImage = async () => {
@@ -152,7 +163,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setShowForm(true);
   };
 
-  const handleOpenEdit = (product) => {
+  const handleOpenEdit = async (product) => {
     setEditingId(product.id);
     setTitle(product.name || '');
     setDescription(product.description || '');
@@ -165,9 +176,21 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setSelectedRecipeIds(product.recipe_ids || []);
     setCoverImageUrl(product.cover_image_url || null);
     setRequiredAccessLevel(product.required_access_level || null);
-    setSelectedTemplateId(product.template_id || null);
     setCategory(product.category || null);
+    setLevel(product.level || null);
+    setGoal(product.goal || null);
     setShowForm(true);
+
+    if (product.type === 'treino_template') {
+      const { data: rows } = await supabase
+        .from('product_templates')
+        .select('template_id')
+        .eq('product_id', product.id)
+        .order('order_index');
+      setSelectedTemplateIds(rows && rows.length > 0 ? rows.map((r) => r.template_id) : product.template_id ? [product.template_id] : []);
+    } else {
+      setSelectedTemplateIds([]);
+    }
   };
 
   const handleSave = async () => {
@@ -175,8 +198,8 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       showAlert('Ops', 'Digita o título do produto.');
       return;
     }
-    if (type === 'treino_template' && !selectedTemplateId) {
-      showAlert('Ops', 'Escolhe qual template de treino esse produto vai entregar.');
+    if (type === 'treino_template' && selectedTemplateIds.length === 0) {
+      showAlert('Ops', 'Escolhe pelo menos um treino (Treino A, B, C...) pra esse produto entregar.');
       return;
     }
     setSaving(true);
@@ -194,16 +217,35 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       recipe_ids: type === 'treino_template' ? [] : selectedRecipeIds,
       cover_image_url: coverImageUrl,
       required_access_level: requiredAccessLevel,
-      template_id: type === 'treino_template' ? selectedTemplateId : null,
+      template_id: type === 'treino_template' ? selectedTemplateIds[0] : null,
       category,
+      level: type === 'treino_template' ? level : null,
+      goal: type === 'treino_template' ? goal : null,
     };
 
     let error;
+    let productId = editingId;
     if (editingId) {
       ({ error } = await supabase.from('products').update(payload).eq('id', editingId));
     } else {
-      ({ error } = await supabase.from('products').insert(payload));
+      const { data: inserted, error: insertError } = await supabase.from('products').insert(payload).select().single();
+      error = insertError;
+      productId = inserted?.id || null;
     }
+
+    if (!error && productId && type === 'treino_template') {
+      await supabase.from('product_templates').delete().eq('product_id', productId);
+      const rows = selectedTemplateIds.map((templateId, index) => ({
+        product_id: productId,
+        template_id: templateId,
+        personal_id: personalId,
+        order_index: index,
+      }));
+      if (rows.length > 0) {
+        ({ error } = await supabase.from('product_templates').insert(rows));
+      }
+    }
+
     setSaving(false);
     if (error) {
       showAlert('Erro', error.message);
@@ -214,8 +256,23 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     }
   };
 
+  const loadLinkedTemplates = async (productId) => {
+    const { data } = await supabase
+      .from('product_templates')
+      .select('template_id, order_index, workout_templates (name)')
+      .eq('product_id', productId)
+      .order('order_index');
+    setLinkedTemplates((data || []).map((row) => ({ id: row.template_id, name: row.workout_templates?.name || 'Treino' })));
+  };
+
+  const handleOpenPreview = (product) => {
+    setPreviewProduct(product);
+    if (product.type === 'treino_template') loadLinkedTemplates(product.id);
+  };
+
   const handleOpenManage = async (product) => {
     setManagingProduct(product);
+    if (product.type === 'treino_template') loadLinkedTemplates(product.id);
     setLoadingGrants(true);
     const [{ data: studentRows }, { data: grantRows }] = await Promise.all([
       supabase.from('users').select('id, name').eq('personal_id', personalId).eq('role', 'aluno').order('name'),
@@ -294,17 +351,21 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 
           {previewProduct.type === 'treino_template' ? (
             <>
-              <Text style={styles.helperText}>É assim que aparece na Vitrine do aluno depois que você libera o acesso — ele toca em um botão e a ficha é criada automaticamente na aba de Treinos dele:</Text>
+              <Text style={styles.helperText}>É assim que aparece na Vitrine do aluno depois que você libera o acesso — ele toca em um botão e as fichas são criadas automaticamente na aba de Treinos dele:</Text>
               <View style={styles.previewRecipeList}>
-                <View style={styles.previewRecipeRow}>
-                  <View style={styles.previewRecipeThumb}>
-                    <Ionicons name="barbell-outline" size={18} color="#f97316" />
-                  </View>
-                  <Text style={styles.previewRecipeTitle}>
-                    {templates.find((t) => t.id === previewProduct.template_id)?.name || 'Template não selecionado'}
-                  </Text>
-                  <Ionicons name="lock-open-outline" size={16} color="#22c55e" />
-                </View>
+                {linkedTemplates.length === 0 ? (
+                  <Text style={[styles.helperText, { padding: 10 }]}>Nenhum treino vinculado ainda.</Text>
+                ) : (
+                  linkedTemplates.map((t, i) => (
+                    <View key={t.id} style={styles.previewRecipeRow}>
+                      <View style={styles.previewRecipeThumb}>
+                        <Ionicons name="barbell-outline" size={18} color="#f97316" />
+                      </View>
+                      <Text style={styles.previewRecipeTitle}>{String.fromCharCode(65 + i)} — {t.name}</Text>
+                      <Ionicons name="lock-open-outline" size={16} color="#22c55e" />
+                    </View>
+                  ))
+                )}
               </View>
             </>
           ) : (
@@ -347,15 +408,19 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           {managingProduct.type === 'treino_template' ? (
             <>
-              <Text style={styles.label}>Template de treino vinculado</Text>
-              <View style={styles.recipeChecklist}>
-                <View style={styles.recipeCheckRow}>
-                  <Ionicons name="barbell-outline" size={14} color="#f97316" />
-                  <Text style={styles.recipeCheckLabel}>
-                    {templates.find((t) => t.id === managingProduct.template_id)?.name || 'Nenhum template selecionado'}
-                  </Text>
+              <Text style={styles.label}>Treinos vinculados</Text>
+              {linkedTemplates.length === 0 ? (
+                <Text style={styles.helperText}>Nenhum treino vinculado. Edite o produto pra adicionar.</Text>
+              ) : (
+                <View style={styles.recipeChecklist}>
+                  {linkedTemplates.map((t, i) => (
+                    <View key={t.id} style={styles.recipeCheckRow}>
+                      <Ionicons name="barbell-outline" size={14} color="#f97316" />
+                      <Text style={styles.recipeCheckLabel}>{String.fromCharCode(65 + i)} — {t.name}</Text>
+                    </View>
+                  ))}
                 </View>
-              </View>
+              )}
             </>
           ) : (
             <>
@@ -457,23 +522,53 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 
           {type === 'treino_template' ? (
             <>
-              <Text style={styles.label}>Qual Template de Treino esse produto entrega?</Text>
+              <Text style={styles.label}>Quais Treinos esse programa entrega? (ex: Treino A, Treino B, Treino C)</Text>
               {templates.length === 0 ? (
                 <Text style={styles.helperText}>Você ainda não criou nenhum template em “Biblioteca de Treinos”.</Text>
               ) : (
-                <View style={styles.typeRow}>
-                  {templates.map((t) => (
-                    <TouchableOpacity
-                      key={t.id}
-                      style={[styles.deliveryTypeChip, { flex: 0, paddingHorizontal: 14 }, selectedTemplateId === t.id && styles.deliveryTypeChipActive]}
-                      onPress={() => setSelectedTemplateId(t.id)}
-                    >
-                      <Text style={[styles.deliveryTypeChipText, selectedTemplateId === t.id && styles.deliveryTypeChipTextActive]}>{t.name}</Text>
-                    </TouchableOpacity>
-                  ))}
+                <View style={styles.recipeChecklist}>
+                  {templates.map((t) => {
+                    const checked = selectedTemplateIds.includes(t.id);
+                    const order = selectedTemplateIds.indexOf(t.id);
+                    return (
+                      <TouchableOpacity key={t.id} style={styles.recipeCheckRow} onPress={() => toggleSelectedTemplate(t.id)}>
+                        <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
+                          {checked && <Ionicons name="checkmark" size={13} color="#0a0a0a" />}
+                        </View>
+                        <Text style={styles.recipeCheckLabel}>{t.name}</Text>
+                        {checked && <Text style={styles.templateOrderBadge}>{order + 1}º</Text>}
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               )}
-              <Text style={[styles.helperText, { marginTop: 8 }]}>Ao liberar acesso, o aluno mesmo cria a ficha na aba dele com um toque — sem precisar você montar treino por treino.</Text>
+              <Text style={[styles.helperText, { marginTop: 8 }]}>A ordem que você marca é a ordem que aparece pro aluno (Treino A, B, C...). Ao liberar acesso, o aluno mesmo cria as fichas na aba dele com um toque.</Text>
+
+              <Text style={styles.label}>Nível</Text>
+              <View style={styles.accessLevelFormRow}>
+                {PROGRAM_LEVELS.map((l) => (
+                  <TouchableOpacity
+                    key={l.value}
+                    style={[styles.accessLevelFormChip, level === l.value && styles.accessLevelFormChipActive]}
+                    onPress={() => setLevel(level === l.value ? null : l.value)}
+                  >
+                    <Text style={[styles.accessLevelFormChipText, level === l.value && styles.accessLevelFormChipTextActive]}>{l.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.label}>Objetivo</Text>
+              <View style={styles.accessLevelFormRow}>
+                {PROGRAM_GOALS.map((g) => (
+                  <TouchableOpacity
+                    key={g.value}
+                    style={[styles.accessLevelFormChip, goal === g.value && styles.accessLevelFormChipActive]}
+                    onPress={() => setGoal(goal === g.value ? null : g.value)}
+                  >
+                    <Text style={[styles.accessLevelFormChipText, goal === g.value && styles.accessLevelFormChipTextActive]}>{g.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </>
           ) : (
             <>
@@ -640,10 +735,16 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 
                     <View style={styles.productGridInfo}>
                       <Text style={styles.productGridName} numberOfLines={2}>{p.name}</Text>
+                      {(p.level || p.goal) && (
+                        <View style={styles.metaBadgeRow}>
+                          {p.level ? <Text style={styles.metaBadge}>{PROGRAM_LEVELS.find((l) => l.value === p.level)?.label}</Text> : null}
+                          {p.goal ? <Text style={styles.metaBadge}>{PROGRAM_GOALS.find((g) => g.value === p.goal)?.label}</Text> : null}
+                        </View>
+                      )}
                       <Text style={styles.productGridPrice}>{p.price != null ? `R$ ${Number(p.price).toFixed(2)}` : 'Consulte'}</Text>
 
                       <View style={styles.productGridActions}>
-                        <TouchableOpacity hitSlop={6} onPress={() => setPreviewProduct(p)}>
+                        <TouchableOpacity hitSlop={6} onPress={() => handleOpenPreview(p)}>
                           <Ionicons name="eye-outline" size={18} color="#a855f7" />
                         </TouchableOpacity>
                         <TouchableOpacity hitSlop={6} onPress={() => handleOpenManage(p)}>
@@ -691,7 +792,9 @@ const styles = StyleSheet.create({
   manageLink: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
   productGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   productGridCard: { width: '47%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, overflow: 'hidden' },
-  productCoverWrap: { width: '100%', height: 100, backgroundColor: '#0a0a0a', position: 'relative' },
+  productCoverWrap: { width: '100%', height: 150, backgroundColor: '#0a0a0a', position: 'relative' },
+  metaBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 },
+  metaBadge: { color: '#a3a3a3', fontSize: 9, fontWeight: '700', backgroundColor: '#0a0a0a', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   productCoverImage: { width: '100%', height: '100%' },
   productCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   addonTagOverlay: { position: 'absolute', top: 8, left: 8, backgroundColor: 'rgba(34,197,94,0.9)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
@@ -750,7 +853,8 @@ const styles = StyleSheet.create({
   recipeCheckRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingHorizontal: 6 },
   checkbox: { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: '#292524', alignItems: 'center', justifyContent: 'center' },
   checkboxChecked: { backgroundColor: '#f97316', borderColor: '#f97316' },
-  recipeCheckLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flexShrink: 1 },
+  recipeCheckLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flexShrink: 1, flex: 1 },
+  templateOrderBadge: { color: '#f97316', fontSize: 10, fontWeight: '800', backgroundColor: 'rgba(249,115,22,0.12)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 },
   switchLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flexShrink: 1, marginRight: 8 },
   saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
