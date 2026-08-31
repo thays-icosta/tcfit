@@ -8,7 +8,7 @@ import PersonalAgendaScreen from './PersonalAgendaScreen';
 import PersonalChatListScreen from './PersonalChatListScreen';
 import PersonalFinanceScreen from './PersonalFinanceScreen';
 import TemplateBuilderScreen from './TemplateBuilderScreen';
-import RecipeManagerScreen from './RecipeManagerScreen';
+import ProductsManagerScreen from './ProductsManagerScreen';
 import FoodCatalogScreen from './FoodCatalogScreen';
 import AlunoDetailScreen from './AlunoDetailScreen';
 import { showAlert } from './alertUtils';
@@ -26,7 +26,7 @@ export default function PersonalHomeScreen({ user, onLogout }) {
   const [showChat, setShowChat] = useState(false);
   const [showFinance, setShowFinance] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
-  const [showRecipes, setShowRecipes] = useState(false);
+  const [showProductsManager, setShowProductsManager] = useState(false);
   const [showFoodCatalog, setShowFoodCatalog] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
   const [financeSummary, setFinanceSummary] = useState({ monthlyRevenue: 0, dueCount: 0 });
@@ -186,8 +186,8 @@ export default function PersonalHomeScreen({ user, onLogout }) {
     return <TemplateBuilderScreen personalId={user.id} onClose={() => setShowTemplates(false)} />;
   }
 
-  if (showRecipes) {
-    return <RecipeManagerScreen personalId={user.id} onClose={() => setShowRecipes(false)} />;
+  if (showProductsManager) {
+    return <ProductsManagerScreen personalId={user.id} onClose={() => setShowProductsManager(false)} />;
   }
 
   if (showFoodCatalog) {
@@ -252,11 +252,11 @@ export default function PersonalHomeScreen({ user, onLogout }) {
           </View>
           <Text style={styles.shortcutText}>Dietas</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowRecipes(true)}>
+        <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowProductsManager(true)}>
           <View style={styles.shortcutIconCircle}>
-            <Ionicons name="restaurant-outline" size={20} color="#f97316" />
+            <Ionicons name="bag-handle-outline" size={20} color="#f97316" />
           </View>
-          <Text style={styles.shortcutText}>Receitas</Text>
+          <Text style={styles.shortcutText}>Produtos Adicionais</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowFinance(true)}>
           <View style={styles.shortcutIconCircle}>

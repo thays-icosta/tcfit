@@ -256,23 +256,32 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     }
   };
 
-  const loadLinkedTemplates = async (productId) => {
+  const loadLinkedTemplates = async (product) => {
+    if (product.source_template_id) {
+      const { data } = await supabase
+        .from('template_sessions')
+        .select('id, name')
+        .eq('template_id', product.source_template_id)
+        .order('order_index');
+      setLinkedTemplates(data || []);
+      return;
+    }
     const { data } = await supabase
       .from('product_templates')
       .select('template_id, order_index, workout_templates (name)')
-      .eq('product_id', productId)
+      .eq('product_id', product.id)
       .order('order_index');
     setLinkedTemplates((data || []).map((row) => ({ id: row.template_id, name: row.workout_templates?.name || 'Treino' })));
   };
 
   const handleOpenPreview = (product) => {
     setPreviewProduct(product);
-    if (product.type === 'treino_template') loadLinkedTemplates(product.id);
+    if (product.type === 'treino_template') loadLinkedTemplates(product);
   };
 
   const handleOpenManage = async (product) => {
     setManagingProduct(product);
-    if (product.type === 'treino_template') loadLinkedTemplates(product.id);
+    if (product.type === 'treino_template') loadLinkedTemplates(product);
     setLoadingGrants(true);
     const [{ data: studentRows }, { data: grantRows }] = await Promise.all([
       supabase.from('users').select('id, name').eq('personal_id', personalId).eq('role', 'aluno').order('name'),

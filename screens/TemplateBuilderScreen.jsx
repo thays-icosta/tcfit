@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Switch } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import AddExerciseModal from './AddExerciseModal';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { showAlert } from './alertUtils';
+import { HOME_CATEGORIES } from './accessLevel';
+
+function uuidv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 const METHOD_LABELS = {
   'tradicional': 'Tradicional',
@@ -16,6 +27,8 @@ const METHOD_LABELS = {
 export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [templates, setTemplates] = useState([]);
   const [activeTemplateId, setActiveTemplateId] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [activeSessionId, setActiveSessionId] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -25,12 +38,15 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [editDescription, setEditDescription] = useState('');
   const [editIsPublic, setEditIsPublic] = useState(false);
   const [editPrice, setEditPrice] = useState('');
+  const [editCoverImageUrl, setEditCoverImageUrl] = useState(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [editCategory, setEditCategory] = useState(null);
   const [savingMeta, setSavingMeta] = useState(false);
 
   const loadTemplates = async () => {
     const { data } = await supabase
       .from('workout_templates')
-      .select('id, name, description, is_public, price')
+      .select('id, name, description, is_public, price, cover_image_url, category')
       .eq('personal_id', personalId)
       .order('created_at', { ascending: true });
     setTemplates(data || []);
@@ -41,12 +57,23 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
     }
   };
 
-  const loadItems = async (templateId) => {
-    if (!templateId) { setItems([]); return; }
+  const loadSessions = async (templateId) => {
+    if (!templateId) { setSessions([]); setActiveSessionId(null); return; }
+    const { data } = await supabase
+      .from('template_sessions')
+      .select('id, name, order_index')
+      .eq('template_id', templateId)
+      .order('order_index', { ascending: true });
+    setSessions(data || []);
+    setActiveSessionId((prev) => (data && data.some((s) => s.id === prev)) ? prev : data?.[0]?.id || null);
+  };
+
+  const loadItems = async (sessionId) => {
+    if (!sessionId) { setItems([]); return; }
     const { data } = await supabase
       .from('workout_template_exercises')
       .select('id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes, exercises (id, name, muscle_group, thumbnail_url, video_url)')
-      .eq('template_id', templateId)
+      .eq('session_id', sessionId)
       .order('order_index', { ascending: true });
     setItems(data || []);
   };
@@ -60,15 +87,22 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
 
   useEffect(() => {
     if (activeTemplateId) {
-      loadItems(activeTemplateId);
+      loadSessions(activeTemplateId);
       const t = templates.find((t) => t.id === activeTemplateId);
       setEditDescription(t?.description || '');
       setEditIsPublic(t?.is_public || false);
       setEditPrice(t?.price != null ? String(t.price) : '');
+      setEditCoverImageUrl(t?.cover_image_url || null);
+      setEditCategory(t?.category || null);
     } else {
-      setItems([]);
+      setSessions([]);
+      setActiveSessionId(null);
     }
   }, [activeTemplateId, templates]);
+
+  useEffect(() => {
+    loadItems(activeSessionId);
+  }, [activeSessionId]);
 
   const handleCreateTemplate = async () => {
     if (!newTemplateName.trim()) {
@@ -84,6 +118,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       showAlert('Erro', error.message);
       return;
     }
+    await supabase.from('template_sessions').insert({ template_id: data.id, personal_id: personalId, name: 'Treino A', order_index: 0 });
     setNewTemplateName('');
     await loadTemplates();
     setActiveTemplateId(data.id);
@@ -96,6 +131,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
         text: 'Excluir',
         style: 'destructive',
         onPress: async () => {
+          await supabase.from('products').update({ active: false }).eq('source_template_id', template.id);
           await supabase.from('workout_templates').delete().eq('id', template.id);
           if (activeTemplateId === template.id) setActiveTemplateId(null);
           loadTemplates();
@@ -104,16 +140,104 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
     ]);
   };
 
+  const handleAddSession = async () => {
+    if (!activeTemplateId) return;
+    const nextLetter = String.fromCharCode(65 + sessions.length);
+    const { data, error } = await supabase
+      .from('template_sessions')
+      .insert({ template_id: activeTemplateId, personal_id: personalId, name: `Treino ${nextLetter}`, order_index: sessions.length })
+      .select()
+      .single();
+    if (error) {
+      showAlert('Erro', error.message);
+      return;
+    }
+    await loadSessions(activeTemplateId);
+    setActiveSessionId(data.id);
+  };
+
+  const handleDeleteSession = (session) => {
+    if (sessions.length <= 1) {
+      showAlert('Ops', 'Precisa ter pelo menos um treino (sessão) no template.');
+      return;
+    }
+    showAlert('Excluir sessão', `Tem certeza que quer excluir "${session.name}"?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: async () => {
+          await supabase.from('template_sessions').delete().eq('id', session.id);
+          if (activeSessionId === session.id) setActiveSessionId(null);
+          loadSessions(activeTemplateId);
+        },
+      },
+    ]);
+  };
+
+  const handlePickCoverImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      showAlert('Permissão necessária', 'Autorize o acesso às fotos.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.6, base64: true });
+    if (result.canceled || !result.assets?.[0]?.base64) return;
+
+    setUploadingCover(true);
+    try {
+      const fileName = `${uuidv4()}.jpg`;
+      const { error } = await supabase.storage.from('product-covers').upload(fileName, decode(result.assets[0].base64), { contentType: 'image/jpeg' });
+      if (error) throw error;
+      const { data } = supabase.storage.from('product-covers').getPublicUrl(fileName);
+      setEditCoverImageUrl(data.publicUrl);
+    } catch {
+      showAlert('Não deu pra enviar a capa', 'Sem problema, você pode salvar sem foto e adicionar depois.');
+    }
+    setUploadingCover(false);
+  };
+
+  const syncProductFromTemplate = async (template) => {
+    const { data: existing } = await supabase
+      .from('products')
+      .select('id')
+      .eq('source_template_id', template.id)
+      .maybeSingle();
+
+    const payload = {
+      personal_id: personalId,
+      name: template.name,
+      description: template.description,
+      type: 'treino_template',
+      product_key: 'treino_template',
+      price: template.price,
+      cover_image_url: template.cover_image_url,
+      category: template.category,
+      active: template.is_public,
+      source_template_id: template.id,
+    };
+
+    if (existing) {
+      await supabase.from('products').update(payload).eq('id', existing.id);
+    } else if (template.is_public) {
+      await supabase.from('products').insert(payload);
+    }
+  };
+
   const handleSaveMeta = async () => {
     setSavingMeta(true);
-    const { error } = await supabase
-      .from('workout_templates')
-      .update({
-        description: editDescription.trim() || null,
-        is_public: editIsPublic,
-        price: editPrice ? Number(editPrice) : null,
-      })
-      .eq('id', activeTemplateId);
+    const meta = {
+      description: editDescription.trim() || null,
+      is_public: editIsPublic,
+      price: editPrice ? Number(editPrice) : null,
+      cover_image_url: editCoverImageUrl,
+      category: editCategory,
+    };
+    const { error } = await supabase.from('workout_templates').update(meta).eq('id', activeTemplateId);
+    if (!error) {
+      const current = templates.find((t) => t.id === activeTemplateId);
+      await syncProductFromTemplate({ id: activeTemplateId, name: current?.name || '', ...meta });
+    }
     setSavingMeta(false);
     if (error) {
       showAlert('Erro', error.message);
@@ -124,20 +248,21 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   };
 
   const handleConfirmAddExercise = async (exercise, config) => {
-    if (!activeTemplateId) {
-      showAlert('Ops', 'Cria ou seleciona um template primeiro.');
+    if (!activeSessionId) {
+      showAlert('Ops', 'Cria ou seleciona uma sessão (Treino A, B, C...) primeiro.');
       return;
     }
     const { data: maxRow } = await supabase
       .from('workout_template_exercises')
       .select('order_index')
-      .eq('template_id', activeTemplateId)
+      .eq('session_id', activeSessionId)
       .order('order_index', { ascending: false })
       .limit(1);
     const nextOrder = maxRow && maxRow.length > 0 ? maxRow[0].order_index + 1 : 0;
 
     const { error } = await supabase.from('workout_template_exercises').insert({
       template_id: activeTemplateId,
+      session_id: activeSessionId,
       exercise_id: exercise.id,
       order_index: nextOrder,
       ...config,
@@ -146,7 +271,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       showAlert('Erro ao adicionar', error.message);
     } else {
       setShowAddModal(false);
-      loadItems(activeTemplateId);
+      loadItems(activeSessionId);
     }
   };
 
@@ -158,7 +283,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
         style: 'destructive',
         onPress: async () => {
           await supabase.from('workout_template_exercises').delete().eq('id', itemId);
-          loadItems(activeTemplateId);
+          loadItems(activeSessionId);
         },
       },
     ]);
@@ -171,7 +296,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
     const b = items[newIndex];
     await supabase.from('workout_template_exercises').update({ order_index: b.order_index }).eq('id', a.id);
     await supabase.from('workout_template_exercises').update({ order_index: a.order_index }).eq('id', b.id);
-    loadItems(activeTemplateId);
+    loadItems(activeSessionId);
   };
 
   if (loading) {
@@ -262,6 +387,17 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
 
             {editIsPublic && (
               <>
+                <Text style={styles.metaLabel}>Foto de Capa (vertical, pra vitrine)</Text>
+                <TouchableOpacity style={styles.coverPicker} onPress={handlePickCoverImage} disabled={uploadingCover}>
+                  {uploadingCover ? (
+                    <ActivityIndicator color="#f97316" />
+                  ) : editCoverImageUrl ? (
+                    <Image source={{ uri: editCoverImageUrl }} style={styles.coverPreview} resizeMode="cover" />
+                  ) : (
+                    <Text style={styles.coverPickerText}>📷 Adicionar foto de capa</Text>
+                  )}
+                </TouchableOpacity>
+
                 <Text style={styles.metaLabel}>Preço (R$)</Text>
                 <TextInput
                   style={styles.metaInput}
@@ -271,6 +407,19 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                   value={editPrice}
                   onChangeText={setEditPrice}
                 />
+
+                <Text style={styles.metaLabel}>Categoria de Exibição na Vitrine</Text>
+                <View style={styles.categoryRow}>
+                  {HOME_CATEGORIES.map((c) => (
+                    <TouchableOpacity
+                      key={c.value}
+                      style={[styles.categoryChip, editCategory === c.value && styles.categoryChipActive]}
+                      onPress={() => setEditCategory(editCategory === c.value ? null : c.value)}
+                    >
+                      <Text style={[styles.categoryChipText, editCategory === c.value && styles.categoryChipTextActive]}>{c.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </>
             )}
 
@@ -279,11 +428,31 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
             </TouchableOpacity>
           </View>
 
+          <Text style={styles.sectionTitle}>Sessões deste template</Text>
+          <View style={styles.sessionRow}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
+              {sessions.map((s) => (
+                <TouchableOpacity
+                  key={s.id}
+                  style={[styles.sessionTab, activeSessionId === s.id && styles.sessionTabActive]}
+                  onPress={() => setActiveSessionId(s.id)}
+                  onLongPress={() => handleDeleteSession(s)}
+                >
+                  <Text style={[styles.sessionTabText, activeSessionId === s.id && styles.sessionTabTextActive]}>{s.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity style={styles.addSessionButton} onPress={handleAddSession}>
+              <Text style={styles.addSessionButtonText}>+ Treino</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.hintText}>Segure uma sessão pra excluir · agrupe Treino A, B, C sob o mesmo produto</Text>
+
           <TouchableOpacity style={styles.addExerciseButton} onPress={() => setShowAddModal(true)}>
             <Text style={styles.addExerciseButtonText}>+ Adicionar Exercício</Text>
           </TouchableOpacity>
 
-          <Text style={styles.sectionTitle}>Exercícios do template ({items.length})</Text>
+          <Text style={styles.sectionTitle}>Exercícios de {sessions.find((s) => s.id === activeSessionId)?.name || 'Treino'} ({items.length})</Text>
           {items.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum exercício ainda.</Text>
           ) : (
@@ -355,6 +524,21 @@ const styles = StyleSheet.create({
   publicLabel: { color: '#f5f5f5', fontSize: 13, fontWeight: '600', flexShrink: 1, marginRight: 8 },
   saveMetaButton: { backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginTop: 16 },
   saveMetaButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  coverPicker: { height: 140, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  coverPreview: { width: '100%', height: '100%' },
+  coverPickerText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  categoryChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  categoryChipActive: { backgroundColor: '#a855f7', borderColor: '#a855f7' },
+  categoryChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
+  categoryChipTextActive: { color: '#0a0a0a' },
+  sessionRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 4, gap: 8 },
+  sessionTab: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
+  sessionTabActive: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
+  sessionTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  sessionTabTextActive: { color: '#0a0a0a' },
+  addSessionButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
+  addSessionButtonText: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
   addExerciseButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
   addExerciseButtonText: { color: '#f97316', fontSize: 13, fontWeight: '700' },
   sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },

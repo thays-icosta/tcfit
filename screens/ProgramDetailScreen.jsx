@@ -15,21 +15,33 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
   const [loadingExercisesFor, setLoadingExercisesFor] = useState(null);
   const [alreadyAdded, setAlreadyAdded] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [sessionBased, setSessionBased] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { data: rows } = await supabase
-        .from('product_templates')
-        .select('template_id, order_index, workout_templates (name)')
-        .eq('product_id', product.id)
-        .order('order_index');
+      if (product.source_template_id) {
+        const { data: sessionRows } = await supabase
+          .from('template_sessions')
+          .select('id, name, order_index')
+          .eq('template_id', product.source_template_id)
+          .order('order_index');
+        setDivisions((sessionRows || []).map((s) => ({ id: s.id, name: s.name })));
+        setSessionBased(true);
+      } else {
+        const { data: rows } = await supabase
+          .from('product_templates')
+          .select('template_id, order_index, workout_templates (name)')
+          .eq('product_id', product.id)
+          .order('order_index');
 
-      const list = rows && rows.length > 0
-        ? rows.map((r) => ({ id: r.template_id, name: r.workout_templates?.name || 'Treino' }))
-        : product.template_id
-          ? [{ id: product.template_id, name: product.name }]
-          : [];
-      setDivisions(list);
+        const list = rows && rows.length > 0
+          ? rows.map((r) => ({ id: r.template_id, name: r.workout_templates?.name || 'Treino' }))
+          : product.template_id
+            ? [{ id: product.template_id, name: product.name }]
+            : [];
+        setDivisions(list);
+        setSessionBased(false);
+      }
 
       if (unlocked) {
         const { data: existing } = await supabase
@@ -57,7 +69,7 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
     const { data } = await supabase
       .from('workout_template_exercises')
       .select('id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, exercises (name, muscle_group)')
-      .eq('template_id', templateId)
+      .eq(sessionBased ? 'session_id' : 'template_id', templateId)
       .order('order_index');
     setExercisesByTemplate((prev) => ({ ...prev, [templateId]: data || [] }));
     setLoadingExercisesFor(null);
@@ -76,7 +88,7 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
         const { data: templateItems } = await supabase
           .from('workout_template_exercises')
           .select('exercise_id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes')
-          .eq('template_id', division.id);
+          .eq(sessionBased ? 'session_id' : 'template_id', division.id);
 
         const { data: newWorkout, error } = await supabase
           .from('workouts')
