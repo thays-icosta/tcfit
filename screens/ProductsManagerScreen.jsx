@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Switch, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 
 const TYPES = [
   { value: 'ebook_receitas', label: 'Guia de Receitas / E-book', icon: 'book-outline' },
+  { value: 'treino_template', label: 'Template de Treino', icon: 'barbell-outline' },
   { value: 'desafio', label: 'Inscrição em Desafio', icon: 'trophy-outline' },
   { value: 'substituicao_alimentar', label: 'Guia de Substituição Alimentar', icon: 'swap-horizontal-outline' },
   { value: 'outro', label: 'Outro', icon: 'pricetag-outline' },
@@ -46,11 +48,14 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [selectedRecipeIds, setSelectedRecipeIds] = useState([]);
   const [coverImageUrl, setCoverImageUrl] = useState(null);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const [requiredAccessLevel, setRequiredAccessLevel] = useState(null);
   const [students, setStudents] = useState([]);
   const [grants, setGrants] = useState([]);
   const [loadingGrants, setLoadingGrants] = useState(false);
   const [grantingStudentId, setGrantingStudentId] = useState(null);
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
 
   const loadProducts = async () => {
     const { data } = await supabase.from('products').select('*').eq('personal_id', personalId).order('created_at', { ascending: false });
@@ -63,9 +68,15 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setRecipes(data || []);
   };
 
+  const loadTemplates = async () => {
+    const { data } = await supabase.from('workout_templates').select('id, name').eq('personal_id', personalId).order('name');
+    setTemplates(data || []);
+  };
+
   useEffect(() => {
     loadProducts();
     loadRecipes();
+    loadTemplates();
   }, []);
 
   const toggleSelectedRecipe = (recipeId) => {
@@ -87,6 +98,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setSelectedRecipeIds([]);
     setCoverImageUrl(null);
     setRequiredAccessLevel(null);
+    setSelectedTemplateId(null);
   };
 
   const handlePickCoverImage = async () => {
@@ -111,6 +123,27 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setUploadingCover(false);
   };
 
+  const handlePickFile = async () => {
+    const result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf', copyToCacheDirectory: true });
+    if (result.canceled || !result.assets?.[0]) return;
+
+    const asset = result.assets[0];
+    setUploadingFile(true);
+    try {
+      const response = await fetch(asset.uri);
+      const blob = await response.blob();
+      const safeName = (asset.name || 'arquivo.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const fileName = `${uuidv4()}-${safeName}`;
+      const { error } = await supabase.storage.from('product-files').upload(fileName, blob, { contentType: 'application/pdf' });
+      if (error) throw error;
+      const { data } = supabase.storage.from('product-files').getPublicUrl(fileName);
+      setDeliveryValue(data.publicUrl);
+    } catch {
+      showAlert('Não deu pra enviar o PDF', 'Tenta de novo ou cole um link (Drive/Dropbox) manualmente.');
+    }
+    setUploadingFile(false);
+  };
+
   const handleOpenNew = () => {
     resetForm();
     setShowForm(true);
@@ -129,12 +162,17 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setSelectedRecipeIds(product.recipe_ids || []);
     setCoverImageUrl(product.cover_image_url || null);
     setRequiredAccessLevel(product.required_access_level || null);
+    setSelectedTemplateId(product.template_id || null);
     setShowForm(true);
   };
 
   const handleSave = async () => {
     if (!title.trim()) {
       showAlert('Ops', 'Digita o título do produto.');
+      return;
+    }
+    if (type === 'treino_template' && !selectedTemplateId) {
+      showAlert('Ops', 'Escolhe qual template de treino esse produto vai entregar.');
       return;
     }
     setSaving(true);
@@ -149,9 +187,10 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       show_as_addon: showAsAddon,
       active,
       product_key: type,
-      recipe_ids: selectedRecipeIds,
+      recipe_ids: type === 'treino_template' ? [] : selectedRecipeIds,
       cover_image_url: coverImageUrl,
       required_access_level: requiredAccessLevel,
+      template_id: type === 'treino_template' ? selectedTemplateId : null,
     };
 
     let error;
@@ -247,22 +286,41 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           </View>
 
           <Text style={[styles.previewSectionLabel, { marginTop: 28 }]}>Área do Aluno (Depois de Liberado)</Text>
-          <Text style={styles.helperText}>É assim que aparece na aba de Receitas do aluno depois que você libera o acesso:</Text>
 
-          {previewRecipes.length === 0 ? (
-            <Text style={styles.helperText}>Nenhuma receita vinculada a esse produto ainda.</Text>
-          ) : (
-            <View style={styles.previewRecipeList}>
-              {previewRecipes.map((r) => (
-                <View key={r.id} style={styles.previewRecipeRow}>
+          {previewProduct.type === 'treino_template' ? (
+            <>
+              <Text style={styles.helperText}>É assim que aparece na Vitrine do aluno depois que você libera o acesso — ele toca em um botão e a ficha é criada automaticamente na aba de Treinos dele:</Text>
+              <View style={styles.previewRecipeList}>
+                <View style={styles.previewRecipeRow}>
                   <View style={styles.previewRecipeThumb}>
-                    <Text style={{ fontSize: 18 }}>🍽️</Text>
+                    <Ionicons name="barbell-outline" size={18} color="#f97316" />
                   </View>
-                  <Text style={styles.previewRecipeTitle}>{r.title}</Text>
+                  <Text style={styles.previewRecipeTitle}>
+                    {templates.find((t) => t.id === previewProduct.template_id)?.name || 'Template não selecionado'}
+                  </Text>
                   <Ionicons name="lock-open-outline" size={16} color="#22c55e" />
                 </View>
-              ))}
-            </View>
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.helperText}>É assim que aparece na aba de Receitas do aluno depois que você libera o acesso:</Text>
+              {previewRecipes.length === 0 ? (
+                <Text style={styles.helperText}>Nenhuma receita vinculada a esse produto ainda.</Text>
+              ) : (
+                <View style={styles.previewRecipeList}>
+                  {previewRecipes.map((r) => (
+                    <View key={r.id} style={styles.previewRecipeRow}>
+                      <View style={styles.previewRecipeThumb}>
+                        <Text style={{ fontSize: 18 }}>🍽️</Text>
+                      </View>
+                      <Text style={styles.previewRecipeTitle}>{r.title}</Text>
+                      <Ionicons name="lock-open-outline" size={16} color="#22c55e" />
+                    </View>
+                  ))}
+                </View>
+              )}
+            </>
           )}
         </ScrollView>
       </View>
@@ -282,18 +340,34 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
         </View>
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
-          <Text style={styles.label}>Receitas incluídas</Text>
-          {linkedRecipes.length === 0 ? (
-            <Text style={styles.helperText}>Nenhuma receita vinculada. Edite o produto pra adicionar.</Text>
-          ) : (
-            <View style={styles.recipeChecklist}>
-              {linkedRecipes.map((r) => (
-                <View key={r.id} style={styles.recipeCheckRow}>
-                  <Ionicons name="restaurant-outline" size={14} color="#f97316" />
-                  <Text style={styles.recipeCheckLabel}>{r.title}</Text>
+          {managingProduct.type === 'treino_template' ? (
+            <>
+              <Text style={styles.label}>Template de treino vinculado</Text>
+              <View style={styles.recipeChecklist}>
+                <View style={styles.recipeCheckRow}>
+                  <Ionicons name="barbell-outline" size={14} color="#f97316" />
+                  <Text style={styles.recipeCheckLabel}>
+                    {templates.find((t) => t.id === managingProduct.template_id)?.name || 'Nenhum template selecionado'}
+                  </Text>
                 </View>
-              ))}
-            </View>
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.label}>Receitas incluídas</Text>
+              {linkedRecipes.length === 0 ? (
+                <Text style={styles.helperText}>Nenhuma receita vinculada. Edite o produto pra adicionar.</Text>
+              ) : (
+                <View style={styles.recipeChecklist}>
+                  {linkedRecipes.map((r) => (
+                    <View key={r.id} style={styles.recipeCheckRow}>
+                      <Ionicons name="restaurant-outline" size={14} color="#f97316" />
+                      <Text style={styles.recipeCheckLabel}>{r.title}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </>
           )}
 
           <Text style={[styles.label, { marginTop: 24 }]}>Liberar acesso pra aluno</Text>
@@ -376,41 +450,79 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
             <TextInput style={styles.priceInput} keyboardType="decimal-pad" placeholder="ex: 47,00" placeholderTextColor="#525252" value={price} onChangeText={setPrice} />
           </View>
 
-          <Text style={styles.label}>Entregável / Acesso</Text>
-          <View style={styles.deliveryTypeRow}>
-            <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === 'arquivo' && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType('arquivo')}>
-              <Text style={[styles.deliveryTypeChipText, deliveryType === 'arquivo' && styles.deliveryTypeChipTextActive]}>Link de Arquivo (PDF/E-book)</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === 'chave' && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType('chave')}>
-              <Text style={[styles.deliveryTypeChipText, deliveryType === 'chave' && styles.deliveryTypeChipTextActive]}>Chave de Liberação</Text>
-            </TouchableOpacity>
-          </View>
-          <TextInput
-            style={styles.input}
-            placeholder={deliveryType === 'arquivo' ? 'Cole o link do arquivo (Drive, Dropbox...)' : 'ex: RECEITAS2026'}
-            placeholderTextColor="#525252"
-            value={deliveryValue}
-            onChangeText={setDeliveryValue}
-            autoCapitalize="none"
-          />
-
-          <Text style={styles.label}>Conteúdo do Produto (Receitas Incluídas)</Text>
-          {recipes.length === 0 ? (
-            <Text style={styles.helperText}>Você ainda não cadastrou receitas em “Gerenciar Receitas”.</Text>
+          {type === 'treino_template' ? (
+            <>
+              <Text style={styles.label}>Qual Template de Treino esse produto entrega?</Text>
+              {templates.length === 0 ? (
+                <Text style={styles.helperText}>Você ainda não criou nenhum template em “Biblioteca de Treinos”.</Text>
+              ) : (
+                <View style={styles.typeRow}>
+                  {templates.map((t) => (
+                    <TouchableOpacity
+                      key={t.id}
+                      style={[styles.deliveryTypeChip, { flex: 0, paddingHorizontal: 14 }, selectedTemplateId === t.id && styles.deliveryTypeChipActive]}
+                      onPress={() => setSelectedTemplateId(t.id)}
+                    >
+                      <Text style={[styles.deliveryTypeChipText, selectedTemplateId === t.id && styles.deliveryTypeChipTextActive]}>{t.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+              <Text style={[styles.helperText, { marginTop: 8 }]}>Ao liberar acesso, o aluno mesmo cria a ficha na aba dele com um toque — sem precisar você montar treino por treino.</Text>
+            </>
           ) : (
-            <View style={styles.recipeChecklist}>
-              {recipes.map((r) => {
-                const checked = selectedRecipeIds.includes(r.id);
-                return (
-                  <TouchableOpacity key={r.id} style={styles.recipeCheckRow} onPress={() => toggleSelectedRecipe(r.id)}>
-                    <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
-                      {checked && <Ionicons name="checkmark" size={13} color="#0a0a0a" />}
-                    </View>
-                    <Text style={styles.recipeCheckLabel}>{r.title}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            <>
+              <Text style={styles.label}>Entregável / Acesso</Text>
+              <View style={styles.deliveryTypeRow}>
+                <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === 'arquivo' && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType('arquivo')}>
+                  <Text style={[styles.deliveryTypeChipText, deliveryType === 'arquivo' && styles.deliveryTypeChipTextActive]}>Arquivo (PDF/E-book)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === 'chave' && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType('chave')}>
+                  <Text style={[styles.deliveryTypeChipText, deliveryType === 'chave' && styles.deliveryTypeChipTextActive]}>Chave de Liberação</Text>
+                </TouchableOpacity>
+              </View>
+
+              {deliveryType === 'arquivo' && (
+                <TouchableOpacity style={styles.filePickerButton} onPress={handlePickFile} disabled={uploadingFile}>
+                  {uploadingFile ? (
+                    <ActivityIndicator color="#f97316" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="cloud-upload-outline" size={16} color="#f97316" />
+                      <Text style={styles.filePickerButtonText}>{deliveryValue ? 'Trocar PDF enviado' : 'Enviar PDF'}</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+
+              <TextInput
+                style={styles.input}
+                placeholder={deliveryType === 'arquivo' ? 'Ou cole o link do arquivo (Drive, Dropbox...)' : 'ex: RECEITAS2026'}
+                placeholderTextColor="#525252"
+                value={deliveryValue}
+                onChangeText={setDeliveryValue}
+                autoCapitalize="none"
+              />
+
+              <Text style={styles.label}>Conteúdo do Produto (Receitas Incluídas)</Text>
+              {recipes.length === 0 ? (
+                <Text style={styles.helperText}>Você ainda não cadastrou receitas em “Gerenciar Receitas”.</Text>
+              ) : (
+                <View style={styles.recipeChecklist}>
+                  {recipes.map((r) => {
+                    const checked = selectedRecipeIds.includes(r.id);
+                    return (
+                      <TouchableOpacity key={r.id} style={styles.recipeCheckRow} onPress={() => toggleSelectedRecipe(r.id)}>
+                        <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
+                          {checked && <Ionicons name="checkmark" size={13} color="#0a0a0a" />}
+                        </View>
+                        <Text style={styles.recipeCheckLabel}>{r.title}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </>
           )}
 
           <Text style={styles.label}>Nível mínimo de acesso</Text>
@@ -601,6 +713,8 @@ const styles = StyleSheet.create({
   deliveryTypeChipActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
   deliveryTypeChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', textAlign: 'center' },
   deliveryTypeChipTextActive: { color: '#0a0a0a' },
+  filePickerButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1, borderColor: '#f97316', borderStyle: 'dashed', borderRadius: 8, paddingVertical: 12, marginBottom: 8 },
+  filePickerButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
   helperText: { color: '#525252', fontSize: 11 },
   accessLevelFormRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   accessLevelFormChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
