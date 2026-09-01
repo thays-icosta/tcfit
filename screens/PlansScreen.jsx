@@ -9,6 +9,15 @@ const WHATSAPP_NUMBER = '5537998231382';
 const ICONS = ['barbell-outline', 'restaurant-outline', 'sparkles-outline', 'flash-outline', 'trophy-outline'];
 const COLORS = ['#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
 
+const TRUST_CHECKLIST = [
+  'Conteúdos 100% atualizados a cada 5 semanas',
+  'Acesso ilimitado a todas as modalidades (Casa e Academia)',
+  'Guias alimentares e e-books de receitas inclusos',
+  'Canal de dúvidas direto com a equipe TcFit',
+  'Flexibilidade total: cancele a qualquer momento sem letras miúdas',
+  'Garantia incondicional de 7 dias (risco zero)',
+];
+
 export default function PlansScreen({ onBack, onLogin }) {
   const [plans, setPlans] = useState([]);
   const [templates, setTemplates] = useState([]);
@@ -18,6 +27,7 @@ export default function PlansScreen({ onBack, onLogin }) {
   const [checkoutTarget, setCheckoutTarget] = useState(null);
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [pixCopied, setPixCopied] = useState(false);
+  const [audience, setAudience] = useState('ela');
 
   useEffect(() => {
     (async () => {
@@ -104,15 +114,21 @@ export default function PlansScreen({ onBack, onLogin }) {
 
   const renderPlanCard = (plan, i) => {
     const hasPrice = plan.price != null;
+    const hasMonthlyEquivalent = plan.monthly_equivalent_price != null;
     const color = COLORS[i % COLORS.length];
     const icon = ICONS[i % ICONS.length];
     const bullets = (plan.bullets || '').split('\n').map((b) => b.trim()).filter(Boolean);
+    const ctaText = plan.audience === 'ela'
+      ? 'QUERO INICIAR MEU PLANO TCFIT ELA'
+      : plan.audience === 'ele'
+        ? 'QUERO INICIAR MEU PLANO TCFIT ELE'
+        : 'Quero meu Protocolo';
 
     return (
       <View key={plan.plan_key} style={[styles.planCard, plan.is_featured && styles.planCardHighlight]}>
         {plan.is_featured && (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>MAIS RECOMENDADO</Text>
+            <Text style={styles.badgeText}>MELHOR OFERTA</Text>
           </View>
         )}
         <View style={[styles.planIconCircle, { borderColor: color }]}>
@@ -132,15 +148,34 @@ export default function PlansScreen({ onBack, onLogin }) {
           </View>
         )}
 
-        <Text style={[styles.planPrice, { color }]}>
-          {hasPrice ? `R$ ${Number(plan.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
-        </Text>
+        {hasMonthlyEquivalent ? (
+          <>
+            <View style={styles.priceHighlightRow}>
+              <Text style={[styles.planPriceBig, { color }]}>R$ {Number(plan.monthly_equivalent_price).toFixed(2).replace('.', ',')}</Text>
+              <Text style={styles.planPriceBigSuffix}>/mês</Text>
+            </View>
+            {hasPrice && (
+              <Text style={styles.planPriceTotal}>
+                cobrado R$ {Number(plan.price).toFixed(2).replace('.', ',')}{plan.duration_label ? ` ${plan.duration_label}` : ''}
+              </Text>
+            )}
+          </>
+        ) : (
+          <Text style={[styles.planPrice, { color }]}>
+            {hasPrice ? `R$ ${Number(plan.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
+          </Text>
+        )}
+
         <TouchableOpacity style={[styles.wantButton, { backgroundColor: color }]} onPress={() => handleOpenCheckout({ kind: 'plan', data: plan })}>
-          <Text style={styles.wantButtonText}>Quero meu Protocolo</Text>
+          <Text style={styles.wantButtonText}>{ctaText}</Text>
         </TouchableOpacity>
       </View>
     );
   };
+
+  const namedPlans = plans.filter((p) => p.plan_name);
+  const hasAudienceTags = namedPlans.some((p) => p.audience);
+  const visiblePlans = hasAudienceTags ? namedPlans.filter((p) => !p.audience || p.audience === audience) : namedPlans;
 
   return (
     <View style={styles.container}>
@@ -151,19 +186,55 @@ export default function PlansScreen({ onBack, onLogin }) {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
+        <View style={styles.heroBox}>
+          <Text style={styles.heroHeadline}>Treino em casa ou na academia, dieta e suporte direto com a equipe — tudo em um só app.</Text>
+          <View style={styles.socialProofRow}>
+            <Ionicons name="people-outline" size={13} color="#a3a3a3" />
+            <Text style={styles.socialProofText}>Alunos reais, resultados reais, acompanhamento de verdade</Text>
+          </View>
+        </View>
+
         <Text style={styles.title}>Protocolos & Consultoria</Text>
         <Text style={styles.subtitle}>Escolha o plano ideal pra sua rotina</Text>
 
+        {hasAudienceTags && (
+          <View style={styles.audienceToggleRow}>
+            <TouchableOpacity
+              style={[styles.audienceToggleChip, audience === 'ela' && styles.audienceToggleChipActive]}
+              onPress={() => setAudience('ela')}
+            >
+              <Text style={[styles.audienceToggleText, audience === 'ela' && styles.audienceToggleTextActive]}>Para Elas</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.audienceToggleChip, audience === 'ele' && styles.audienceToggleChipActive]}
+              onPress={() => setAudience('ele')}
+            >
+              <Text style={[styles.audienceToggleText, audience === 'ele' && styles.audienceToggleTextActive]}>Para Eles</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {loading ? (
           <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
-        ) : plans.filter((p) => p.plan_name).length === 0 && templates.length === 0 ? (
+        ) : namedPlans.length === 0 && templates.length === 0 ? (
           <View style={styles.emptyBox}>
             <Ionicons name="time-outline" size={32} color="#525252" />
             <Text style={styles.emptyText}>Em breve novos planos disponíveis! Entre em contato pra saber mais.</Text>
           </View>
         ) : (
           <>
-            {plans.filter((p) => p.plan_name).map((plan, i) => renderPlanCard(plan, i))}
+            {visiblePlans.map((plan, i) => renderPlanCard(plan, i))}
+
+            {visiblePlans.length > 0 && (
+              <View style={styles.trustBox}>
+                {TRUST_CHECKLIST.map((item, i) => (
+                  <View key={i} style={styles.trustRow}>
+                    <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
+                    <Text style={styles.trustText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
 
             {templates.length > 0 && (
               <>
@@ -250,6 +321,22 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 20 },
   topBar: { marginBottom: 8 },
   backText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
+  heroBox: { alignItems: 'center', paddingHorizontal: 8, marginBottom: 22 },
+  heroHeadline: { color: '#f5f5f5', fontSize: 21, fontWeight: '800', textAlign: 'center', lineHeight: 28 },
+  socialProofRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
+  socialProofText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
+  audienceToggleRow: { flexDirection: 'row', gap: 8, alignSelf: 'center', backgroundColor: '#171717', borderRadius: 12, padding: 4, marginBottom: 20 },
+  audienceToggleChip: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 9 },
+  audienceToggleChipActive: { backgroundColor: '#f97316' },
+  audienceToggleText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
+  audienceToggleTextActive: { color: '#0a0a0a' },
+  priceHighlightRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
+  planPriceBig: { fontSize: 30, fontWeight: '800' },
+  planPriceBigSuffix: { color: '#737373', fontSize: 13, fontWeight: '700' },
+  planPriceTotal: { color: '#737373', fontSize: 11, marginTop: 2, marginBottom: 4 },
+  trustBox: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 16, marginBottom: 20 },
+  trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
   title: { color: '#f5f5f5', fontSize: 24, fontWeight: '800', textAlign: 'center', marginTop: 10 },
   subtitle: { color: '#a3a3a3', fontSize: 13, textAlign: 'center', marginTop: 6, marginBottom: 24 },
   emptyBox: { alignItems: 'center', gap: 12, paddingHorizontal: 32, paddingVertical: 40 },

@@ -22,6 +22,8 @@ export default function PlanPricesScreen({ onClose }) {
       (data || []).map((p) => ({
         ...p,
         priceInput: p.price != null ? String(p.price) : '',
+        monthlyEquivalentInput: p.monthly_equivalent_price != null ? String(p.monthly_equivalent_price) : '',
+        audience: p.audience || null,
         bulletsInput: p.bullets || '',
         messageInput: p.whatsapp_message || 'Olá! Gostaria de contratar o plano {plano}.',
         nameInput: p.plan_name || '',
@@ -51,6 +53,8 @@ export default function PlanPricesScreen({ onClose }) {
         nameInput: '',
         durationInput: '',
         priceInput: '',
+        monthlyEquivalentInput: '',
+        audience: null,
         bulletsInput: '',
         messageInput: 'Olá! Gostaria de contratar o plano {plano}.',
         isFeatured: false,
@@ -85,6 +89,8 @@ export default function PlanPricesScreen({ onClose }) {
         plan_name: plan.nameInput.trim(),
         duration_label: plan.durationInput.trim() || null,
         price: plan.priceInput ? Number(plan.priceInput) : null,
+        monthly_equivalent_price: plan.monthlyEquivalentInput ? Number(plan.monthlyEquivalentInput) : null,
+        audience: plan.audience || null,
         bullets: plan.bulletsInput.trim() || null,
         whatsapp_message: plan.messageInput.trim() || null,
         is_featured: plan.isFeatured,
@@ -162,6 +168,37 @@ export default function PlanPricesScreen({ onClose }) {
           </View>
           <Text style={styles.smallHint}>Deixe em branco pra mostrar "Consulte".</Text>
 
+          <Text style={styles.fieldLabel}>Preço Mensal Equivalente (opcional)</Text>
+          <View style={styles.priceRow}>
+            <Text style={styles.currencyPrefix}>R$</Text>
+            <TextInput
+              style={styles.priceInput}
+              keyboardType="decimal-pad"
+              placeholder="ex: 39,90"
+              placeholderTextColor="#525252"
+              value={plan.monthlyEquivalentInput}
+              onChangeText={(t) => handleChange(plan.plan_key, 'monthlyEquivalentInput', t)}
+            />
+          </View>
+          <Text style={styles.smallHint}>Se preenchido, esse valor aparece em destaque com “/mês” e o preço total vira o texto menor abaixo (ex: plano trimestral cobrado de uma vez).</Text>
+
+          <Text style={styles.fieldLabel}>Público-alvo</Text>
+          <View style={styles.audienceRow}>
+            {[
+              { value: null, label: 'Todos' },
+              { value: 'ela', label: 'Para Elas' },
+              { value: 'ele', label: 'Para Eles' },
+            ].map((opt) => (
+              <TouchableOpacity
+                key={opt.label}
+                style={[styles.audienceChip, plan.audience === opt.value && styles.audienceChipActive]}
+                onPress={() => handleChange(plan.plan_key, 'audience', opt.value)}
+              >
+                <Text style={[styles.audienceChipText, plan.audience === opt.value && styles.audienceChipTextActive]}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
           <Text style={styles.fieldLabel}>Benefícios (um por linha)</Text>
           <TextInput
             style={styles.bulletsInput}
@@ -235,6 +272,11 @@ const styles = StyleSheet.create({
   bulletsInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13, minHeight: 70, textAlignVertical: 'top' },
   messageInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13, minHeight: 50, textAlignVertical: 'top' },
   smallHint: { color: '#525252', fontSize: 9, marginTop: 4, lineHeight: 13 },
+  audienceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  audienceChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  audienceChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  audienceChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
+  audienceChipTextActive: { color: '#0a0a0a' },
   featuredRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 },
   featuredLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flexShrink: 1, marginRight: 8 },
   addPlanButton: { borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 16 },
