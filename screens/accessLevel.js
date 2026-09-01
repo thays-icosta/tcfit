@@ -24,3 +24,26 @@ export const PROGRAM_GOALS = [
   { value: 'definicao', label: 'Definição' },
   { value: 'condicionamento', label: 'Condicionamento' },
 ];
+
+export const TRAINING_LOCATIONS = [
+  { value: 'academia', label: 'Academia' },
+  { value: 'casa', label: 'Casa' },
+];
+
+export const PAIN_ZONES = [
+  { value: 'lombar', label: 'Lombar' },
+  { value: 'joelho', label: 'Joelho' },
+  { value: 'ombro', label: 'Ombro' },
+  { value: 'cervical', label: 'Cervical' },
+  { value: 'punho', label: 'Punho' },
+  { value: 'tornozelo', label: 'Tornozelo' },
+  { value: 'quadril', label: 'Quadril' },
+  { value: 'cotovelo', label: 'Cotovelo' },
+];
+
+export const ANAMNESE_QUESTION_TYPES = [
+  { value: 'texto_curto', label: 'Texto curto' },
+  { value: 'texto_longo', label: 'Texto longo' },
+  { value: 'multipla_escolha', label: 'Múltipla escolha' },
+  { value: 'sim_nao', label: 'Sim/Não' },
+];

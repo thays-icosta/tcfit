@@ -8,6 +8,7 @@ import { supabase } from './supabaseClient';
 import PhysicalAssessmentHistoryScreen from './PhysicalAssessmentHistoryScreen';
 import VolumeSummaryScreen from './VolumeSummaryScreen';
 import WeeklyPeriodizationScreen from './WeeklyPeriodizationScreen';
+import AnamneseFormScreen from './AnamneseFormScreen';
 import { showAlert } from './alertUtils';
 
 Notifications.setNotificationHandler({
@@ -33,6 +34,8 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
   const [showEvolution, setShowEvolution] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
   const [showPeriodization, setShowPeriodization] = useState(false);
+  const [showAnamnese, setShowAnamnese] = useState(false);
+  const [personalId, setPersonalId] = useState(null);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -50,7 +53,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
     (async () => {
       const { data } = await supabase
         .from('users')
-        .select('name, weight_kg, email, phone, reminder_enabled, reminder_time, avatar_url')
+        .select('name, weight_kg, email, phone, reminder_enabled, reminder_time, avatar_url, personal_id')
         .eq('id', user.id)
         .single();
       if (data) {
@@ -61,6 +64,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
         setReminderEnabled(data.reminder_enabled || false);
         setReminderTime(data.reminder_time || '18:00');
         setAvatarUrl(data.avatar_url || null);
+        setPersonalId(data.personal_id || null);
       }
       setLoading(false);
     })();
@@ -240,6 +244,17 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
     }
   };
 
+  if (showAnamnese) {
+    return (
+      <AnamneseFormScreen
+        studentId={user.id}
+        personalId={personalId}
+        onClose={() => setShowAnamnese(false)}
+        onComplete={() => setShowAnamnese(false)}
+      />
+    );
+  }
+
   if (showEvolution) {
     return (
       <PhysicalAssessmentHistoryScreen
@@ -323,6 +338,11 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
         <TouchableOpacity style={[styles.shortcutCard, styles.shortcutCardPurple, styles.shortcutCardWide]} onPress={() => setShowPeriodization(true)}>
           <Ionicons name="calendar-outline" size={24} color="#a855f7" />
           <Text style={styles.shortcutCardText}>Minha Periodização de Treino</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.shortcutCard, styles.shortcutCardOrange, styles.shortcutCardWide]} onPress={() => setShowAnamnese(true)}>
+          <Ionicons name="clipboard-outline" size={24} color="#f97316" />
+          <Text style={styles.shortcutCardText}>Minha Anamnese</Text>
         </TouchableOpacity>
       </View>
 

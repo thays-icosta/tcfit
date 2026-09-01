@@ -11,6 +11,7 @@ import VolumeSummaryScreen from './VolumeSummaryScreen';
 import WeeklyPeriodizationScreen from './WeeklyPeriodizationScreen';
 import PersonalFinanceScreen from './PersonalFinanceScreen';
 import ChatScreen from './ChatScreen';
+import AnamneseViewScreen from './AnamneseViewScreen';
 
 function getRpeTag(pse) {
   if (!pse) return null;
@@ -30,6 +31,7 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
   const [loading, setLoading] = useState(true);
   const [isOverdue, setIsOverdue] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showAnamnese, setShowAnamnese] = useState(false);
   const [accessLevel, setAccessLevel] = useState(student.access_level || 'plataforma_base');
   const [savingAccessLevel, setSavingAccessLevel] = useState(false);
 
@@ -191,6 +193,9 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
       />
     );
   }
+  if (showAnamnese) {
+    return <AnamneseViewScreen studentId={student.id} onClose={() => setShowAnamnese(false)} />;
+  }
 
   const lastDurationMin = lastSession && lastSession.finished_at
     ? Math.round((new Date(lastSession.finished_at) - new Date(lastSession.started_at)) / 60000)
@@ -227,9 +232,9 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.anamneseButton} onPress={() => setAssessmentFor(true)}>
+        <TouchableOpacity style={styles.anamneseButton} onPress={() => setShowAnamnese(true)}>
           <Ionicons name="clipboard-outline" size={16} color="#0a0a0a" />
-          <Text style={styles.anamneseButtonText}>Abrir Anamnese/Avaliação</Text>
+          <Text style={styles.anamneseButtonText}>Abrir Anamnese</Text>
         </TouchableOpacity>
       </View>
 

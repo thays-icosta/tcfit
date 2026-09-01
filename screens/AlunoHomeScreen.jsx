@@ -13,6 +13,7 @@ import AlunoProductsScreen from './AlunoProductsScreen';
 import AlunoDownloadsScreen from './AlunoDownloadsScreen';
 import AlunoTabBar from './AlunoTabBar';
 import ProgramDetailScreen from './ProgramDetailScreen';
+import AnamneseFormScreen from './AnamneseFormScreen';
 import { showAlert } from './alertUtils';
 import { hasAccessByLevel, HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
 
@@ -82,6 +83,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const [categorizedProducts, setCategorizedProducts] = useState([]);
   const [unlockedProductIds, setUnlockedProductIds] = useState(new Set());
   const [openProgram, setOpenProgram] = useState(null);
+  const [showAnamnesePrompt, setShowAnamnesePrompt] = useState(false);
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -110,13 +112,14 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const loadData = async () => {
     const { data: myRow } = await supabase
       .from('users')
-      .select('personal_id, avatar_url, student_type, access_level')
+      .select('personal_id, avatar_url, student_type, access_level, anamnese_completed_at')
       .eq('id', user.id)
       .single();
 
     setOwnAvatarUrl(myRow?.avatar_url || null);
     setPersonalId(myRow?.personal_id || null);
     setStudentType(myRow?.student_type || 'consultoria');
+    setShowAnamnesePrompt(!!myRow?.personal_id && !myRow?.anamnese_completed_at);
 
     if (myRow?.personal_id) {
       const { data: personalRow } = await supabase
@@ -406,6 +409,18 @@ export default function AlunoHomeScreen({ user, onLogout }) {
         studentId={user.id}
         hasFullAccess={studentType === 'consultoria'}
         onClose={() => setShowRecipes(false)}
+      />
+    );
+  }
+
+  if (showAnamnesePrompt) {
+    return (
+      <AnamneseFormScreen
+        studentId={user.id}
+        personalId={personalId}
+        allowSkip
+        onClose={() => setShowAnamnesePrompt(false)}
+        onComplete={() => setShowAnamnesePrompt(false)}
       />
     );
   }

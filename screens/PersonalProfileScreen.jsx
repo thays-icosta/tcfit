@@ -9,6 +9,7 @@ import RecipeManagerScreen from './RecipeManagerScreen';
 import TemplateBuilderScreen from './TemplateBuilderScreen';
 import ProductsManagerScreen from './ProductsManagerScreen';
 import PartnerBrandsManagerScreen from './PartnerBrandsManagerScreen';
+import AnamneseConfigScreen from './AnamneseConfigScreen';
 import { showAlert } from './alertUtils';
 
 const BRAND_COLOR_PRESETS = ['#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ef4444', '#eab308', '#ec4899', '#14b8a6'];
@@ -26,6 +27,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
   const [showProductsManager, setShowProductsManager] = useState(false);
   const [showPartnerBrands, setShowPartnerBrands] = useState(false);
+  const [showAnamneseConfig, setShowAnamneseConfig] = useState(false);
   const [studentCount, setStudentCount] = useState(0);
 
   const [brandingExpanded, setBrandingExpanded] = useState(true);
@@ -244,6 +246,10 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
     return <PartnerBrandsManagerScreen personalId={user.id} onClose={() => setShowPartnerBrands(false)} />;
   }
 
+  if (showAnamneseConfig) {
+    return <AnamneseConfigScreen personalId={user.id} onClose={() => setShowAnamneseConfig(false)} />;
+  }
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -328,6 +334,13 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
             <Ionicons name="pricetags-outline" size={22} color="#f97316" />
           </View>
           <Text style={styles.shortcutText}>Marcas Parceiras</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowAnamneseConfig(true)}>
+          <View style={styles.shortcutIconCircle}>
+            <Ionicons name="clipboard-outline" size={22} color="#f97316" />
+          </View>
+          <Text style={styles.shortcutText}>Configurar Anamnese</Text>
         </TouchableOpacity>
       </View>
 
