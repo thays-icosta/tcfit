@@ -227,8 +227,8 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
     } catch (e) {
       console.log('Erro ao escanear relatório com IA:', e.message);
       showAlert(
-        'Não foi possível ler a imagem com IA',
-        `${e.message}\n\nVerifique a chave da OpenAI configurada no Supabase, ou preencha os campos manualmente.`
+        'Não foi possível ler a imagem automaticamente',
+        'Por favor, preencha os campos da bioimpedância manualmente.'
       );
     }
     setScanning(false);
