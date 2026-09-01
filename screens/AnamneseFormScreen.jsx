@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Linking } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { PROGRAM_GOALS, TRAINING_LOCATIONS, PAIN_ZONES, SEX_OPTIONS, calculateMacroGoals } from './accessLevel';
 
-export default function AnamneseFormScreen({ studentId, personalId, onClose, onComplete, allowSkip }) {
+const WHATSAPP_NUMBER = '5537998231382';
+
+export default function AnamneseFormScreen({ studentId, personalId, onClose, onComplete, allowSkip, accessLevel, personalName, personalPhone }) {
+  const isVip = accessLevel === 'consultoria_vip';
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [questions, setQuestions] = useState([]);
@@ -26,11 +30,11 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
     (async () => {
       const [{ data: existing }, { data: questionRows }, { data: existingAnswers }, { data: ebookRows }] = await Promise.all([
         supabase.from('anamnese_responses').select('*').eq('student_id', studentId).maybeSingle(),
-        personalId
+        personalId && isVip
           ? supabase.from('anamnese_questions').select('*').eq('personal_id', personalId).eq('active', true).order('order_index')
           : Promise.resolve({ data: [] }),
         supabase.from('anamnese_answers').select('question_id, answer_text').eq('student_id', studentId),
-        personalId
+        personalId && isVip
           ? supabase.from('products').select('id, name, cover_image_url, delivery_type, delivery_value').eq('personal_id', personalId).eq('type', 'ebook_receitas').eq('active', true)
           : Promise.resolve({ data: [] }),
       ]);
@@ -62,7 +66,7 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
 
       setLoading(false);
     })();
-  }, [studentId, personalId]);
+  }, [studentId, personalId, isVip]);
 
   const handleCalculate = () => {
     const result = calculateMacroGoals({ sex, weightKg, heightCm, age, goal: mainGoal });
@@ -71,6 +75,12 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
       return;
     }
     setCalcResult(result);
+  };
+
+  const handleUpgrade = () => {
+    const phone = (personalPhone || WHATSAPP_NUMBER).replace(/\D/g, '') || WHATSAPP_NUMBER;
+    const message = `Olá${personalName ? `, ${personalName}` : ''}! Vi que a calculadora de macros e as perguntas personalizadas da anamnese são exclusivas da Consultoria VIP e quero saber mais sobre fazer upgrade.`;
+    Linking.openURL(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`).catch(() => {});
   };
 
   const togglePainZone = (value) => {
@@ -86,10 +96,12 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
       showAlert('Ops', 'Escolhe onde você vai treinar.');
       return;
     }
-    for (const q of questions) {
-      if (q.required && !(customAnswers[q.id] || '').trim()) {
-        showAlert('Ops', `Responde: "${q.question_text}"`);
-        return;
+    if (isVip) {
+      for (const q of questions) {
+        if (q.required && !(customAnswers[q.id] || '').trim()) {
+          showAlert('Ops', `Responde: "${q.question_text}"`);
+          return;
+        }
       }
     }
 
@@ -167,63 +179,77 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
           ))}
         </View>
 
-        <Text style={styles.label}>Calculadora de Calorias e Macros</Text>
-        <Text style={styles.helperText}>Preenche pra receber uma estimativa de meta diária. Seu personal pode ajustar depois.</Text>
-        <View style={styles.chipRow}>
-          {SEX_OPTIONS.map((s) => (
-            <TouchableOpacity key={s.value} style={[styles.chip, sex === s.value && styles.chipActive]} onPress={() => setSex(s.value)}>
-              <Text style={[styles.chipText, sex === s.value && styles.chipTextActive]}>{s.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={styles.calcFieldRow}>
-          <View style={styles.calcFieldSmall}>
-            <Text style={styles.calcFieldLabel}>Peso (kg)</Text>
-            <TextInput style={styles.input} keyboardType="decimal-pad" placeholder="70" placeholderTextColor="#525252" value={weightKg} onChangeText={setWeightKg} />
-          </View>
-          <View style={styles.calcFieldSmall}>
-            <Text style={styles.calcFieldLabel}>Altura (cm)</Text>
-            <TextInput style={styles.input} keyboardType="decimal-pad" placeholder="170" placeholderTextColor="#525252" value={heightCm} onChangeText={setHeightCm} />
-          </View>
-          <View style={styles.calcFieldSmall}>
-            <Text style={styles.calcFieldLabel}>Idade</Text>
-            <TextInput style={styles.input} keyboardType="number-pad" placeholder="30" placeholderTextColor="#525252" value={age} onChangeText={setAge} />
-          </View>
-        </View>
-
-        <TouchableOpacity style={styles.calcButton} onPress={handleCalculate}>
-          <Text style={styles.calcButtonText}>Calcular Estimativa</Text>
-        </TouchableOpacity>
-
-        {calcResult && (
-          <View style={styles.calcResultCard}>
-            <Text style={styles.calcResultKcal}>{calcResult.kcal} kcal/dia</Text>
-            <Text style={styles.calcResultNote}>Estimativa baseada nos seus dados — não substitui o ajuste do seu personal.</Text>
-            <View style={styles.calcMacroRow}>
-              <View style={styles.calcMacroItem}>
-                <Text style={styles.calcMacroValue}>{calcResult.protein}g</Text>
-                <Text style={styles.calcMacroLabel}>Proteína</Text>
+        {isVip ? (
+          <>
+            <Text style={styles.label}>Calculadora de Calorias e Macros</Text>
+            <Text style={styles.helperText}>Preenche pra receber uma estimativa de meta diária. Seu personal pode ajustar depois.</Text>
+            <View style={styles.chipRow}>
+              {SEX_OPTIONS.map((s) => (
+                <TouchableOpacity key={s.value} style={[styles.chip, sex === s.value && styles.chipActive]} onPress={() => setSex(s.value)}>
+                  <Text style={[styles.chipText, sex === s.value && styles.chipTextActive]}>{s.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={styles.calcFieldRow}>
+              <View style={styles.calcFieldSmall}>
+                <Text style={styles.calcFieldLabel}>Peso (kg)</Text>
+                <TextInput style={styles.input} keyboardType="decimal-pad" placeholder="70" placeholderTextColor="#525252" value={weightKg} onChangeText={setWeightKg} />
               </View>
-              <View style={styles.calcMacroItem}>
-                <Text style={styles.calcMacroValue}>{calcResult.carbs}g</Text>
-                <Text style={styles.calcMacroLabel}>Carbo</Text>
+              <View style={styles.calcFieldSmall}>
+                <Text style={styles.calcFieldLabel}>Altura (cm)</Text>
+                <TextInput style={styles.input} keyboardType="decimal-pad" placeholder="170" placeholderTextColor="#525252" value={heightCm} onChangeText={setHeightCm} />
               </View>
-              <View style={styles.calcMacroItem}>
-                <Text style={styles.calcMacroValue}>{calcResult.fat}g</Text>
-                <Text style={styles.calcMacroLabel}>Gordura</Text>
+              <View style={styles.calcFieldSmall}>
+                <Text style={styles.calcFieldLabel}>Idade</Text>
+                <TextInput style={styles.input} keyboardType="number-pad" placeholder="30" placeholderTextColor="#525252" value={age} onChangeText={setAge} />
               </View>
             </View>
 
-            {ebooks.length > 0 && (
-              <>
-                <Text style={styles.calcEbooksLabel}>Guias que podem te ajudar</Text>
-                {ebooks.map((e) => (
-                  <View key={e.id} style={styles.calcEbookRow}>
-                    <Text style={styles.calcEbookName} numberOfLines={1}>📘 {e.name}</Text>
+            <TouchableOpacity style={styles.calcButton} onPress={handleCalculate}>
+              <Text style={styles.calcButtonText}>Calcular Estimativa</Text>
+            </TouchableOpacity>
+
+            {calcResult && (
+              <View style={styles.calcResultCard}>
+                <Text style={styles.calcResultKcal}>{calcResult.kcal} kcal/dia</Text>
+                <Text style={styles.calcResultNote}>Estimativa baseada nos seus dados — não substitui o ajuste do seu personal.</Text>
+                <View style={styles.calcMacroRow}>
+                  <View style={styles.calcMacroItem}>
+                    <Text style={styles.calcMacroValue}>{calcResult.protein}g</Text>
+                    <Text style={styles.calcMacroLabel}>Proteína</Text>
                   </View>
-                ))}
-              </>
+                  <View style={styles.calcMacroItem}>
+                    <Text style={styles.calcMacroValue}>{calcResult.carbs}g</Text>
+                    <Text style={styles.calcMacroLabel}>Carbo</Text>
+                  </View>
+                  <View style={styles.calcMacroItem}>
+                    <Text style={styles.calcMacroValue}>{calcResult.fat}g</Text>
+                    <Text style={styles.calcMacroLabel}>Gordura</Text>
+                  </View>
+                </View>
+
+                {ebooks.length > 0 && (
+                  <>
+                    <Text style={styles.calcEbooksLabel}>Guias que podem te ajudar</Text>
+                    {ebooks.map((e) => (
+                      <View key={e.id} style={styles.calcEbookRow}>
+                        <Text style={styles.calcEbookName} numberOfLines={1}>📘 {e.name}</Text>
+                      </View>
+                    ))}
+                  </>
+                )}
+              </View>
             )}
+          </>
+        ) : (
+          <View style={styles.lockedCard}>
+            <Ionicons name="lock-closed" size={20} color="#f97316" />
+            <Text style={styles.lockedTitle}>Calculadora de Macros e perguntas personalizadas</Text>
+            <Text style={styles.lockedText}>Exclusivo da Consultoria VIP.</Text>
+            <TouchableOpacity style={styles.lockedButton} onPress={handleUpgrade}>
+              <Ionicons name="logo-whatsapp" size={14} color="#0a0a0a" />
+              <Text style={styles.lockedButtonText}>Fazer Upgrade</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -258,7 +284,7 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
           })}
         </View>
 
-        {questions.map((q) => (
+        {isVip && questions.map((q) => (
           <View key={q.id}>
             <Text style={styles.label}>{q.question_text}{q.required ? ' *' : ''}</Text>
             {q.question_type === 'sim_nao' ? (
@@ -338,4 +364,9 @@ const styles = StyleSheet.create({
   textArea: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#f5f5f5', fontSize: 13, minHeight: 70, textAlignVertical: 'top' },
   saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 28 },
   saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
+  lockedCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 8 },
+  lockedTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700', textAlign: 'center', marginTop: 8 },
+  lockedText: { color: '#737373', fontSize: 11, textAlign: 'center', marginTop: 4, marginBottom: 14 },
+  lockedButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 11, paddingHorizontal: 20, alignItems: 'center' },
+  lockedButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '800' },
 });

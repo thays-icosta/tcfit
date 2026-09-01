@@ -14,6 +14,7 @@ import AlunoDownloadsScreen from './AlunoDownloadsScreen';
 import AlunoTabBar from './AlunoTabBar';
 import ProgramDetailScreen from './ProgramDetailScreen';
 import AnamneseFormScreen from './AnamneseFormScreen';
+import UpgradeLockModal from './UpgradeLockModal';
 import PhysicalAssessmentHistoryScreen from './PhysicalAssessmentHistoryScreen';
 import FoodSubstituteScreen from './FoodSubstituteScreen';
 import { showAlert } from './alertUtils';
@@ -43,6 +44,7 @@ function mealLabel(code) {
 
 export default function AlunoHomeScreen({ user, onLogout }) {
   const [personalId, setPersonalId] = useState(null);
+  const [myAccessLevel, setMyAccessLevel] = useState('plataforma_base');
   const [personalName, setPersonalName] = useState(null);
   const [personalAvatarUrl, setPersonalAvatarUrl] = useState(null);
   const [personalPhone, setPersonalPhone] = useState(null);
@@ -87,6 +89,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const [openProgram, setOpenProgram] = useState(null);
   const [showAnamnesePrompt, setShowAnamnesePrompt] = useState(false);
   const [showEvolution, setShowEvolution] = useState(false);
+  const [showEvolutionLock, setShowEvolutionLock] = useState(false);
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -150,6 +153,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
         supabase.from('product_grants').select('product_id').eq('student_id', user.id),
       ]);
       const level = myRow?.access_level || 'plataforma_base';
+      setMyAccessLevel(level);
       const grantedIds = new Set((grantRows || []).map((g) => g.product_id));
       const unlocked = new Set();
       (productRows || []).forEach((p) => {
@@ -436,6 +440,9 @@ export default function AlunoHomeScreen({ user, onLogout }) {
       <AnamneseFormScreen
         studentId={user.id}
         personalId={personalId}
+        accessLevel={myAccessLevel}
+        personalName={personalName}
+        personalPhone={personalPhone}
         allowSkip
         onClose={() => setShowAnamnesePrompt(false)}
         onComplete={() => setShowAnamnesePrompt(false)}
@@ -969,13 +976,20 @@ export default function AlunoHomeScreen({ user, onLogout }) {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.gridCardWide} onPress={() => setShowEvolution(true)}>
+            <TouchableOpacity
+              style={styles.gridCardWide}
+              onPress={() => (myAccessLevel === 'consultoria_vip' ? setShowEvolution(true) : setShowEvolutionLock(true))}
+            >
               <Ionicons name="trending-up-outline" size={24} color="#f97316" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.gridCardTitle}>Evolução Física</Text>
                 <Text style={styles.gridCardSubtitle}>Fotos de progresso, peso e avaliações</Text>
               </View>
-              <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+              {myAccessLevel === 'consultoria_vip' ? (
+                <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+              ) : (
+                <Ionicons name="lock-closed" size={16} color="#f97316" />
+              )}
             </TouchableOpacity>
           </View>
 
@@ -1077,6 +1091,13 @@ export default function AlunoHomeScreen({ user, onLogout }) {
       </TouchableOpacity>
     </ScrollView>
     <AlunoTabBar activeTab={activeTab} onChange={setActiveTab} />
+    <UpgradeLockModal
+      visible={showEvolutionLock}
+      onClose={() => setShowEvolutionLock(false)}
+      personalName={personalName}
+      personalPhone={personalPhone}
+      featureLabel="Evolução Física"
+    />
     </View>
   );
 }

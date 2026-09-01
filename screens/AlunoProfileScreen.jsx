@@ -9,6 +9,7 @@ import PhysicalAssessmentHistoryScreen from './PhysicalAssessmentHistoryScreen';
 import VolumeSummaryScreen from './VolumeSummaryScreen';
 import WeeklyPeriodizationScreen from './WeeklyPeriodizationScreen';
 import AnamneseFormScreen from './AnamneseFormScreen';
+import UpgradeLockModal from './UpgradeLockModal';
 import { showAlert } from './alertUtils';
 
 Notifications.setNotificationHandler({
@@ -36,6 +37,10 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
   const [showPeriodization, setShowPeriodization] = useState(false);
   const [showAnamnese, setShowAnamnese] = useState(false);
   const [personalId, setPersonalId] = useState(null);
+  const [accessLevel, setAccessLevel] = useState('plataforma_base');
+  const [personalName, setPersonalName] = useState(null);
+  const [personalPhone, setPersonalPhone] = useState(null);
+  const [lockModalFeature, setLockModalFeature] = useState(null);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -53,7 +58,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
     (async () => {
       const { data } = await supabase
         .from('users')
-        .select('name, weight_kg, email, phone, reminder_enabled, reminder_time, avatar_url, personal_id')
+        .select('name, weight_kg, email, phone, reminder_enabled, reminder_time, avatar_url, personal_id, access_level')
         .eq('id', user.id)
         .single();
       if (data) {
@@ -65,6 +70,13 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
         setReminderTime(data.reminder_time || '18:00');
         setAvatarUrl(data.avatar_url || null);
         setPersonalId(data.personal_id || null);
+        setAccessLevel(data.access_level || 'plataforma_base');
+
+        if (data.personal_id) {
+          const { data: personalRow } = await supabase.from('users').select('name, phone').eq('id', data.personal_id).single();
+          setPersonalName(personalRow?.name || null);
+          setPersonalPhone(personalRow?.phone || null);
+        }
       }
       setLoading(false);
     })();
@@ -249,6 +261,9 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
       <AnamneseFormScreen
         studentId={user.id}
         personalId={personalId}
+        accessLevel={accessLevel}
+        personalName={personalName}
+        personalPhone={personalPhone}
         onClose={() => setShowAnamnese(false)}
         onComplete={() => setShowAnamnese(false)}
       />
@@ -324,7 +339,15 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
 
       <View style={styles.shortcutsGrid}>
         <View style={styles.shortcutsRow}>
-          <TouchableOpacity style={[styles.shortcutCard, styles.shortcutCardPurple]} onPress={() => setShowEvolution(true)}>
+          <TouchableOpacity
+            style={[styles.shortcutCard, styles.shortcutCardPurple]}
+            onPress={() => (accessLevel === 'consultoria_vip' ? setShowEvolution(true) : setLockModalFeature('Evolução Física'))}
+          >
+            {accessLevel !== 'consultoria_vip' && (
+              <View style={styles.shortcutLockBadge}>
+                <Ionicons name="lock-closed" size={11} color="#f97316" />
+              </View>
+            )}
             <Ionicons name="trending-up-outline" size={24} color="#a855f7" />
             <Text style={styles.shortcutCardText}>Evolução Física</Text>
           </TouchableOpacity>
@@ -345,6 +368,13 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
           <Text style={styles.shortcutCardText}>Minha Anamnese</Text>
         </TouchableOpacity>
       </View>
+
+      {accessLevel !== 'consultoria_vip' && (
+        <TouchableOpacity style={styles.upsellBanner} onPress={() => setLockModalFeature('a Consultoria Individualizada')}>
+          <Ionicons name="star-outline" size={16} color="#f97316" />
+          <Text style={styles.upsellBannerText}>Quer um treino 100% personalizado{personalName ? ` feito por ${personalName}` : ''}? Fazer Upgrade para Consultoria</Text>
+        </TouchableOpacity>
+      )}
 
       <View style={styles.reminderCard}>
         <View style={styles.reminderHeader}>
@@ -484,6 +514,14 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
           </View>
         </View>
       </Modal>
+
+      <UpgradeLockModal
+        visible={!!lockModalFeature}
+        onClose={() => setLockModalFeature(null)}
+        personalName={personalName}
+        personalPhone={personalPhone}
+        featureLabel={lockModalFeature || ''}
+      />
     </ScrollView>
   );
 }
@@ -503,7 +541,10 @@ const styles = StyleSheet.create({
   avatarHint: { color: '#525252', fontSize: 10, marginTop: 8 },
   shortcutsGrid: { gap: 10, marginBottom: 16 },
   shortcutsRow: { flexDirection: 'row', gap: 10 },
-  shortcutCard: { flex: 1, borderWidth: 1, borderRadius: 14, paddingVertical: 18, alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 90 },
+  upsellBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(249,115,22,0.08)', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 16 },
+  upsellBannerText: { flex: 1, color: '#a3a3a3', fontSize: 11, fontWeight: '600', lineHeight: 16 },
+  shortcutCard: { flex: 1, borderWidth: 1, borderRadius: 14, paddingVertical: 18, alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 90, position: 'relative' },
+  shortcutLockBadge: { position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
   shortcutCardWide: { flex: undefined, width: '100%' },
   shortcutCardPurple: { backgroundColor: 'rgba(168,85,247,0.12)', borderColor: '#a855f7' },
   shortcutCardOrange: { backgroundColor: 'rgba(249,115,22,0.12)', borderColor: '#f97316' },
