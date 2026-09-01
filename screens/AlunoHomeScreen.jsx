@@ -14,6 +14,7 @@ import AlunoDownloadsScreen from './AlunoDownloadsScreen';
 import AlunoTabBar from './AlunoTabBar';
 import ProgramDetailScreen from './ProgramDetailScreen';
 import AnamneseFormScreen from './AnamneseFormScreen';
+import PhysicalAssessmentHistoryScreen from './PhysicalAssessmentHistoryScreen';
 import { showAlert } from './alertUtils';
 import { hasAccessByLevel, HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
 
@@ -84,6 +85,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const [unlockedProductIds, setUnlockedProductIds] = useState(new Set());
   const [openProgram, setOpenProgram] = useState(null);
   const [showAnamnesePrompt, setShowAnamnesePrompt] = useState(false);
+  const [showEvolution, setShowEvolution] = useState(false);
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -356,6 +358,16 @@ export default function AlunoHomeScreen({ user, onLogout }) {
     }
   };
 
+  const handleOpenWhatsApp = () => {
+    if (!personalPhone) {
+      handleOpenChatFor('');
+      return;
+    }
+    const cleanPhone = personalPhone.replace(/\D/g, '');
+    const message = `Olá${personalName ? `, ${personalName}` : ''}! Tudo bem?`;
+    Linking.openURL(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`).catch(() => {});
+  };
+
   const handleOpenChatFor = (message) => {
     setChatPrefill(message || '');
     setMode('chat');
@@ -448,6 +460,16 @@ export default function AlunoHomeScreen({ user, onLogout }) {
         onAddFood={handleAddFoodToDiary}
         onClose={() => setAddingFoodForMeal(null)}
         recentForStudentId={user.id}
+      />
+    );
+  }
+
+  if (showEvolution) {
+    return (
+      <PhysicalAssessmentHistoryScreen
+        studentId={user.id}
+        studentName={user?.name || 'Você'}
+        onClose={() => setShowEvolution(false)}
       />
     );
   }
@@ -896,48 +918,68 @@ export default function AlunoHomeScreen({ user, onLogout }) {
             </View>
           )}
 
-          <View style={styles.gridWrap}>
-            <View style={styles.gridRow}>
-              <TouchableOpacity
-                style={styles.gridCard}
-                onPress={() => personalId && handleOpenChatFor('')}
-                disabled={!personalId}
-              >
+          {personalId && (
+            <View style={styles.personalCard}>
+              <TouchableOpacity style={styles.personalCardTop} onPress={() => setActiveTab('perfil')}>
                 {personalAvatarUrl ? (
-                  <Image source={{ uri: personalAvatarUrl }} style={styles.gridPersonalAvatar} />
+                  <Image source={{ uri: personalAvatarUrl }} style={styles.personalCardAvatar} />
                 ) : (
-                  <View style={styles.gridPersonalAvatarPlaceholder}>
-                    <Text style={styles.gridPersonalAvatarLetter}>{personalName?.charAt(0).toUpperCase() || '?'}</Text>
+                  <View style={styles.personalCardAvatarPlaceholder}>
+                    <Text style={styles.personalCardAvatarLetter}>{personalName?.charAt(0).toUpperCase() || '?'}</Text>
                   </View>
                 )}
-                <Text style={styles.gridCardTitle}>{personalName || 'Sem personal'}</Text>
-                <Text style={styles.gridCardSubtitle}>Seu personal</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.personalCardLabel}>Seu Personal</Text>
+                  <Text style={styles.personalCardName}>{personalName || 'Sem personal vinculado'}</Text>
+                </View>
               </TouchableOpacity>
-
-              <View style={styles.gridCard}>
-                <Ionicons name="checkmark-done-outline" size={26} color="#22c55e" />
-                <Text style={styles.gridBigNumber}>{weekDaysCount}/7</Text>
-                <Text style={styles.gridCardSubtitle}>dias treinados essa semana</Text>
+              <View style={styles.personalCardActions}>
+                <TouchableOpacity style={styles.personalCardWhatsapp} onPress={handleOpenWhatsApp}>
+                  <Ionicons name="logo-whatsapp" size={16} color="#0a0a0a" />
+                  <Text style={styles.personalCardWhatsappText}>Falar no WhatsApp</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.personalCardChatIcon} onPress={() => handleOpenChatFor('')}>
+                  <Ionicons name="chatbubble-ellipses-outline" size={18} color="#a3a3a3" />
+                </TouchableOpacity>
               </View>
             </View>
+          )}
 
+          <View style={styles.gridWrap}>
             <View style={styles.gridRow}>
               <TouchableOpacity style={styles.gridCard} onPress={() => setActiveTab('treinos')}>
                 <Ionicons name="barbell-outline" size={26} color="#f97316" />
                 <Text style={styles.gridCardTitle}>Treinos</Text>
-                <Text style={styles.gridCardSubtitle}>{workouts.length} ficha{workouts.length !== 1 ? 's' : ''}</Text>
+                <Text style={styles.gridCardSubtitle}>{workouts.length} ficha{workouts.length !== 1 ? 's' : ''} · {weekDaysCount}/7 dias essa semana</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.gridCard} onPress={() => setMode('dieta')}>
-                <Ionicons name="restaurant-outline" size={26} color="#3b82f6" />
-                <Text style={styles.gridCardTitle}>Dieta</Text>
-                <Text style={styles.gridCardSubtitle}>{diets.length} plano{diets.length !== 1 ? 's' : ''}</Text>
+                <Ionicons name="restaurant-outline" size={26} color="#a3a3a3" />
+                <Text style={styles.gridCardTitle}>Dieta e Macros</Text>
+                <Text style={styles.gridCardSubtitle}>{diets.length} plano{diets.length !== 1 ? 's' : ''} · diário</Text>
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity style={styles.gridCardWide} onPress={() => setShowEvolution(true)}>
+              <Ionicons name="trending-up-outline" size={24} color="#f97316" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.gridCardTitle}>Evolução Física</Text>
+                <Text style={styles.gridCardSubtitle}>Fotos de progresso, peso e avaliações</Text>
+              </View>
+              <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.recipesBanner} onPress={() => setShowRecipes(true)}>
-            <Text style={styles.recipesBannerText}>🍽️ Guia de Receitas Fitness</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>E-books e Conteúdos Exclusivos</Text>
+          <TouchableOpacity style={styles.ebookCard} onPress={() => setShowRecipes(true)}>
+            <View style={styles.ebookCardThumb}>
+              <Ionicons name="restaurant-outline" size={26} color="#f97316" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.ebookCardTitle}>Guia de Receitas Fitness</Text>
+              <Text style={styles.ebookCardSubtitle}>Receitas prontas com macros calculados</Text>
+              <Text style={styles.ebookCardCta}>Visualizar Receitas →</Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.productsBanner} onPress={() => setMode('downloads')}>
@@ -1052,17 +1094,29 @@ const styles = StyleSheet.create({
   payButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#22c55e', borderRadius: 10, paddingVertical: 10 },
   payButtonOverdue: { backgroundColor: '#ef4444' },
   payButtonText: { color: '#0a0a0a', fontSize: 11, fontWeight: '800' },
+  personalCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 16, marginBottom: 16 },
+  personalCardTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  personalCardAvatar: { width: 48, height: 48, borderRadius: 24 },
+  personalCardAvatarPlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
+  personalCardAvatarLetter: { color: '#f97316', fontSize: 18, fontWeight: '800' },
+  personalCardLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 2 },
+  personalCardName: { color: '#f5f5f5', fontSize: 15, fontWeight: '700' },
+  personalCardActions: { flexDirection: 'row', gap: 10 },
+  personalCardWhatsapp: { flex: 1, flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
+  personalCardWhatsappText: { color: '#0a0a0a', fontSize: 13, fontWeight: '800' },
+  personalCardChatIcon: { width: 42, height: 42, borderRadius: 10, borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center' },
   gridWrap: { gap: 12 },
   gridRow: { flexDirection: 'row', gap: 12 },
   gridCard: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 18, alignItems: 'center', justifyContent: 'center', minHeight: 130 },
-  gridPersonalAvatar: { width: 44, height: 44, borderRadius: 22, marginBottom: 8 },
-  gridPersonalAvatarPlaceholder: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  gridPersonalAvatarLetter: { color: '#f97316', fontSize: 16, fontWeight: '800' },
+  gridCardWide: { flexDirection: 'row', gap: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 18, alignItems: 'center' },
   gridBigNumber: { color: '#f5f5f5', fontSize: 24, fontWeight: '800', marginTop: 6 },
   gridCardTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginTop: 8, textAlign: 'center' },
   gridCardSubtitle: { color: '#737373', fontSize: 10, marginTop: 4, textAlign: 'center' },
-  recipesBanner: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 12 },
-  recipesBannerText: { color: '#f97316', fontSize: 13, fontWeight: '700' },
+  ebookCard: { flexDirection: 'row', gap: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 10 },
+  ebookCardThumb: { width: 56, height: 56, borderRadius: 10, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },
+  ebookCardTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  ebookCardSubtitle: { color: '#737373', fontSize: 11, marginTop: 2 },
+  ebookCardCta: { color: '#f97316', fontSize: 11, fontWeight: '700', marginTop: 6 },
   productsBanner: { backgroundColor: 'rgba(168,85,247,0.12)', borderWidth: 1, borderColor: '#a855f7', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 12 },
   productsBannerText: { color: '#a855f7', fontSize: 13, fontWeight: '700' },
   partnersSection: { marginTop: 20 },
