@@ -4,10 +4,15 @@ import { Ionicons } from '@expo/vector-icons';
 
 const ANDROID_APK_URL = 'https://github.com/thays-icosta/tcfit/releases/download/v1.0.0-android/tcfit-latest.apk';
 
+function isMobileBrowser() {
+  if (typeof navigator === 'undefined' || !navigator.userAgent) return false;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
 export default function InstallBanner() {
   const [showIosGuide, setShowIosGuide] = useState(false);
 
-  if (Platform.OS !== 'web') return null;
+  if (Platform.OS !== 'web' || !isMobileBrowser()) return null;
 
   const handleInstallAndroid = () => {
     Linking.openURL(ANDROID_APK_URL).catch(() => {});

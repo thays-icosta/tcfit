@@ -72,7 +72,7 @@ export default function AuthScreen({ onAuthenticated, onBack, initialMode, initi
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, styles.webCenterWrap]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
     <ScrollView
@@ -179,6 +179,7 @@ export default function AuthScreen({ onAuthenticated, onBack, initialMode, initi
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a' },
+  webCenterWrap: Platform.OS === 'web' ? { maxWidth: 440, width: '100%', marginHorizontal: 'auto' } : {},
   backLink: { marginBottom: 20 },
   backLinkText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
   brandBlock: { alignItems: 'center', marginBottom: 8 },

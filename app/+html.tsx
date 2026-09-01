@@ -24,6 +24,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="mobile-web-app-capable" content="yes" />
 
         <ScrollViewStyleReset />
+        <style dangerouslySetInnerHTML={{ __html: 'html, body { background-color: #0a0a0a; }' }} />
       </head>
       <body>{children}</body>
     </html>

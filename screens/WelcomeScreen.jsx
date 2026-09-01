@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import InstallBanner from './InstallBanner';
 
@@ -33,7 +33,14 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'space-between', paddingVertical: 80, paddingHorizontal: 32 },
+  container: {
+    flex: 1,
+    backgroundColor: '#0a0a0a',
+    justifyContent: 'space-between',
+    paddingVertical: 80,
+    paddingHorizontal: 32,
+    ...(Platform.OS === 'web' ? { maxWidth: 440, width: '100%', marginHorizontal: 'auto' } : {}),
+  },
   centerBlock: { alignItems: 'center', marginTop: 40 },
   logo: { width: 140, height: 140, marginBottom: 12 },
   appName: { color: '#f5f5f5', fontSize: 32, fontWeight: '800', letterSpacing: 0.5 },
