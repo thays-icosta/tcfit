@@ -1130,7 +1130,7 @@ const styles = StyleSheet.create({
   productsBannerText: { color: '#a855f7', fontSize: 13, fontWeight: '700' },
   partnersSection: { marginTop: 20 },
   categoryCard: { width: 110 },
-  categoryCoverWrap: { width: 110, height: 150, borderRadius: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', overflow: 'hidden', marginBottom: 6, position: 'relative' },
+  categoryCoverWrap: { width: 110, aspectRatio: 1, borderRadius: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', overflow: 'hidden', marginBottom: 6, position: 'relative' },
   categoryCoverImage: { width: '100%', height: '100%' },
   categoryCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   categoryLockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
