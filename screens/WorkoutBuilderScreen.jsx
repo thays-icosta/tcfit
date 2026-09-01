@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Activi
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import AddExerciseModal from './AddExerciseModal';
+import EditExerciseModal from './EditExerciseModal';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { loadPeriodizationPlan, getCurrentPhase } from './periodizationUtils';
 import { showAlert } from './alertUtils';
@@ -57,6 +58,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const [showCreateFichaModal, setShowCreateFichaModal] = useState(false);
   const [renamingWorkout, setRenamingWorkout] = useState(null);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
 
   const loadWorkouts = async () => {
     const { data } = await supabase
@@ -389,6 +391,16 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     loadItems(activeWorkoutId);
   };
 
+  const handleSaveEditItem = async (config) => {
+    const { error } = await supabase.from('workout_exercises').update(config).eq('id', editingItem.id);
+    setEditingItem(null);
+    if (error) {
+      showAlert('Erro ao salvar', error.message);
+    } else {
+      loadItems(activeWorkoutId);
+    }
+  };
+
   const handleOpenReplicate = () => {
     if (items.length === 0) {
       showAlert('Ops', 'Ainda não tem exercício nessa ficha pra aplicar valores.');
@@ -477,6 +489,16 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     );
   }
 
+  if (editingItem) {
+    return (
+      <EditExerciseModal
+        item={editingItem}
+        onSave={handleSaveEditItem}
+        onClose={() => setEditingItem(null)}
+      />
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
@@ -486,6 +508,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         <Text style={styles.studentLabel}>{studentName}</Text>
       </View>
 
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 120 }}>
       <View style={styles.fichaRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
           {workouts.map((w) => (
@@ -563,7 +586,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
             <Text style={styles.addExerciseButtonText}>+ Adicionar Exercício</Text>
           </TouchableOpacity>
 
-          <ScrollView style={{ flex: 1 }}>
+          <>
             <Text style={styles.sectionTitle}>Exercícios da ficha ({items.length})</Text>
             {items.length === 0 ? (
               <Text style={styles.emptyText}>Nenhum exercício ainda nessa ficha.</Text>
@@ -610,6 +633,9 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
                           <TouchableOpacity hitSlop={10} onPress={() => handleMove(index, 1)} disabled={index === items.length - 1}>
                             <Text style={[styles.moveArrow, index === items.length - 1 && styles.moveArrowDisabled]}>▼</Text>
                           </TouchableOpacity>
+                          <TouchableOpacity hitSlop={10} onPress={() => setEditingItem(item)}>
+                            <Ionicons name="pencil-outline" size={16} color="#3b82f6" />
+                          </TouchableOpacity>
                           <TouchableOpacity hitSlop={10} onPress={() => handleRemoveItem(item.id)}>
                             <Ionicons name="trash-outline" size={16} color="#ef4444" />
                           </TouchableOpacity>
@@ -631,13 +657,14 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
                 );
               })
             )}
-          </ScrollView>
+          </>
         </>
       )}
 
       <TouchableOpacity style={styles.saveButton} onPress={onClose}>
         <Text style={styles.saveButtonText}>Salvar Ficha</Text>
       </TouchableOpacity>
+      </ScrollView>
 
       <PromptModal
         visible={!!renamingWorkout}
