@@ -20,6 +20,18 @@ function typeMeta(value) {
   return TYPES.find((t) => t.value === value) || TYPES[3];
 }
 
+function extractFileLabel(url) {
+  try {
+    const last = decodeURIComponent(url.split('/').pop().split('?')[0]);
+    const uuidPrefixMatch = last.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-(.+)$/i);
+    const name = uuidPrefixMatch ? uuidPrefixMatch[1] : last;
+    if (!name || name.length > 60 || !name.includes('.')) return 'Arquivo vinculado';
+    return name;
+  } catch {
+    return 'Arquivo vinculado';
+  }
+}
+
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
@@ -210,11 +222,11 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       type,
       price: price ? Number(price) : null,
       delivery_type: deliveryType,
-      delivery_value: deliveryValue.trim() || null,
+      delivery_value: deliveryType === 'receitas' ? null : deliveryValue.trim() || null,
       show_as_addon: showAsAddon,
       active,
       product_key: type,
-      recipe_ids: type === 'treino_template' ? [] : selectedRecipeIds,
+      recipe_ids: type === 'treino_template' ? [] : deliveryType === 'receitas' ? selectedRecipeIds : [],
       cover_image_url: coverImageUrl,
       required_access_level: requiredAccessLevel,
       template_id: type === 'treino_template' ? selectedTemplateIds[0] : null,
@@ -589,47 +601,68 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                 <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === 'chave' && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType('chave')}>
                   <Text style={[styles.deliveryTypeChipText, deliveryType === 'chave' && styles.deliveryTypeChipTextActive]}>Chave de Liberação</Text>
                 </TouchableOpacity>
+                <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === 'receitas' && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType('receitas')}>
+                  <Text style={[styles.deliveryTypeChipText, deliveryType === 'receitas' && styles.deliveryTypeChipTextActive]}>Pacote de Receitas Internas</Text>
+                </TouchableOpacity>
               </View>
 
-              {deliveryType === 'arquivo' && (
-                <TouchableOpacity style={styles.filePickerButton} onPress={handlePickFile} disabled={uploadingFile}>
-                  {uploadingFile ? (
-                    <ActivityIndicator color="#f97316" size="small" />
-                  ) : (
-                    <>
-                      <Ionicons name="cloud-upload-outline" size={16} color="#f97316" />
-                      <Text style={styles.filePickerButtonText}>{deliveryValue ? 'Trocar PDF enviado' : 'Enviar PDF'}</Text>
-                    </>
+              {(deliveryType === 'arquivo' || deliveryType === 'chave') && (
+                <>
+                  {deliveryType === 'arquivo' && (
+                    <TouchableOpacity style={styles.filePickerButton} onPress={handlePickFile} disabled={uploadingFile}>
+                      {uploadingFile ? (
+                        <ActivityIndicator color="#f97316" size="small" />
+                      ) : (
+                        <>
+                          <Ionicons name="cloud-upload-outline" size={16} color="#f97316" />
+                          <Text style={styles.filePickerButtonText}>{deliveryValue ? 'Trocar PDF enviado' : 'Enviar PDF'}</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
                   )}
-                </TouchableOpacity>
+
+                  {deliveryType === 'arquivo' && deliveryValue ? (
+                    <View style={styles.fileConfirmBadge}>
+                      <Ionicons name="document-text-outline" size={16} color="#22c55e" />
+                      <Text style={styles.fileConfirmText} numberOfLines={1}>{extractFileLabel(deliveryValue)} (Enviado com sucesso)</Text>
+                      <TouchableOpacity hitSlop={8} onPress={() => setDeliveryValue('')}>
+                        <Ionicons name="close-circle" size={16} color="#737373" />
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TextInput
+                      style={styles.input}
+                      placeholder={deliveryType === 'arquivo' ? 'Ou cole o link do arquivo (Drive, Dropbox...)' : 'ex: RECEITAS2026'}
+                      placeholderTextColor="#525252"
+                      value={deliveryValue}
+                      onChangeText={setDeliveryValue}
+                      autoCapitalize="none"
+                    />
+                  )}
+                </>
               )}
 
-              <TextInput
-                style={styles.input}
-                placeholder={deliveryType === 'arquivo' ? 'Ou cole o link do arquivo (Drive, Dropbox...)' : 'ex: RECEITAS2026'}
-                placeholderTextColor="#525252"
-                value={deliveryValue}
-                onChangeText={setDeliveryValue}
-                autoCapitalize="none"
-              />
-
-              <Text style={styles.label}>Conteúdo do Produto (Receitas Incluídas)</Text>
-              {recipes.length === 0 ? (
-                <Text style={styles.helperText}>Você ainda não cadastrou receitas em “Gerenciar Receitas”.</Text>
-              ) : (
-                <View style={styles.recipeChecklist}>
-                  {recipes.map((r) => {
-                    const checked = selectedRecipeIds.includes(r.id);
-                    return (
-                      <TouchableOpacity key={r.id} style={styles.recipeCheckRow} onPress={() => toggleSelectedRecipe(r.id)}>
-                        <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
-                          {checked && <Ionicons name="checkmark" size={13} color="#0a0a0a" />}
-                        </View>
-                        <Text style={styles.recipeCheckLabel}>{r.title}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+              {deliveryType === 'receitas' && (
+                <>
+                  <Text style={styles.label}>Conteúdo do Produto (Receitas Incluídas)</Text>
+                  {recipes.length === 0 ? (
+                    <Text style={styles.helperText}>Você ainda não cadastrou receitas em “Gerenciar Receitas”.</Text>
+                  ) : (
+                    <View style={styles.recipeChecklist}>
+                      {recipes.map((r) => {
+                        const checked = selectedRecipeIds.includes(r.id);
+                        return (
+                          <TouchableOpacity key={r.id} style={styles.recipeCheckRow} onPress={() => toggleSelectedRecipe(r.id)}>
+                            <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
+                              {checked && <Ionicons name="checkmark" size={13} color="#0a0a0a" />}
+                            </View>
+                            <Text style={styles.recipeCheckLabel}>{r.title}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
+                </>
               )}
             </>
           )}
@@ -852,6 +885,8 @@ const styles = StyleSheet.create({
   deliveryTypeChipTextActive: { color: '#0a0a0a' },
   filePickerButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1, borderColor: '#f97316', borderStyle: 'dashed', borderRadius: 8, paddingVertical: 12, marginBottom: 8 },
   filePickerButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
+  fileConfirmBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(34,197,94,0.1)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10 },
+  fileConfirmText: { flex: 1, color: '#22c55e', fontSize: 12, fontWeight: '600' },
   helperText: { color: '#525252', fontSize: 11 },
   accessLevelFormRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   accessLevelFormChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
