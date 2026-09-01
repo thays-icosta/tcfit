@@ -10,6 +10,7 @@ import StudentDietDiaryViewScreen from './StudentDietDiaryViewScreen';
 import VolumeSummaryScreen from './VolumeSummaryScreen';
 import WeeklyPeriodizationScreen from './WeeklyPeriodizationScreen';
 import PersonalFinanceScreen from './PersonalFinanceScreen';
+import ChatScreen from './ChatScreen';
 
 function getRpeTag(pse) {
   if (!pse) return null;
@@ -27,6 +28,8 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
   const [lastSession, setLastSession] = useState(null);
   const [diaryTotals, setDiaryTotals] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isOverdue, setIsOverdue] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const [accessLevel, setAccessLevel] = useState(student.access_level || 'plataforma_base');
   const [savingAccessLevel, setSavingAccessLevel] = useState(false);
 
@@ -81,6 +84,15 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
       .eq('entry_date', todayStr);
     const consumedKcal = (entries || []).reduce((sum, e) => sum + (e.calories_kcal || 0), 0);
     setDiaryTotals({ goalKcal, consumedKcal });
+
+    const { data: overdueRows } = await supabase
+      .from('payments')
+      .select('id')
+      .eq('student_id', student.id)
+      .eq('paid', false)
+      .lt('due_date', todayStr)
+      .limit(1);
+    setIsOverdue((overdueRows || []).length > 0);
 
     setLoading(false);
   };
@@ -167,6 +179,18 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
       />
     );
   }
+  if (showChat) {
+    return (
+      <ChatScreen
+        personalId={personalId}
+        studentId={student.id}
+        currentUserId={personalId}
+        otherName={student.name}
+        otherAvatarUrl={student.avatar_url}
+        onClose={() => setShowChat(false)}
+      />
+    );
+  }
 
   const lastDurationMin = lastSession && lastSession.finished_at
     ? Math.round((new Date(lastSession.finished_at) - new Date(lastSession.started_at)) / 60000)
@@ -181,16 +205,31 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.studentHeader}>
-        <View style={styles.avatarCircle}>
-          {student.avatar_url ? (
-            <Image source={{ uri: student.avatar_url }} style={styles.avatarImage} />
-          ) : (
-            <Text style={styles.avatarLetter}>{student.name?.charAt(0).toUpperCase() || '?'}</Text>
-          )}
+      <View style={styles.summaryHeaderCard}>
+        <View style={styles.summaryHeaderTop}>
+          <View style={styles.avatarCircle}>
+            {student.avatar_url ? (
+              <Image source={{ uri: student.avatar_url }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarLetter}>{student.name?.charAt(0).toUpperCase() || '?'}</Text>
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.studentName}>{student.name}</Text>
+            <View style={styles.statusRow}>
+              <View style={[styles.statusDot, isOverdue && styles.statusDotInactive]} />
+              <Text style={[styles.statusText, isOverdue && styles.statusTextInactive]}>{isOverdue ? 'Inativo' : 'Ativo'}</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.chatShortcutButton} onPress={() => setShowChat(true)}>
+            <Ionicons name="chatbubbles-outline" size={18} color="#22c55e" />
+          </TouchableOpacity>
         </View>
-        <Text style={styles.studentName}>{student.name}</Text>
-        <Text style={styles.studentEmail}>{student.email}</Text>
+
+        <TouchableOpacity style={styles.anamneseButton} onPress={() => setAssessmentFor(true)}>
+          <Ionicons name="clipboard-outline" size={16} color="#0a0a0a" />
+          <Text style={styles.anamneseButtonText}>Abrir Anamnese/Avaliação</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.accessLevelBox}>
@@ -295,12 +334,21 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
   topBar: { marginBottom: 8 },
   closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  studentHeader: { alignItems: 'center', marginBottom: 20 },
-  avatarCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#171717', borderWidth: 2, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 10 },
-  avatarImage: { width: 72, height: 72 },
-  avatarLetter: { color: '#f97316', fontSize: 26, fontWeight: '800' },
-  studentName: { color: '#f5f5f5', fontSize: 19, fontWeight: '800' },
+  summaryHeaderCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 14, marginBottom: 16 },
+  summaryHeaderTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+  avatarCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#0a0a0a', borderWidth: 2, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarImage: { width: 56, height: 56 },
+  avatarLetter: { color: '#f97316', fontSize: 20, fontWeight: '800' },
+  studentName: { color: '#f5f5f5', fontSize: 17, fontWeight: '800' },
   studentEmail: { color: '#737373', fontSize: 12, marginTop: 2 },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' },
+  statusDotInactive: { backgroundColor: '#ef4444' },
+  statusText: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
+  statusTextInactive: { color: '#ef4444' },
+  chatShortcutButton: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', alignItems: 'center', justifyContent: 'center' },
+  anamneseButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
+  anamneseButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '700' },
   accessLevelBox: { marginBottom: 16 },
   accessLevelLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
   accessLevelRow: { flexDirection: 'row', gap: 8 },

@@ -56,6 +56,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const [saving, setSaving] = useState(false);
   const [showCreateFichaModal, setShowCreateFichaModal] = useState(false);
   const [renamingWorkout, setRenamingWorkout] = useState(null);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
 
   const loadWorkouts = async () => {
     const { data } = await supabase
@@ -507,11 +508,11 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
           <Text style={styles.actionChipText}>+ Nova Ficha</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionChip} onPress={handleOpenTemplatePicker}>
-          <Text style={styles.actionChipText}>⚡ Template</Text>
+          <Text style={styles.actionChipText}>⚡ Importar Template</Text>
         </TouchableOpacity>
         {activeWorkoutId && items.length > 0 && (
           <TouchableOpacity style={styles.actionChip} onPress={handleOpenReplicate}>
-            <Text style={styles.actionChipText}>📋 Aplicar a todos</Text>
+            <Text style={styles.actionChipText}>📋 Copiar para Todos</Text>
           </TouchableOpacity>
         )}
         {activeWorkoutId && (
@@ -541,15 +542,20 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
           {muscleGroupEntries.length > 0 && (
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryTitle}>Resumo por grupo muscular</Text>
-              <View style={styles.summaryRow}>
-                {muscleGroupEntries.map(([group, count]) => (
-                  <View key={group} style={styles.summaryBadge}>
-                    <Text style={styles.summaryBadgeCount}>{count}</Text>
-                    <Text style={styles.summaryBadgeLabel}>{group}</Text>
-                  </View>
-                ))}
-              </View>
+              <TouchableOpacity style={styles.summaryHeader} onPress={() => setSummaryExpanded(!summaryExpanded)}>
+                <Text style={styles.summaryTitle}>Resumo por grupo muscular</Text>
+                <Ionicons name={summaryExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={14} color="#737373" />
+              </TouchableOpacity>
+              {summaryExpanded && (
+                <View style={styles.summaryRow}>
+                  {muscleGroupEntries.map(([group, count]) => (
+                    <View key={group} style={styles.summaryBadge}>
+                      <Text style={styles.summaryBadgeCount}>{count}</Text>
+                      <Text style={styles.summaryBadgeLabel}>{group}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           )}
 
@@ -805,8 +811,8 @@ const styles = StyleSheet.create({
   fichaTabActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
   fichaTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   fichaTabTextActive: { color: '#0a0a0a' },
-  hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 8 },
-  actionsRow: { marginBottom: 14 },
+  hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 6 },
+  actionsRow: { marginBottom: 8 },
   actionsRowContent: { paddingHorizontal: 16, gap: 8 },
   actionChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
   actionChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
@@ -815,14 +821,15 @@ const styles = StyleSheet.create({
   suggestionChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
   suggestionChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
-  phaseSelectorRow: { marginHorizontal: 16, marginBottom: 12 },
+  phaseSelectorRow: { marginHorizontal: 16, marginBottom: 8 },
   phaseBadge: { alignSelf: 'flex-start', backgroundColor: '#171717', borderWidth: 1, borderColor: '#a855f7', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
   phaseBadgeCurrent: { backgroundColor: 'rgba(168,85,247,0.15)' },
   phaseBadgeText: { color: '#a855f7', fontSize: 11, fontWeight: '700' },
   phaseSelectorPlaceholder: { color: '#525252', fontSize: 11, textDecorationLine: 'underline' },
-  summaryCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 8, marginHorizontal: 16, marginBottom: 8 },
-  summaryTitle: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 6 },
-  summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  summaryCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, marginHorizontal: 16, marginBottom: 6 },
+  summaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  summaryTitle: { color: '#737373', fontSize: 9, textTransform: 'uppercase' },
+  summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
   summaryBadge: { backgroundColor: '#0a0a0a', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', minWidth: 50 },
   summaryBadgeCount: { color: '#f97316', fontSize: 13, fontWeight: '700' },
   summaryBadgeLabel: { color: '#a3a3a3', fontSize: 8, textTransform: 'capitalize', marginTop: 1 },

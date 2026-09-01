@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Switch, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
@@ -33,6 +34,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [watchingVideo, setWatchingVideo] = useState(null);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
 
   const [newTemplateName, setNewTemplateName] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -336,37 +338,64 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
         <Text style={styles.title}>Templates de Treino</Text>
       </View>
 
-      <View style={styles.templateRow}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
-          {templates.map((t) => (
-            <TouchableOpacity
-              key={t.id}
-              style={[styles.templateTab, activeTemplateId === t.id && styles.templateTabActive]}
-              onPress={() => setActiveTemplateId(t.id)}
-              onLongPress={() => handleDeleteTemplate(t)}
-            >
-              <Text style={[styles.templateTabText, activeTemplateId === t.id && styles.templateTabTextActive]}>{t.name}</Text>
-              {t.is_public && <Text style={styles.publicDot}>●</Text>}
+      <TouchableOpacity style={styles.editingBar} onPress={() => setShowTemplatePicker(true)}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.editingBarLabel}>Editando</Text>
+          <Text style={styles.editingBarTitle} numberOfLines={1}>
+            {templates.find((t) => t.id === activeTemplateId)?.name || 'Nenhum template selecionado'}
+          </Text>
+        </View>
+        <Ionicons name="swap-horizontal-outline" size={16} color="#f97316" />
+        <Text style={styles.editingBarSwitchText}>Trocar</Text>
+      </TouchableOpacity>
+
+      <Modal visible={showTemplatePicker} transparent animationType="slide" onRequestClose={() => setShowTemplatePicker(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Meus Templates</Text>
+
+            <View style={styles.newRow}>
+              <TextInput
+                style={styles.newInput}
+                placeholder="Nome do novo template"
+                placeholderTextColor="#737373"
+                value={newTemplateName}
+                onChangeText={setNewTemplateName}
+              />
+              <TouchableOpacity style={styles.addButton} onPress={handleCreateTemplate}>
+                <Text style={styles.addButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 320 }}>
+              {templates.map((t) => (
+                <TouchableOpacity
+                  key={t.id}
+                  style={[styles.templateListRow, activeTemplateId === t.id && styles.templateListRowActive]}
+                  onPress={() => {
+                    setActiveTemplateId(t.id);
+                    setShowTemplatePicker(false);
+                  }}
+                >
+                  <Text style={styles.templateListRowText} numberOfLines={1}>{t.name}</Text>
+                  {t.is_public && <Text style={styles.publicDot}>●</Text>}
+                  <TouchableOpacity hitSlop={8} onPress={() => handleDeleteTemplate(t)}>
+                    <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              ))}
+              {templates.length === 0 && <Text style={styles.emptyText}>Nenhum template ainda.</Text>}
+            </ScrollView>
+
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowTemplatePicker(false)}>
+              <Text style={styles.modalCloseButtonText}>Fechar</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-      {templates.length > 0 && <Text style={styles.hintText}>Segure uma aba pra excluir · ● indica template à venda</Text>}
-      <View style={styles.newRow}>
-        <TextInput
-          style={styles.newInput}
-          placeholder="Nome do novo template"
-          placeholderTextColor="#737373"
-          value={newTemplateName}
-          onChangeText={setNewTemplateName}
-        />
-        <TouchableOpacity style={styles.addButton} onPress={handleCreateTemplate}>
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
-      </View>
+          </View>
+        </View>
+      </Modal>
 
       {!activeTemplateId ? (
-        <Text style={styles.emptyText}>Cria um template acima pra começar.</Text>
+        <Text style={styles.emptyText}>Cria um template pra começar.</Text>
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }}>
           <View style={styles.metaCard}>
@@ -387,7 +416,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
 
             {editIsPublic && (
               <>
-                <Text style={styles.metaLabel}>Foto de Capa (vertical, pra vitrine)</Text>
+                <Text style={styles.metaLabel}>Foto de Capa (Poster)</Text>
                 <TouchableOpacity style={styles.coverPicker} onPress={handlePickCoverImage} disabled={uploadingCover}>
                   {uploadingCover ? (
                     <ActivityIndicator color="#f97316" />
@@ -505,14 +534,21 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12 },
   closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
   title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
-  templateRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 4 },
-  templateTab: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
-  templateTabActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
-  templateTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  templateTabTextActive: { color: '#0a0a0a' },
+  editingBar: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginHorizontal: 16, marginBottom: 16 },
+  editingBarLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 2 },
+  editingBarTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
+  editingBarSwitchText: { color: '#f97316', fontSize: 11, fontWeight: '700' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: '#171717', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '80%' },
+  modalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 14 },
+  templateListRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, marginBottom: 8 },
+  templateListRowActive: { borderColor: '#f97316' },
+  templateListRowText: { flex: 1, color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
+  modalCloseButton: { paddingVertical: 12, alignItems: 'center', marginTop: 8 },
+  modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
   publicDot: { color: '#22c55e', fontSize: 8 },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 8 },
-  newRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 16, gap: 8 },
+  newRow: { flexDirection: 'row', marginBottom: 16, gap: 8 },
   newInput: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#f5f5f5', fontSize: 12 },
   addButton: { backgroundColor: '#f97316', width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   addButtonText: { color: '#0a0a0a', fontSize: 20, fontWeight: '700' },
@@ -534,11 +570,11 @@ const styles = StyleSheet.create({
   categoryChipTextActive: { color: '#0a0a0a' },
   sessionRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 4, gap: 8 },
   sessionTab: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
-  sessionTabActive: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
+  sessionTabActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
   sessionTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   sessionTabTextActive: { color: '#0a0a0a' },
-  addSessionButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
-  addSessionButtonText: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
+  addSessionButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
+  addSessionButtonText: { color: '#f97316', fontSize: 11, fontWeight: '700' },
   addExerciseButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
   addExerciseButtonText: { color: '#f97316', fontSize: 13, fontWeight: '700' },
   sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
