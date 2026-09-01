@@ -11,6 +11,7 @@ import TemplateBuilderScreen from './TemplateBuilderScreen';
 import ProductsManagerScreen from './ProductsManagerScreen';
 import FoodCatalogScreen from './FoodCatalogScreen';
 import AlunoDetailScreen from './AlunoDetailScreen';
+import AnamneseConfigScreen from './AnamneseConfigScreen';
 import { showAlert } from './alertUtils';
 
 export default function PersonalHomeScreen({ user, onLogout }) {
@@ -28,6 +29,7 @@ export default function PersonalHomeScreen({ user, onLogout }) {
   const [showTemplates, setShowTemplates] = useState(false);
   const [showProductsManager, setShowProductsManager] = useState(false);
   const [showFoodCatalog, setShowFoodCatalog] = useState(false);
+  const [showAnamneseConfig, setShowAnamneseConfig] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
   const [financeSummary, setFinanceSummary] = useState({ monthlyRevenue: 0, dueCount: 0 });
 
@@ -182,6 +184,10 @@ export default function PersonalHomeScreen({ user, onLogout }) {
     );
   }
 
+  if (showAnamneseConfig) {
+    return <AnamneseConfigScreen personalId={user.id} onClose={() => setShowAnamneseConfig(false)} />;
+  }
+
   if (showTemplates) {
     return <TemplateBuilderScreen personalId={user.id} onClose={() => setShowTemplates(false)} />;
   }
@@ -222,7 +228,7 @@ export default function PersonalHomeScreen({ user, onLogout }) {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.summaryCard}>
+      <TouchableOpacity style={styles.summaryCard} onPress={() => setShowFinance(true)} activeOpacity={0.7}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>R$ {financeSummary.monthlyRevenue.toFixed(2)}</Text>
           <Text style={styles.summaryLabel}>Faturamento Mensal</Text>
@@ -237,7 +243,7 @@ export default function PersonalHomeScreen({ user, onLogout }) {
           <Text style={styles.summaryValue}>{financeSummary.dueCount}</Text>
           <Text style={styles.summaryLabel}>A Vencer</Text>
         </View>
-      </View>
+      </TouchableOpacity>
 
       <View style={styles.shortcutGrid}>
         <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowTemplates(true)}>
@@ -258,11 +264,11 @@ export default function PersonalHomeScreen({ user, onLogout }) {
           </View>
           <Text style={styles.shortcutText}>Produtos Adicionais</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowFinance(true)}>
+        <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowAnamneseConfig(true)}>
           <View style={styles.shortcutIconCircle}>
-            <Ionicons name="cash-outline" size={20} color="#f97316" />
+            <Ionicons name="clipboard-outline" size={20} color="#f97316" />
           </View>
-          <Text style={styles.shortcutText}>Financeiro</Text>
+          <Text style={styles.shortcutText}>Configurar Anamnese</Text>
         </TouchableOpacity>
       </View>
 

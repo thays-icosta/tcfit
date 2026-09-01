@@ -280,7 +280,12 @@ export default function FoodCatalogScreen({ onAddFood, onClose, recentForStudent
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <Text style={styles.title}>Catálogo de Alimentos</Text>
+        <View style={styles.topBarLeft}>
+          <TouchableOpacity onPress={onClose}>
+            <Text style={styles.backText}>← Voltar</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>Catálogo de Alimentos</Text>
+        </View>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Text style={styles.closeButtonText}>Concluir</Text>
         </TouchableOpacity>
@@ -387,7 +392,9 @@ export default function FoodCatalogScreen({ onAddFood, onClose, recentForStudent
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  title: { color: '#f5f5f5', fontSize: 17, fontWeight: '700' },
+  topBarLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flexShrink: 1 },
+  backText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
+  title: { color: '#f5f5f5', fontSize: 17, fontWeight: '700', flexShrink: 1 },
   closeButton: { backgroundColor: '#f97316', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
   closeButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
   disclaimer: { color: '#525252', fontSize: 10, marginBottom: 10 },
