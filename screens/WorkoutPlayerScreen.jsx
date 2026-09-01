@@ -3,9 +3,11 @@ import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Activi
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './supabaseClient';
 import { loadPeriodizationPlan, getCurrentPhase } from './periodizationUtils';
 import { showAlert } from './alertUtils';
+import AlunoTabBar from './AlunoTabBar';
 
 function parseReps(repsStr) {
   if (!repsStr) return 10;
@@ -57,7 +59,8 @@ async function setQueue(key, arr) {
   await AsyncStorage.setItem(key, JSON.stringify(arr));
 }
 
-export default function WorkoutPlayerScreen({ workout, studentId, onExit }) {
+export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavigateTab }) {
+  const insets = useSafeAreaInsets();
   const [exercises, setExercises] = useState([]);
   const [sessionId, setSessionId] = useState(null);
   const [startedAt, setStartedAt] = useState(null);
@@ -434,10 +437,11 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit }) {
 
   if (showCelebration && summary) {
     return (
+      <View style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
-          style={styles.celebrationContainer}
-          contentContainerStyle={{ alignItems: 'center', paddingBottom: 40 }}
+          style={[styles.celebrationContainer, { paddingTop: insets.top + 40 }]}
+          contentContainerStyle={{ alignItems: 'center', paddingBottom: 40, flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.trophyCircle}>
@@ -498,7 +502,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit }) {
             />
           </View>
 
-          <TouchableOpacity style={styles.finishButtonWide} onPress={handleSavePse} disabled={savingPse}>
+          <TouchableOpacity style={[styles.finishButtonWide, { marginBottom: 24 }]} onPress={handleSavePse} disabled={savingPse}>
             {savingPse ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.finishButtonText}>Concluir</Text>}
           </TouchableOpacity>
         </ScrollView>
@@ -513,6 +517,8 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit }) {
           </InputAccessoryView>
         )}
       </KeyboardAvoidingView>
+      {onNavigateTab && <AlunoTabBar activeTab="treinos" onChange={onNavigateTab} />}
+      </View>
     );
   }
 

@@ -399,6 +399,11 @@ export default function AlunoHomeScreen({ user, onLogout }) {
           setPlayingWorkout(null);
           loadData();
         }}
+        onNavigateTab={(tab) => {
+          setPlayingWorkout(null);
+          setActiveTab(tab);
+          loadData();
+        }}
       />
     );
   }
@@ -536,6 +541,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
 
   if (mode === 'dieta') {
     return (
+      <View style={{ flex: 1 }}>
       <View style={styles.subContainer}>
         <View style={styles.subTopBar}>
           <TouchableOpacity onPress={() => setMode(null)}>
@@ -616,10 +622,10 @@ export default function AlunoHomeScreen({ user, onLogout }) {
                                     disabled={registeringKey === mainKey}
                                   >
                                     {registeringKey === mainKey ? (
-                                      <ActivityIndicator color="#22c55e" size="small" />
+                                      <ActivityIndicator color="#f97316" size="small" />
                                     ) : (
                                       <View style={styles.consumedBadge}>
-                                        <Ionicons name="checkmark-outline" size={12} color="#22c55e" />
+                                        <Ionicons name="checkmark-outline" size={12} color="#f97316" />
                                         <Text style={styles.consumedBadgeText}>Consumi</Text>
                                       </View>
                                     )}
@@ -643,10 +649,10 @@ export default function AlunoHomeScreen({ user, onLogout }) {
                                               disabled={registeringKey === subKey}
                                             >
                                               {registeringKey === subKey ? (
-                                                <ActivityIndicator color="#22c55e" size="small" />
+                                                <ActivityIndicator color="#f97316" size="small" />
                                               ) : (
                                                 <View style={styles.consumedBadge}>
-                                                  <Ionicons name="checkmark-outline" size={12} color="#22c55e" />
+                                                  <Ionicons name="checkmark-outline" size={12} color="#f97316" />
                                                   <Text style={styles.consumedBadgeText}>Consumi</Text>
                                                 </View>
                                               )}
@@ -670,6 +676,33 @@ export default function AlunoHomeScreen({ user, onLogout }) {
           </>
         ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+            {!showMealPicker ? (
+              <TouchableOpacity style={styles.addExtraButton} onPress={() => setShowMealPicker(true)}>
+                <Text style={styles.addExtraButtonText}>+ Registrar Alimento Extra</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.mealPickerBox}>
+                <Text style={styles.mealPickerLabel}>Em qual refeição?</Text>
+                <View style={styles.mealPickerRow}>
+                  {MEAL_OPTIONS.map((m) => (
+                    <TouchableOpacity
+                      key={m.value}
+                      style={styles.mealPickerChip}
+                      onPress={() => {
+                        setShowMealPicker(false);
+                        setAddingFoodForMeal(m.value);
+                      }}
+                    >
+                      <Text style={styles.mealPickerChipText}>{m.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <TouchableOpacity onPress={() => setShowMealPicker(false)}>
+                  <Text style={styles.mealPickerCancel}>Cancelar</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             <View style={styles.hojeCard}>
               <TouchableOpacity style={styles.hojeHeader} onPress={() => setHojeExpanded(!hojeExpanded)}>
                 <Text style={styles.hojeTitle}>Hoje</Text>
@@ -685,7 +718,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
                 <View style={styles.hojeBody}>
                   {[
                     { label: 'Calorias', value: consumedTotals.kcal, goal: diets[0]?.goal_kcal, unit: 'kcal', color: '#f97316' },
-                    { label: 'Proteína', value: consumedTotals.protein, goal: diets[0]?.goal_protein_g, unit: 'g', color: '#3b82f6' },
+                    { label: 'Proteína', value: consumedTotals.protein, goal: diets[0]?.goal_protein_g, unit: 'g', color: '#a3a3a3' },
                     { label: 'Carboidrato', value: consumedTotals.carbs, goal: diets[0]?.goal_carbs_g, unit: 'g', color: '#eab308' },
                     { label: 'Gordura', value: consumedTotals.fat, goal: diets[0]?.goal_fat_g, unit: 'g', color: '#ef4444' },
                   ].map((macro) => (
@@ -713,7 +746,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
                 <Text style={styles.waterValue}>{(waterMl / 1000).toFixed(1)}L / 2.0L</Text>
               </View>
               <View style={styles.macroBarTrack}>
-                <View style={[styles.macroBarFill, { width: `${Math.min(100, (waterMl / 2000) * 100)}%`, backgroundColor: '#3b82f6' }]} />
+                <View style={[styles.macroBarFill, { width: `${Math.min(100, (waterMl / 2000) * 100)}%`, backgroundColor: '#5EC8D8' }]} />
               </View>
               <View style={styles.waterButtonsRow}>
                 <TouchableOpacity style={styles.waterButton} onPress={() => handleAddWater(250)}>
@@ -748,33 +781,6 @@ export default function AlunoHomeScreen({ user, onLogout }) {
               )}
             </View>
 
-            {!showMealPicker ? (
-              <TouchableOpacity style={styles.addExtraButton} onPress={() => setShowMealPicker(true)}>
-                <Text style={styles.addExtraButtonText}>+ Registrar Alimento Extra</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.mealPickerBox}>
-                <Text style={styles.mealPickerLabel}>Em qual refeição?</Text>
-                <View style={styles.mealPickerRow}>
-                  {MEAL_OPTIONS.map((m) => (
-                    <TouchableOpacity
-                      key={m.value}
-                      style={styles.mealPickerChip}
-                      onPress={() => {
-                        setShowMealPicker(false);
-                        setAddingFoodForMeal(m.value);
-                      }}
-                    >
-                      <Text style={styles.mealPickerChipText}>{m.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-                <TouchableOpacity onPress={() => setShowMealPicker(false)}>
-                  <Text style={styles.mealPickerCancel}>Cancelar</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
             <Text style={styles.sectionTitle}>Registros de hoje</Text>
             {todaysEntries.length === 0 ? (
               <Text style={styles.emptyText}>Nenhum alimento registrado ainda hoje.</Text>
@@ -793,6 +799,8 @@ export default function AlunoHomeScreen({ user, onLogout }) {
             )}
           </ScrollView>
         )}
+      </View>
+      <AlunoTabBar activeTab="inicio" onChange={(tab) => { setMode(null); setActiveTab(tab); }} />
       </View>
     );
   }
@@ -1092,12 +1100,12 @@ const styles = StyleSheet.create({
   startButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
   dietSubTabRow: { flexDirection: 'row', backgroundColor: '#171717', borderRadius: 10, padding: 3, marginHorizontal: 16, marginBottom: 14 },
   dietSubTabButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
-  dietSubTabButtonActive: { backgroundColor: '#22c55e' },
+  dietSubTabButtonActive: { backgroundColor: '#f97316' },
   dietSubTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
   dietSubTabTextActive: { color: '#0a0a0a' },
   dietTabScroll: { maxHeight: 46, marginBottom: 8 },
   dietTabChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginRight: 8 },
-  dietTabChipActive: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
+  dietTabChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
   dietTabChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   dietTabChipTextActive: { color: '#0a0a0a' },
   mealAccordionCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, marginBottom: 8, overflow: 'hidden' },
@@ -1109,8 +1117,8 @@ const styles = StyleSheet.create({
   foodOptionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   foodText: { color: '#a3a3a3', fontSize: 12, flexShrink: 1 },
   registerButton: { padding: 2 },
-  consumedBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 },
-  consumedBadgeText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
+  consumedBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(249,115,22,0.12)', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 },
+  consumedBadgeText: { color: '#f97316', fontSize: 10, fontWeight: '700' },
   orConnector: { color: '#525252', fontSize: 9, fontWeight: '700', marginVertical: 4, marginLeft: 8 },
   substitutesBox: { marginLeft: 8, marginTop: 2 },
   substituteText: { color: '#737373', fontSize: 11, flexShrink: 1 },
@@ -1118,7 +1126,7 @@ const styles = StyleSheet.create({
   hojeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
   hojeTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
   hojeHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  hojeSummary: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
+  hojeSummary: { color: '#f97316', fontSize: 12, fontWeight: '700' },
   hojeBody: { paddingHorizontal: 14, paddingBottom: 14, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
   macroRow: { marginTop: 12 },
   macroLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
@@ -1129,18 +1137,18 @@ const styles = StyleSheet.create({
   waterCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 14 },
   waterHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   waterTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
-  waterValue: { color: '#3b82f6', fontSize: 12, fontWeight: '700' },
+  waterValue: { color: '#5EC8D8', fontSize: 12, fontWeight: '700' },
   waterButtonsRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  waterButton: { flex: 1, backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
-  waterButtonText: { color: '#3b82f6', fontSize: 12, fontWeight: '700' },
+  waterButton: { flex: 1, backgroundColor: 'rgba(94,200,216,0.12)', borderWidth: 1, borderColor: '#5EC8D8', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  waterButtonText: { color: '#5EC8D8', fontSize: 12, fontWeight: '700' },
   noteCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 14 },
   noteCardTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700', marginBottom: 8 },
   noteText: { color: '#737373', fontSize: 12, fontStyle: 'italic' },
   noteInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 12, minHeight: 60, textAlignVertical: 'top', marginBottom: 8 },
   noteSaveButton: { backgroundColor: '#f97316', borderRadius: 8, paddingVertical: 9, alignItems: 'center' },
   noteSaveButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '700' },
-  addExtraButton: { borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginBottom: 16 },
-  addExtraButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
+  addExtraButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginBottom: 16 },
+  addExtraButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
   mealPickerBox: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 16 },
   mealPickerLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 10 },
   mealPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
