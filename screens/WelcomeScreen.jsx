@@ -21,7 +21,7 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
 
         <TouchableOpacity style={styles.exploreButton} onPress={onExplore}>
           <Ionicons name="storefront-outline" size={18} color="#0a0a0a" />
-          <Text style={styles.exploreButtonText}>Conhecer Protocolos & Consultoria</Text>
+          <Text style={styles.exploreButtonText}>Conhecer Nossos Planos</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.loginButton} onPress={onLogin}>

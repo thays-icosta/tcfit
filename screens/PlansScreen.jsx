@@ -18,11 +18,12 @@ const TRUST_CHECKLIST = [
   'Garantia incondicional de 7 dias (risco zero)',
 ];
 
-export default function PlansScreen({ onBack, onLogin }) {
+export default function PlansScreen({ onBack, onLogin, onSignup }) {
   const [plans, setPlans] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [addonProducts, setAddonProducts] = useState([]);
   const [paymentInfo, setPaymentInfo] = useState(null);
+  const [matchedPersonal, setMatchedPersonal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [checkoutTarget, setCheckoutTarget] = useState(null);
   const [selectedAddons, setSelectedAddons] = useState([]);
@@ -51,17 +52,18 @@ export default function PlansScreen({ onBack, onLogin }) {
       const cleanTargetPhone = WHATSAPP_NUMBER.replace(/\D/g, '');
       const { data: allPersonals } = await supabase
         .from('personal_public_info')
-        .select('pix_key, payment_link, phone');
+        .select('id, name, pix_key, payment_link, phone');
 
-      let matchedPersonal = null;
+      let found = null;
       if (allPersonals && allPersonals.length > 0) {
-        matchedPersonal =
+        found =
           allPersonals.find((p) => p.phone && p.phone.replace(/\D/g, '').length >= 8 && p.phone.replace(/\D/g, '').slice(-8) === cleanTargetPhone.slice(-8))
           || allPersonals.find((p) => p.pix_key)
           || allPersonals[0];
       }
-      if (matchedPersonal) {
-        setPaymentInfo({ pixKey: matchedPersonal.pix_key, paymentLink: matchedPersonal.payment_link });
+      if (found) {
+        setPaymentInfo({ pixKey: found.pix_key, paymentLink: found.payment_link });
+        setMatchedPersonal({ id: found.id, name: found.name });
       }
 
       setLoading(false);
@@ -95,6 +97,8 @@ export default function PlansScreen({ onBack, onLogin }) {
     if (target.kind === 'plan') {
       const template = target.data.whatsapp_message || 'Olá! Gostaria de contratar o plano {plano}.';
       message = template.replace('{plano}', target.data.plan_name || '');
+    } else if (target.kind === 'product') {
+      message = `Olá! Vi o produto "${target.data.name}" no app e gostaria de contratar.`;
     } else {
       message = `Olá! Vi o treino pronto "${target.data.name}" no app e gostaria de contratar.`;
     }
@@ -110,6 +114,11 @@ export default function PlansScreen({ onBack, onLogin }) {
     } catch (e) {
       showAlert('Erro', 'Não foi possível abrir o WhatsApp.');
     }
+  };
+
+  const handleSignup = () => {
+    setCheckoutTarget(null);
+    if (onSignup) onSignup(matchedPersonal?.id);
   };
 
   const renderPlanCard = (plan, i) => {
@@ -176,6 +185,10 @@ export default function PlansScreen({ onBack, onLogin }) {
   const namedPlans = plans.filter((p) => p.plan_name);
   const hasAudienceTags = namedPlans.some((p) => p.audience);
   const visiblePlans = hasAudienceTags ? namedPlans.filter((p) => !p.audience || p.audience === audience) : namedPlans;
+  const hasTierTags = visiblePlans.some((p) => p.tier);
+  const appPlans = hasTierTags ? visiblePlans.filter((p) => p.tier === 'app') : visiblePlans;
+  const consultoriaPlans = hasTierTags ? visiblePlans.filter((p) => p.tier === 'consultoria') : [];
+  const untaggedPlans = hasTierTags ? visiblePlans.filter((p) => !p.tier) : [];
 
   return (
     <View style={styles.container}>
@@ -223,7 +236,20 @@ export default function PlansScreen({ onBack, onLogin }) {
           </View>
         ) : (
           <>
-            {visiblePlans.map((plan, i) => renderPlanCard(plan, i))}
+            {hasTierTags && consultoriaPlans.length > 0 && appPlans.length > 0 && (
+              <Text style={styles.sectionTitle}>TcFit App/Treinos</Text>
+            )}
+            {appPlans.map((plan, i) => renderPlanCard(plan, i))}
+
+            {consultoriaPlans.length > 0 && (
+              <>
+                <Text style={styles.sectionTitle}>Consultoria Individualizada</Text>
+                <Text style={styles.sectionSubtitle}>Acompanhamento 100% personalizado, direto com a equipe</Text>
+                {consultoriaPlans.map((plan, i) => renderPlanCard(plan, i))}
+              </>
+            )}
+
+            {untaggedPlans.map((plan, i) => renderPlanCard(plan, i))}
 
             {visiblePlans.length > 0 && (
               <View style={styles.trustBox}>
@@ -257,6 +283,28 @@ export default function PlansScreen({ onBack, onLogin }) {
                 ))}
               </>
             )}
+
+            {addonProducts.length > 0 && (
+              <>
+                <Text style={styles.sectionTitle}>Produtos Avulsos</Text>
+                <Text style={styles.sectionSubtitle}>E-books, guias e materiais extras</Text>
+                {addonProducts.map((product) => (
+                  <View key={product.id} style={styles.templateCard}>
+                    <View style={styles.templateIconCircle}>
+                      <Ionicons name="book-outline" size={22} color="#f97316" />
+                    </View>
+                    <Text style={styles.templateName}>{product.name}</Text>
+                    {product.description ? <Text style={styles.templateDescription}>{product.description}</Text> : null}
+                    <Text style={styles.templatePrice}>
+                      {product.price != null ? `R$ ${Number(product.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
+                    </Text>
+                    <TouchableOpacity style={styles.templateWantButton} onPress={() => handleOpenCheckout({ kind: 'product', data: product })}>
+                      <Text style={styles.templateWantButtonText}>Quero esse produto</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </>
+            )}
           </>
         )}
 
@@ -272,11 +320,11 @@ export default function PlansScreen({ onBack, onLogin }) {
               {checkoutTarget?.kind === 'plan' ? checkoutTarget.data.plan_name : checkoutTarget?.data.name}
             </Text>
 
-            {addonProducts.length > 0 ? (
+            {addonProducts.filter((p) => !(checkoutTarget?.kind === 'product' && p.id === checkoutTarget.data.id)).length > 0 ? (
               <>
                 <Text style={styles.modalSubtitle}>Quer adicionar algo a mais? (opcional)</Text>
                 <ScrollView style={{ maxHeight: 180, marginBottom: 16 }}>
-                  {addonProducts.map((product) => {
+                  {addonProducts.filter((p) => !(checkoutTarget?.kind === 'product' && p.id === checkoutTarget.data.id)).map((product) => {
                     const isSelected = selectedAddons.some((p) => p.id === product.id);
                     return (
                       <TouchableOpacity key={product.id} style={[styles.addonRow, isSelected && styles.addonRowSelected]} onPress={() => handleToggleAddon(product)}>
@@ -310,6 +358,13 @@ export default function PlansScreen({ onBack, onLogin }) {
                 <Text style={styles.modalConfirmButtonText}>Enviar no WhatsApp</Text>
               </TouchableOpacity>
             </View>
+
+            {onSignup && (
+              <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
+                <Ionicons name="person-add-outline" size={16} color="#f97316" />
+                <Text style={styles.signupButtonText}>Já decidiu? Criar Conta Agora</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </Modal>
@@ -381,4 +436,6 @@ const styles = StyleSheet.create({
   modalCancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
   modalConfirmButton: { flex: 1, flexDirection: 'row', gap: 6, backgroundColor: '#22c55e', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
   modalConfirmButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  signupButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', marginTop: 12, paddingVertical: 10 },
+  signupButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
 });

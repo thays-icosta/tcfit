@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { useNavigation, useGlobalSearchParams } from 'expo-router';
+import { useNavigation, useGlobalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthScreen from '../../screens/AuthScreen';
 import PersonalHomeScreen from '../../screens/PersonalHomeScreen';
@@ -12,6 +12,7 @@ import { supabase } from '../../screens/supabaseClient';
 
 export default function HomeTab() {
   const navigation = useNavigation();
+  const router = useRouter();
   const params = useGlobalSearchParams<{ view?: string; mode?: string; role?: string; invite?: string }>();
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
@@ -97,7 +98,13 @@ export default function HomeTab() {
 
   if (!user) {
     if (authView === 'plans') {
-      return <PlansScreen onBack={() => setAuthView('welcome')} onLogin={() => setAuthView('auth')} />;
+      return (
+        <PlansScreen
+          onBack={() => setAuthView('welcome')}
+          onLogin={() => setAuthView('auth')}
+          onSignup={(personalId) => router.push(`/?view=auth&mode=signup&role=aluno${personalId ? `&invite=${personalId}` : ''}`)}
+        />
+      );
     }
     if (authView === 'auth') {
       return (

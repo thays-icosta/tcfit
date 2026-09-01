@@ -24,6 +24,7 @@ export default function PlanPricesScreen({ onClose }) {
         priceInput: p.price != null ? String(p.price) : '',
         monthlyEquivalentInput: p.monthly_equivalent_price != null ? String(p.monthly_equivalent_price) : '',
         audience: p.audience || null,
+        tier: p.tier || null,
         bulletsInput: p.bullets || '',
         messageInput: p.whatsapp_message || 'Olá! Gostaria de contratar o plano {plano}.',
         nameInput: p.plan_name || '',
@@ -55,6 +56,7 @@ export default function PlanPricesScreen({ onClose }) {
         priceInput: '',
         monthlyEquivalentInput: '',
         audience: null,
+        tier: null,
         bulletsInput: '',
         messageInput: 'Olá! Gostaria de contratar o plano {plano}.',
         isFeatured: false,
@@ -91,6 +93,7 @@ export default function PlanPricesScreen({ onClose }) {
         price: plan.priceInput ? Number(plan.priceInput) : null,
         monthly_equivalent_price: plan.monthlyEquivalentInput ? Number(plan.monthlyEquivalentInput) : null,
         audience: plan.audience || null,
+        tier: plan.tier || null,
         bullets: plan.bulletsInput.trim() || null,
         whatsapp_message: plan.messageInput.trim() || null,
         is_featured: plan.isFeatured,
@@ -195,6 +198,23 @@ export default function PlanPricesScreen({ onClose }) {
                 onPress={() => handleChange(plan.plan_key, 'audience', opt.value)}
               >
                 <Text style={[styles.audienceChipText, plan.audience === opt.value && styles.audienceChipTextActive]}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.fieldLabel}>Categoria do Plano</Text>
+          <View style={styles.audienceRow}>
+            {[
+              { value: null, label: 'Sem categoria' },
+              { value: 'app', label: 'TcFit App/Treinos' },
+              { value: 'consultoria', label: 'Consultoria Individual' },
+            ].map((opt) => (
+              <TouchableOpacity
+                key={opt.label}
+                style={[styles.audienceChip, plan.tier === opt.value && styles.audienceChipActive]}
+                onPress={() => handleChange(plan.plan_key, 'tier', opt.value)}
+              >
+                <Text style={[styles.audienceChipText, plan.tier === opt.value && styles.audienceChipTextActive]}>{opt.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
