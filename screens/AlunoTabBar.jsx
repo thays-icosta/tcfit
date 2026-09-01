@@ -1,27 +1,49 @@
-import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const ACTIVE_COLOR = '#f97316';
+const INACTIVE_COLOR = '#666666';
 
 const TABS = [
   { key: 'inicio', label: 'Início', icon: 'home-outline', iconActive: 'home' },
-  { key: 'planner', label: 'Planner', icon: 'calendar-outline', iconActive: 'calendar' },
-  { key: 'downloads', label: 'Downloads', icon: 'download-outline', iconActive: 'download' },
-  { key: 'comunidade', label: 'Comunidade', icon: 'chatbubbles-outline', iconActive: 'chatbubbles' },
+  { key: 'treinos', label: 'Treinos', icon: 'barbell-outline', iconActive: 'barbell' },
+  { key: 'loja', label: 'Loja', icon: 'storefront-outline', iconActive: 'storefront' },
   { key: 'perfil', label: 'Perfil', icon: 'person-outline', iconActive: 'person' },
 ];
 
-export default function AlunoTabBar({ activeTab, onChange }) {
+function TabIcon({ tab, active, onPress }) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.spring(scale, {
+      toValue: active ? 1.12 : 1,
+      friction: 6,
+      tension: 140,
+      useNativeDriver: true,
+    }).start();
+  }, [active, scale]);
+
   return (
-    <View style={styles.bar}>
-      {TABS.map((t) => {
-        const active = activeTab === t.key;
-        return (
-          <TouchableOpacity key={t.key} style={styles.tab} onPress={() => onChange(t.key)}>
-            <Ionicons name={active ? t.iconActive : t.icon} size={22} color={active ? '#f97316' : '#737373'} />
-            <Text style={[styles.label, active && styles.labelActive]}>{t.label}</Text>
-          </TouchableOpacity>
-        );
-      })}
+    <TouchableOpacity style={styles.tab} onPress={onPress} activeOpacity={0.7}>
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <Ionicons name={active ? tab.iconActive : tab.icon} size={22} color={active ? ACTIVE_COLOR : INACTIVE_COLOR} />
+      </Animated.View>
+      <Text style={[styles.label, active && styles.labelActive]}>{tab.label}</Text>
+      <View style={[styles.dot, active && styles.dotActive]} />
+    </TouchableOpacity>
+  );
+}
+
+export default function AlunoTabBar({ activeTab, onChange }) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+      {TABS.map((t) => (
+        <TabIcon key={t.key} tab={t} active={activeTab === t.key} onPress={() => onChange(t.key)} />
+      ))}
     </View>
   );
 }
@@ -31,11 +53,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#171717',
     borderTopWidth: 1,
-    borderTopColor: '#292524',
-    paddingTop: 8,
-    paddingBottom: 10,
+    borderTopColor: '#222222',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 12,
   },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 },
-  label: { color: '#737373', fontSize: 9, fontWeight: '700' },
-  labelActive: { color: '#f97316' },
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  label: { color: INACTIVE_COLOR, fontSize: 10, fontWeight: '700' },
+  labelActive: { color: ACTIVE_COLOR },
+  dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: 'transparent', marginTop: 2 },
+  dotActive: { backgroundColor: ACTIVE_COLOR },
 });

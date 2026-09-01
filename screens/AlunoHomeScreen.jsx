@@ -70,7 +70,6 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [playingWorkout, setPlayingWorkout] = useState(null);
   const [showRecipes, setShowRecipes] = useState(false);
-  const [showProducts, setShowProducts] = useState(false);
   const [addingFoodForMeal, setAddingFoodForMeal] = useState(null);
   const [showMealPicker, setShowMealPicker] = useState(false);
   const [diaryRefreshKey, setDiaryRefreshKey] = useState(0);
@@ -356,7 +355,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
 
   const handleOpenChatFor = (message) => {
     setChatPrefill(message || '');
-    setActiveTab('comunidade');
+    setMode('chat');
   };
 
   const handleRealizarPagamento = async () => {
@@ -411,16 +410,6 @@ export default function AlunoHomeScreen({ user, onLogout }) {
     );
   }
 
-  if (showProducts) {
-    return (
-      <AlunoProductsScreen
-        studentId={user.id}
-        personalId={personalId}
-        onClose={() => setShowProducts(false)}
-      />
-    );
-  }
-
   if (openProgram) {
     return (
       <ProgramDetailScreen
@@ -443,13 +432,46 @@ export default function AlunoHomeScreen({ user, onLogout }) {
     );
   }
 
-  if (mode === 'treinos') {
+  if (mode === 'agenda') {
+    return <AlunoAgendaScreen studentId={user.id} onClose={() => setMode(null)} />;
+  }
+
+  if (mode === 'downloads') {
     return (
       <View style={styles.subContainer}>
         <View style={styles.subTopBar}>
           <TouchableOpacity onPress={() => setMode(null)}>
             <Text style={styles.subCloseText}>← Voltar</Text>
           </TouchableOpacity>
+          <Text style={styles.subTitle}>Downloads</Text>
+        </View>
+        <AlunoDownloadsScreen studentId={user.id} personalId={personalId} />
+      </View>
+    );
+  }
+
+  if (mode === 'chat' && personalId) {
+    return (
+      <ChatScreen
+        personalId={personalId}
+        studentId={user.id}
+        currentUserId={user.id}
+        otherName={personalName}
+        otherAvatarUrl={personalAvatarUrl}
+        initialMessage={chatPrefill}
+        onClose={() => {
+          setMode(null);
+          setChatPrefill('');
+        }}
+      />
+    );
+  }
+
+  if (activeTab === 'treinos') {
+    return (
+      <View style={{ flex: 1 }}>
+      <View style={styles.subContainer}>
+        <View style={styles.subTopBar}>
           <Text style={styles.subTitle}>Treinos</Text>
         </View>
         {workouts.length === 0 ? (
@@ -491,6 +513,8 @@ export default function AlunoHomeScreen({ user, onLogout }) {
             }}
           />
         )}
+      </View>
+      <AlunoTabBar activeTab={activeTab} onChange={setActiveTab} />
       </View>
     );
   }
@@ -758,50 +782,11 @@ export default function AlunoHomeScreen({ user, onLogout }) {
     );
   }
 
-  if (activeTab === 'planner') {
+  if (activeTab === 'loja') {
     return (
       <View style={{ flex: 1 }}>
         <View style={{ flex: 1 }}>
-          <AlunoAgendaScreen studentId={user.id} onClose={() => setActiveTab('inicio')} />
-        </View>
-        <AlunoTabBar activeTab={activeTab} onChange={setActiveTab} />
-      </View>
-    );
-  }
-
-  if (activeTab === 'downloads') {
-    return (
-      <View style={{ flex: 1 }}>
-        <View style={{ flex: 1 }}>
-          <AlunoDownloadsScreen studentId={user.id} personalId={personalId} />
-        </View>
-        <AlunoTabBar activeTab={activeTab} onChange={setActiveTab} />
-      </View>
-    );
-  }
-
-  if (activeTab === 'comunidade') {
-    return (
-      <View style={{ flex: 1 }}>
-        <View style={{ flex: 1 }}>
-          {personalId ? (
-            <ChatScreen
-              personalId={personalId}
-              studentId={user.id}
-              currentUserId={user.id}
-              otherName={personalName}
-              otherAvatarUrl={personalAvatarUrl}
-              initialMessage={chatPrefill}
-              onClose={() => {
-                setActiveTab('inicio');
-                setChatPrefill('');
-              }}
-            />
-          ) : (
-            <View style={styles.container}>
-              <Text style={styles.emptyText}>Você ainda não tem um personal vinculado.</Text>
-            </View>
-          )}
+          <AlunoProductsScreen studentId={user.id} personalId={personalId} onClose={() => setActiveTab('inicio')} />
         </View>
         <AlunoTabBar activeTab={activeTab} onChange={setActiveTab} />
       </View>
@@ -843,9 +828,14 @@ export default function AlunoHomeScreen({ user, onLogout }) {
             <Text style={styles.greeting}>Olá, {user?.name}!</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => setActiveTab('comunidade')}>
-          <Ionicons name="chatbubbles-outline" size={20} color="#a3a3a3" />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => setMode('agenda')}>
+            <Ionicons name="calendar-outline" size={20} color="#a3a3a3" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={() => handleOpenChatFor('')}>
+            <Ionicons name="chatbubbles-outline" size={20} color="#a3a3a3" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {loading ? (
@@ -909,7 +899,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
             </View>
 
             <View style={styles.gridRow}>
-              <TouchableOpacity style={styles.gridCard} onPress={() => setMode('treinos')}>
+              <TouchableOpacity style={styles.gridCard} onPress={() => setActiveTab('treinos')}>
                 <Ionicons name="barbell-outline" size={26} color="#f97316" />
                 <Text style={styles.gridCardTitle}>Treinos</Text>
                 <Text style={styles.gridCardSubtitle}>{workouts.length} ficha{workouts.length !== 1 ? 's' : ''}</Text>
@@ -927,8 +917,8 @@ export default function AlunoHomeScreen({ user, onLogout }) {
             <Text style={styles.recipesBannerText}>🍽️ Guia de Receitas Fitness</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.productsBanner} onPress={() => setShowProducts(true)}>
-            <Text style={styles.productsBannerText}>🛍️ Conteúdos e Produtos</Text>
+          <TouchableOpacity style={styles.productsBanner} onPress={() => setMode('downloads')}>
+            <Text style={styles.productsBannerText}>📥 Downloads</Text>
           </TouchableOpacity>
 
           {HOME_CATEGORIES.map((cat) => {
@@ -944,7 +934,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
                       <TouchableOpacity
                         key={p.id}
                         style={styles.categoryCard}
-                        onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setShowProducts(true))}
+                        onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setActiveTab('loja'))}
                       >
                         <View style={styles.categoryCoverWrap}>
                           {p.cover_image_url ? (
