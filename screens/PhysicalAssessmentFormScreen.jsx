@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Platform, Modal } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -88,6 +88,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
   const [uploadingReport, setUploadingReport] = useState(false);
 
   const [scanning, setScanning] = useState(false);
+  const [showScanErrorModal, setShowScanErrorModal] = useState(false);
   const webFileInputRef = useRef(null);
 
   const [protocol, setProtocol] = useState('pollock3');
@@ -226,10 +227,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
       showAlert('Relatório analisado!', 'Confira os campos preenchidos e ajuste o que precisar antes de salvar.');
     } catch (e) {
       console.log('Erro ao escanear relatório com IA:', e.message);
-      showAlert(
-        'Não foi possível ler a imagem automaticamente',
-        'Por favor, preencha os campos da bioimpedância manualmente.'
-      );
+      setShowScanErrorModal(true);
     }
     setScanning(false);
   };
@@ -419,6 +417,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
   );
 
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={styles.topBar}>
         <TouchableOpacity onPress={onClose}>
@@ -661,6 +660,21 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
         </View>
       )}
     </ScrollView>
+
+    <Modal visible={showScanErrorModal} transparent animationType="fade" onRequestClose={() => setShowScanErrorModal(false)}>
+      <View style={styles.scanErrorOverlay}>
+        <View style={styles.scanErrorCard}>
+          <Text style={styles.scanErrorTitle}>Não conseguimos ler o laudo automaticamente</Text>
+          <Text style={styles.scanErrorText}>
+            Verifique se a foto está bem iluminada e legível, ou preencha os campos manualmente abaixo.
+          </Text>
+          <TouchableOpacity style={styles.scanErrorButton} onPress={() => setShowScanErrorModal(false)}>
+            <Text style={styles.scanErrorButtonText}>Fechar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+    </>
   );
 }
 
@@ -721,4 +735,10 @@ const styles = StyleSheet.create({
   resultLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 2 },
   saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 20 },
   saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
+  scanErrorOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
+  scanErrorCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 22 },
+  scanErrorTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 10 },
+  scanErrorText: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginBottom: 20 },
+  scanErrorButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  scanErrorButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
 });
