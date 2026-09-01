@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
-import { PROGRAM_GOALS, TRAINING_LOCATIONS, PAIN_ZONES } from './accessLevel';
+import { PROGRAM_GOALS, TRAINING_LOCATIONS, PAIN_ZONES, SEX_OPTIONS, calculateMacroGoals } from './accessLevel';
 
 export default function AnamneseFormScreen({ studentId, personalId, onClose, onComplete, allowSkip }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [questions, setQuestions] = useState([]);
+  const [ebooks, setEbooks] = useState([]);
 
   const [mainGoal, setMainGoal] = useState(null);
   const [trainingLocation, setTrainingLocation] = useState(null);
@@ -15,14 +16,23 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
   const [painZones, setPainZones] = useState([]);
   const [customAnswers, setCustomAnswers] = useState({});
 
+  const [sex, setSex] = useState(null);
+  const [weightKg, setWeightKg] = useState('');
+  const [heightCm, setHeightCm] = useState('');
+  const [age, setAge] = useState('');
+  const [calcResult, setCalcResult] = useState(null);
+
   useEffect(() => {
     (async () => {
-      const [{ data: existing }, { data: questionRows }, { data: existingAnswers }] = await Promise.all([
+      const [{ data: existing }, { data: questionRows }, { data: existingAnswers }, { data: ebookRows }] = await Promise.all([
         supabase.from('anamnese_responses').select('*').eq('student_id', studentId).maybeSingle(),
         personalId
           ? supabase.from('anamnese_questions').select('*').eq('personal_id', personalId).eq('active', true).order('order_index')
           : Promise.resolve({ data: [] }),
         supabase.from('anamnese_answers').select('question_id, answer_text').eq('student_id', studentId),
+        personalId
+          ? supabase.from('products').select('id, name, cover_image_url, delivery_type, delivery_value').eq('personal_id', personalId).eq('type', 'ebook_receitas').eq('active', true)
+          : Promise.resolve({ data: [] }),
       ]);
 
       if (existing) {
@@ -30,9 +40,22 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
         setTrainingLocation(existing.training_location || null);
         setHealthIssues(existing.health_issues || '');
         setPainZones(existing.pain_zones || []);
+        setSex(existing.sex || null);
+        setWeightKg(existing.weight_kg != null ? String(existing.weight_kg) : '');
+        setHeightCm(existing.height_cm != null ? String(existing.height_cm) : '');
+        setAge(existing.age != null ? String(existing.age) : '');
+        if (existing.calc_goal_kcal) {
+          setCalcResult({
+            kcal: existing.calc_goal_kcal,
+            protein: existing.calc_goal_protein_g,
+            carbs: existing.calc_goal_carbs_g,
+            fat: existing.calc_goal_fat_g,
+          });
+        }
       }
 
       setQuestions(questionRows || []);
+      setEbooks(ebookRows || []);
       const answerMap = {};
       (existingAnswers || []).forEach((a) => { answerMap[a.question_id] = a.answer_text || ''; });
       setCustomAnswers(answerMap);
@@ -40,6 +63,15 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
       setLoading(false);
     })();
   }, [studentId, personalId]);
+
+  const handleCalculate = () => {
+    const result = calculateMacroGoals({ sex, weightKg, heightCm, age, goal: mainGoal });
+    if (!result) {
+      showAlert('Ops', 'Preenche sexo, peso, altura, idade e objetivo pra calcular.');
+      return;
+    }
+    setCalcResult(result);
+  };
 
   const togglePainZone = (value) => {
     setPainZones((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
@@ -70,6 +102,14 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
         training_location: trainingLocation,
         health_issues: healthIssues.trim() || null,
         pain_zones: painZones,
+        sex: sex || null,
+        weight_kg: weightKg ? Number(weightKg) : null,
+        height_cm: heightCm ? Number(heightCm) : null,
+        age: age ? Number(age) : null,
+        calc_goal_kcal: calcResult?.kcal || null,
+        calc_goal_protein_g: calcResult?.protein || null,
+        calc_goal_carbs_g: calcResult?.carbs || null,
+        calc_goal_fat_g: calcResult?.fat || null,
         completed_at: new Date().toISOString(),
       },
       { onConflict: 'student_id' }
@@ -126,6 +166,66 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
             </TouchableOpacity>
           ))}
         </View>
+
+        <Text style={styles.label}>Calculadora de Calorias e Macros</Text>
+        <Text style={styles.helperText}>Preenche pra receber uma estimativa de meta diária. Seu personal pode ajustar depois.</Text>
+        <View style={styles.chipRow}>
+          {SEX_OPTIONS.map((s) => (
+            <TouchableOpacity key={s.value} style={[styles.chip, sex === s.value && styles.chipActive]} onPress={() => setSex(s.value)}>
+              <Text style={[styles.chipText, sex === s.value && styles.chipTextActive]}>{s.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <View style={styles.calcFieldRow}>
+          <View style={styles.calcFieldSmall}>
+            <Text style={styles.calcFieldLabel}>Peso (kg)</Text>
+            <TextInput style={styles.input} keyboardType="decimal-pad" placeholder="70" placeholderTextColor="#525252" value={weightKg} onChangeText={setWeightKg} />
+          </View>
+          <View style={styles.calcFieldSmall}>
+            <Text style={styles.calcFieldLabel}>Altura (cm)</Text>
+            <TextInput style={styles.input} keyboardType="decimal-pad" placeholder="170" placeholderTextColor="#525252" value={heightCm} onChangeText={setHeightCm} />
+          </View>
+          <View style={styles.calcFieldSmall}>
+            <Text style={styles.calcFieldLabel}>Idade</Text>
+            <TextInput style={styles.input} keyboardType="number-pad" placeholder="30" placeholderTextColor="#525252" value={age} onChangeText={setAge} />
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.calcButton} onPress={handleCalculate}>
+          <Text style={styles.calcButtonText}>Calcular Estimativa</Text>
+        </TouchableOpacity>
+
+        {calcResult && (
+          <View style={styles.calcResultCard}>
+            <Text style={styles.calcResultKcal}>{calcResult.kcal} kcal/dia</Text>
+            <Text style={styles.calcResultNote}>Estimativa baseada nos seus dados — não substitui o ajuste do seu personal.</Text>
+            <View style={styles.calcMacroRow}>
+              <View style={styles.calcMacroItem}>
+                <Text style={styles.calcMacroValue}>{calcResult.protein}g</Text>
+                <Text style={styles.calcMacroLabel}>Proteína</Text>
+              </View>
+              <View style={styles.calcMacroItem}>
+                <Text style={styles.calcMacroValue}>{calcResult.carbs}g</Text>
+                <Text style={styles.calcMacroLabel}>Carbo</Text>
+              </View>
+              <View style={styles.calcMacroItem}>
+                <Text style={styles.calcMacroValue}>{calcResult.fat}g</Text>
+                <Text style={styles.calcMacroLabel}>Gordura</Text>
+              </View>
+            </View>
+
+            {ebooks.length > 0 && (
+              <>
+                <Text style={styles.calcEbooksLabel}>Guias que podem te ajudar</Text>
+                {ebooks.map((e) => (
+                  <View key={e.id} style={styles.calcEbookRow}>
+                    <Text style={styles.calcEbookName} numberOfLines={1}>📘 {e.name}</Text>
+                  </View>
+                ))}
+              </>
+            )}
+          </View>
+        )}
 
         <Text style={styles.label}>Local de Treino</Text>
         <View style={styles.chipRow}>
@@ -219,6 +319,22 @@ const styles = StyleSheet.create({
   chipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   chipTextActive: { color: '#0a0a0a' },
   input: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#f5f5f5', fontSize: 13 },
+  helperText: { color: '#525252', fontSize: 11, marginBottom: 10, lineHeight: 15 },
+  calcFieldRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
+  calcFieldSmall: { flex: 1 },
+  calcFieldLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 4 },
+  calcButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
+  calcButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
+  calcResultCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, padding: 16, marginTop: 12, alignItems: 'center' },
+  calcResultKcal: { color: '#f97316', fontSize: 26, fontWeight: '800' },
+  calcResultNote: { color: '#737373', fontSize: 10, textAlign: 'center', marginTop: 4, marginBottom: 14, lineHeight: 14 },
+  calcMacroRow: { flexDirection: 'row', gap: 24 },
+  calcMacroItem: { alignItems: 'center' },
+  calcMacroValue: { color: '#f5f5f5', fontSize: 15, fontWeight: '700' },
+  calcMacroLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginTop: 2 },
+  calcEbooksLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginTop: 16, marginBottom: 8, alignSelf: 'flex-start' },
+  calcEbookRow: { backgroundColor: '#0a0a0a', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, width: '100%', marginBottom: 6 },
+  calcEbookName: { color: '#f5f5f5', fontSize: 12, fontWeight: '600' },
   textArea: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#f5f5f5', fontSize: 13, minHeight: 70, textAlignVertical: 'top' },
   saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 28 },
   saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },

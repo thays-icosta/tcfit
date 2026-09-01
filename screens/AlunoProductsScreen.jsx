@@ -16,18 +16,27 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [openProgram, setOpenProgram] = useState(null);
+  const [studentAccessLevel, setStudentAccessLevel] = useState('plataforma_base');
+  const [personalName, setPersonalName] = useState(null);
+  const [personalPhone, setPersonalPhone] = useState(null);
 
   useEffect(() => {
     (async () => {
-      const [{ data: myRow }, { data: productRows }, { data: grantRows }] = await Promise.all([
+      const [{ data: myRow }, { data: productRows }, { data: grantRows }, { data: personalRow }] = await Promise.all([
         supabase.from('users').select('access_level').eq('id', studentId).single(),
         personalId
           ? supabase.from('products').select('*').eq('personal_id', personalId).eq('active', true).order('created_at', { ascending: false })
           : Promise.resolve({ data: [] }),
         supabase.from('product_grants').select('product_id').eq('student_id', studentId),
+        personalId
+          ? supabase.from('users').select('name, phone').eq('id', personalId).single()
+          : Promise.resolve({ data: null }),
       ]);
 
       const level = myRow?.access_level || 'plataforma_base';
+      setStudentAccessLevel(level);
+      setPersonalName(personalRow?.name || null);
+      setPersonalPhone(personalRow?.phone || null);
       setProducts(productRows || []);
 
       const grantedIds = new Set((grantRows || []).map((g) => g.product_id));
@@ -49,6 +58,12 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
   const handleUnlockRequest = (product) => {
     const message = `Olá! Vi o conteúdo "${product.name}" no app e quero desbloquear.`;
     Linking.openURL(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`).catch(() => {});
+  };
+
+  const handleUpsellConsultoria = () => {
+    const phone = (personalPhone || WHATSAPP_NUMBER).replace(/\D/g, '') || WHATSAPP_NUMBER;
+    const message = `Olá${personalName ? `, ${personalName}` : ''}! Vi no app e quero saber mais sobre a consultoria individual com acompanhamento exclusivo.`;
+    Linking.openURL(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`).catch(() => {});
   };
 
   if (selectedRecipe) {
@@ -78,6 +93,19 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
         </TouchableOpacity>
         <Text style={styles.title}>Conteúdos e Produtos</Text>
       </View>
+
+      {!loading && studentAccessLevel !== 'consultoria_vip' && (
+        <View style={styles.upsellCard}>
+          <Text style={styles.upsellTitle}>Quer um acompanhamento 100% individual?</Text>
+          <Text style={styles.upsellText}>
+            {personalName ? `${personalName} pode montar` : 'Seu personal pode montar'} sua ficha de treino do zero, sob medida pras suas necessidades específicas.
+          </Text>
+          <TouchableOpacity style={styles.upsellButton} onPress={handleUpsellConsultoria}>
+            <Ionicons name="logo-whatsapp" size={16} color="#0a0a0a" />
+            <Text style={styles.upsellButtonText}>Quero Consultoria Individual</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
@@ -196,6 +224,11 @@ const styles = StyleSheet.create({
   closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
   title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
+  upsellCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#f97316', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 16 },
+  upsellTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '800', marginBottom: 6 },
+  upsellText: { color: '#a3a3a3', fontSize: 12, lineHeight: 17, marginBottom: 14 },
+  upsellButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
+  upsellButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '800' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   card: { width: '47%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, overflow: 'hidden' },
   coverWrap: { width: '100%', height: 100, backgroundColor: '#0a0a0a', position: 'relative' },

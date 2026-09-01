@@ -47,3 +47,35 @@ export const ANAMNESE_QUESTION_TYPES = [
   { value: 'multipla_escolha', label: 'Múltipla escolha' },
   { value: 'sim_nao', label: 'Sim/Não' },
 ];
+
+export const SEX_OPTIONS = [
+  { value: 'masculino', label: 'Masculino' },
+  { value: 'feminino', label: 'Feminino' },
+];
+
+const GOAL_CALORIE_FACTOR = {
+  emagrecimento: 0.80,
+  ganho_de_massa: 1.10,
+  definicao: 0.90,
+  condicionamento: 1.0,
+};
+
+// Mifflin-St Jeor BMR + a fixed moderate-activity multiplier (this app's
+// students all train with a personal, so we don't collect a separate
+// activity-level question) + a per-goal calorie adjustment.
+export function calculateMacroGoals({ sex, weightKg, heightCm, age, goal }) {
+  const w = Number(weightKg);
+  const h = Number(heightCm);
+  const a = Number(age);
+  if (!w || !h || !a || !sex) return null;
+
+  const bmr = sex === 'masculino' ? 10 * w + 6.25 * h - 5 * a + 5 : 10 * w + 6.25 * h - 5 * a - 161;
+  const tdee = bmr * 1.55;
+  const kcal = Math.round(tdee * (GOAL_CALORIE_FACTOR[goal] ?? 1));
+
+  const proteinG = Math.round(w * 2);
+  const fatG = Math.round((kcal * 0.25) / 9);
+  const carbsG = Math.max(0, Math.round((kcal - proteinG * 4 - fatG * 9) / 4));
+
+  return { kcal, protein: proteinG, carbs: carbsG, fat: fatG };
+}

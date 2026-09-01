@@ -15,6 +15,7 @@ import AlunoTabBar from './AlunoTabBar';
 import ProgramDetailScreen from './ProgramDetailScreen';
 import AnamneseFormScreen from './AnamneseFormScreen';
 import PhysicalAssessmentHistoryScreen from './PhysicalAssessmentHistoryScreen';
+import FoodSubstituteScreen from './FoodSubstituteScreen';
 import { showAlert } from './alertUtils';
 import { hasAccessByLevel, HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
 
@@ -585,9 +586,17 @@ export default function AlunoHomeScreen({ user, onLogout }) {
           >
             <Text style={[styles.dietSubTabText, dietSubTab === 'diario' && styles.dietSubTabTextActive]}>Diário Alimentar</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.dietSubTabButton, dietSubTab === 'substituicoes' && styles.dietSubTabButtonActive]}
+            onPress={() => setDietSubTab('substituicoes')}
+          >
+            <Text style={[styles.dietSubTabText, dietSubTab === 'substituicoes' && styles.dietSubTabTextActive]}>Substituições</Text>
+          </TouchableOpacity>
         </View>
 
-        {dietSubTab === 'prescrita' ? (
+        {dietSubTab === 'substituicoes' ? (
+          <FoodSubstituteScreen />
+        ) : dietSubTab === 'prescrita' ? (
           <>
             {diets.length > 1 && (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dietTabScroll} contentContainerStyle={{ paddingHorizontal: 16 }}>
@@ -1155,7 +1164,7 @@ const styles = StyleSheet.create({
   dietSubTabRow: { flexDirection: 'row', backgroundColor: '#171717', borderRadius: 10, padding: 3, marginHorizontal: 16, marginBottom: 14 },
   dietSubTabButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
   dietSubTabButtonActive: { backgroundColor: '#f97316' },
-  dietSubTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
+  dietSubTabText: { color: '#a3a3a3', fontSize: 10, fontWeight: '700', textAlign: 'center' },
   dietSubTabTextActive: { color: '#0a0a0a' },
   dietTabScroll: { maxHeight: 46, marginBottom: 8 },
   dietTabChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginRight: 8 },
