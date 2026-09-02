@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { WORKOUT_TAGS } from './accessLevel';
-import { ACCENT, TRANSITION, FLAT_CARD, sectionTitleStyle, CARD_TITLE, SUPPORT_TEXT, CARD_DESCRIPTION, GRID_GAP } from './vitrineStyles';
+import { ACCENT, TRANSITION, FLAT_CARD, sectionTitleStyle, SUPPORT_TEXT, GRID_GAP } from './vitrineStyles';
 
 const TAG_META = {};
 WORKOUT_TAGS.forEach((t) => { TAG_META[t.value] = t; });
@@ -127,17 +127,17 @@ const styles = StyleSheet.create({
   filterChipText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600' },
   filterChipTextActive: { color: '#000000' },
   emptyText: { color: '#525252', fontSize: 12, textAlign: 'center', paddingVertical: 20 },
-  itemGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
-  itemCard: { width: '100%', ...FLAT_CARD, padding: 0, overflow: 'hidden' },
+  itemGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  itemCard: { width: '100%', ...FLAT_CARD, borderRadius: 12, padding: 0, overflow: 'hidden' },
   itemCardDesktop: { width: '48%' },
-  bannerWrap: { width: '100%', aspectRatio: 4 / 3, position: 'relative' },
+  bannerWrap: { width: '100%', height: 130, position: 'relative' },
   itemCover: { width: '100%', height: '100%', backgroundColor: '#171717' },
   itemCoverPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  bannerBadge: { position: 'absolute', left: 10, bottom: 10, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(10,10,10,0.7)', borderRadius: 8, paddingHorizontal: 9, paddingVertical: 5 },
-  bannerBadgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
-  itemBody: { padding: 14 },
-  itemTitle: { ...CARD_TITLE, fontSize: 15 },
-  itemDescription: { ...CARD_DESCRIPTION, marginTop: 6 },
-  viewButton: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 12, alignSelf: 'flex-start', ...TRANSITION },
+  bannerBadge: { position: 'absolute', left: 8, bottom: 8, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(10,10,10,0.7)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  bannerBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '800', letterSpacing: 0.3, textTransform: 'uppercase' },
+  itemBody: { padding: 10 },
+  itemTitle: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
+  itemDescription: { fontSize: 11, fontWeight: '400', color: '#A1A1AA', lineHeight: 15, marginTop: 3 },
+  viewButton: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8, alignSelf: 'flex-start', ...TRANSITION },
   viewButtonText: { color: ACCENT, fontSize: 12, fontWeight: '700' },
 });
