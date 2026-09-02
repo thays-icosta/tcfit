@@ -7,6 +7,7 @@ export function hasAccessByLevel(myLevel, requiredLevel) {
 export const HOME_CATEGORIES = [
   { value: 'planilha_academia', label: 'Planilhas Academia' },
   { value: 'planilha_casa', label: 'Planilhas Casa' },
+  { value: 'treino_3d', label: 'Treino 3D' },
   { value: 'dieta_ebook', label: 'Dietas + E-books' },
   { value: 'modulo_corrida', label: 'Módulo Corrida' },
   { value: 'treino_extra', label: 'Treinos Extras' },
