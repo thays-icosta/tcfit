@@ -6,6 +6,7 @@ import InstallBanner from './InstallBanner';
 import PlansSection from './PlansSection';
 import MaterialsSection from './MaterialsSection';
 import WorkoutsSection from './WorkoutsSection';
+import { ACCENT, TRANSITION, FLAT_CARD, sectionTitleStyle, CARD_TITLE, GRID_GAP } from './vitrineStyles';
 
 const TRUST_STRIP = [
   { icon: 'barbell-outline', text: 'Treinos personalizados e atualizados' },
@@ -14,13 +15,11 @@ const TRUST_STRIP = [
 ];
 
 const CATEGORIES = [
-  { icon: 'barbell-outline', label: 'Treinos', subtitle: 'Fichas em vídeo', color: '#E05A17' },
+  { icon: 'barbell-outline', label: 'Treinos', subtitle: 'Fichas em vídeo', color: ACCENT },
   { icon: 'restaurant-outline', label: 'Dieta e Macros', subtitle: 'Plano nutricional', color: '#5EC8D8' },
   { icon: 'trending-up-outline', label: 'Evolução Física', subtitle: 'Relatórios completos', color: '#a855f7' },
   { icon: 'star-outline', label: 'Consultoria VIP', subtitle: 'Suporte direto', color: '#ec4899', glow: true },
 ];
-
-const TRANSITION = Platform.OS === 'web' ? { transitionProperty: 'all', transitionDuration: '200ms', transitionTimingFunction: 'ease' } : {};
 
 function CategoryCard({ cat }) {
   const [hovered, setHovered] = useState(false);
@@ -119,7 +118,7 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
           {TRUST_STRIP.map((item, i) => (
             <View key={i} style={styles.trustRow}>
               <View style={styles.trustIconCircle}>
-                <Ionicons name={item.icon} size={16} color="#E05A17" />
+                <Ionicons name={item.icon} size={16} color={ACCENT} />
               </View>
               <Text style={styles.trustText}>{item.text}</Text>
             </View>
@@ -129,18 +128,18 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
         <PrimaryButton onPress={scrollToPlanos} icon="storefront-outline" text="Conhecer Nossos Planos" />
         <GhostButton onPress={onLogin} text="Já tenho conta (Entrar)" />
 
-        <Text style={styles.sectionTitle}>RECURSOS EXCLUSIVOS</Text>
+        <Text style={sectionTitleStyle(isDesktop)}>RECURSOS EXCLUSIVOS</Text>
         <View style={styles.categoryGrid}>
           {CATEGORIES.map((cat) => (
             <CategoryCard key={cat.label} cat={cat} />
           ))}
         </View>
 
-        <WorkoutsSection onSelectWorkout={scrollToPlanos} />
+        <WorkoutsSection onSelectWorkout={scrollToPlanos} isDesktop={isDesktop} />
 
-        <MaterialsSection onSelectMaterial={scrollToPlanos} />
+        <MaterialsSection onSelectMaterial={scrollToPlanos} isDesktop={isDesktop} />
 
-        <Text style={styles.sectionTitle}>ESCOLHA O SEU PLANO</Text>
+        <Text style={sectionTitleStyle(isDesktop)}>ESCOLHA O SEU PLANO</Text>
         <PlansSection
           onLayout={(e) => { planosY.current = e.nativeEvent.layout.y; }}
           onLogin={onLogin}
@@ -152,13 +151,6 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
     </View>
   );
 }
-
-const glassCard = {
-  backgroundColor: 'rgba(23,23,28,0.55)',
-  borderWidth: 1,
-  borderColor: 'rgba(224,90,23,0.16)',
-  ...(Platform.OS === 'web' ? { backdropFilter: 'blur(16px)' } : {}),
-};
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#090A0F' },
@@ -180,7 +172,7 @@ const styles = StyleSheet.create({
   },
   appNameTc: { color: '#FFFFFF' },
   appNameFit: {
-    color: '#E05A17',
+    color: ACCENT,
     textShadowColor: 'rgba(224,90,23,0.55)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 14,
@@ -204,20 +196,20 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 24,
   },
-  trustStrip: { ...glassCard, borderRadius: 20, padding: 16, marginBottom: 20, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
+  trustStrip: { ...FLAT_CARD, marginBottom: 20, gap: 12 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(224,90,23,0.12)', alignItems: 'center', justifyContent: 'center' },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
   exploreButton: {
     flexDirection: 'row',
     gap: 8,
-    backgroundColor: '#E05A17',
+    backgroundColor: ACCENT,
     borderRadius: 18,
     paddingVertical: 18,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
-    shadowColor: '#E05A17',
+    shadowColor: ACCENT,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 14,
@@ -229,20 +221,10 @@ const styles = StyleSheet.create({
   loginButton: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#3F3F46', borderRadius: 18, paddingVertical: 15, alignItems: 'center', marginBottom: 8, ...TRANSITION },
   loginButtonHovered: { borderColor: '#71717a', backgroundColor: 'rgba(255,255,255,0.04)' },
   loginButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
-  sectionTitle: {
-    color: '#F4F4F5',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 16 * 0.08,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-    marginTop: 28,
-    marginBottom: 14,
-  },
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },
-  categoryCard: { width: '47%', ...glassCard, borderRadius: 20, padding: 16, alignItems: 'center', marginBottom: 10, ...TRANSITION },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
+  categoryCard: { width: '47%', ...FLAT_CARD, alignItems: 'center', ...TRANSITION },
   categoryCardGlow: { shadowColor: '#ec4899', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.28, shadowRadius: 18, elevation: 4, borderColor: 'rgba(236,72,153,0.25)' },
   categoryIconCircle: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  categoryLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', textAlign: 'center' },
+  categoryLabel: { ...CARD_TITLE, textAlign: 'center' },
   categorySubtitle: { color: '#A1A1AA', fontSize: 10, fontWeight: '600', textAlign: 'center', marginTop: 3 },
 });

@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Platform, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
-
-const ACCENT = '#E05A17';
-const TRANSITION = Platform.OS === 'web' ? { transitionProperty: 'all', transitionDuration: '200ms', transitionTimingFunction: 'ease' } : {};
+import { ACCENT, TRANSITION, FLAT_CARD, sectionTitleStyle, CARD_TITLE, SUPPORT_TEXT, CARD_DESCRIPTION, CARD_BADGE, CARD_BADGE_TEXT, GRID_GAP } from './vitrineStyles';
 
 const DIET_TAGS = [
   { value: 'emagrecimento', label: 'Emagrecimento', icon: 'flame-outline' },
@@ -22,7 +20,7 @@ function HoverCard({ style, hoverStyle, onPress, children }) {
   );
 }
 
-export default function MaterialsSection({ onSelectMaterial }) {
+export default function MaterialsSection({ onSelectMaterial, isDesktop }) {
   const [materialsData, setMaterialsData] = useState([]);
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [selectedDietTag, setSelectedDietTag] = useState(null);
@@ -41,7 +39,8 @@ export default function MaterialsSection({ onSelectMaterial }) {
         category: p.material_type,
         title: p.name,
         description: p.description,
-        badge: p.diet_tag ? DIET_TAGS.find((t) => t.value === p.diet_tag)?.label : null,
+        badge: p.material_type === 'plano_alimentar' ? 'Plano' : 'E-book',
+        dietTagLabel: p.diet_tag ? DIET_TAGS.find((t) => t.value === p.diet_tag)?.label : null,
         coverImage: p.cover_image_url,
         fileUrl: p.delivery_value,
         active: p.active,
@@ -70,13 +69,19 @@ export default function MaterialsSection({ onSelectMaterial }) {
           <Ionicons name={item.category === 'plano_alimentar' ? 'restaurant-outline' : 'book-outline'} size={24} color="#525252" />
         </View>
       )}
-      <View style={styles.itemInfo}>
-        <Text style={styles.itemTitle} numberOfLines={2}>{item.title}</Text>
-        {item.badge && (
+      <View style={styles.itemBody}>
+        <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
+        {item.description ? <Text style={styles.itemDescription} numberOfLines={2}>{item.description}</Text> : null}
+        <View style={styles.itemBadgeRow}>
           <View style={styles.itemBadge}>
             <Text style={styles.itemBadgeText}>{item.badge}</Text>
           </View>
-        )}
+          {item.dietTagLabel && (
+            <View style={styles.itemBadge}>
+              <Text style={styles.itemBadgeText}>{item.dietTagLabel}</Text>
+            </View>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -85,7 +90,7 @@ export default function MaterialsSection({ onSelectMaterial }) {
 
   return (
     <View>
-      <Text style={styles.sectionTitle}>PLANOS ALIMENTARES E E-BOOKS DE RECEITA</Text>
+      <Text style={sectionTitleStyle(isDesktop)}>PLANOS ALIMENTARES E E-BOOKS DE RECEITA</Text>
       <Text style={styles.sectionSupport}>
         Planos alimentares e e-books exclusivos adaptados à sua rotina: emagrecimento, ganho de massa, receitas funcionais, opção sem glúten e rotinas vegetarianas.
       </Text>
@@ -150,66 +155,35 @@ export default function MaterialsSection({ onSelectMaterial }) {
 }
 
 const styles = StyleSheet.create({
-  sectionTitle: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 16 * 0.08,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
   sectionSupport: {
-    color: '#A1A1AA',
-    fontSize: 14,
+    ...SUPPORT_TEXT,
     textAlign: 'center',
     maxWidth: 440,
     alignSelf: 'center',
     marginTop: 8,
     marginBottom: 20,
-    lineHeight: 21,
   },
-  level1Row: { flexDirection: 'row', gap: 10, marginBottom: 10 },
-  level1Card: {
-    flex: 1,
-    backgroundColor: 'rgba(23,23,28,0.55)',
-    borderWidth: 1,
-    borderColor: 'rgba(224,90,23,0.16)',
-    borderRadius: 20,
-    padding: 18,
-    alignItems: 'center',
-    ...(Platform.OS === 'web' ? { backdropFilter: 'blur(16px)' } : {}),
-    ...TRANSITION,
-  },
+  level1Row: { flexDirection: 'row', gap: GRID_GAP, marginBottom: GRID_GAP },
+  level1Card: { flex: 1, ...FLAT_CARD, alignItems: 'center', ...TRANSITION },
   level1CardActive: { borderColor: ACCENT, backgroundColor: 'rgba(224,90,23,0.1)' },
   level1CardHover: { borderColor: 'rgba(224,90,23,0.5)' },
-  level1Title: { color: '#f5f5f5', fontSize: 13, fontWeight: '800', marginTop: 10, textAlign: 'center' },
+  level1Title: { ...CARD_TITLE, marginTop: 10, textAlign: 'center' },
   level1Counter: { color: '#737373', fontSize: 10, fontWeight: '600', marginTop: 4, textAlign: 'center' },
-  level2Row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  level2Row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: GRID_GAP },
   level2Chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 9, ...TRANSITION },
   level2ChipActive: { backgroundColor: ACCENT, borderColor: ACCENT },
   level2ChipText: { color: '#d4d4d4', fontSize: 11, fontWeight: '700' },
   level2ChipTextActive: { color: '#000000' },
   level2ChipCount: { color: '#737373', fontSize: 10, fontWeight: '700' },
   emptyText: { color: '#525252', fontSize: 12, textAlign: 'center', paddingVertical: 20 },
-  itemGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
-  itemCard: { width: 130 },
-  itemCover: {
-    width: 130,
-    height: 130,
-    borderRadius: 16,
-    backgroundColor: '#171717',
-    borderWidth: 1,
-    borderColor: 'rgba(224,90,23,0.16)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 8,
-  },
+  itemGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP, justifyContent: 'center' },
+  itemCard: { width: 150, ...FLAT_CARD, padding: 0, overflow: 'hidden' },
+  itemCover: { width: '100%', aspectRatio: 1, backgroundColor: '#171717' },
   itemCoverPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  itemInfo: { marginTop: 8, alignItems: 'center' },
-  itemTitle: { color: '#d4d4d4', fontSize: 11, fontWeight: '600', textAlign: 'center' },
-  itemBadge: { backgroundColor: 'rgba(224,90,23,0.12)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, marginTop: 6 },
-  itemBadgeText: { color: ACCENT, fontSize: 9, fontWeight: '700' },
+  itemBody: { padding: 12 },
+  itemTitle: { ...CARD_TITLE, fontSize: 13 },
+  itemDescription: { ...CARD_DESCRIPTION, marginTop: 4 },
+  itemBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  itemBadge: { ...CARD_BADGE },
+  itemBadgeText: { ...CARD_BADGE_TEXT },
 });

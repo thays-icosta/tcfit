@@ -5,11 +5,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
+import { ACCENT, TRANSITION, FLAT_CARD, CARD_TITLE, CARD_DESCRIPTION, GRID_GAP } from './vitrineStyles';
 
 const WHATSAPP_NUMBER = '5537998231382';
 const ICONS = ['barbell-outline', 'restaurant-outline', 'sparkles-outline', 'flash-outline', 'trophy-outline'];
-const ACCENT = '#E05A17';
-const TRANSITION = Platform.OS === 'web' ? { transitionProperty: 'all', transitionDuration: '200ms', transitionTimingFunction: 'ease' } : {};
 
 function HoverButton({ style, hoverStyle, onPress, children }) {
   const [hovered, setHovered] = useState(false);
@@ -420,13 +419,6 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
   );
 }
 
-const glassCard = {
-  backgroundColor: 'rgba(23,23,28,0.55)',
-  borderWidth: 1,
-  borderColor: 'rgba(224,90,23,0.16)',
-  ...(Platform.OS === 'web' ? { backdropFilter: 'blur(16px)' } : {}),
-};
-
 const styles = StyleSheet.create({
   audienceToggleRow: { flexDirection: 'row', gap: 8, alignSelf: 'center', backgroundColor: '#171717', borderRadius: 12, padding: 4, marginBottom: 20 },
   audienceToggleChip: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 9 },
@@ -445,12 +437,12 @@ const styles = StyleSheet.create({
   planPriceBig: { color: '#FFFFFF', fontSize: 36, fontWeight: '800' },
   planPriceBigSuffix: { color: '#737373', fontSize: 14, fontWeight: '700' },
   planPriceTotal: { color: '#737373', fontSize: 11, marginTop: 2, marginBottom: 4 },
-  trustBox: { ...glassCard, borderRadius: 20, padding: 16, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
+  trustBox: { ...FLAT_CARD, marginBottom: 20 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
   emptyBox: { alignItems: 'center', gap: 12, paddingHorizontal: 32, paddingVertical: 40 },
   emptyText: { color: '#a3a3a3', fontSize: 14, textAlign: 'center', lineHeight: 20 },
-  planCard: { backgroundColor: '#12141C', borderWidth: 1, borderColor: '#27272A', borderRadius: 22, marginBottom: 16, overflow: 'hidden' },
+  planCard: { ...FLAT_CARD, padding: 0, marginBottom: GRID_GAP, overflow: 'hidden' },
   planCardHighlight: { borderColor: '#E05A17', borderWidth: 1.5 },
   bannerWrap: { width: '100%', height: 140, position: 'relative' },
   bannerImage: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
@@ -459,7 +451,7 @@ const styles = StyleSheet.create({
   badge: { position: 'absolute', top: 12, right: 12, backgroundColor: '#E05A17', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   badgeText: { color: '#000000', fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
   planCardBody: { padding: 20, alignItems: 'center' },
-  planName: { color: '#f5f5f5', fontSize: 17, fontWeight: '800' },
+  planName: { ...CARD_TITLE },
   planDuration: { color: '#737373', fontSize: 11, marginTop: 2, marginBottom: 12 },
   bulletsBox: { alignSelf: 'stretch', marginTop: 16, marginBottom: 16 },
   bulletRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
@@ -467,12 +459,12 @@ const styles = StyleSheet.create({
   planPrice: { color: '#FFFFFF', fontSize: 34, fontWeight: '800', marginTop: 8 },
   wantButton: { backgroundColor: '#E05A17', borderRadius: 14, paddingVertical: 15, marginTop: 4, width: '100%', alignItems: 'center', ...TRANSITION },
   wantButtonText: { color: '#000000', fontSize: 15, fontWeight: '800', letterSpacing: 0.3 },
-  sectionTitle: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginTop: 20, marginBottom: 4 },
+  sectionTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '700', marginTop: 20, marginBottom: 4 },
   sectionSubtitle: { color: '#737373', fontSize: 12, marginBottom: 16 },
-  templateCard: { ...glassCard, borderRadius: 20, padding: 18, alignItems: 'center', marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 3 },
+  templateCard: { ...FLAT_CARD, alignItems: 'center', marginBottom: GRID_GAP },
   templateIconCircle: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: '#E05A17', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  templateName: { color: '#f5f5f5', fontSize: 15, fontWeight: '800' },
-  templateDescription: { color: '#a3a3a3', fontSize: 12, textAlign: 'center', marginTop: 8, lineHeight: 17 },
+  templateName: { ...CARD_TITLE },
+  templateDescription: { ...CARD_DESCRIPTION, textAlign: 'center', marginTop: 8 },
   templatePrice: { color: '#E05A17', fontSize: 20, fontWeight: '800', marginTop: 12 },
   templateWantButton: { backgroundColor: '#E05A17', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 28, marginTop: 14, width: '100%', alignItems: 'center', ...TRANSITION },
   templateWantButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '800' },
