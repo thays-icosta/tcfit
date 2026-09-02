@@ -17,6 +17,14 @@ export function showAlert(title, message, buttons) {
   const cancelButton = buttons.find((b) => b.style === 'cancel');
   const actionButtons = buttons.filter((b) => b.style !== 'cancel');
 
+  if (actionButtons.length <= 1 && !cancelButton) {
+    // A single non-cancel button is a plain acknowledgement, not a choice —
+    // window.confirm would add a phantom Cancel that doesn't belong here.
+    window.alert(message ? `${title}\n\n${message}` : title);
+    actionButtons[0]?.onPress?.();
+    return;
+  }
+
   if (actionButtons.length <= 1) {
     const ok = window.confirm(message ? `${title}\n\n${message}` : title);
     if (ok) actionButtons[0]?.onPress?.();

@@ -50,17 +50,21 @@ export default function AuthScreen({ onAuthenticated, onBack, initialMode, initi
         metadata.personal_id = inviteCode.trim();
       }
 
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: { data: metadata },
       });
       setLoading(false);
-      if (error) {
-        showAlert('Erro ao cadastrar', error.message);
+      const alreadyRegistered = /already registered|already exists|user already/i.test(error?.message || '')
+        || (!error && signUpData?.user?.identities?.length === 0);
+      if (alreadyRegistered) {
+        showAlert('E-mail já cadastrado', 'Este e-mail já possui uma conta. Faça login ou recupere sua senha.');
+      } else if (error) {
+        showAlert('Erro ao cadastrar', 'Não foi possível criar sua conta. Verifique os dados inseridos e tente novamente.');
       } else {
-        showAlert('Conta criada!', 'Verifica seu e-mail se precisar confirmar, e depois faz login.', [
-          { text: 'OK', onPress: () => setMode('login') },
+        showAlert('Conta criada com sucesso! 🎉', 'Enviamos um link de confirmação para o seu e-mail. Confirme seu cadastro e acesse o app.', [
+          { text: 'Ir para o Login', onPress: () => setMode('login') },
         ]);
       }
     }
