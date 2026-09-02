@@ -6,6 +6,7 @@ import InstallBanner from './InstallBanner';
 import PlansSection from './PlansSection';
 import MaterialsSection from './MaterialsSection';
 import WorkoutsSection from './WorkoutsSection';
+import PartnersSection from './PartnersSection';
 import { ACCENT, TRANSITION, FLAT_CARD, sectionTitleStyle, CARD_TITLE, GRID_GAP } from './vitrineStyles';
 
 const TRUST_STRIP = [
@@ -145,6 +146,8 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
           onLogin={onLogin}
           onSignup={onSignup}
         />
+
+        <PartnersSection />
 
         <InstallBanner />
       </ScrollView>
