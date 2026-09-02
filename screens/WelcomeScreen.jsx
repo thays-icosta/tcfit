@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Platform, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Platform, ScrollView, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import InstallBanner from './InstallBanner';
 import { supabase } from './supabaseClient';
 
@@ -11,11 +12,28 @@ const TRUST_STRIP = [
 ];
 
 const CATEGORIES = [
-  { icon: 'barbell-outline', label: 'Treinos', color: '#f97316' },
-  { icon: 'restaurant-outline', label: 'Dieta e Macros', color: '#5EC8D8' },
-  { icon: 'trending-up-outline', label: 'Evolução Física', color: '#a855f7' },
-  { icon: 'star-outline', label: 'Consultoria VIP', color: '#ec4899' },
+  { icon: 'barbell-outline', label: 'Treinos', subtitle: 'Fichas em vídeo', color: '#f97316' },
+  { icon: 'restaurant-outline', label: 'Dieta e Macros', subtitle: 'Plano nutricional', color: '#5EC8D8' },
+  { icon: 'trending-up-outline', label: 'Evolução Física', subtitle: 'Relatórios completos', color: '#a855f7' },
+  { icon: 'star-outline', label: 'Consultoria VIP', subtitle: 'Suporte direto', color: '#ec4899' },
 ];
+
+function CategoryCard({ cat }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Pressable
+      style={[styles.categoryCard, hovered && { borderColor: cat.color, shadowColor: cat.color, shadowOpacity: 0.35, shadowRadius: 10, shadowOffset: { width: 0, height: 0 }, elevation: 4 }]}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
+    >
+      <View style={[styles.categoryIconCircle, { borderColor: cat.color }]}>
+        <Ionicons name={cat.icon} size={22} color={cat.color} />
+      </View>
+      <Text style={styles.categoryLabel}>{cat.label}</Text>
+      <Text style={styles.categorySubtitle}>{cat.subtitle}</Text>
+    </Pressable>
+  );
+}
 
 export default function WelcomeScreen({ onExplore, onLogin }) {
   const [ebooks, setEbooks] = useState([]);
@@ -24,7 +42,7 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
     (async () => {
       const { data } = await supabase
         .from('products')
-        .select('id, name, cover_image_url')
+        .select('id, name, price, cover_image_url')
         .eq('active', true)
         .eq('show_as_addon', true)
         .order('created_at', { ascending: false })
@@ -36,14 +54,23 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
   return (
     <View style={styles.root}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
-        <View style={styles.centerBlock}>
-          <Image
-            source={require('../assets/images/brand-logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
+        <View style={styles.heroWrap}>
+          <LinearGradient
+            colors={['rgba(10,10,10,0.55)', 'rgba(10,10,15,0.85)', '#0a0a0a']}
+            style={StyleSheet.absoluteFill}
           />
-          <Text style={styles.appName}>TcFit</Text>
-          <Text style={styles.slogan}>Sua plataforma exclusiva de treino e saúde</Text>
+          <View style={styles.centerBlock}>
+            <Image
+              source={require('../assets/images/brand-logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={styles.appName}>TcFit</Text>
+            <Text style={styles.slogan}>Sua plataforma exclusiva de treino e saúde</Text>
+            <View style={styles.socialProofBadge}>
+              <Text style={styles.socialProofText}>⭐ Mais de 500 vidas e corpos transformados</Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.trustStrip}>
@@ -71,12 +98,7 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
         <Text style={styles.sectionTitle}>O que você encontra no app</Text>
         <View style={styles.categoryGrid}>
           {CATEGORIES.map((cat) => (
-            <View key={cat.label} style={styles.categoryCard}>
-              <View style={[styles.categoryIconCircle, { borderColor: cat.color }]}>
-                <Ionicons name={cat.icon} size={22} color={cat.color} />
-              </View>
-              <Text style={styles.categoryLabel}>{cat.label}</Text>
-            </View>
+            <CategoryCard key={cat.label} cat={cat} />
           ))}
         </View>
 
@@ -94,6 +116,11 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
                     </View>
                   )}
                   <Text style={styles.ebookName} numberOfLines={2}>{p.name}</Text>
+                  <View style={styles.ebookTag}>
+                    <Text style={styles.ebookTagText}>
+                      {p.price != null ? `R$ ${Number(p.price).toFixed(2).replace('.', ',')}` : 'Avulso'}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -107,31 +134,47 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0a0a0a' },
   container: {
-    paddingVertical: 60,
-    paddingHorizontal: 32,
     paddingBottom: 60,
     ...(Platform.OS === 'web' ? { maxWidth: 440, width: '100%', marginHorizontal: 'auto' } : {}),
   },
-  centerBlock: { alignItems: 'center', marginBottom: 28 },
+  heroWrap: { paddingTop: 60, paddingBottom: 24, paddingHorizontal: 32, overflow: 'hidden' },
+  centerBlock: { alignItems: 'center' },
   logo: { width: 120, height: 120, marginBottom: 12 },
   appName: { color: '#f5f5f5', fontSize: 32, fontWeight: '800', letterSpacing: 0.5 },
   slogan: { color: '#a3a3a3', fontSize: 13, marginTop: 8, textAlign: 'center', paddingHorizontal: 20 },
-  trustStrip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 16, marginBottom: 20, gap: 12 },
+  socialProofBadge: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: 'rgba(249,115,22,0.3)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7, marginTop: 14 },
+  socialProofText: { color: '#fdba74', fontSize: 11, fontWeight: '700' },
+  trustStrip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 16, marginBottom: 20, marginHorizontal: 32, gap: 12 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
-  exploreButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 14, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  exploreButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 14, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 14, marginHorizontal: 32 },
   exploreButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
-  loginButton: { borderWidth: 1, borderColor: '#292524', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginBottom: 8 },
+  loginButton: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#525252', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginBottom: 8, marginHorizontal: 32 },
   loginButtonText: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
-  sectionTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginTop: 28, marginBottom: 14 },
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },
+  sectionTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginTop: 28, marginBottom: 14, marginHorizontal: 32 },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', marginHorizontal: 32 },
   categoryCard: { width: '47%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 16, alignItems: 'center', marginBottom: 10 },
   categoryIconCircle: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   categoryLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', textAlign: 'center' },
-  ebookRow: { gap: 12, paddingRight: 12 },
+  categorySubtitle: { color: '#737373', fontSize: 10, fontWeight: '600', textAlign: 'center', marginTop: 3 },
+  ebookRow: { gap: 12, paddingRight: 12, marginHorizontal: 32 },
   ebookCard: { width: 110 },
-  ebookCover: { width: 110, height: 110, borderRadius: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524' },
+  ebookCover: {
+    width: 110,
+    height: 110,
+    borderRadius: 12,
+    backgroundColor: '#171717',
+    borderWidth: 1,
+    borderColor: '#292524',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 8,
+  },
   ebookCoverPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   ebookName: { color: '#d4d4d4', fontSize: 11, fontWeight: '600', marginTop: 8, textAlign: 'center' },
+  ebookTag: { alignSelf: 'center', backgroundColor: 'rgba(249,115,22,0.12)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, marginTop: 6 },
+  ebookTagText: { color: '#f97316', fontSize: 10, fontWeight: '700' },
 });
