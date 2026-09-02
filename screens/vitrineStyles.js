@@ -20,7 +20,7 @@ export const FLAT_CARD = {
 };
 
 export function sectionTitleStyle(isDesktop) {
-  const fontSize = isDesktop ? 24 : 20;
+  const fontSize = isDesktop ? 24 : 18;
   return {
     color: '#FFFFFF',
     fontSize,
@@ -36,10 +36,10 @@ export function sectionTitleStyle(isDesktop) {
 export const CARD_TITLE = { fontSize: 16, fontWeight: '600', color: '#FFFFFF' };
 
 export const SUPPORT_TEXT = {
-  fontSize: 14,
+  fontSize: 13,
   fontWeight: '400',
   color: '#A1A1AA',
-  lineHeight: 21,
+  lineHeight: 18,
 };
 
 export const CARD_DESCRIPTION = { fontSize: 12, fontWeight: '400', color: '#A1A1AA', lineHeight: 17 };

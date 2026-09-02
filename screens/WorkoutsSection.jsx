@@ -81,10 +81,10 @@ const styles = StyleSheet.create({
   sectionSupport: {
     ...SUPPORT_TEXT,
     textAlign: 'center',
-    maxWidth: 460,
+    maxWidth: 360,
     alignSelf: 'center',
     marginTop: 8,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   itemGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   itemCard: { width: '48%', ...FLAT_CARD, borderRadius: 12, padding: 0, overflow: 'hidden' },
