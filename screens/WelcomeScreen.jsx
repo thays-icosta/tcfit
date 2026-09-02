@@ -81,16 +81,16 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
           ))}
         </View>
 
-        <InstallBanner />
-
         <TouchableOpacity style={styles.exploreButton} onPress={onExplore}>
-          <Ionicons name="storefront-outline" size={18} color="#0a0a0a" />
+          <Ionicons name="storefront-outline" size={20} color="#0a0a0a" />
           <Text style={styles.exploreButtonText}>Conhecer Nossos Planos</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.loginButton} onPress={onLogin}>
           <Text style={styles.loginButtonText}>Já tenho conta (Entrar)</Text>
         </TouchableOpacity>
+
+        <InstallBanner />
 
         <Text style={styles.sectionTitle}>O que você encontra no app</Text>
         <View style={styles.categoryGrid}>
@@ -143,9 +143,24 @@ const styles = StyleSheet.create({
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
-  exploreButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 14, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 14, marginHorizontal: 32 },
-  exploreButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
-  loginButton: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#525252', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginBottom: 8, marginHorizontal: 32 },
+  exploreButton: {
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: '#f97316',
+    borderRadius: 14,
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+    marginHorizontal: 32,
+    shadowColor: '#f97316',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  exploreButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '800' },
+  loginButton: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#525252', borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginBottom: 8, marginHorizontal: 32 },
   loginButtonText: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
   sectionTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginTop: 28, marginBottom: 14, marginHorizontal: 32 },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', marginHorizontal: 32 },

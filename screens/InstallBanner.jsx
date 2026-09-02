@@ -19,15 +19,16 @@ export default function InstallBanner() {
   };
 
   return (
-    <View style={styles.installBlock}>
-      <Text style={styles.installTitle}>Instalar o app</Text>
-      <TouchableOpacity style={styles.installButton} onPress={handleInstallAndroid}>
-        <Ionicons name="logo-android" size={18} color="#f5f5f5" />
-        <Text style={styles.installButtonText}>Instalar no Android (Download APK)</Text>
+    <View style={styles.installRow}>
+      <Text style={styles.installLabel}>Baixar o app:</Text>
+      <TouchableOpacity style={styles.installIconButton} onPress={handleInstallAndroid} hitSlop={6}>
+        <Ionicons name="logo-android" size={14} color="#a3a3a3" />
+        <Text style={styles.installIconText}>Android</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.installButton} onPress={() => setShowIosGuide(true)}>
-        <Ionicons name="logo-apple" size={18} color="#f5f5f5" />
-        <Text style={styles.installButtonText}>Abrir no iPhone (Adicionar à Tela de Início)</Text>
+      <Text style={styles.installDivider}>|</Text>
+      <TouchableOpacity style={styles.installIconButton} onPress={() => setShowIosGuide(true)} hitSlop={6}>
+        <Ionicons name="logo-apple" size={14} color="#a3a3a3" />
+        <Text style={styles.installIconText}>iOS</Text>
       </TouchableOpacity>
 
       <Modal visible={showIosGuide} transparent animationType="fade" onRequestClose={() => setShowIosGuide(false)}>
@@ -64,10 +65,11 @@ export default function InstallBanner() {
 }
 
 const styles = StyleSheet.create({
-  installBlock: { marginBottom: 20, width: '100%' },
-  installTitle: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
-  installButton: { flexDirection: 'row', gap: 8, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  installButtonText: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  installRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20 },
+  installLabel: { color: '#525252', fontSize: 11, fontWeight: '600' },
+  installIconButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  installIconText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
+  installDivider: { color: '#292524', fontSize: 11 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
   modalCard: { backgroundColor: '#171717', borderRadius: 16, padding: 22 },
   modalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 8 },
