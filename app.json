@@ -48,7 +48,8 @@
           "photosPermission": "Permitir acesso à galeria para anexar laudos e fotos de avaliação física.",
           "cameraPermission": "Permitir acesso à câmera para fotografar laudos de avaliação física."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,

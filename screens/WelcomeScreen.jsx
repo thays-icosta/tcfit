@@ -101,7 +101,10 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
               style={styles.logo}
               resizeMode="contain"
             />
-            <Text style={styles.appName}>TcFit</Text>
+            <Text style={styles.appName}>
+              <Text style={styles.appNameTc}>Tc</Text>
+              <Text style={styles.appNameFit}>Fit</Text>
+            </Text>
             <Text style={styles.slogan}>Sua plataforma exclusiva de treino e saúde</Text>
           </View>
         </View>
@@ -174,8 +177,30 @@ const styles = StyleSheet.create({
   heroWrap: { paddingTop: 60, paddingBottom: 24, paddingHorizontal: 32, overflow: 'hidden' },
   centerBlock: { alignItems: 'center' },
   logo: { width: 120, height: 120, marginBottom: 12 },
-  appName: { color: '#f5f5f5', fontSize: 32, fontWeight: '800', letterSpacing: 0.5 },
-  slogan: { color: '#a3a3a3', fontSize: 13, marginTop: 8, textAlign: 'center', paddingHorizontal: 20 },
+  appName: {
+    fontSize: 32,
+    fontFamily: 'Outfit_700Bold',
+    fontWeight: '700',
+    letterSpacing: 32 * 0.08,
+    ...(Platform.OS === 'web' ? { WebkitFontSmoothing: 'antialiased', fontSmoothing: 'antialiased' } : {}),
+  },
+  appNameTc: { color: '#FFFFFF' },
+  appNameFit: {
+    color: '#FF6B00',
+    textShadowColor: 'rgba(255,107,0,0.55)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 14,
+  },
+  slogan: {
+    color: '#A1A1AA',
+    fontSize: 13,
+    fontFamily: 'Outfit_400Regular',
+    fontWeight: '400',
+    letterSpacing: 0.4,
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+  },
   trustStrip: { ...glassCard, borderRadius: 20, padding: 16, marginBottom: 20, marginHorizontal: 32, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },
