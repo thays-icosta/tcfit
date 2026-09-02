@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Platform, ScrollView, Pressable, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Image, Platform, ScrollView, Pressable, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import InstallBanner from './InstallBanner';
 import PlansSection from './PlansSection';
-import { supabase } from './supabaseClient';
+import MaterialsSection from './MaterialsSection';
 
 const TRUST_STRIP = [
   { icon: 'barbell-outline', text: 'Treinos personalizados e atualizados' },
@@ -13,7 +13,7 @@ const TRUST_STRIP = [
 ];
 
 const CATEGORIES = [
-  { icon: 'barbell-outline', label: 'Treinos', subtitle: 'Fichas em vídeo', color: '#f97316' },
+  { icon: 'barbell-outline', label: 'Treinos', subtitle: 'Fichas em vídeo', color: '#E05A17' },
   { icon: 'restaurant-outline', label: 'Dieta e Macros', subtitle: 'Plano nutricional', color: '#5EC8D8' },
   { icon: 'trending-up-outline', label: 'Evolução Física', subtitle: 'Relatórios completos', color: '#a855f7' },
   { icon: 'star-outline', label: 'Consultoria VIP', subtitle: 'Suporte direto', color: '#ec4899', glow: true },
@@ -72,24 +72,10 @@ function GhostButton({ onPress, text }) {
 }
 
 export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount }) {
-  const [ebooks, setEbooks] = useState([]);
   const scrollRef = useRef(null);
   const planosY = useRef(0);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from('products')
-        .select('id, name, price, cover_image_url')
-        .eq('active', true)
-        .eq('show_as_addon', true)
-        .order('created_at', { ascending: false })
-        .limit(4);
-      setEbooks(data || []);
-    })();
-  }, []);
 
   const scrollToPlanos = () => {
     scrollRef.current?.scrollTo({ y: Math.max(planosY.current - 20, 0), animated: true });
@@ -132,7 +118,7 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
           {TRUST_STRIP.map((item, i) => (
             <View key={i} style={styles.trustRow}>
               <View style={styles.trustIconCircle}>
-                <Ionicons name={item.icon} size={16} color="#f97316" />
+                <Ionicons name={item.icon} size={16} color="#E05A17" />
               </View>
               <Text style={styles.trustText}>{item.text}</Text>
             </View>
@@ -149,30 +135,7 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
           ))}
         </View>
 
-        {ebooks.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>MATERIAIS E E-BOOKS</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.ebookRow}>
-              {ebooks.map((p) => (
-                <TouchableOpacity key={p.id} style={styles.ebookCard} onPress={scrollToPlanos}>
-                  {p.cover_image_url ? (
-                    <Image source={{ uri: p.cover_image_url }} style={styles.ebookCover} resizeMode="cover" />
-                  ) : (
-                    <View style={[styles.ebookCover, styles.ebookCoverPlaceholder]}>
-                      <Ionicons name="book-outline" size={26} color="#525252" />
-                    </View>
-                  )}
-                  <Text style={styles.ebookName} numberOfLines={2}>{p.name}</Text>
-                  <View style={styles.ebookTag}>
-                    <Text style={styles.ebookTagText}>
-                      {p.price != null ? `R$ ${Number(p.price).toFixed(2).replace('.', ',')}` : 'Avulso'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </>
-        )}
+        <MaterialsSection onSelectMaterial={scrollToPlanos} />
 
         <Text style={styles.sectionTitle}>ESCOLHA O SEU PLANO</Text>
         <PlansSection
@@ -190,7 +153,7 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
 const glassCard = {
   backgroundColor: 'rgba(23,23,28,0.55)',
   borderWidth: 1,
-  borderColor: 'rgba(249,115,22,0.16)',
+  borderColor: 'rgba(224,90,23,0.16)',
   ...(Platform.OS === 'web' ? { backdropFilter: 'blur(16px)' } : {}),
 };
 
@@ -214,8 +177,8 @@ const styles = StyleSheet.create({
   },
   appNameTc: { color: '#FFFFFF' },
   appNameFit: {
-    color: '#FF6B00',
-    textShadowColor: 'rgba(255,107,0,0.55)',
+    color: '#E05A17',
+    textShadowColor: 'rgba(224,90,23,0.55)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 14,
   },
@@ -240,25 +203,25 @@ const styles = StyleSheet.create({
   },
   trustStrip: { ...glassCard, borderRadius: 20, padding: 16, marginBottom: 20, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },
+  trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(224,90,23,0.12)', alignItems: 'center', justifyContent: 'center' },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
   exploreButton: {
     flexDirection: 'row',
     gap: 8,
-    backgroundColor: '#FF6B00',
+    backgroundColor: '#E05A17',
     borderRadius: 18,
     paddingVertical: 18,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
-    shadowColor: '#FF6B00',
+    shadowColor: '#E05A17',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 14,
     elevation: 6,
     ...TRANSITION,
   },
-  exploreButtonHovered: { backgroundColor: '#ff7f1f', shadowOpacity: 0.6, shadowRadius: 20, transform: [{ scale: 1.01 }] },
+  exploreButtonHovered: { backgroundColor: '#ED7940', shadowOpacity: 0.6, shadowRadius: 20, transform: [{ scale: 1.01 }] },
   exploreButtonText: { color: '#1a1000', fontSize: 15, fontWeight: '800' },
   loginButton: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#3F3F46', borderRadius: 18, paddingVertical: 15, alignItems: 'center', marginBottom: 8, ...TRANSITION },
   loginButtonHovered: { borderColor: '#71717a', backgroundColor: 'rgba(255,255,255,0.04)' },
@@ -279,23 +242,4 @@ const styles = StyleSheet.create({
   categoryIconCircle: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   categoryLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', textAlign: 'center' },
   categorySubtitle: { color: '#A1A1AA', fontSize: 10, fontWeight: '600', textAlign: 'center', marginTop: 3 },
-  ebookRow: { gap: 12, paddingRight: 12 },
-  ebookCard: { width: 110 },
-  ebookCover: {
-    width: 110,
-    height: 110,
-    borderRadius: 16,
-    backgroundColor: '#171717',
-    borderWidth: 1,
-    borderColor: 'rgba(249,115,22,0.16)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  ebookCoverPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  ebookName: { color: '#d4d4d4', fontSize: 11, fontWeight: '600', marginTop: 8, textAlign: 'center' },
-  ebookTag: { alignSelf: 'center', backgroundColor: 'rgba(249,115,22,0.12)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, marginTop: 6 },
-  ebookTagText: { color: '#f97316', fontSize: 10, fontWeight: '700' },
 });

@@ -8,7 +8,7 @@ import { showAlert } from './alertUtils';
 
 const WHATSAPP_NUMBER = '5537998231382';
 const ICONS = ['barbell-outline', 'restaurant-outline', 'sparkles-outline', 'flash-outline', 'trophy-outline'];
-const ACCENT = '#FF6B00';
+const ACCENT = '#E05A17';
 const TRANSITION = Platform.OS === 'web' ? { transitionProperty: 'all', transitionDuration: '200ms', transitionTimingFunction: 'ease' } : {};
 
 function HoverButton({ style, hoverStyle, onPress, children }) {
@@ -265,7 +265,7 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
       )}
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
+        <ActivityIndicator color="#E05A17" style={{ marginTop: 30 }} />
       ) : namedPlans.length === 0 && templates.length === 0 ? (
         <View style={styles.emptyBox}>
           <Ionicons name="time-outline" size={32} color="#525252" />
@@ -306,7 +306,7 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
               {templates.map((t) => (
                 <View key={t.id} style={styles.templateCard}>
                   <View style={styles.templateIconCircle}>
-                    <Ionicons name="flash-outline" size={22} color="#f97316" />
+                    <Ionicons name="flash-outline" size={22} color="#E05A17" />
                   </View>
                   <Text style={styles.templateName}>{t.name}</Text>
                   {t.description ? <Text style={styles.templateDescription}>{t.description}</Text> : null}
@@ -332,7 +332,7 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
               {addonProducts.map((product) => (
                 <View key={product.id} style={styles.templateCard}>
                   <View style={styles.templateIconCircle}>
-                    <Ionicons name="book-outline" size={22} color="#f97316" />
+                    <Ionicons name="book-outline" size={22} color="#E05A17" />
                   </View>
                   <Text style={styles.templateName}>{product.name}</Text>
                   {product.description ? <Text style={styles.templateDescription}>{product.description}</Text> : null}
@@ -409,7 +409,7 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
 
             {onSignup && (
               <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
-                <Ionicons name="person-add-outline" size={16} color="#f97316" />
+                <Ionicons name="person-add-outline" size={16} color="#E05A17" />
                 <Text style={styles.signupButtonText}>Já decidiu? Criar Conta Agora</Text>
               </TouchableOpacity>
             )}
@@ -423,24 +423,24 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
 const glassCard = {
   backgroundColor: 'rgba(23,23,28,0.55)',
   borderWidth: 1,
-  borderColor: 'rgba(249,115,22,0.16)',
+  borderColor: 'rgba(224,90,23,0.16)',
   ...(Platform.OS === 'web' ? { backdropFilter: 'blur(16px)' } : {}),
 };
 
 const styles = StyleSheet.create({
   audienceToggleRow: { flexDirection: 'row', gap: 8, alignSelf: 'center', backgroundColor: '#171717', borderRadius: 12, padding: 4, marginBottom: 20 },
   audienceToggleChip: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 9 },
-  audienceToggleChipActive: { backgroundColor: '#f97316' },
+  audienceToggleChipActive: { backgroundColor: '#E05A17' },
   audienceToggleText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
   audienceToggleTextActive: { color: '#0a0a0a' },
   periodToggleWrap: { alignItems: 'center', marginBottom: 20 },
   periodToggleRow: { flexDirection: 'row', gap: 8, backgroundColor: '#171717', borderRadius: 12, padding: 4, marginBottom: 8 },
   periodToggleChip: { paddingHorizontal: 24, paddingVertical: 10, borderRadius: 9 },
-  periodToggleChipActive: { backgroundColor: '#FF6B00' },
+  periodToggleChipActive: { backgroundColor: '#E05A17' },
   periodToggleText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700' },
   periodToggleTextActive: { color: '#000000' },
-  periodBestTag: { backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 },
-  periodBestTagText: { color: '#FF6B00', fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
+  periodBestTag: { backgroundColor: 'rgba(224,90,23,0.12)', borderWidth: 1, borderColor: '#E05A17', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 },
+  periodBestTagText: { color: '#E05A17', fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
   priceHighlightRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
   planPriceBig: { color: '#FFFFFF', fontSize: 36, fontWeight: '800' },
   planPriceBigSuffix: { color: '#737373', fontSize: 14, fontWeight: '700' },
@@ -451,12 +451,12 @@ const styles = StyleSheet.create({
   emptyBox: { alignItems: 'center', gap: 12, paddingHorizontal: 32, paddingVertical: 40 },
   emptyText: { color: '#a3a3a3', fontSize: 14, textAlign: 'center', lineHeight: 20 },
   planCard: { backgroundColor: '#12141C', borderWidth: 1, borderColor: '#27272A', borderRadius: 22, marginBottom: 16, overflow: 'hidden' },
-  planCardHighlight: { borderColor: '#FF6B00', borderWidth: 1.5 },
+  planCardHighlight: { borderColor: '#E05A17', borderWidth: 1.5 },
   bannerWrap: { width: '100%', height: 140, position: 'relative' },
   bannerImage: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  offerTag: { position: 'absolute', top: 12, left: 12, backgroundColor: 'rgba(10,10,10,0.75)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
-  offerTagText: { color: '#FF6B00', fontSize: 9, fontWeight: '800', letterSpacing: 0.3 },
-  badge: { position: 'absolute', top: 12, right: 12, backgroundColor: '#FF6B00', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
+  offerTag: { position: 'absolute', top: 12, left: 12, backgroundColor: 'rgba(10,10,10,0.75)', borderWidth: 1, borderColor: '#E05A17', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  offerTagText: { color: '#E05A17', fontSize: 9, fontWeight: '800', letterSpacing: 0.3 },
+  badge: { position: 'absolute', top: 12, right: 12, backgroundColor: '#E05A17', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   badgeText: { color: '#000000', fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
   planCardBody: { padding: 20, alignItems: 'center' },
   planName: { color: '#f5f5f5', fontSize: 17, fontWeight: '800' },
@@ -465,22 +465,22 @@ const styles = StyleSheet.create({
   bulletRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   bulletText: { color: '#D4D4D8', fontSize: 12, flexShrink: 1 },
   planPrice: { color: '#FFFFFF', fontSize: 34, fontWeight: '800', marginTop: 8 },
-  wantButton: { backgroundColor: '#FF6B00', borderRadius: 14, paddingVertical: 15, marginTop: 4, width: '100%', alignItems: 'center', ...TRANSITION },
+  wantButton: { backgroundColor: '#E05A17', borderRadius: 14, paddingVertical: 15, marginTop: 4, width: '100%', alignItems: 'center', ...TRANSITION },
   wantButtonText: { color: '#000000', fontSize: 15, fontWeight: '800', letterSpacing: 0.3 },
   sectionTitle: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginTop: 20, marginBottom: 4 },
   sectionSubtitle: { color: '#737373', fontSize: 12, marginBottom: 16 },
   templateCard: { ...glassCard, borderRadius: 20, padding: 18, alignItems: 'center', marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 3 },
-  templateIconCircle: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  templateIconCircle: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: '#E05A17', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   templateName: { color: '#f5f5f5', fontSize: 15, fontWeight: '800' },
   templateDescription: { color: '#a3a3a3', fontSize: 12, textAlign: 'center', marginTop: 8, lineHeight: 17 },
-  templatePrice: { color: '#f97316', fontSize: 20, fontWeight: '800', marginTop: 12 },
-  templateWantButton: { backgroundColor: '#f97316', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 28, marginTop: 14, width: '100%', alignItems: 'center', ...TRANSITION },
+  templatePrice: { color: '#E05A17', fontSize: 20, fontWeight: '800', marginTop: 12 },
+  templateWantButton: { backgroundColor: '#E05A17', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 28, marginTop: 14, width: '100%', alignItems: 'center', ...TRANSITION },
   templateWantButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '800' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(5,6,10,0.75)', justifyContent: 'flex-end' },
   checkoutSheet: {
     backgroundColor: 'rgba(23,23,28,0.85)',
     borderWidth: 1,
-    borderColor: 'rgba(249,115,22,0.18)',
+    borderColor: 'rgba(224,90,23,0.18)',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -503,5 +503,5 @@ const styles = StyleSheet.create({
   modalConfirmButton: { flex: 1, flexDirection: 'row', gap: 6, backgroundColor: '#22c55e', borderRadius: 14, paddingVertical: 12, alignItems: 'center', justifyContent: 'center', ...TRANSITION },
   modalConfirmButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
   signupButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', marginTop: 12, paddingVertical: 10 },
-  signupButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
+  signupButtonText: { color: '#E05A17', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
 });

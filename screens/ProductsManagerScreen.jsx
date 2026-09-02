@@ -73,6 +73,8 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [linkedTemplates, setLinkedTemplates] = useState([]);
   const [level, setLevel] = useState(null);
   const [goal, setGoal] = useState(null);
+  const [materialType, setMaterialType] = useState(null);
+  const [dietTag, setDietTag] = useState(null);
 
   const loadProducts = async () => {
     const { data } = await supabase.from('products').select('*').eq('personal_id', personalId).order('created_at', { ascending: false });
@@ -125,6 +127,8 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setCategory(null);
     setLevel(null);
     setGoal(null);
+    setMaterialType(null);
+    setDietTag(null);
   };
 
   const handlePickCoverImage = async () => {
@@ -191,6 +195,8 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setCategory(product.category || null);
     setLevel(product.level || null);
     setGoal(product.goal || null);
+    setMaterialType(product.material_type || null);
+    setDietTag(product.diet_tag || null);
     setShowForm(true);
 
     if (product.type === 'treino_template') {
@@ -233,6 +239,8 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       category,
       level: type === 'treino_template' ? level : null,
       goal: type === 'treino_template' ? goal : null,
+      material_type: type === 'ebook_receitas' ? materialType : null,
+      diet_tag: type === 'ebook_receitas' && materialType === 'plano_alimentar' ? dietTag : null,
     };
 
     let error;
@@ -593,6 +601,47 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
             </>
           ) : (
             <>
+              <Text style={styles.label}>Tipo de Material</Text>
+              <Text style={styles.helperText}>Define em qual card (Planos Alimentares / E-books e Receitas) esse produto aparece na landing page.</Text>
+              <View style={styles.accessLevelFormRow}>
+                {[
+                  { value: null, label: 'Sem tipo' },
+                  { value: 'plano_alimentar', label: 'Plano Alimentar' },
+                  { value: 'ebook_receita', label: 'E-book / Receita' },
+                ].map((opt) => (
+                  <TouchableOpacity
+                    key={opt.label}
+                    style={[styles.accessLevelFormChip, materialType === opt.value && styles.accessLevelFormChipActive]}
+                    onPress={() => setMaterialType(opt.value)}
+                  >
+                    <Text style={[styles.accessLevelFormChipText, materialType === opt.value && styles.accessLevelFormChipTextActive]}>{opt.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {materialType === 'plano_alimentar' && (
+                <>
+                  <Text style={styles.label}>Categoria do Plano Alimentar</Text>
+                  <View style={styles.accessLevelFormRow}>
+                    {[
+                      { value: null, label: 'Sem categoria' },
+                      { value: 'emagrecimento', label: 'Emagrecimento' },
+                      { value: 'ganho_de_massa', label: 'Ganho de Massa' },
+                      { value: 'sem_gluten', label: 'Sem Glúten' },
+                      { value: 'vegetariano', label: 'Vegetariano/Vegano' },
+                    ].map((opt) => (
+                      <TouchableOpacity
+                        key={opt.label}
+                        style={[styles.accessLevelFormChip, dietTag === opt.value && styles.accessLevelFormChipActive]}
+                        onPress={() => setDietTag(opt.value)}
+                      >
+                        <Text style={[styles.accessLevelFormChipText, dietTag === opt.value && styles.accessLevelFormChipTextActive]}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              )}
+
               <Text style={styles.label}>Entregável / Acesso</Text>
               <View style={styles.deliveryTypeRow}>
                 <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === 'arquivo' && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType('arquivo')}>
