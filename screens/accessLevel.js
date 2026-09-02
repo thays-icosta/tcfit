@@ -62,6 +62,25 @@ export const SEX_OPTIONS = [
   { value: 'feminino', label: 'Feminino' },
 ];
 
+export const NUTRITION_TAGS = [
+  { value: 'celiaca', label: 'Celíaca', icon: 'leaf-outline' },
+  { value: 'emagrecimento', label: 'Emagrecimento', icon: 'flame-outline' },
+  { value: 'hipertrofia', label: 'Hipertrofia', icon: 'barbell-outline' },
+  { value: 'menopausa', label: 'Menopausa', icon: 'flower-outline' },
+  { value: 'vegana', label: 'Vegana', icon: 'nutrition-outline' },
+  { value: 'vegetariana', label: 'Vegetariana', icon: 'nutrition-outline' },
+  { value: 'lactante', label: 'Lactante', icon: 'heart-outline' },
+  { value: 'gestante', label: 'Gestante', icon: 'heart-outline' },
+];
+
+export const WORKOUT_TAGS = [
+  { value: 'mulheres', label: 'Mulheres', icon: 'woman-outline', badge: 'PARA MULHERES' },
+  { value: 'homens', label: 'Homens', icon: 'man-outline', badge: 'PARA HOMENS' },
+  { value: 'academia', label: 'Academia', icon: 'barbell-outline', badge: 'NA ACADEMIA' },
+  { value: 'em_casa', label: 'Em Casa', icon: 'home-outline', badge: 'EM CASA' },
+  { value: 'planilhas', label: 'Planilhas', icon: 'document-text-outline', badge: 'EM PLANILHA' },
+];
+
 const GOAL_CALORIE_FACTOR = {
   emagrecimento: 0.80,
   ganho_de_massa: 1.10,

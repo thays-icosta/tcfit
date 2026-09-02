@@ -7,7 +7,7 @@ import { supabase } from './supabaseClient';
 import AddExerciseModal from './AddExerciseModal';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { showAlert } from './alertUtils';
-import { HOME_CATEGORIES, PROGRAM_LEVELS, TRAINING_LOCATIONS, WORKOUT_GOALS } from './accessLevel';
+import { HOME_CATEGORIES, WORKOUT_TAGS } from './accessLevel';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -43,9 +43,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [editCoverImageUrl, setEditCoverImageUrl] = useState(null);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [editCategory, setEditCategory] = useState(null);
-  const [editEnvironment, setEditEnvironment] = useState(null);
-  const [editLevel, setEditLevel] = useState(null);
-  const [editGoal, setEditGoal] = useState(null);
+  const [editWorkoutTags, setEditWorkoutTags] = useState([]);
   const [savingMeta, setSavingMeta] = useState(false);
 
   const loadTemplates = async () => {
@@ -99,9 +97,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       setEditPrice(t?.price != null ? String(t.price) : '');
       setEditCoverImageUrl(t?.cover_image_url || null);
       setEditCategory(t?.category || null);
-      setEditEnvironment(t?.environment || null);
-      setEditLevel(t?.level || null);
-      setEditGoal(t?.goal || null);
+      setEditWorkoutTags(t?.workout_tags || []);
     } else {
       setSessions([]);
       setActiveSessionId(null);
@@ -240,9 +236,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       price: editPrice ? Number(editPrice) : null,
       cover_image_url: editCoverImageUrl,
       category: editCategory,
-      environment: editEnvironment,
-      level: editLevel,
-      goal: editGoal,
+      workout_tags: editWorkoutTags,
     };
     const { error } = await supabase.from('workout_templates').update(meta).eq('id', activeTemplateId);
     if (!error) {
@@ -459,43 +453,21 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                   ))}
                 </View>
 
-                <Text style={styles.metaLabel}>Ambiente (seção &quot;Metodologia e Programas de Treino&quot;)</Text>
+                <Text style={styles.metaLabel}>Tags (seção &quot;Metodologia e Programas de Treino&quot;)</Text>
+                <Text style={styles.helperText}>Usadas nos filtros em pílula da landing page. Pode marcar mais de uma.</Text>
                 <View style={styles.categoryRow}>
-                  {[{ value: null, label: 'Sem ambiente' }, ...TRAINING_LOCATIONS].map((opt) => (
-                    <TouchableOpacity
-                      key={opt.label}
-                      style={[styles.categoryChip, editEnvironment === opt.value && styles.categoryChipActive]}
-                      onPress={() => setEditEnvironment(opt.value)}
-                    >
-                      <Text style={[styles.categoryChipText, editEnvironment === opt.value && styles.categoryChipTextActive]}>{opt.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <Text style={styles.metaLabel}>Nível</Text>
-                <View style={styles.categoryRow}>
-                  {[{ value: null, label: 'Sem nível' }, ...PROGRAM_LEVELS].map((opt) => (
-                    <TouchableOpacity
-                      key={opt.label}
-                      style={[styles.categoryChip, editLevel === opt.value && styles.categoryChipActive]}
-                      onPress={() => setEditLevel(opt.value)}
-                    >
-                      <Text style={[styles.categoryChipText, editLevel === opt.value && styles.categoryChipTextActive]}>{opt.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <Text style={styles.metaLabel}>Objetivo/Tag</Text>
-                <View style={styles.categoryRow}>
-                  {[{ value: null, label: 'Sem objetivo' }, ...WORKOUT_GOALS].map((opt) => (
-                    <TouchableOpacity
-                      key={opt.label}
-                      style={[styles.categoryChip, editGoal === opt.value && styles.categoryChipActive]}
-                      onPress={() => setEditGoal(opt.value)}
-                    >
-                      <Text style={[styles.categoryChipText, editGoal === opt.value && styles.categoryChipTextActive]}>{opt.label}</Text>
-                    </TouchableOpacity>
-                  ))}
+                  {WORKOUT_TAGS.map((opt) => {
+                    const active = editWorkoutTags.includes(opt.value);
+                    return (
+                      <TouchableOpacity
+                        key={opt.value}
+                        style={[styles.categoryChip, active && styles.categoryChipActive]}
+                        onPress={() => setEditWorkoutTags((prev) => (prev.includes(opt.value) ? prev.filter((v) => v !== opt.value) : [...prev, opt.value]))}
+                      >
+                        <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </>
             )}
@@ -603,6 +575,7 @@ const styles = StyleSheet.create({
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
   metaCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 14 },
   metaLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 8 },
+  helperText: { color: '#525252', fontSize: 11, marginBottom: 8 },
   metaInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 13, minHeight: 50, textAlignVertical: 'top' },
   publicRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 },
   publicLabel: { color: '#f5f5f5', fontSize: 13, fontWeight: '600', flexShrink: 1, marginRight: 8 },

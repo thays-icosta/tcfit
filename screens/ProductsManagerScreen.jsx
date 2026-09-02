@@ -6,7 +6,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
-import { HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
+import { HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS, NUTRITION_TAGS } from './accessLevel';
 
 const TYPES = [
   { value: 'ebook_receitas', label: 'Guia de Receitas / E-book', icon: 'book-outline' },
@@ -74,7 +74,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [level, setLevel] = useState(null);
   const [goal, setGoal] = useState(null);
   const [materialType, setMaterialType] = useState(null);
-  const [dietTag, setDietTag] = useState(null);
+  const [nutritionTags, setNutritionTags] = useState([]);
 
   const loadProducts = async () => {
     const { data } = await supabase.from('products').select('*').eq('personal_id', personalId).order('created_at', { ascending: false });
@@ -128,7 +128,11 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setLevel(null);
     setGoal(null);
     setMaterialType(null);
-    setDietTag(null);
+    setNutritionTags([]);
+  };
+
+  const toggleNutritionTag = (value) => {
+    setNutritionTags((prev) => (prev.includes(value) ? prev.filter((t) => t !== value) : [...prev, value]));
   };
 
   const handlePickCoverImage = async () => {
@@ -196,7 +200,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setLevel(product.level || null);
     setGoal(product.goal || null);
     setMaterialType(product.material_type || null);
-    setDietTag(product.diet_tag || null);
+    setNutritionTags(product.nutrition_tags || []);
     setShowForm(true);
 
     if (product.type === 'treino_template') {
@@ -240,7 +244,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       level: type === 'treino_template' ? level : null,
       goal: type === 'treino_template' ? goal : null,
       material_type: type === 'ebook_receitas' ? materialType : null,
-      diet_tag: type === 'ebook_receitas' && materialType === 'plano_alimentar' ? dietTag : null,
+      nutrition_tags: type === 'ebook_receitas' && materialType === 'plano_alimentar' ? nutritionTags : null,
     };
 
     let error;
@@ -621,21 +625,16 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 
               {materialType === 'plano_alimentar' && (
                 <>
-                  <Text style={styles.label}>Categoria do Plano Alimentar</Text>
+                  <Text style={styles.label}>Tags do Plano Alimentar</Text>
+                  <Text style={styles.helperText}>Usadas nos filtros em pílula da landing page. Pode marcar mais de uma.</Text>
                   <View style={styles.accessLevelFormRow}>
-                    {[
-                      { value: null, label: 'Sem categoria' },
-                      { value: 'emagrecimento', label: 'Emagrecimento' },
-                      { value: 'ganho_de_massa', label: 'Ganho de Massa' },
-                      { value: 'sem_gluten', label: 'Sem Glúten' },
-                      { value: 'vegetariano', label: 'Vegetariano/Vegano' },
-                    ].map((opt) => (
+                    {NUTRITION_TAGS.map((opt) => (
                       <TouchableOpacity
-                        key={opt.label}
-                        style={[styles.accessLevelFormChip, dietTag === opt.value && styles.accessLevelFormChipActive]}
-                        onPress={() => setDietTag(opt.value)}
+                        key={opt.value}
+                        style={[styles.accessLevelFormChip, nutritionTags.includes(opt.value) && styles.accessLevelFormChipActive]}
+                        onPress={() => toggleNutritionTag(opt.value)}
                       >
-                        <Text style={[styles.accessLevelFormChipText, dietTag === opt.value && styles.accessLevelFormChipTextActive]}>{opt.label}</Text>
+                        <Text style={[styles.accessLevelFormChipText, nutritionTags.includes(opt.value) && styles.accessLevelFormChipTextActive]}>{opt.label}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
