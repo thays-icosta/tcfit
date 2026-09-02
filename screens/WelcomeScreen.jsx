@@ -50,7 +50,7 @@ function PrimaryButton({ onPress, icon, text }) {
       onHoverIn={() => setHovered(true)}
       onHoverOut={() => setHovered(false)}
     >
-      <Ionicons name={icon} size={20} color="#0a0a0a" />
+      <Ionicons name={icon} size={20} color="#1a1000" />
       <Text style={styles.exploreButtonText}>{text}</Text>
     </Pressable>
   );
@@ -123,9 +123,7 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
         <PrimaryButton onPress={onExplore} icon="storefront-outline" text="Conhecer Nossos Planos" />
         <GhostButton onPress={onLogin} text="Já tenho conta (Entrar)" />
 
-        <InstallBanner />
-
-        <Text style={styles.sectionTitle}>O que você encontra no app</Text>
+        <Text style={styles.sectionTitle}>RECURSOS EXCLUSIVOS</Text>
         <View style={styles.categoryGrid}>
           {CATEGORIES.map((cat) => (
             <CategoryCard key={cat.label} cat={cat} />
@@ -134,7 +132,7 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
 
         {ebooks.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>E-books e Conteúdos Exclusivos</Text>
+            <Text style={styles.sectionTitle}>MATERIAIS E E-BOOKS</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.ebookRow}>
               {ebooks.map((p) => (
                 <TouchableOpacity key={p.id} style={styles.ebookCard} onPress={onExplore}>
@@ -156,6 +154,8 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
             </ScrollView>
           </>
         )}
+
+        <InstallBanner />
       </ScrollView>
     </View>
   );
@@ -172,14 +172,16 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#090A0F' },
   container: {
     paddingBottom: 60,
-    ...(Platform.OS === 'web' ? { maxWidth: 440, width: '100%', marginHorizontal: 'auto' } : {}),
+    ...(Platform.OS === 'web'
+      ? { maxWidth: 480, width: '100%', marginHorizontal: 'auto', paddingHorizontal: 16 }
+      : { paddingHorizontal: 16 }),
   },
-  heroWrap: { paddingTop: 60, paddingBottom: 24, paddingHorizontal: 32, overflow: 'hidden' },
+  heroWrap: { paddingTop: 60, paddingBottom: 24, overflow: 'hidden' },
   centerBlock: { alignItems: 'center' },
   logo: { width: 120, height: 120, marginBottom: 12 },
   appName: {
     fontSize: 32,
-    fontFamily: 'Outfit_700Bold',
+    fontFamily: 'PlusJakartaSans_700Bold',
     fontWeight: '700',
     letterSpacing: 32 * 0.08,
     ...(Platform.OS === 'web' ? { WebkitFontSmoothing: 'antialiased', fontSmoothing: 'antialiased' } : {}),
@@ -194,47 +196,55 @@ const styles = StyleSheet.create({
   slogan: {
     color: '#A1A1AA',
     fontSize: 13,
-    fontFamily: 'Outfit_400Regular',
+    fontFamily: 'PlusJakartaSans_400Regular',
     fontWeight: '400',
     letterSpacing: 0.4,
     marginTop: 8,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
-  trustStrip: { ...glassCard, borderRadius: 20, padding: 16, marginBottom: 20, marginHorizontal: 32, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
+  trustStrip: { ...glassCard, borderRadius: 20, padding: 16, marginBottom: 20, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
   exploreButton: {
     flexDirection: 'row',
     gap: 8,
-    backgroundColor: '#f97316',
+    backgroundColor: '#FF6B00',
     borderRadius: 18,
     paddingVertical: 18,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
-    marginHorizontal: 32,
-    shadowColor: '#f97316',
+    shadowColor: '#FF6B00',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
     elevation: 6,
     ...TRANSITION,
   },
-  exploreButtonHovered: { backgroundColor: '#fb923c', shadowOpacity: 0.55, shadowRadius: 18, transform: [{ scale: 1.01 }] },
-  exploreButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '800' },
-  loginButton: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#525252', borderRadius: 18, paddingVertical: 15, alignItems: 'center', marginBottom: 8, marginHorizontal: 32, ...TRANSITION },
-  loginButtonHovered: { borderColor: '#a3a3a3', backgroundColor: 'rgba(255,255,255,0.04)' },
-  loginButtonText: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
-  sectionTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginTop: 28, marginBottom: 14, marginHorizontal: 32 },
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', marginHorizontal: 32 },
+  exploreButtonHovered: { backgroundColor: '#ff7f1f', shadowOpacity: 0.6, shadowRadius: 20, transform: [{ scale: 1.01 }] },
+  exploreButtonText: { color: '#1a1000', fontSize: 15, fontWeight: '800' },
+  loginButton: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#3F3F46', borderRadius: 18, paddingVertical: 15, alignItems: 'center', marginBottom: 8, ...TRANSITION },
+  loginButtonHovered: { borderColor: '#71717a', backgroundColor: 'rgba(255,255,255,0.04)' },
+  loginButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  sectionTitle: {
+    color: '#F4F4F5',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 16 * 0.08,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    marginTop: 28,
+    marginBottom: 14,
+  },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },
   categoryCard: { width: '47%', ...glassCard, borderRadius: 20, padding: 16, alignItems: 'center', marginBottom: 10, ...TRANSITION },
   categoryCardGlow: { shadowColor: '#ec4899', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.28, shadowRadius: 18, elevation: 4, borderColor: 'rgba(236,72,153,0.25)' },
   categoryIconCircle: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   categoryLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', textAlign: 'center' },
-  categorySubtitle: { color: '#737373', fontSize: 10, fontWeight: '600', textAlign: 'center', marginTop: 3 },
-  ebookRow: { gap: 12, paddingRight: 12, marginHorizontal: 32 },
+  categorySubtitle: { color: '#A1A1AA', fontSize: 10, fontWeight: '600', textAlign: 'center', marginTop: 3 },
+  ebookRow: { gap: 12, paddingRight: 12 },
   ebookCard: { width: 110 },
   ebookCover: {
     width: 110,

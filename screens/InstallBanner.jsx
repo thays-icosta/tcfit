@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Linking, Modal } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
 const ANDROID_APK_URL = 'https://github.com/thays-icosta/tcfit/releases/download/v1.0.0-android/tcfit-latest.apk';
 
@@ -20,16 +19,12 @@ export default function InstallBanner() {
 
   return (
     <View style={styles.installRow}>
-      <Text style={styles.installLabel}>Baixar o app:</Text>
-      <TouchableOpacity style={styles.installIconButton} onPress={handleInstallAndroid} hitSlop={6}>
-        <Ionicons name="logo-android" size={14} color="#a3a3a3" />
-        <Text style={styles.installIconText}>Android</Text>
-      </TouchableOpacity>
-      <Text style={styles.installDivider}>|</Text>
-      <TouchableOpacity style={styles.installIconButton} onPress={() => setShowIosGuide(true)} hitSlop={6}>
-        <Ionicons name="logo-apple" size={14} color="#a3a3a3" />
-        <Text style={styles.installIconText}>iOS</Text>
-      </TouchableOpacity>
+      <Text style={styles.installLabel}>
+        Já é aluno? Baixe o app para{' '}
+        <Text style={styles.installLink} onPress={handleInstallAndroid}>Android</Text>
+        {' '}ou{' '}
+        <Text style={styles.installLink} onPress={() => setShowIosGuide(true)}>iOS</Text>
+      </Text>
 
       <Modal visible={showIosGuide} transparent animationType="fade" onRequestClose={() => setShowIosGuide(false)}>
         <View style={styles.modalOverlay}>
@@ -65,11 +60,9 @@ export default function InstallBanner() {
 }
 
 const styles = StyleSheet.create({
-  installRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20 },
-  installLabel: { color: '#525252', fontSize: 11, fontWeight: '600' },
-  installIconButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  installIconText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
-  installDivider: { color: '#292524', fontSize: 11 },
+  installRow: { alignItems: 'center', justifyContent: 'center', marginTop: 32, paddingHorizontal: 12 },
+  installLabel: { color: '#71717a', fontSize: 11, fontWeight: '600', textAlign: 'center' },
+  installLink: { color: '#a3a3a3', fontWeight: '800', textDecorationLine: 'underline' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(5,6,10,0.75)', justifyContent: 'center', paddingHorizontal: 24 },
   modalCard: {
     backgroundColor: 'rgba(23,23,28,0.85)',
