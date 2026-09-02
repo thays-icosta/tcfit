@@ -8,7 +8,7 @@ import { showAlert } from './alertUtils';
 
 const WHATSAPP_NUMBER = '5537998231382';
 const ICONS = ['barbell-outline', 'restaurant-outline', 'sparkles-outline', 'flash-outline', 'trophy-outline'];
-const COLORS = ['#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
+const ACCENT = '#FF6B00';
 const TRANSITION = Platform.OS === 'web' ? { transitionProperty: 'all', transitionDuration: '200ms', transitionTimingFunction: 'ease' } : {};
 
 function HoverButton({ style, hoverStyle, onPress, children }) {
@@ -143,7 +143,6 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
   const renderPlanCard = (plan, i) => {
     const hasPrice = plan.price != null;
     const hasMonthlyEquivalent = plan.monthly_equivalent_price != null;
-    const color = COLORS[i % COLORS.length];
     const icon = ICONS[i % ICONS.length];
     const bullets = (plan.bullets || '').split('\n').map((b) => b.trim()).filter(Boolean);
     const ctaText = plan.audience === 'ela'
@@ -156,11 +155,11 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
       <View key={plan.plan_key} style={[styles.planCard, plan.is_featured && styles.planCardHighlight]}>
         {plan.is_featured && (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>MELHOR OFERTA</Text>
+            <Text style={styles.badgeText}>MAIS RECOMENDADO</Text>
           </View>
         )}
-        <View style={[styles.planIconCircle, { borderColor: color }]}>
-          <Ionicons name={icon} size={26} color={color} />
+        <View style={styles.planIconCircle}>
+          <Ionicons name={icon} size={26} color={ACCENT} />
         </View>
         <Text style={styles.planName}>{plan.plan_name}</Text>
         {plan.duration_label ? <Text style={styles.planDuration}>{plan.duration_label}</Text> : null}
@@ -169,7 +168,7 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
           <View style={styles.bulletsBox}>
             {bullets.map((bullet, j) => (
               <View key={j} style={styles.bulletRow}>
-                <Ionicons name="checkmark-outline" size={14} color={color} />
+                <Ionicons name="checkmark-outline" size={14} color={ACCENT} />
                 <Text style={styles.bulletText}>{bullet}</Text>
               </View>
             ))}
@@ -179,7 +178,7 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
         {hasMonthlyEquivalent ? (
           <>
             <View style={styles.priceHighlightRow}>
-              <Text style={[styles.planPriceBig, { color }]}>R$ {Number(plan.monthly_equivalent_price).toFixed(2).replace('.', ',')}</Text>
+              <Text style={styles.planPriceBig}>R$ {Number(plan.monthly_equivalent_price).toFixed(2).replace('.', ',')}</Text>
               <Text style={styles.planPriceBigSuffix}>/mês</Text>
             </View>
             {hasPrice && (
@@ -189,13 +188,13 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
             )}
           </>
         ) : (
-          <Text style={[styles.planPrice, { color }]}>
+          <Text style={styles.planPrice}>
             {hasPrice ? `R$ ${Number(plan.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
           </Text>
         )}
 
         <HoverButton
-          style={[styles.wantButton, { backgroundColor: color }]}
+          style={styles.wantButton}
           hoverStyle={{ opacity: 0.88, transform: [{ scale: 1.015 }] }}
           onPress={() => handleOpenCheckout({ kind: 'plan', data: plan })}
         >
@@ -220,20 +219,10 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
         <TouchableOpacity onPress={onBack}>
           <Text style={styles.backText}>← Voltar</Text>
         </TouchableOpacity>
+        <Text style={styles.title}>Escolha o seu Plano</Text>
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
-        <View style={styles.heroBox}>
-          <Text style={styles.heroHeadline}>Treino em casa ou na academia, dieta e suporte direto com a equipe — tudo em um só app.</Text>
-          <View style={styles.socialProofRow}>
-            <Ionicons name="people-outline" size={13} color="#a3a3a3" />
-            <Text style={styles.socialProofText}>Alunos reais, resultados reais, acompanhamento de verdade</Text>
-          </View>
-        </View>
-
-        <Text style={styles.title}>Protocolos & Consultoria</Text>
-        <Text style={styles.subtitle}>Escolha o plano ideal pra sua rotina</Text>
-
         {hasAudienceTags && (
           <View style={styles.audienceToggleRow}>
             <TouchableOpacity
@@ -421,49 +410,36 @@ const glassCard = {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#090A0F', paddingTop: 50, paddingHorizontal: 20 },
-  topBar: { marginBottom: 8 },
+  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   backText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  heroBox: { alignItems: 'center', paddingHorizontal: 8, marginBottom: 22 },
-  heroHeadline: { color: '#f5f5f5', fontSize: 21, fontWeight: '800', textAlign: 'center', lineHeight: 28 },
-  socialProofRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
-  socialProofText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
   audienceToggleRow: { flexDirection: 'row', gap: 8, alignSelf: 'center', backgroundColor: '#171717', borderRadius: 12, padding: 4, marginBottom: 20 },
   audienceToggleChip: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 9 },
   audienceToggleChipActive: { backgroundColor: '#f97316' },
   audienceToggleText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
   audienceToggleTextActive: { color: '#0a0a0a' },
   priceHighlightRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  planPriceBig: { fontSize: 30, fontWeight: '800' },
+  planPriceBig: { color: '#FFFFFF', fontSize: 30, fontWeight: '800' },
   planPriceBigSuffix: { color: '#737373', fontSize: 13, fontWeight: '700' },
   planPriceTotal: { color: '#737373', fontSize: 11, marginTop: 2, marginBottom: 4 },
   trustBox: { ...glassCard, borderRadius: 20, padding: 16, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
-  title: { color: '#f5f5f5', fontSize: 24, fontWeight: '800', textAlign: 'center', marginTop: 10 },
-  subtitle: { color: '#a3a3a3', fontSize: 13, textAlign: 'center', marginTop: 6, marginBottom: 24 },
+  title: { color: '#FFFFFF', fontSize: 18, fontWeight: '700', marginLeft: 16 },
   emptyBox: { alignItems: 'center', gap: 12, paddingHorizontal: 32, paddingVertical: 40 },
   emptyText: { color: '#a3a3a3', fontSize: 14, textAlign: 'center', lineHeight: 20 },
-  planCard: { ...glassCard, borderRadius: 22, padding: 20, alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
-  planCardHighlight: {
-    borderColor: 'rgba(249,115,22,0.5)',
-    borderWidth: 1.5,
-    shadowColor: '#f97316',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 28,
-    elevation: 10,
-  },
-  badge: { position: 'absolute', top: -10, backgroundColor: '#f97316', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
-  badgeText: { color: '#0a0a0a', fontSize: 9, fontWeight: '800' },
-  planIconCircle: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 12, marginTop: 8 },
+  planCard: { backgroundColor: '#12141C', borderWidth: 1, borderColor: '#27272A', borderRadius: 22, padding: 20, alignItems: 'center', marginBottom: 16 },
+  planCardHighlight: { borderColor: '#FF6B00', borderWidth: 1.5 },
+  badge: { position: 'absolute', top: -10, backgroundColor: '#FF6B00', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
+  badgeText: { color: '#000000', fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  planIconCircle: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', marginBottom: 12, marginTop: 8 },
   planName: { color: '#f5f5f5', fontSize: 17, fontWeight: '800' },
   planDuration: { color: '#737373', fontSize: 11, marginTop: 2, marginBottom: 12 },
   bulletsBox: { alignSelf: 'stretch', marginBottom: 16, marginTop: 14 },
   bulletRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  bulletText: { color: '#a3a3a3', fontSize: 12, flexShrink: 1 },
-  planPrice: { fontSize: 26, fontWeight: '800', marginBottom: 14 },
-  wantButton: { borderRadius: 14, paddingVertical: 13, paddingHorizontal: 32, marginTop: 4, width: '100%', alignItems: 'center', ...TRANSITION },
-  wantButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
+  bulletText: { color: '#D4D4D8', fontSize: 12, flexShrink: 1 },
+  planPrice: { color: '#FFFFFF', fontSize: 26, fontWeight: '800', marginBottom: 14 },
+  wantButton: { backgroundColor: '#FF6B00', borderRadius: 14, paddingVertical: 13, paddingHorizontal: 32, marginTop: 4, width: '100%', alignItems: 'center', ...TRANSITION },
+  wantButtonText: { color: '#000000', fontSize: 14, fontWeight: '800' },
   sectionTitle: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginTop: 20, marginBottom: 4 },
   sectionSubtitle: { color: '#737373', fontSize: 12, marginBottom: 16 },
   templateCard: { ...glassCard, borderRadius: 20, padding: 18, alignItems: 'center', marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 3 },
