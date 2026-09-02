@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Platform, ScrollView, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Platform, ScrollView, Pressable, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import InstallBanner from './InstallBanner';
@@ -75,6 +75,8 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
   const [ebooks, setEbooks] = useState([]);
   const scrollRef = useRef(null);
   const planosY = useRef(0);
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
 
   useEffect(() => {
     (async () => {
@@ -120,6 +122,9 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
               <Text style={styles.appNameFit}>Fit</Text>
             </Text>
             <Text style={styles.slogan}>Sua plataforma exclusiva de treino e saúde</Text>
+            <Text style={[styles.heroSupportText, { fontSize: isDesktop ? 15 : 14, lineHeight: (isDesktop ? 15 : 14) * 1.5 }]}>
+              Acompanhamento completo e metodologia validada para transformar o seu corpo de forma simples.
+            </Text>
           </View>
         </View>
 
@@ -223,6 +228,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
     paddingHorizontal: 20,
+  },
+  heroSupportText: {
+    color: '#A1A1AA',
+    fontWeight: '400',
+    textAlign: 'center',
+    maxWidth: 360,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 24,
   },
   trustStrip: { ...glassCard, borderRadius: 20, padding: 16, marginBottom: 20, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
