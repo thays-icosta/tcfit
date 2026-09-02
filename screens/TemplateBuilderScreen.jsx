@@ -7,7 +7,7 @@ import { supabase } from './supabaseClient';
 import AddExerciseModal from './AddExerciseModal';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { showAlert } from './alertUtils';
-import { HOME_CATEGORIES } from './accessLevel';
+import { HOME_CATEGORIES, PROGRAM_LEVELS, TRAINING_LOCATIONS, WORKOUT_GOALS } from './accessLevel';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -43,12 +43,15 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [editCoverImageUrl, setEditCoverImageUrl] = useState(null);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [editCategory, setEditCategory] = useState(null);
+  const [editEnvironment, setEditEnvironment] = useState(null);
+  const [editLevel, setEditLevel] = useState(null);
+  const [editGoal, setEditGoal] = useState(null);
   const [savingMeta, setSavingMeta] = useState(false);
 
   const loadTemplates = async () => {
     const { data } = await supabase
       .from('workout_templates')
-      .select('id, name, description, is_public, price, cover_image_url, category')
+      .select('id, name, description, is_public, price, cover_image_url, category, environment, level, goal')
       .eq('personal_id', personalId)
       .order('created_at', { ascending: true });
     setTemplates(data || []);
@@ -96,6 +99,9 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       setEditPrice(t?.price != null ? String(t.price) : '');
       setEditCoverImageUrl(t?.cover_image_url || null);
       setEditCategory(t?.category || null);
+      setEditEnvironment(t?.environment || null);
+      setEditLevel(t?.level || null);
+      setEditGoal(t?.goal || null);
     } else {
       setSessions([]);
       setActiveSessionId(null);
@@ -234,6 +240,9 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       price: editPrice ? Number(editPrice) : null,
       cover_image_url: editCoverImageUrl,
       category: editCategory,
+      environment: editEnvironment,
+      level: editLevel,
+      goal: editGoal,
     };
     const { error } = await supabase.from('workout_templates').update(meta).eq('id', activeTemplateId);
     if (!error) {
@@ -446,6 +455,45 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                       onPress={() => setEditCategory(editCategory === c.value ? null : c.value)}
                     >
                       <Text style={[styles.categoryChipText, editCategory === c.value && styles.categoryChipTextActive]}>{c.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.metaLabel}>Ambiente (seção &quot;Metodologia e Programas de Treino&quot;)</Text>
+                <View style={styles.categoryRow}>
+                  {[{ value: null, label: 'Sem ambiente' }, ...TRAINING_LOCATIONS].map((opt) => (
+                    <TouchableOpacity
+                      key={opt.label}
+                      style={[styles.categoryChip, editEnvironment === opt.value && styles.categoryChipActive]}
+                      onPress={() => setEditEnvironment(opt.value)}
+                    >
+                      <Text style={[styles.categoryChipText, editEnvironment === opt.value && styles.categoryChipTextActive]}>{opt.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.metaLabel}>Nível</Text>
+                <View style={styles.categoryRow}>
+                  {[{ value: null, label: 'Sem nível' }, ...PROGRAM_LEVELS].map((opt) => (
+                    <TouchableOpacity
+                      key={opt.label}
+                      style={[styles.categoryChip, editLevel === opt.value && styles.categoryChipActive]}
+                      onPress={() => setEditLevel(opt.value)}
+                    >
+                      <Text style={[styles.categoryChipText, editLevel === opt.value && styles.categoryChipTextActive]}>{opt.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.metaLabel}>Objetivo/Tag</Text>
+                <View style={styles.categoryRow}>
+                  {[{ value: null, label: 'Sem objetivo' }, ...WORKOUT_GOALS].map((opt) => (
+                    <TouchableOpacity
+                      key={opt.label}
+                      style={[styles.categoryChip, editGoal === opt.value && styles.categoryChipActive]}
+                      onPress={() => setEditGoal(opt.value)}
+                    >
+                      <Text style={[styles.categoryChipText, editGoal === opt.value && styles.categoryChipTextActive]}>{opt.label}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>

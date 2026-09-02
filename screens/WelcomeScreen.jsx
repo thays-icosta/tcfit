@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import InstallBanner from './InstallBanner';
 import PlansSection from './PlansSection';
 import MaterialsSection from './MaterialsSection';
+import WorkoutsSection from './WorkoutsSection';
 
 const TRUST_STRIP = [
   { icon: 'barbell-outline', text: 'Treinos personalizados e atualizados' },
@@ -134,6 +135,8 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
             <CategoryCard key={cat.label} cat={cat} />
           ))}
         </View>
+
+        <WorkoutsSection onSelectWorkout={scrollToPlanos} />
 
         <MaterialsSection onSelectMaterial={scrollToPlanos} />
 

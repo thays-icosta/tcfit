@@ -31,6 +31,14 @@ export const TRAINING_LOCATIONS = [
   { value: 'casa', label: 'Casa' },
 ];
 
+export const WORKOUT_GOALS = [
+  { value: 'hipertrofia', label: 'Hipertrofia' },
+  { value: 'emagrecimento', label: 'Emagrecimento' },
+  { value: 'sem_equipamentos', label: 'Sem Equipamentos' },
+  { value: 'cardio', label: 'Cardio' },
+  { value: 'definicao', label: 'Definição' },
+];
+
 export const PAIN_ZONES = [
   { value: 'lombar', label: 'Lombar' },
   { value: 'joelho', label: 'Joelho' },
