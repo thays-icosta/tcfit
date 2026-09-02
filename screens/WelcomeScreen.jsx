@@ -15,14 +15,20 @@ const CATEGORIES = [
   { icon: 'barbell-outline', label: 'Treinos', subtitle: 'Fichas em vídeo', color: '#f97316' },
   { icon: 'restaurant-outline', label: 'Dieta e Macros', subtitle: 'Plano nutricional', color: '#5EC8D8' },
   { icon: 'trending-up-outline', label: 'Evolução Física', subtitle: 'Relatórios completos', color: '#a855f7' },
-  { icon: 'star-outline', label: 'Consultoria VIP', subtitle: 'Suporte direto', color: '#ec4899' },
+  { icon: 'star-outline', label: 'Consultoria VIP', subtitle: 'Suporte direto', color: '#ec4899', glow: true },
 ];
+
+const TRANSITION = Platform.OS === 'web' ? { transitionProperty: 'all', transitionDuration: '200ms', transitionTimingFunction: 'ease' } : {};
 
 function CategoryCard({ cat }) {
   const [hovered, setHovered] = useState(false);
   return (
     <Pressable
-      style={[styles.categoryCard, hovered && { borderColor: cat.color, shadowColor: cat.color, shadowOpacity: 0.35, shadowRadius: 10, shadowOffset: { width: 0, height: 0 }, elevation: 4 }]}
+      style={[
+        styles.categoryCard,
+        cat.glow && styles.categoryCardGlow,
+        hovered && { borderColor: cat.color, shadowColor: cat.color, shadowOpacity: 0.4, shadowRadius: 14, shadowOffset: { width: 0, height: 0 }, elevation: 5, transform: [{ scale: 1.02 }] },
+      ]}
       onHoverIn={() => setHovered(true)}
       onHoverOut={() => setHovered(false)}
     >
@@ -31,6 +37,35 @@ function CategoryCard({ cat }) {
       </View>
       <Text style={styles.categoryLabel}>{cat.label}</Text>
       <Text style={styles.categorySubtitle}>{cat.subtitle}</Text>
+    </Pressable>
+  );
+}
+
+function PrimaryButton({ onPress, icon, text }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Pressable
+      style={[styles.exploreButton, hovered && styles.exploreButtonHovered]}
+      onPress={onPress}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
+    >
+      <Ionicons name={icon} size={20} color="#0a0a0a" />
+      <Text style={styles.exploreButtonText}>{text}</Text>
+    </Pressable>
+  );
+}
+
+function GhostButton({ onPress, text }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Pressable
+      style={[styles.loginButton, hovered && styles.loginButtonHovered]}
+      onPress={onPress}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
+    >
+      <Text style={styles.loginButtonText}>{text}</Text>
     </Pressable>
   );
 }
@@ -53,10 +88,11 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
 
   return (
     <View style={styles.root}>
+      <LinearGradient colors={['#090A0F', '#121624']} style={StyleSheet.absoluteFill} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
         <View style={styles.heroWrap}>
           <LinearGradient
-            colors={['rgba(10,10,10,0.55)', 'rgba(10,10,15,0.85)', '#0a0a0a']}
+            colors={['rgba(9,10,15,0.6)', 'rgba(18,22,36,0.85)', 'transparent']}
             style={StyleSheet.absoluteFill}
           />
           <View style={styles.centerBlock}>
@@ -81,14 +117,8 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
           ))}
         </View>
 
-        <TouchableOpacity style={styles.exploreButton} onPress={onExplore}>
-          <Ionicons name="storefront-outline" size={20} color="#0a0a0a" />
-          <Text style={styles.exploreButtonText}>Conhecer Nossos Planos</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.loginButton} onPress={onLogin}>
-          <Text style={styles.loginButtonText}>Já tenho conta (Entrar)</Text>
-        </TouchableOpacity>
+        <PrimaryButton onPress={onExplore} icon="storefront-outline" text="Conhecer Nossos Planos" />
+        <GhostButton onPress={onLogin} text="Já tenho conta (Entrar)" />
 
         <InstallBanner />
 
@@ -128,8 +158,15 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
   );
 }
 
+const glassCard = {
+  backgroundColor: 'rgba(23,23,28,0.55)',
+  borderWidth: 1,
+  borderColor: 'rgba(249,115,22,0.16)',
+  ...(Platform.OS === 'web' ? { backdropFilter: 'blur(16px)' } : {}),
+};
+
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0a0a0a' },
+  root: { flex: 1, backgroundColor: '#090A0F' },
   container: {
     paddingBottom: 60,
     ...(Platform.OS === 'web' ? { maxWidth: 440, width: '100%', marginHorizontal: 'auto' } : {}),
@@ -139,7 +176,7 @@ const styles = StyleSheet.create({
   logo: { width: 120, height: 120, marginBottom: 12 },
   appName: { color: '#f5f5f5', fontSize: 32, fontWeight: '800', letterSpacing: 0.5 },
   slogan: { color: '#a3a3a3', fontSize: 13, marginTop: 8, textAlign: 'center', paddingHorizontal: 20 },
-  trustStrip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 16, marginBottom: 20, marginHorizontal: 32, gap: 12 },
+  trustStrip: { ...glassCard, borderRadius: 20, padding: 16, marginBottom: 20, marginHorizontal: 32, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
@@ -147,7 +184,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     backgroundColor: '#f97316',
-    borderRadius: 14,
+    borderRadius: 18,
     paddingVertical: 18,
     alignItems: 'center',
     justifyContent: 'center',
@@ -158,13 +195,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 12,
     elevation: 6,
+    ...TRANSITION,
   },
+  exploreButtonHovered: { backgroundColor: '#fb923c', shadowOpacity: 0.55, shadowRadius: 18, transform: [{ scale: 1.01 }] },
   exploreButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '800' },
-  loginButton: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#525252', borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginBottom: 8, marginHorizontal: 32 },
+  loginButton: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#525252', borderRadius: 18, paddingVertical: 15, alignItems: 'center', marginBottom: 8, marginHorizontal: 32, ...TRANSITION },
+  loginButtonHovered: { borderColor: '#a3a3a3', backgroundColor: 'rgba(255,255,255,0.04)' },
   loginButtonText: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
   sectionTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginTop: 28, marginBottom: 14, marginHorizontal: 32 },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', marginHorizontal: 32 },
-  categoryCard: { width: '47%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 16, alignItems: 'center', marginBottom: 10 },
+  categoryCard: { width: '47%', ...glassCard, borderRadius: 20, padding: 16, alignItems: 'center', marginBottom: 10, ...TRANSITION },
+  categoryCardGlow: { shadowColor: '#ec4899', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.28, shadowRadius: 18, elevation: 4, borderColor: 'rgba(236,72,153,0.25)' },
   categoryIconCircle: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   categoryLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', textAlign: 'center' },
   categorySubtitle: { color: '#737373', fontSize: 10, fontWeight: '600', textAlign: 'center', marginTop: 3 },
@@ -173,10 +214,10 @@ const styles = StyleSheet.create({
   ebookCover: {
     width: 110,
     height: 110,
-    borderRadius: 12,
+    borderRadius: 16,
     backgroundColor: '#171717',
     borderWidth: 1,
-    borderColor: '#292524',
+    borderColor: 'rgba(249,115,22,0.16)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,

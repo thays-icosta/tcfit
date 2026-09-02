@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking, Modal, Animated, Platform, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
@@ -8,6 +9,16 @@ import { showAlert } from './alertUtils';
 const WHATSAPP_NUMBER = '5537998231382';
 const ICONS = ['barbell-outline', 'restaurant-outline', 'sparkles-outline', 'flash-outline', 'trophy-outline'];
 const COLORS = ['#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
+const TRANSITION = Platform.OS === 'web' ? { transitionProperty: 'all', transitionDuration: '200ms', transitionTimingFunction: 'ease' } : {};
+
+function HoverButton({ style, hoverStyle, onPress, children }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Pressable style={[style, hovered && hoverStyle]} onPress={onPress} onHoverIn={() => setHovered(true)} onHoverOut={() => setHovered(false)}>
+      {children}
+    </Pressable>
+  );
+}
 
 const TRUST_CHECKLIST = [
   'Conteúdos 100% atualizados a cada 5 semanas',
@@ -29,6 +40,14 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [pixCopied, setPixCopied] = useState(false);
   const [audience, setAudience] = useState('ela');
+  const modalAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (checkoutTarget) {
+      modalAnim.setValue(0);
+      Animated.timing(modalAnim, { toValue: 1, duration: 260, useNativeDriver: true }).start();
+    }
+  }, [checkoutTarget]);
 
   useEffect(() => {
     (async () => {
@@ -175,9 +194,13 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
           </Text>
         )}
 
-        <TouchableOpacity style={[styles.wantButton, { backgroundColor: color }]} onPress={() => handleOpenCheckout({ kind: 'plan', data: plan })}>
+        <HoverButton
+          style={[styles.wantButton, { backgroundColor: color }]}
+          hoverStyle={{ opacity: 0.88, transform: [{ scale: 1.015 }] }}
+          onPress={() => handleOpenCheckout({ kind: 'plan', data: plan })}
+        >
           <Text style={styles.wantButtonText}>{ctaText}</Text>
-        </TouchableOpacity>
+        </HoverButton>
       </View>
     );
   };
@@ -192,6 +215,7 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
 
   return (
     <View style={styles.container}>
+      <LinearGradient colors={['#090A0F', '#121624']} style={StyleSheet.absoluteFill} />
       <View style={styles.topBar}>
         <TouchableOpacity onPress={onBack}>
           <Text style={styles.backText}>← Voltar</Text>
@@ -276,9 +300,13 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
                     <Text style={styles.templatePrice}>
                       {t.price != null ? `R$ ${Number(t.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
                     </Text>
-                    <TouchableOpacity style={styles.templateWantButton} onPress={() => handleOpenCheckout({ kind: 'template', data: t })}>
+                    <HoverButton
+                      style={styles.templateWantButton}
+                      hoverStyle={{ opacity: 0.88, transform: [{ scale: 1.015 }] }}
+                      onPress={() => handleOpenCheckout({ kind: 'template', data: t })}
+                    >
                       <Text style={styles.templateWantButtonText}>Quero esse treino</Text>
-                    </TouchableOpacity>
+                    </HoverButton>
                   </View>
                 ))}
               </>
@@ -298,9 +326,13 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
                     <Text style={styles.templatePrice}>
                       {product.price != null ? `R$ ${Number(product.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
                     </Text>
-                    <TouchableOpacity style={styles.templateWantButton} onPress={() => handleOpenCheckout({ kind: 'product', data: product })}>
+                    <HoverButton
+                      style={styles.templateWantButton}
+                      hoverStyle={{ opacity: 0.88, transform: [{ scale: 1.015 }] }}
+                      onPress={() => handleOpenCheckout({ kind: 'product', data: product })}
+                    >
                       <Text style={styles.templateWantButtonText}>Quero esse produto</Text>
-                    </TouchableOpacity>
+                    </HoverButton>
                   </View>
                 ))}
               </>
@@ -313,9 +345,17 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
         </TouchableOpacity>
       </ScrollView>
 
-      <Modal visible={!!checkoutTarget} transparent animationType="slide" onRequestClose={() => setCheckoutTarget(null)}>
+      <Modal visible={!!checkoutTarget} transparent animationType="none" onRequestClose={() => setCheckoutTarget(null)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.checkoutSheet}>
+          <Animated.View
+            style={[
+              styles.checkoutSheet,
+              {
+                opacity: modalAnim,
+                transform: [{ translateY: modalAnim.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) }],
+              },
+            ]}
+          >
             <Text style={styles.modalTitle}>
               {checkoutTarget?.kind === 'plan' ? checkoutTarget.data.plan_name : checkoutTarget?.data.name}
             </Text>
@@ -365,15 +405,22 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
                 <Text style={styles.signupButtonText}>Já decidiu? Criar Conta Agora</Text>
               </TouchableOpacity>
             )}
-          </View>
+          </Animated.View>
         </View>
       </Modal>
     </View>
   );
 }
 
+const glassCard = {
+  backgroundColor: 'rgba(23,23,28,0.55)',
+  borderWidth: 1,
+  borderColor: 'rgba(249,115,22,0.16)',
+  ...(Platform.OS === 'web' ? { backdropFilter: 'blur(16px)' } : {}),
+};
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 20 },
+  container: { flex: 1, backgroundColor: '#090A0F', paddingTop: 50, paddingHorizontal: 20 },
   topBar: { marginBottom: 8 },
   backText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
   heroBox: { alignItems: 'center', paddingHorizontal: 8, marginBottom: 22 },
@@ -389,16 +436,24 @@ const styles = StyleSheet.create({
   planPriceBig: { fontSize: 30, fontWeight: '800' },
   planPriceBigSuffix: { color: '#737373', fontSize: 13, fontWeight: '700' },
   planPriceTotal: { color: '#737373', fontSize: 11, marginTop: 2, marginBottom: 4 },
-  trustBox: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 16, marginBottom: 20 },
+  trustBox: { ...glassCard, borderRadius: 20, padding: 16, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
   title: { color: '#f5f5f5', fontSize: 24, fontWeight: '800', textAlign: 'center', marginTop: 10 },
   subtitle: { color: '#a3a3a3', fontSize: 13, textAlign: 'center', marginTop: 6, marginBottom: 24 },
   emptyBox: { alignItems: 'center', gap: 12, paddingHorizontal: 32, paddingVertical: 40 },
   emptyText: { color: '#a3a3a3', fontSize: 14, textAlign: 'center', lineHeight: 20 },
-  planCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 18, padding: 20, alignItems: 'center', marginBottom: 16 },
-  planCardHighlight: { borderColor: '#a855f7', borderWidth: 1.5 },
-  badge: { position: 'absolute', top: -10, backgroundColor: '#a855f7', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
+  planCard: { ...glassCard, borderRadius: 22, padding: 20, alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
+  planCardHighlight: {
+    borderColor: 'rgba(249,115,22,0.5)',
+    borderWidth: 1.5,
+    shadowColor: '#f97316',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 28,
+    elevation: 10,
+  },
+  badge: { position: 'absolute', top: -10, backgroundColor: '#f97316', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
   badgeText: { color: '#0a0a0a', fontSize: 9, fontWeight: '800' },
   planIconCircle: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 12, marginTop: 8 },
   planName: { color: '#f5f5f5', fontSize: 17, fontWeight: '800' },
@@ -407,21 +462,31 @@ const styles = StyleSheet.create({
   bulletRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   bulletText: { color: '#a3a3a3', fontSize: 12, flexShrink: 1 },
   planPrice: { fontSize: 26, fontWeight: '800', marginBottom: 14 },
-  wantButton: { borderRadius: 12, paddingVertical: 13, paddingHorizontal: 32, marginTop: 4, width: '100%', alignItems: 'center' },
+  wantButton: { borderRadius: 14, paddingVertical: 13, paddingHorizontal: 32, marginTop: 4, width: '100%', alignItems: 'center', ...TRANSITION },
   wantButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
   sectionTitle: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginTop: 20, marginBottom: 4 },
   sectionSubtitle: { color: '#737373', fontSize: 12, marginBottom: 16 },
-  templateCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 18, alignItems: 'center', marginBottom: 14 },
+  templateCard: { ...glassCard, borderRadius: 20, padding: 18, alignItems: 'center', marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 3 },
   templateIconCircle: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   templateName: { color: '#f5f5f5', fontSize: 15, fontWeight: '800' },
   templateDescription: { color: '#a3a3a3', fontSize: 12, textAlign: 'center', marginTop: 8, lineHeight: 17 },
   templatePrice: { color: '#f97316', fontSize: 20, fontWeight: '800', marginTop: 12 },
-  templateWantButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 28, marginTop: 14, width: '100%', alignItems: 'center' },
+  templateWantButton: { backgroundColor: '#f97316', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 28, marginTop: 14, width: '100%', alignItems: 'center', ...TRANSITION },
   templateWantButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '800' },
   loginLink: { alignItems: 'center', marginTop: 10 },
   loginLinkText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600', textDecorationLine: 'underline' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  checkoutSheet: { backgroundColor: '#171717', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '85%' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(5,6,10,0.75)', justifyContent: 'flex-end' },
+  checkoutSheet: {
+    backgroundColor: 'rgba(23,23,28,0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(249,115,22,0.18)',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 40,
+    maxHeight: '85%',
+    ...(Platform.OS === 'web' ? { backdropFilter: 'blur(20px)' } : {}),
+  },
   modalTitle: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginBottom: 8 },
   modalSubtitle: { color: '#a3a3a3', fontSize: 12, marginBottom: 14 },
   addonRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 12, marginBottom: 8 },
@@ -432,9 +497,9 @@ const styles = StyleSheet.create({
   copyPixButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, paddingVertical: 12, marginBottom: 8 },
   copyPixButtonText: { color: '#3b82f6', fontSize: 13, fontWeight: '700' },
   modalButtonRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  modalCancelButton: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalCancelButton: { flex: 1, backgroundColor: 'rgba(10,10,10,0.6)', borderWidth: 1, borderColor: '#292524', borderRadius: 14, paddingVertical: 12, alignItems: 'center', ...TRANSITION },
   modalCancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  modalConfirmButton: { flex: 1, flexDirection: 'row', gap: 6, backgroundColor: '#22c55e', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
+  modalConfirmButton: { flex: 1, flexDirection: 'row', gap: 6, backgroundColor: '#22c55e', borderRadius: 14, paddingVertical: 12, alignItems: 'center', justifyContent: 'center', ...TRANSITION },
   modalConfirmButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
   signupButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', marginTop: 12, paddingVertical: 10 },
   signupButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
