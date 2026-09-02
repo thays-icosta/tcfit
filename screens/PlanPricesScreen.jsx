@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator, ScrollView, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator, ScrollView, Switch, Image } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 
@@ -15,6 +17,7 @@ export default function PlanPricesScreen({ onClose }) {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingPlanKey, setUploadingPlanKey] = useState(null);
 
   const loadPlans = async () => {
     const { data } = await supabase.from('plan_prices').select('*').order('plan_key');
@@ -25,6 +28,8 @@ export default function PlanPricesScreen({ onClose }) {
         monthlyEquivalentInput: p.monthly_equivalent_price != null ? String(p.monthly_equivalent_price) : '',
         audience: p.audience || null,
         tier: p.tier || null,
+        billingPeriod: p.billing_period || null,
+        coverImageUrl: p.cover_image_url || null,
         bulletsInput: p.bullets || '',
         messageInput: p.whatsapp_message || 'Olá! Gostaria de contratar o plano {plano}.',
         nameInput: p.plan_name || '',
@@ -57,6 +62,8 @@ export default function PlanPricesScreen({ onClose }) {
         monthlyEquivalentInput: '',
         audience: null,
         tier: null,
+        billingPeriod: null,
+        coverImageUrl: null,
         bulletsInput: '',
         messageInput: 'Olá! Gostaria de contratar o plano {plano}.',
         isFeatured: false,
@@ -94,6 +101,8 @@ export default function PlanPricesScreen({ onClose }) {
         monthly_equivalent_price: plan.monthlyEquivalentInput ? Number(plan.monthlyEquivalentInput) : null,
         audience: plan.audience || null,
         tier: plan.tier || null,
+        billing_period: plan.billingPeriod || null,
+        cover_image_url: plan.coverImageUrl || null,
         bullets: plan.bulletsInput.trim() || null,
         whatsapp_message: plan.messageInput.trim() || null,
         is_featured: plan.isFeatured,
@@ -112,6 +121,28 @@ export default function PlanPricesScreen({ onClose }) {
   const handleSaveWithLoading = async () => {
     setSaving(true);
     await handleSave();
+  };
+
+  const handlePickCover = async (planKey) => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      showAlert('Permissão necessária', 'Autorize o acesso às fotos.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.6, base64: true });
+    if (result.canceled || !result.assets?.[0]?.base64) return;
+
+    setUploadingPlanKey(planKey);
+    try {
+      const fileName = `${uuidv4()}.jpg`;
+      const { error } = await supabase.storage.from('product-covers').upload(fileName, decode(result.assets[0].base64), { contentType: 'image/jpeg' });
+      if (error) throw error;
+      const { data } = supabase.storage.from('product-covers').getPublicUrl(fileName);
+      handleChange(planKey, 'coverImageUrl', data.publicUrl);
+    } catch {
+      showAlert('Não deu pra enviar a foto', 'Sem problema, você pode salvar sem foto e adicionar depois.');
+    }
+    setUploadingPlanKey(null);
   };
 
   if (loading) {
@@ -147,6 +178,17 @@ export default function PlanPricesScreen({ onClose }) {
               <Text style={styles.deleteLink}>🗑️</Text>
             </TouchableOpacity>
           </View>
+
+          <Text style={styles.fieldLabel}>Foto de Banner (topo do card na vitrine)</Text>
+          <TouchableOpacity style={styles.coverPicker} onPress={() => handlePickCover(plan.plan_key)} disabled={uploadingPlanKey === plan.plan_key}>
+            {uploadingPlanKey === plan.plan_key ? (
+              <ActivityIndicator color="#f97316" />
+            ) : plan.coverImageUrl ? (
+              <Image source={{ uri: plan.coverImageUrl }} style={styles.coverPreview} resizeMode="cover" />
+            ) : (
+              <Text style={styles.coverPickerText}>📷 Adicionar foto de banner</Text>
+            )}
+          </TouchableOpacity>
 
           <Text style={styles.fieldLabel}>Duração</Text>
           <TextInput
@@ -219,6 +261,24 @@ export default function PlanPricesScreen({ onClose }) {
             ))}
           </View>
 
+          <Text style={styles.fieldLabel}>Período de Cobrança</Text>
+          <View style={styles.audienceRow}>
+            {[
+              { value: null, label: 'Sem período' },
+              { value: 'mensal', label: 'Mensal' },
+              { value: 'trimestral', label: 'Trimestral (Melhor Oferta)' },
+            ].map((opt) => (
+              <TouchableOpacity
+                key={opt.label}
+                style={[styles.audienceChip, plan.billingPeriod === opt.value && styles.audienceChipActive]}
+                onPress={() => handleChange(plan.plan_key, 'billingPeriod', opt.value)}
+              >
+                <Text style={[styles.audienceChipText, plan.billingPeriod === opt.value && styles.audienceChipTextActive]}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Text style={styles.smallHint}>Se você marcar período em pelo menos um plano, o seletor &quot;Mensal / Trimestral&quot; aparece na vitrine.</Text>
+
           <Text style={styles.fieldLabel}>Benefícios (um por linha)</Text>
           <TextInput
             style={styles.bulletsInput}
@@ -285,6 +345,9 @@ const styles = StyleSheet.create({
   nameInput: { flex: 1, color: '#f5f5f5', fontSize: 15, fontWeight: '800', borderBottomWidth: 1, borderBottomColor: '#292524', paddingBottom: 6 },
   deleteLink: { fontSize: 16 },
   fieldLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 14 },
+  coverPicker: { width: '100%', height: 120, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  coverPreview: { width: '100%', height: '100%' },
+  coverPickerText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   input: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, color: '#f5f5f5', fontSize: 14 },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   currencyPrefix: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },

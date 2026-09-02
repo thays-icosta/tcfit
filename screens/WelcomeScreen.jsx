@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Platform, ScrollView, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import InstallBanner from './InstallBanner';
+import PlansSection from './PlansSection';
 import { supabase } from './supabaseClient';
 
 const TRUST_STRIP = [
@@ -70,8 +71,10 @@ function GhostButton({ onPress, text }) {
   );
 }
 
-export default function WelcomeScreen({ onExplore, onLogin }) {
+export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount }) {
   const [ebooks, setEbooks] = useState([]);
+  const scrollRef = useRef(null);
+  const planosY = useRef(0);
 
   useEffect(() => {
     (async () => {
@@ -86,10 +89,21 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
     })();
   }, []);
 
+  const scrollToPlanos = () => {
+    scrollRef.current?.scrollTo({ y: Math.max(planosY.current - 20, 0), animated: true });
+  };
+
+  useEffect(() => {
+    if (scrollToPlansOnMount) {
+      const t = setTimeout(scrollToPlanos, 300);
+      return () => clearTimeout(t);
+    }
+  }, [scrollToPlansOnMount]);
+
   return (
     <View style={styles.root}>
       <LinearGradient colors={['#090A0F', '#121624']} style={StyleSheet.absoluteFill} />
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
+      <ScrollView ref={scrollRef} style={{ flex: 1 }} contentContainerStyle={styles.container}>
         <View style={styles.heroWrap}>
           <LinearGradient
             colors={['rgba(9,10,15,0.6)', 'rgba(18,22,36,0.85)', 'transparent']}
@@ -120,7 +134,7 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
           ))}
         </View>
 
-        <PrimaryButton onPress={onExplore} icon="storefront-outline" text="Conhecer Nossos Planos" />
+        <PrimaryButton onPress={scrollToPlanos} icon="storefront-outline" text="Conhecer Nossos Planos" />
         <GhostButton onPress={onLogin} text="Já tenho conta (Entrar)" />
 
         <Text style={styles.sectionTitle}>RECURSOS EXCLUSIVOS</Text>
@@ -135,7 +149,7 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
             <Text style={styles.sectionTitle}>MATERIAIS E E-BOOKS</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.ebookRow}>
               {ebooks.map((p) => (
-                <TouchableOpacity key={p.id} style={styles.ebookCard} onPress={onExplore}>
+                <TouchableOpacity key={p.id} style={styles.ebookCard} onPress={scrollToPlanos}>
                   {p.cover_image_url ? (
                     <Image source={{ uri: p.cover_image_url }} style={styles.ebookCover} resizeMode="cover" />
                   ) : (
@@ -154,6 +168,13 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
             </ScrollView>
           </>
         )}
+
+        <Text style={styles.sectionTitle}>ESCOLHA O SEU PLANO</Text>
+        <PlansSection
+          onLayout={(e) => { planosY.current = e.nativeEvent.layout.y; }}
+          onLogin={onLogin}
+          onSignup={onSignup}
+        />
 
         <InstallBanner />
       </ScrollView>

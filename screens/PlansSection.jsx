@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking, Modal, Animated, Platform, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking, Modal, Animated, Platform, Pressable, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
@@ -29,7 +29,7 @@ const TRUST_CHECKLIST = [
   'Garantia incondicional de 7 dias (risco zero)',
 ];
 
-export default function PlansScreen({ onBack, onLogin, onSignup }) {
+export default function PlansSection({ onLayout, onLogin, onSignup }) {
   const [plans, setPlans] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [addonProducts, setAddonProducts] = useState([]);
@@ -40,6 +40,7 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [pixCopied, setPixCopied] = useState(false);
   const [audience, setAudience] = useState('ela');
+  const [billingPeriod, setBillingPeriod] = useState('trimestral');
   const modalAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -145,194 +146,212 @@ export default function PlansScreen({ onBack, onLogin, onSignup }) {
     const hasMonthlyEquivalent = plan.monthly_equivalent_price != null;
     const icon = ICONS[i % ICONS.length];
     const bullets = (plan.bullets || '').split('\n').map((b) => b.trim()).filter(Boolean);
-    const ctaText = plan.audience === 'ela'
-      ? 'QUERO INICIAR MEU PLANO TCFIT ELA'
-      : plan.audience === 'ele'
-        ? 'QUERO INICIAR MEU PLANO TCFIT ELE'
-        : 'Quero meu Protocolo';
 
     return (
       <View key={plan.plan_key} style={[styles.planCard, plan.is_featured && styles.planCardHighlight]}>
-        {plan.is_featured && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>MAIS RECOMENDADO</Text>
+        <View style={styles.bannerWrap}>
+          {plan.cover_image_url ? (
+            <Image source={{ uri: plan.cover_image_url }} style={styles.bannerImage} resizeMode="cover" />
+          ) : (
+            <LinearGradient colors={['#2a1608', '#12141C']} style={styles.bannerImage}>
+              <Ionicons name={icon} size={30} color={ACCENT} />
+            </LinearGradient>
+          )}
+          <LinearGradient colors={['rgba(0,0,0,0.15)', 'rgba(18,20,28,0.95)']} style={StyleSheet.absoluteFill} />
+          <View style={styles.offerTag}>
+            <Text style={styles.offerTagText}>OFERTA DE LANÇAMENTO</Text>
           </View>
-        )}
-        <View style={styles.planIconCircle}>
-          <Ionicons name={icon} size={26} color={ACCENT} />
-        </View>
-        <Text style={styles.planName}>{plan.plan_name}</Text>
-        {plan.duration_label ? <Text style={styles.planDuration}>{plan.duration_label}</Text> : null}
-
-        {bullets.length > 0 && (
-          <View style={styles.bulletsBox}>
-            {bullets.map((bullet, j) => (
-              <View key={j} style={styles.bulletRow}>
-                <Ionicons name="checkmark-outline" size={14} color={ACCENT} />
-                <Text style={styles.bulletText}>{bullet}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {hasMonthlyEquivalent ? (
-          <>
-            <View style={styles.priceHighlightRow}>
-              <Text style={styles.planPriceBig}>R$ {Number(plan.monthly_equivalent_price).toFixed(2).replace('.', ',')}</Text>
-              <Text style={styles.planPriceBigSuffix}>/mês</Text>
+          {plan.is_featured && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>MAIS RECOMENDADO</Text>
             </View>
-            {hasPrice && (
-              <Text style={styles.planPriceTotal}>
-                cobrado R$ {Number(plan.price).toFixed(2).replace('.', ',')}{plan.duration_label ? ` ${plan.duration_label}` : ''}
-              </Text>
-            )}
-          </>
-        ) : (
-          <Text style={styles.planPrice}>
-            {hasPrice ? `R$ ${Number(plan.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
-          </Text>
-        )}
+          )}
+        </View>
 
-        <HoverButton
-          style={styles.wantButton}
-          hoverStyle={{ opacity: 0.88, transform: [{ scale: 1.015 }] }}
-          onPress={() => handleOpenCheckout({ kind: 'plan', data: plan })}
-        >
-          <Text style={styles.wantButtonText}>{ctaText}</Text>
-        </HoverButton>
+        <View style={styles.planCardBody}>
+          <Text style={styles.planName}>{plan.plan_name}</Text>
+          {plan.duration_label ? <Text style={styles.planDuration}>{plan.duration_label}</Text> : null}
+
+          {hasMonthlyEquivalent ? (
+            <>
+              <View style={styles.priceHighlightRow}>
+                <Text style={styles.planPriceBig}>R$ {Number(plan.monthly_equivalent_price).toFixed(2).replace('.', ',')}</Text>
+                <Text style={styles.planPriceBigSuffix}>/mês</Text>
+              </View>
+              {hasPrice && (
+                <Text style={styles.planPriceTotal}>
+                  cobrado R$ {Number(plan.price).toFixed(2).replace('.', ',')}{plan.duration_label ? ` ${plan.duration_label}` : ''}
+                </Text>
+              )}
+            </>
+          ) : (
+            <Text style={styles.planPrice}>
+              {hasPrice ? `R$ ${Number(plan.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
+            </Text>
+          )}
+
+          {bullets.length > 0 && (
+            <View style={styles.bulletsBox}>
+              {bullets.map((bullet, j) => (
+                <View key={j} style={styles.bulletRow}>
+                  <Ionicons name="checkmark-outline" size={14} color={ACCENT} />
+                  <Text style={styles.bulletText}>{bullet}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <HoverButton
+            style={styles.wantButton}
+            hoverStyle={{ opacity: 0.88, transform: [{ scale: 1.015 }] }}
+            onPress={() => handleOpenCheckout({ kind: 'plan', data: plan })}
+          >
+            <Text style={styles.wantButtonText}>ASSINE AGORA</Text>
+          </HoverButton>
+        </View>
       </View>
     );
   };
 
   const namedPlans = plans.filter((p) => p.plan_name);
   const hasAudienceTags = namedPlans.some((p) => p.audience);
-  const visiblePlans = hasAudienceTags ? namedPlans.filter((p) => !p.audience || p.audience === audience) : namedPlans;
+  const audienceFiltered = hasAudienceTags ? namedPlans.filter((p) => !p.audience || p.audience === audience) : namedPlans;
+  const hasPeriodTags = audienceFiltered.some((p) => p.billing_period);
+  const visiblePlans = hasPeriodTags ? audienceFiltered.filter((p) => !p.billing_period || p.billing_period === billingPeriod) : audienceFiltered;
   const hasTierTags = visiblePlans.some((p) => p.tier);
   const appPlans = hasTierTags ? visiblePlans.filter((p) => p.tier === 'app') : visiblePlans;
   const consultoriaPlans = hasTierTags ? visiblePlans.filter((p) => p.tier === 'consultoria') : [];
   const untaggedPlans = hasTierTags ? visiblePlans.filter((p) => !p.tier) : [];
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={['#090A0F', '#121624']} style={StyleSheet.absoluteFill} />
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onBack}>
-          <Text style={styles.backText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Escolha o seu Plano</Text>
-      </View>
+    <View onLayout={onLayout}>
+      {hasAudienceTags && (
+        <View style={styles.audienceToggleRow}>
+          <TouchableOpacity
+            style={[styles.audienceToggleChip, audience === 'ela' && styles.audienceToggleChipActive]}
+            onPress={() => setAudience('ela')}
+          >
+            <Text style={[styles.audienceToggleText, audience === 'ela' && styles.audienceToggleTextActive]}>Para Elas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.audienceToggleChip, audience === 'ele' && styles.audienceToggleChipActive]}
+            onPress={() => setAudience('ele')}
+          >
+            <Text style={[styles.audienceToggleText, audience === 'ele' && styles.audienceToggleTextActive]}>Para Eles</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
-        {hasAudienceTags && (
-          <View style={styles.audienceToggleRow}>
+      {hasPeriodTags && (
+        <View style={styles.periodToggleWrap}>
+          <View style={styles.periodToggleRow}>
             <TouchableOpacity
-              style={[styles.audienceToggleChip, audience === 'ela' && styles.audienceToggleChipActive]}
-              onPress={() => setAudience('ela')}
+              style={[styles.periodToggleChip, billingPeriod === 'mensal' && styles.periodToggleChipActive]}
+              onPress={() => setBillingPeriod('mensal')}
             >
-              <Text style={[styles.audienceToggleText, audience === 'ela' && styles.audienceToggleTextActive]}>Para Elas</Text>
+              <Text style={[styles.periodToggleText, billingPeriod === 'mensal' && styles.periodToggleTextActive]}>Mensal</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.audienceToggleChip, audience === 'ele' && styles.audienceToggleChipActive]}
-              onPress={() => setAudience('ele')}
+              style={[styles.periodToggleChip, billingPeriod === 'trimestral' && styles.periodToggleChipActive]}
+              onPress={() => setBillingPeriod('trimestral')}
             >
-              <Text style={[styles.audienceToggleText, audience === 'ele' && styles.audienceToggleTextActive]}>Para Eles</Text>
+              <Text style={[styles.periodToggleText, billingPeriod === 'trimestral' && styles.periodToggleTextActive]}>Trimestral</Text>
             </TouchableOpacity>
           </View>
-        )}
-
-        {loading ? (
-          <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
-        ) : namedPlans.length === 0 && templates.length === 0 ? (
-          <View style={styles.emptyBox}>
-            <Ionicons name="time-outline" size={32} color="#525252" />
-            <Text style={styles.emptyText}>Em breve novos planos disponíveis! Entre em contato pra saber mais.</Text>
+          <View style={styles.periodBestTag}>
+            <Text style={styles.periodBestTagText}>MELHOR OFERTA NO TRIMESTRAL</Text>
           </View>
-        ) : (
-          <>
-            {hasTierTags && consultoriaPlans.length > 0 && appPlans.length > 0 && (
-              <Text style={styles.sectionTitle}>TcFit App/Treinos</Text>
-            )}
-            {appPlans.map((plan, i) => renderPlanCard(plan, i))}
+        </View>
+      )}
 
-            {consultoriaPlans.length > 0 && (
-              <>
-                <Text style={styles.sectionTitle}>Consultoria Individualizada</Text>
-                <Text style={styles.sectionSubtitle}>Acompanhamento 100% personalizado, direto com a equipe</Text>
-                {consultoriaPlans.map((plan, i) => renderPlanCard(plan, i))}
-              </>
-            )}
+      {loading ? (
+        <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
+      ) : namedPlans.length === 0 && templates.length === 0 ? (
+        <View style={styles.emptyBox}>
+          <Ionicons name="time-outline" size={32} color="#525252" />
+          <Text style={styles.emptyText}>Em breve novos planos disponíveis! Entre em contato pra saber mais.</Text>
+        </View>
+      ) : (
+        <>
+          {hasTierTags && consultoriaPlans.length > 0 && appPlans.length > 0 && (
+            <Text style={styles.sectionTitle}>TcFit App/Treinos</Text>
+          )}
+          {appPlans.map((plan, i) => renderPlanCard(plan, i))}
 
-            {untaggedPlans.map((plan, i) => renderPlanCard(plan, i))}
+          {consultoriaPlans.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Consultoria Individualizada</Text>
+              <Text style={styles.sectionSubtitle}>Acompanhamento 100% personalizado, direto com a equipe</Text>
+              {consultoriaPlans.map((plan, i) => renderPlanCard(plan, i))}
+            </>
+          )}
 
-            {visiblePlans.length > 0 && (
-              <View style={styles.trustBox}>
-                {TRUST_CHECKLIST.map((item, i) => (
-                  <View key={i} style={styles.trustRow}>
-                    <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
-                    <Text style={styles.trustText}>{item}</Text>
+          {untaggedPlans.map((plan, i) => renderPlanCard(plan, i))}
+
+          {visiblePlans.length > 0 && (
+            <View style={styles.trustBox}>
+              {TRUST_CHECKLIST.map((item, i) => (
+                <View key={i} style={styles.trustRow}>
+                  <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
+                  <Text style={styles.trustText}>{item}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {templates.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Treinos Prontos</Text>
+              <Text style={styles.sectionSubtitle}>Fichas montadas por especialista, prontas pra começar hoje</Text>
+              {templates.map((t) => (
+                <View key={t.id} style={styles.templateCard}>
+                  <View style={styles.templateIconCircle}>
+                    <Ionicons name="flash-outline" size={22} color="#f97316" />
                   </View>
-                ))}
-              </View>
-            )}
+                  <Text style={styles.templateName}>{t.name}</Text>
+                  {t.description ? <Text style={styles.templateDescription}>{t.description}</Text> : null}
+                  <Text style={styles.templatePrice}>
+                    {t.price != null ? `R$ ${Number(t.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
+                  </Text>
+                  <HoverButton
+                    style={styles.templateWantButton}
+                    hoverStyle={{ opacity: 0.88, transform: [{ scale: 1.015 }] }}
+                    onPress={() => handleOpenCheckout({ kind: 'template', data: t })}
+                  >
+                    <Text style={styles.templateWantButtonText}>Quero esse treino</Text>
+                  </HoverButton>
+                </View>
+              ))}
+            </>
+          )}
 
-            {templates.length > 0 && (
-              <>
-                <Text style={styles.sectionTitle}>Treinos Prontos</Text>
-                <Text style={styles.sectionSubtitle}>Fichas montadas por especialista, prontas pra começar hoje</Text>
-                {templates.map((t) => (
-                  <View key={t.id} style={styles.templateCard}>
-                    <View style={styles.templateIconCircle}>
-                      <Ionicons name="flash-outline" size={22} color="#f97316" />
-                    </View>
-                    <Text style={styles.templateName}>{t.name}</Text>
-                    {t.description ? <Text style={styles.templateDescription}>{t.description}</Text> : null}
-                    <Text style={styles.templatePrice}>
-                      {t.price != null ? `R$ ${Number(t.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
-                    </Text>
-                    <HoverButton
-                      style={styles.templateWantButton}
-                      hoverStyle={{ opacity: 0.88, transform: [{ scale: 1.015 }] }}
-                      onPress={() => handleOpenCheckout({ kind: 'template', data: t })}
-                    >
-                      <Text style={styles.templateWantButtonText}>Quero esse treino</Text>
-                    </HoverButton>
+          {addonProducts.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Produtos Avulsos</Text>
+              <Text style={styles.sectionSubtitle}>E-books, guias e materiais extras</Text>
+              {addonProducts.map((product) => (
+                <View key={product.id} style={styles.templateCard}>
+                  <View style={styles.templateIconCircle}>
+                    <Ionicons name="book-outline" size={22} color="#f97316" />
                   </View>
-                ))}
-              </>
-            )}
-
-            {addonProducts.length > 0 && (
-              <>
-                <Text style={styles.sectionTitle}>Produtos Avulsos</Text>
-                <Text style={styles.sectionSubtitle}>E-books, guias e materiais extras</Text>
-                {addonProducts.map((product) => (
-                  <View key={product.id} style={styles.templateCard}>
-                    <View style={styles.templateIconCircle}>
-                      <Ionicons name="book-outline" size={22} color="#f97316" />
-                    </View>
-                    <Text style={styles.templateName}>{product.name}</Text>
-                    {product.description ? <Text style={styles.templateDescription}>{product.description}</Text> : null}
-                    <Text style={styles.templatePrice}>
-                      {product.price != null ? `R$ ${Number(product.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
-                    </Text>
-                    <HoverButton
-                      style={styles.templateWantButton}
-                      hoverStyle={{ opacity: 0.88, transform: [{ scale: 1.015 }] }}
-                      onPress={() => handleOpenCheckout({ kind: 'product', data: product })}
-                    >
-                      <Text style={styles.templateWantButtonText}>Quero esse produto</Text>
-                    </HoverButton>
-                  </View>
-                ))}
-              </>
-            )}
-          </>
-        )}
-
-        <TouchableOpacity style={styles.loginLink} onPress={onLogin}>
-          <Text style={styles.loginLinkText}>Já tenho conta — Entrar</Text>
-        </TouchableOpacity>
-      </ScrollView>
+                  <Text style={styles.templateName}>{product.name}</Text>
+                  {product.description ? <Text style={styles.templateDescription}>{product.description}</Text> : null}
+                  <Text style={styles.templatePrice}>
+                    {product.price != null ? `R$ ${Number(product.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
+                  </Text>
+                  <HoverButton
+                    style={styles.templateWantButton}
+                    hoverStyle={{ opacity: 0.88, transform: [{ scale: 1.015 }] }}
+                    onPress={() => handleOpenCheckout({ kind: 'product', data: product })}
+                  >
+                    <Text style={styles.templateWantButtonText}>Quero esse produto</Text>
+                  </HoverButton>
+                </View>
+              ))}
+            </>
+          )}
+        </>
+      )}
 
       <Modal visible={!!checkoutTarget} transparent animationType="none" onRequestClose={() => setCheckoutTarget(null)}>
         <View style={styles.modalOverlay}>
@@ -409,37 +428,45 @@ const glassCard = {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#090A0F', paddingTop: 50, paddingHorizontal: 20 },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  backText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
   audienceToggleRow: { flexDirection: 'row', gap: 8, alignSelf: 'center', backgroundColor: '#171717', borderRadius: 12, padding: 4, marginBottom: 20 },
   audienceToggleChip: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 9 },
   audienceToggleChipActive: { backgroundColor: '#f97316' },
   audienceToggleText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
   audienceToggleTextActive: { color: '#0a0a0a' },
+  periodToggleWrap: { alignItems: 'center', marginBottom: 20 },
+  periodToggleRow: { flexDirection: 'row', gap: 8, backgroundColor: '#171717', borderRadius: 12, padding: 4, marginBottom: 8 },
+  periodToggleChip: { paddingHorizontal: 24, paddingVertical: 10, borderRadius: 9 },
+  periodToggleChipActive: { backgroundColor: '#FF6B00' },
+  periodToggleText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700' },
+  periodToggleTextActive: { color: '#000000' },
+  periodBestTag: { backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 },
+  periodBestTagText: { color: '#FF6B00', fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
   priceHighlightRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  planPriceBig: { color: '#FFFFFF', fontSize: 30, fontWeight: '800' },
-  planPriceBigSuffix: { color: '#737373', fontSize: 13, fontWeight: '700' },
+  planPriceBig: { color: '#FFFFFF', fontSize: 36, fontWeight: '800' },
+  planPriceBigSuffix: { color: '#737373', fontSize: 14, fontWeight: '700' },
   planPriceTotal: { color: '#737373', fontSize: 11, marginTop: 2, marginBottom: 4 },
   trustBox: { ...glassCard, borderRadius: 20, padding: 16, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 4 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
-  title: { color: '#FFFFFF', fontSize: 18, fontWeight: '700', marginLeft: 16 },
   emptyBox: { alignItems: 'center', gap: 12, paddingHorizontal: 32, paddingVertical: 40 },
   emptyText: { color: '#a3a3a3', fontSize: 14, textAlign: 'center', lineHeight: 20 },
-  planCard: { backgroundColor: '#12141C', borderWidth: 1, borderColor: '#27272A', borderRadius: 22, padding: 20, alignItems: 'center', marginBottom: 16 },
+  planCard: { backgroundColor: '#12141C', borderWidth: 1, borderColor: '#27272A', borderRadius: 22, marginBottom: 16, overflow: 'hidden' },
   planCardHighlight: { borderColor: '#FF6B00', borderWidth: 1.5 },
-  badge: { position: 'absolute', top: -10, backgroundColor: '#FF6B00', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
-  badgeText: { color: '#000000', fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
-  planIconCircle: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', marginBottom: 12, marginTop: 8 },
+  bannerWrap: { width: '100%', height: 140, position: 'relative' },
+  bannerImage: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  offerTag: { position: 'absolute', top: 12, left: 12, backgroundColor: 'rgba(10,10,10,0.75)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  offerTagText: { color: '#FF6B00', fontSize: 9, fontWeight: '800', letterSpacing: 0.3 },
+  badge: { position: 'absolute', top: 12, right: 12, backgroundColor: '#FF6B00', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
+  badgeText: { color: '#000000', fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
+  planCardBody: { padding: 20, alignItems: 'center' },
   planName: { color: '#f5f5f5', fontSize: 17, fontWeight: '800' },
   planDuration: { color: '#737373', fontSize: 11, marginTop: 2, marginBottom: 12 },
-  bulletsBox: { alignSelf: 'stretch', marginBottom: 16, marginTop: 14 },
+  bulletsBox: { alignSelf: 'stretch', marginTop: 16, marginBottom: 16 },
   bulletRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   bulletText: { color: '#D4D4D8', fontSize: 12, flexShrink: 1 },
-  planPrice: { color: '#FFFFFF', fontSize: 26, fontWeight: '800', marginBottom: 14 },
-  wantButton: { backgroundColor: '#FF6B00', borderRadius: 14, paddingVertical: 13, paddingHorizontal: 32, marginTop: 4, width: '100%', alignItems: 'center', ...TRANSITION },
-  wantButtonText: { color: '#000000', fontSize: 14, fontWeight: '800' },
+  planPrice: { color: '#FFFFFF', fontSize: 34, fontWeight: '800', marginTop: 8 },
+  wantButton: { backgroundColor: '#FF6B00', borderRadius: 14, paddingVertical: 15, marginTop: 4, width: '100%', alignItems: 'center', ...TRANSITION },
+  wantButtonText: { color: '#000000', fontSize: 15, fontWeight: '800', letterSpacing: 0.3 },
   sectionTitle: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginTop: 20, marginBottom: 4 },
   sectionSubtitle: { color: '#737373', fontSize: 12, marginBottom: 16 },
   templateCard: { ...glassCard, borderRadius: 20, padding: 18, alignItems: 'center', marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 3 },
@@ -449,8 +476,6 @@ const styles = StyleSheet.create({
   templatePrice: { color: '#f97316', fontSize: 20, fontWeight: '800', marginTop: 12 },
   templateWantButton: { backgroundColor: '#f97316', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 28, marginTop: 14, width: '100%', alignItems: 'center', ...TRANSITION },
   templateWantButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '800' },
-  loginLink: { alignItems: 'center', marginTop: 10 },
-  loginLinkText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600', textDecorationLine: 'underline' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(5,6,10,0.75)', justifyContent: 'flex-end' },
   checkoutSheet: {
     backgroundColor: 'rgba(23,23,28,0.85)',

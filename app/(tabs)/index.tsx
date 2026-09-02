@@ -5,7 +5,6 @@ import AuthScreen from '../../screens/AuthScreen';
 import PersonalHomeScreen from '../../screens/PersonalHomeScreen';
 import AlunoHomeScreen from '../../screens/AlunoHomeScreen';
 import WelcomeScreen from '../../screens/WelcomeScreen';
-import PlansScreen from '../../screens/PlansScreen';
 import { supabase } from '../../screens/supabaseClient';
 
 export default function HomeTab() {
@@ -17,8 +16,8 @@ export default function HomeTab() {
   const [authView, setAuthView] = useState('welcome');
 
   useEffect(() => {
-    if (params.view === 'plans' || params.view === 'auth') {
-      setAuthView(params.view);
+    if (params.view === 'auth') {
+      setAuthView('auth');
     }
   }, [params.view]);
 
@@ -73,15 +72,6 @@ export default function HomeTab() {
   }
 
   if (!user) {
-    if (authView === 'plans') {
-      return (
-        <PlansScreen
-          onBack={() => setAuthView('welcome')}
-          onLogin={() => setAuthView('auth')}
-          onSignup={(personalId) => router.push(`/?view=auth&mode=signup&role=aluno${personalId ? `&invite=${personalId}` : ''}`)}
-        />
-      );
-    }
     if (authView === 'auth') {
       return (
         <AuthScreen
@@ -93,7 +83,13 @@ export default function HomeTab() {
         />
       );
     }
-    return <WelcomeScreen onExplore={() => setAuthView('plans')} onLogin={() => setAuthView('auth')} />;
+    return (
+      <WelcomeScreen
+        onLogin={() => setAuthView('auth')}
+        onSignup={(personalId) => router.push(`/?view=auth&mode=signup&role=aluno${personalId ? `&invite=${personalId}` : ''}`)}
+        scrollToPlansOnMount={params.view === 'plans'}
+      />
+    );
   }
 
   if (role === 'personal') {
