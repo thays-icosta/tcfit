@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { useNavigation, useGlobalSearchParams, useRouter } from 'expo-router';
+import { useGlobalSearchParams, useRouter } from 'expo-router';
 import AuthScreen from '../../screens/AuthScreen';
 import PersonalHomeScreen from '../../screens/PersonalHomeScreen';
 import AlunoHomeScreen from '../../screens/AlunoHomeScreen';
@@ -9,7 +9,6 @@ import PlansScreen from '../../screens/PlansScreen';
 import { supabase } from '../../screens/supabaseClient';
 
 export default function HomeTab() {
-  const navigation = useNavigation();
   const router = useRouter();
   const params = useGlobalSearchParams<{ view?: string; mode?: string; role?: string; invite?: string }>();
   const [user, setUser] = useState(null);
@@ -22,12 +21,6 @@ export default function HomeTab() {
       setAuthView(params.view);
     }
   }, [params.view]);
-
-  useEffect(() => {
-    navigation.setOptions({
-      tabBarStyle: user ? { backgroundColor: '#121212', borderTopColor: '#121212' } : { display: 'none' },
-    });
-  }, [navigation, user]);
 
   const loadProfile = async (sessionUser) => {
     const { data, error } = await supabase

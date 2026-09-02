@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './supabaseClient';
 
 function parseReps(repsStr) {
@@ -25,6 +26,7 @@ async function resolveActualExercises(supabase, setsRaw) {
 }
 
 export default function VolumeSummaryScreen({ studentId, studentName, onClose }) {
+  const insets = useSafeAreaInsets();
   const [period, setPeriod] = useState('semana');
   const [volumeByMuscle, setVolumeByMuscle] = useState({});
   const [kgByMuscle, setKgByMuscle] = useState({});
@@ -149,7 +151,7 @@ export default function VolumeSummaryScreen({ studentId, studentName, onClose })
   if (detailSession) {
     const { session, exercises } = detailSession;
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: Math.max(insets.top + 12, 24) }]}>
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => setDetailSession(null)}>
             <Text style={styles.closeText}>← Voltar</Text>
@@ -182,7 +184,7 @@ export default function VolumeSummaryScreen({ studentId, studentName, onClose })
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top + 12, 24) }]}>
       <View style={styles.topBar}>
         <TouchableOpacity onPress={onClose}>
           <Text style={styles.closeText}>← Voltar</Text>
@@ -192,7 +194,7 @@ export default function VolumeSummaryScreen({ studentId, studentName, onClose })
 
       {studentName && <Text style={styles.studentLabel}>{studentName}</Text>}
 
-      <View style={styles.periodRow}>
+      <View style={[styles.periodRow, styles.periodRowSpacing]}>
         <TouchableOpacity
           style={[styles.periodButton, period === 'semana' && styles.periodButtonActive]}
           onPress={() => setPeriod('semana')}
@@ -281,6 +283,7 @@ const styles = StyleSheet.create({
   title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   studentLabel: { color: '#737373', fontSize: 12, marginBottom: 14 },
   periodRow: { flexDirection: 'row', backgroundColor: '#171717', borderRadius: 10, padding: 3, marginBottom: 18 },
+  periodRowSpacing: { marginTop: 16 },
   periodButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
   periodButtonActive: { backgroundColor: '#f97316' },
   periodButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
