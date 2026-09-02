@@ -212,15 +212,153 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
     );
   };
 
+  const renderAppCard = () => {
+    const appMensal = appPlans.find((p) => p.billing_period === 'mensal');
+    const appTrimestral = appPlans.find((p) => p.billing_period === 'trimestral');
+    const hasBothPeriods = !!(appMensal && appTrimestral);
+    const selected = hasBothPeriods ? (billingPeriod === 'mensal' ? appMensal : appTrimestral) : (appMensal || appTrimestral || appPlans[0]);
+    if (!selected) return null;
+
+    const hasPrice = selected.price != null;
+    const hasMonthlyEquivalent = selected.monthly_equivalent_price != null;
+    const bullets = (selected.bullets || '').split('\n').map((b) => b.trim()).filter(Boolean);
+
+    return (
+      <View style={[styles.planCard, selected.is_featured && styles.planCardHighlight]}>
+        <View style={styles.bannerWrap}>
+          {selected.cover_image_url ? (
+            <Image source={{ uri: selected.cover_image_url }} style={styles.bannerImage} resizeMode="cover" />
+          ) : (
+            <LinearGradient colors={['#2a1608', '#12141C']} style={styles.bannerImage}>
+              <Ionicons name="phone-portrait-outline" size={30} color={ACCENT} />
+            </LinearGradient>
+          )}
+          <LinearGradient colors={['rgba(0,0,0,0.15)', 'rgba(18,20,28,0.95)']} style={StyleSheet.absoluteFill} />
+          <View style={styles.offerTag}>
+            <Text style={styles.offerTagText}>OFERTA DE LANÇAMENTO</Text>
+          </View>
+        </View>
+
+        <View style={styles.planCardBody}>
+          <Text style={styles.planName}>Acesso à Plataforma (App TcFit)</Text>
+
+          {hasBothPeriods && (
+            <View style={styles.cardPeriodToggleRow}>
+              <TouchableOpacity
+                style={[styles.cardPeriodChip, billingPeriod === 'trimestral' && styles.cardPeriodChipActive]}
+                onPress={() => setBillingPeriod('trimestral')}
+              >
+                <Text style={[styles.cardPeriodText, billingPeriod === 'trimestral' && styles.cardPeriodTextActive]}>Trimestral</Text>
+                <Text style={[styles.cardPeriodBestText, billingPeriod === 'trimestral' && styles.cardPeriodBestTextActive]}>Melhor Oferta</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.cardPeriodChip, billingPeriod === 'mensal' && styles.cardPeriodChipActive]}
+                onPress={() => setBillingPeriod('mensal')}
+              >
+                <Text style={[styles.cardPeriodText, billingPeriod === 'mensal' && styles.cardPeriodTextActive]}>Mensal</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {hasMonthlyEquivalent ? (
+            <>
+              <View style={styles.priceHighlightRow}>
+                <Text style={styles.planPriceBig}>R$ {Number(selected.monthly_equivalent_price).toFixed(2).replace('.', ',')}</Text>
+                <Text style={styles.planPriceBigSuffix}>/mês</Text>
+              </View>
+              {hasPrice && (
+                <Text style={styles.planPriceTotal}>
+                  cobrado R$ {Number(selected.price).toFixed(2).replace('.', ',')}{selected.duration_label ? ` ${selected.duration_label}` : ''}
+                </Text>
+              )}
+            </>
+          ) : (
+            <View style={styles.priceHighlightRow}>
+              <Text style={styles.planPriceBig}>{hasPrice ? `R$ ${Number(selected.price).toFixed(2).replace('.', ',')}` : 'Consulte'}</Text>
+              {hasPrice && <Text style={styles.planPriceBigSuffix}>/mês</Text>}
+            </View>
+          )}
+
+          {bullets.length > 0 && (
+            <View style={styles.bulletsBox}>
+              {bullets.map((bullet, j) => (
+                <View key={j} style={styles.bulletRow}>
+                  <Ionicons name="checkmark-outline" size={14} color={ACCENT} />
+                  <Text style={styles.bulletText}>{bullet}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <HoverButton
+            style={styles.wantButton}
+            hoverStyle={{ opacity: 0.88, transform: [{ scale: 1.015 }] }}
+            onPress={() => handleOpenCheckout({ kind: 'plan', data: selected })}
+          >
+            <Text style={styles.wantButtonText}>ASSINE O APP</Text>
+          </HoverButton>
+        </View>
+      </View>
+    );
+  };
+
+  const renderConsultoriaCard = (plan) => {
+    const hasPrice = plan.price != null;
+    const bullets = (plan.bullets || '').split('\n').map((b) => b.trim()).filter(Boolean);
+
+    return (
+      <View key={plan.plan_key} style={[styles.planCard, styles.consultoriaCard]}>
+        <View style={styles.bannerWrap}>
+          {plan.cover_image_url ? (
+            <Image source={{ uri: plan.cover_image_url }} style={styles.bannerImage} resizeMode="cover" />
+          ) : (
+            <LinearGradient colors={['#2a1608', '#12141C']} style={styles.bannerImage}>
+              <Ionicons name="star-outline" size={30} color={ACCENT} />
+            </LinearGradient>
+          )}
+          <LinearGradient colors={['rgba(0,0,0,0.15)', 'rgba(18,20,28,0.95)']} style={StyleSheet.absoluteFill} />
+          <View style={styles.offerTag}>
+            <Text style={styles.offerTagText}>ACOMPANHAMENTO DIRETO</Text>
+          </View>
+        </View>
+
+        <View style={styles.planCardBody}>
+          <Text style={styles.planName}>{plan.plan_name}</Text>
+
+          <Text style={styles.planPrice}>
+            {hasPrice ? `R$ ${Number(plan.price).toFixed(2).replace('.', ',')}` : 'Consulte'}
+          </Text>
+
+          {bullets.length > 0 && (
+            <View style={styles.bulletsBox}>
+              {bullets.map((bullet, j) => (
+                <View key={j} style={styles.bulletRow}>
+                  <Ionicons name="checkmark-outline" size={14} color={ACCENT} />
+                  <Text style={styles.bulletText}>{bullet}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <HoverButton
+            style={styles.consultoriaButton}
+            hoverStyle={{ backgroundColor: 'rgba(224,90,23,0.12)' }}
+            onPress={() => handleOpenCheckout({ kind: 'plan', data: plan })}
+          >
+            <Text style={styles.consultoriaButtonText}>QUERO CONSULTORIA VIP</Text>
+          </HoverButton>
+        </View>
+      </View>
+    );
+  };
+
   const namedPlans = plans.filter((p) => p.plan_name);
   const hasAudienceTags = namedPlans.some((p) => p.audience);
   const audienceFiltered = hasAudienceTags ? namedPlans.filter((p) => !p.audience || p.audience === audience) : namedPlans;
-  const hasPeriodTags = audienceFiltered.some((p) => p.billing_period);
-  const visiblePlans = hasPeriodTags ? audienceFiltered.filter((p) => !p.billing_period || p.billing_period === billingPeriod) : audienceFiltered;
-  const hasTierTags = visiblePlans.some((p) => p.tier);
-  const appPlans = hasTierTags ? visiblePlans.filter((p) => p.tier === 'app') : visiblePlans;
-  const consultoriaPlans = hasTierTags ? visiblePlans.filter((p) => p.tier === 'consultoria') : [];
-  const untaggedPlans = hasTierTags ? visiblePlans.filter((p) => !p.tier) : [];
+  const hasTierTags = audienceFiltered.some((p) => p.tier);
+  const appPlans = hasTierTags ? audienceFiltered.filter((p) => p.tier === 'app') : [];
+  const consultoriaPlans = hasTierTags ? audienceFiltered.filter((p) => p.tier === 'consultoria') : [];
+  const untaggedPlans = hasTierTags ? audienceFiltered.filter((p) => !p.tier) : [];
 
   return (
     <View onLayout={onLayout}>
@@ -241,28 +379,6 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
         </View>
       )}
 
-      {hasPeriodTags && (
-        <View style={styles.periodToggleWrap}>
-          <View style={styles.periodToggleRow}>
-            <TouchableOpacity
-              style={[styles.periodToggleChip, billingPeriod === 'mensal' && styles.periodToggleChipActive]}
-              onPress={() => setBillingPeriod('mensal')}
-            >
-              <Text style={[styles.periodToggleText, billingPeriod === 'mensal' && styles.periodToggleTextActive]}>Mensal</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.periodToggleChip, billingPeriod === 'trimestral' && styles.periodToggleChipActive]}
-              onPress={() => setBillingPeriod('trimestral')}
-            >
-              <Text style={[styles.periodToggleText, billingPeriod === 'trimestral' && styles.periodToggleTextActive]}>Trimestral</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.periodBestTag}>
-            <Text style={styles.periodBestTagText}>MELHOR OFERTA NO TRIMESTRAL</Text>
-          </View>
-        </View>
-      )}
-
       {loading ? (
         <ActivityIndicator color="#E05A17" style={{ marginTop: 30 }} />
       ) : namedPlans.length === 0 && templates.length === 0 ? (
@@ -272,22 +388,17 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
         </View>
       ) : (
         <>
-          {hasTierTags && consultoriaPlans.length > 0 && appPlans.length > 0 && (
-            <Text style={styles.sectionTitle}>TcFit App/Treinos</Text>
-          )}
-          {appPlans.map((plan, i) => renderPlanCard(plan, i))}
-
-          {consultoriaPlans.length > 0 && (
+          {hasTierTags ? (
             <>
-              <Text style={styles.sectionTitle}>Consultoria Individualizada</Text>
-              <Text style={styles.sectionSubtitle}>Acompanhamento 100% personalizado, direto com a equipe</Text>
-              {consultoriaPlans.map((plan, i) => renderPlanCard(plan, i))}
+              {appPlans.length > 0 && renderAppCard()}
+              {consultoriaPlans.map((plan) => renderConsultoriaCard(plan))}
+              {untaggedPlans.map((plan, i) => renderPlanCard(plan, i))}
             </>
+          ) : (
+            namedPlans.map((plan, i) => renderPlanCard(plan, i))
           )}
 
-          {untaggedPlans.map((plan, i) => renderPlanCard(plan, i))}
-
-          {visiblePlans.length > 0 && (
+          {audienceFiltered.length > 0 && (
             <View style={styles.trustBox}>
               {TRUST_CHECKLIST.map((item, i) => (
                 <View key={i} style={styles.trustRow}>
@@ -425,14 +536,16 @@ const styles = StyleSheet.create({
   audienceToggleChipActive: { backgroundColor: '#E05A17' },
   audienceToggleText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
   audienceToggleTextActive: { color: '#0a0a0a' },
-  periodToggleWrap: { alignItems: 'center', marginBottom: 20 },
-  periodToggleRow: { flexDirection: 'row', gap: 8, backgroundColor: '#171717', borderRadius: 12, padding: 4, marginBottom: 8 },
-  periodToggleChip: { paddingHorizontal: 24, paddingVertical: 10, borderRadius: 9 },
-  periodToggleChipActive: { backgroundColor: '#E05A17' },
-  periodToggleText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700' },
-  periodToggleTextActive: { color: '#000000' },
-  periodBestTag: { backgroundColor: 'rgba(224,90,23,0.12)', borderWidth: 1, borderColor: '#E05A17', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 },
-  periodBestTagText: { color: '#E05A17', fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
+  cardPeriodToggleRow: { flexDirection: 'row', gap: 8, backgroundColor: '#0F1015', borderRadius: 12, padding: 4, marginTop: 10, marginBottom: 16, alignSelf: 'stretch' },
+  cardPeriodChip: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 9 },
+  cardPeriodChipActive: { backgroundColor: '#E05A17' },
+  cardPeriodText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700' },
+  cardPeriodTextActive: { color: '#000000' },
+  cardPeriodBestText: { color: '#E05A17', fontSize: 9, fontWeight: '800', marginTop: 2 },
+  cardPeriodBestTextActive: { color: 'rgba(0,0,0,0.6)' },
+  consultoriaCard: { borderColor: '#E05A17', borderWidth: 1.5 },
+  consultoriaButton: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: '#E05A17', borderRadius: 14, paddingVertical: 15, marginTop: 4, width: '100%', alignItems: 'center', ...TRANSITION },
+  consultoriaButtonText: { color: '#E05A17', fontSize: 15, fontWeight: '800', letterSpacing: 0.3 },
   priceHighlightRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
   planPriceBig: { color: '#FFFFFF', fontSize: 36, fontWeight: '800' },
   planPriceBigSuffix: { color: '#737373', fontSize: 14, fontWeight: '700' },
