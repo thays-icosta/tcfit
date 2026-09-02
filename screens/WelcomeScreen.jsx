@@ -67,9 +67,6 @@ export default function WelcomeScreen({ onExplore, onLogin }) {
             />
             <Text style={styles.appName}>TcFit</Text>
             <Text style={styles.slogan}>Sua plataforma exclusiva de treino e saúde</Text>
-            <View style={styles.socialProofBadge}>
-              <Text style={styles.socialProofText}>⭐ Mais de 500 vidas e corpos transformados</Text>
-            </View>
           </View>
         </View>
 
@@ -142,8 +139,6 @@ const styles = StyleSheet.create({
   logo: { width: 120, height: 120, marginBottom: 12 },
   appName: { color: '#f5f5f5', fontSize: 32, fontWeight: '800', letterSpacing: 0.5 },
   slogan: { color: '#a3a3a3', fontSize: 13, marginTop: 8, textAlign: 'center', paddingHorizontal: 20 },
-  socialProofBadge: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: 'rgba(249,115,22,0.3)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7, marginTop: 14 },
-  socialProofText: { color: '#fdba74', fontSize: 11, fontWeight: '700' },
   trustStrip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 16, marginBottom: 20, marginHorizontal: 32, gap: 12 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },

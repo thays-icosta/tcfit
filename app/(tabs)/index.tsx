@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { useNavigation, useGlobalSearchParams, useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthScreen from '../../screens/AuthScreen';
 import PersonalHomeScreen from '../../screens/PersonalHomeScreen';
 import AlunoHomeScreen from '../../screens/AlunoHomeScreen';
-import OnboardingScreen from '../../screens/OnboardingScreen';
 import WelcomeScreen from '../../screens/WelcomeScreen';
 import PlansScreen from '../../screens/PlansScreen';
 import { supabase } from '../../screens/supabaseClient';
@@ -17,7 +15,6 @@ export default function HomeTab() {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(null);
   const [authView, setAuthView] = useState('welcome');
 
   useEffect(() => {
@@ -49,11 +46,6 @@ export default function HomeTab() {
   };
 
   useEffect(() => {
-    (async () => {
-      const seen = await AsyncStorage.getItem('hasSeenOnboarding');
-      setShowOnboarding(seen !== 'true');
-    })();
-
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) await loadProfile(session.user);
       setLoading(false);
@@ -79,21 +71,12 @@ export default function HomeTab() {
     await supabase.auth.signOut();
   };
 
-  const handleFinishOnboarding = async () => {
-    await AsyncStorage.setItem('hasSeenOnboarding', 'true');
-    setShowOnboarding(false);
-  };
-
-  if (loading || showOnboarding === null) {
+  if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color="#f97316" />
       </View>
     );
-  }
-
-  if (showOnboarding) {
-    return <OnboardingScreen onFinish={handleFinishOnboarding} />;
   }
 
   if (!user) {
