@@ -13,6 +13,7 @@ import FoodCatalogScreen from './FoodCatalogScreen';
 import AlunoDetailScreen from './AlunoDetailScreen';
 import AnamneseConfigScreen from './AnamneseConfigScreen';
 import { showAlert } from './alertUtils';
+import { HeaderWelcome } from './Header';
 
 export default function PersonalHomeScreen({ user, onLogout }) {
   const [students, setStudents] = useState([]);
@@ -207,26 +208,18 @@ export default function PersonalHomeScreen({ user, onLogout }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => setShowProfile(true)}>
-            <View style={styles.ownAvatarCircle}>
-              {ownAvatarUrl ? (
-                <Image key={ownAvatarUrl} source={{ uri: ownAvatarUrl }} style={styles.ownAvatarImage} resizeMode="cover" />
-              ) : (
-                <Text style={styles.ownAvatarLetter}>{user?.name?.charAt(0).toUpperCase() || '?'}</Text>
-              )}
-            </View>
+      <HeaderWelcome
+        avatarUrl={ownAvatarUrl}
+        initial={user?.name?.charAt(0).toUpperCase() || '?'}
+        badge="PERSONAL"
+        greeting={`Olá, ${user?.name}!`}
+        onAvatarPress={() => setShowProfile(true)}
+        rightSlot={
+          <TouchableOpacity style={styles.inviteButton} onPress={() => setShowInviteModal(true)}>
+            <Text style={styles.inviteButtonText}>+ Aluno</Text>
           </TouchableOpacity>
-          <View>
-            <Text style={styles.badge}>PERSONAL</Text>
-            <Text style={styles.greeting}>Olá, {user?.name}!</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={styles.inviteButton} onPress={() => setShowInviteModal(true)}>
-          <Text style={styles.inviteButtonText}>+ Convidar Aluno</Text>
-        </TouchableOpacity>
-      </View>
+        }
+      />
 
       <TouchableOpacity style={styles.summaryCard} onPress={() => setShowFinance(true)} activeOpacity={0.7}>
         <View style={styles.summaryItem}>
@@ -292,7 +285,7 @@ export default function PersonalHomeScreen({ user, onLogout }) {
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : students.length === 0 ? (
-        <Text style={styles.emptyText}>Nenhum aluno ainda. Toque em "+ Convidar Aluno" pra começar.</Text>
+        <Text style={styles.emptyText}>Nenhum aluno ainda. Toque em &quot;+ Aluno&quot; pra começar.</Text>
       ) : (
         students.map((item) => {
           const done = completedToday[item.id];
@@ -357,16 +350,9 @@ export default function PersonalHomeScreen({ user, onLogout }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', padding: 24, paddingTop: 60 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 },
-  ownAvatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#171717', borderWidth: 1, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginRight: 10 },
-  ownAvatarImage: { width: 44, height: 44 },
-  ownAvatarLetter: { color: '#f97316', fontSize: 16, fontWeight: '800' },
-  badge: { color: '#f97316', fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
-  greeting: { color: '#f5f5f5', fontSize: 19, fontWeight: '700' },
-  inviteButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
-  inviteButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
+  container: { flex: 1, backgroundColor: '#0a0a0a', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
+  inviteButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  inviteButtonText: { color: '#f97316', fontSize: 12, fontWeight: '600' },
   summaryCard: { flexDirection: 'row', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 14, marginBottom: 12 },
   summaryItem: { flex: 1, alignItems: 'center' },
   summaryDivider: { width: 1, backgroundColor: '#292524' },

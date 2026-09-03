@@ -19,6 +19,7 @@ import PhysicalAssessmentHistoryScreen from './PhysicalAssessmentHistoryScreen';
 import FoodSubstituteScreen from './FoodSubstituteScreen';
 import { showAlert } from './alertUtils';
 import { hasAccessByLevel, HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
+import { HeaderWelcome } from './Header';
 
 const MEAL_OPTIONS = [
   { value: 'cafe', label: 'Café da manhã' },
@@ -875,29 +876,23 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   return (
     <View style={{ flex: 1 }}>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <View style={styles.topRow}>
-        <TouchableOpacity onPress={() => setActiveTab('perfil')} style={styles.topRowLeft}>
-          <View style={styles.ownAvatarCircle}>
-            {ownAvatarUrl ? (
-              <Image key={ownAvatarUrl} source={{ uri: ownAvatarUrl }} style={styles.ownAvatarImage} resizeMode="cover" />
-            ) : (
-              <Text style={styles.ownAvatarLetter}>{user?.name?.charAt(0).toUpperCase() || '?'}</Text>
-            )}
+      <HeaderWelcome
+        avatarUrl={ownAvatarUrl}
+        initial={user?.name?.charAt(0).toUpperCase() || '?'}
+        badge="ALUNO"
+        greeting={`Olá, ${user?.name}!`}
+        onAvatarPress={() => setActiveTab('perfil')}
+        rightSlot={
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => setMode('agenda')}>
+              <Ionicons name="calendar-outline" size={20} color="#a3a3a3" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton} onPress={() => handleOpenChatFor('')}>
+              <Ionicons name="chatbubbles-outline" size={20} color="#a3a3a3" />
+            </TouchableOpacity>
           </View>
-          <View>
-            <Text style={styles.badge}>ALUNO</Text>
-            <Text style={styles.greeting}>Olá, {user?.name}!</Text>
-          </View>
-        </TouchableOpacity>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => setMode('agenda')}>
-            <Ionicons name="calendar-outline" size={20} color="#a3a3a3" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={() => handleOpenChatFor('')}>
-            <Ionicons name="chatbubbles-outline" size={20} color="#a3a3a3" />
-          </TouchableOpacity>
-        </View>
-      </View>
+        }
+      />
 
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
@@ -1103,15 +1098,8 @@ export default function AlunoHomeScreen({ user, onLogout }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', padding: 24, paddingTop: 60 },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 16 },
-  topRowLeft: { flexDirection: 'row', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#0a0a0a', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
   iconButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center' },
-  ownAvatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#171717', borderWidth: 1, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginRight: 10 },
-  ownAvatarImage: { width: 44, height: 44 },
-  ownAvatarLetter: { color: '#f97316', fontSize: 16, fontWeight: '800' },
-  badge: { color: '#f97316', fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
-  greeting: { color: '#f5f5f5', fontSize: 20, fontWeight: '700' },
   financeBanner: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#eab308', borderRadius: 12, padding: 12, marginBottom: 16 },
   financeBannerOverdue: { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
   financeBannerOk: { borderColor: '#22c55e' },
