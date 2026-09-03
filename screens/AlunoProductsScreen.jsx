@@ -5,6 +5,7 @@ import { supabase } from './supabaseClient';
 import RecipeDetailScreen from './RecipeDetailScreen';
 import ProgramDetailScreen from './ProgramDetailScreen';
 import { hasAccessByLevel } from './accessLevel';
+import { HeaderBack } from './Header';
 
 const WHATSAPP_NUMBER = '5537998231382';
 
@@ -87,12 +88,7 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Conteúdos e Produtos</Text>
-      </View>
+      <HeaderBack title="Conteúdos e Produtos" onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       {!loading && studentAccessLevel !== 'consultoria_vip' && (
         <View style={styles.upsellCard}>
@@ -220,9 +216,6 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
   upsellCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#f97316', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 16 },
   upsellTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '800', marginBottom: 6 },

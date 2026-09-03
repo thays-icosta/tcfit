@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { supabase } from './supabaseClient';
+import { HeaderBack } from './Header';
 
 export default function PersonalDashboardScreen({ personalId, onClose, onSelectStudent }) {
   const [loading, setLoading] = useState(true);
@@ -89,12 +90,7 @@ export default function PersonalDashboardScreen({ personalId, onClose, onSelectS
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Painel Geral</Text>
-      </View>
+      <HeaderBack title="Painel Geral" onBack={onClose} />
 
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
@@ -168,9 +164,6 @@ export default function PersonalDashboardScreen({ personalId, onClose, onSelectS
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 24 },
   statBox: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 16, alignItems: 'center' },

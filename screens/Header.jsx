@@ -5,13 +5,15 @@ const ACCENT = '#f97316';
 
 // Shared "back nav" header: ← Voltar + title, optional right-side action slot.
 // Used by every secondary/admin/detail screen reached via an onClose prop.
-export function HeaderBack({ title, onBack, rightSlot }) {
+export function HeaderBack({ title, titleSlot, onBack, rightSlot, style, backLabel = '← Voltar' }) {
   return (
-    <View style={styles.backBar}>
+    <View style={[styles.backBar, style]}>
       <TouchableOpacity onPress={onBack} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-        <Text style={styles.backText}>← Voltar</Text>
+        <Text style={styles.backText}>{backLabel}</Text>
       </TouchableOpacity>
-      {title ? (
+      {titleSlot ? (
+        <View style={styles.backTitleSlot}>{titleSlot}</View>
+      ) : title ? (
         <Text style={styles.backTitle} numberOfLines={1}>{title}</Text>
       ) : (
         <View style={{ flex: 1 }} />
@@ -47,9 +49,10 @@ export function HeaderWelcome({ avatarUrl, initial, badge, greeting, onAvatarPre
 }
 
 const styles = StyleSheet.create({
-  backBar: { flexDirection: 'row', alignItems: 'center', minHeight: 64 },
+  backBar: { flexDirection: 'row', alignItems: 'center', minHeight: 64, marginBottom: 12 },
   backText: { color: ACCENT, fontSize: 14, fontWeight: '600' },
   backTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16, flex: 1 },
+  backTitleSlot: { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 16, flex: 1 },
   backRight: { flexDirection: 'row', alignItems: 'center', marginLeft: 12 },
 
   welcomeBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 64, marginBottom: 8 },

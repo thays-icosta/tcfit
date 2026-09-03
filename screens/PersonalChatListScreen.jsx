@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { supabase } from './supabaseClient';
 import ChatScreen from './ChatScreen';
+import { HeaderBack } from './Header';
 
 export default function PersonalChatListScreen({ personalId, onClose }) {
   const [students, setStudents] = useState([]);
@@ -70,12 +71,7 @@ export default function PersonalChatListScreen({ personalId, onClose }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Mensagens</Text>
-      </View>
+      <HeaderBack title="Mensagens" onBack={onClose} />
 
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
@@ -113,9 +109,6 @@ export default function PersonalChatListScreen({ personalId, onClose }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
   row: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 12, marginBottom: 8 },
   avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center', marginRight: 12, overflow: 'hidden' },

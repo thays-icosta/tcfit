@@ -8,6 +8,7 @@ import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { loadPeriodizationPlan, getCurrentPhase } from './periodizationUtils';
 import { showAlert } from './alertUtils';
 import PromptModal from './PromptModal';
+import { HeaderBack } from './Header';
 
 const FICHA_NAME_SUGGESTIONS = [
   'Treino A - Quadríceps',
@@ -501,12 +502,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.studentLabel}>{studentName}</Text>
-      </View>
+      <HeaderBack title={studentName} onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 120 }}>
       <View style={styles.fichaRow}>
@@ -830,9 +826,6 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
   center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  studentLabel: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   fichaRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 4 },
   fichaTab: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
   fichaTabActive: { backgroundColor: '#f97316', borderColor: '#f97316' },

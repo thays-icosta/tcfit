@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { supabase } from './supabaseClient';
+import { HeaderBack } from './Header';
 
 export default function ChatScreen({ personalId, studentId, currentUserId, otherName, otherAvatarUrl, initialMessage, onClose }) {
   const [messages, setMessages] = useState([]);
@@ -85,21 +86,22 @@ export default function ChatScreen({ personalId, studentId, currentUserId, other
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={0}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <View style={styles.topBarCenter}>
-          <View style={styles.avatarCircle}>
-            {otherAvatarUrl ? (
-              <Image source={{ uri: otherAvatarUrl }} style={styles.avatarImage} />
-            ) : (
-              <Text style={styles.avatarLetter}>{otherName?.charAt(0).toUpperCase() || '?'}</Text>
-            )}
-          </View>
-          <Text style={styles.title}>{otherName}</Text>
-        </View>
-      </View>
+      <HeaderBack
+        onBack={onClose}
+        style={{ paddingHorizontal: 16 }}
+        titleSlot={
+          <>
+            <View style={styles.avatarCircle}>
+              {otherAvatarUrl ? (
+                <Image source={{ uri: otherAvatarUrl }} style={styles.avatarImage} />
+              ) : (
+                <Text style={styles.avatarLetter}>{otherName?.charAt(0).toUpperCase() || '?'}</Text>
+              )}
+            </View>
+            <Text style={styles.title} numberOfLines={1}>{otherName}</Text>
+          </>
+        }
+      />
 
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
@@ -145,13 +147,10 @@ export default function ChatScreen({ personalId, studentId, currentUserId, other
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8, gap: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  topBarCenter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   avatarCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImage: { width: 32, height: 32 },
   avatarLetter: { color: '#f97316', fontSize: 13, fontWeight: '800' },
-  title: { color: '#f5f5f5', fontSize: 15, fontWeight: '700' },
+  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', flexShrink: 1 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 40 },
   bubbleRow: { flexDirection: 'row', marginBottom: 10 },
   bubbleRowOwn: { justifyContent: 'flex-end' },

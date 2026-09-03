@@ -4,6 +4,7 @@ import { supabase } from './supabaseClient';
 import CreatePeriodizationScreen from './CreatePeriodizationScreen';
 import { getPhaseForWeekIndex, loadPeriodizationPlan } from './periodizationUtils';
 import { showAlert } from './alertUtils';
+import { HeaderBack } from './Header';
 
 const PHASE_COLORS = ['#f97316', '#a855f7', '#3b82f6', '#22c55e', '#eab308', '#ef4444', '#ec4899', '#14b8a6'];
 const PX_PER_WEEK = 40;
@@ -223,12 +224,7 @@ export default function WeeklyPeriodizationScreen({ studentId, studentName, pers
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Periodização de Treino</Text>
-      </View>
+      <HeaderBack title="Periodização de Treino" onBack={onClose} />
 
       {isPersonal && students.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.studentSelectorScroll}>
@@ -366,9 +362,6 @@ export default function WeeklyPeriodizationScreen({ studentId, studentName, pers
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   studentSelectorScroll: { maxHeight: 40, marginBottom: 14 },
   studentChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginRight: 8 },
   studentChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },

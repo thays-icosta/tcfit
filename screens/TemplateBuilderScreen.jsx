@@ -8,6 +8,7 @@ import AddExerciseModal from './AddExerciseModal';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { showAlert } from './alertUtils';
 import { HOME_CATEGORIES, WORKOUT_TAGS } from './accessLevel';
+import { HeaderBack } from './Header';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -334,12 +335,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Templates de Treino</Text>
-      </View>
+      <HeaderBack title="Templates de Treino" onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       <TouchableOpacity style={styles.editingBar} onPress={() => setShowTemplatePicker(true)}>
         <View style={{ flex: 1 }}>
@@ -551,9 +547,6 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
   center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   editingBar: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginHorizontal: 16, marginBottom: 16 },
   editingBarLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 2 },
   editingBarTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },

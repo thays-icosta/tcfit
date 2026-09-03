@@ -12,6 +12,7 @@ import WeeklyPeriodizationScreen from './WeeklyPeriodizationScreen';
 import PersonalFinanceScreen from './PersonalFinanceScreen';
 import ChatScreen from './ChatScreen';
 import AnamneseViewScreen from './AnamneseViewScreen';
+import { HeaderBack } from './Header';
 
 function getRpeTag(pse) {
   if (!pse) return null;
@@ -204,11 +205,7 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-      </View>
+      <HeaderBack onBack={onClose} />
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }}>
       <View style={styles.summaryHeaderCard}>
@@ -339,8 +336,6 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  topBar: { marginBottom: 8 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
   summaryHeaderCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 14, marginBottom: 16 },
   summaryHeaderTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   avatarCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#0a0a0a', borderWidth: 2, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },

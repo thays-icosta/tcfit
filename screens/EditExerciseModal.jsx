@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Image } from 'react-native';
+import { HeaderBack } from './Header';
 
 const METHODS = ['tradicional', 'rest-pause', 'bi-set', 'drop-set', 'piramide'];
 const METHOD_LABELS = {
@@ -33,12 +34,7 @@ export default function EditExerciseModal({ item, onSave, onClose }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Cancelar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Editar Exercício</Text>
-      </View>
+      <HeaderBack backLabel="← Cancelar" title="Editar Exercício" onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       <ScrollView style={{ flex: 1, paddingHorizontal: 16 }}>
         <View style={styles.selectedHeader}>
@@ -103,9 +99,6 @@ export default function EditExerciseModal({ item, onSave, onClose }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   selectedHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   selectedThumb: { width: 56, height: 56, borderRadius: 12, marginRight: 12 },
   selectedThumbPlaceholder: { width: 56, height: 56, borderRadius: 12, backgroundColor: '#171717', alignItems: 'center', justifyContent: 'center', marginRight: 12 },

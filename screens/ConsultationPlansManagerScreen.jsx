@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Switch } from 'react-native';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
+import { HeaderBack } from './Header';
 
 export default function ConsultationPlansManagerScreen({ personalId, onClose }) {
   const [plans, setPlans] = useState([]);
@@ -111,12 +112,7 @@ export default function ConsultationPlansManagerScreen({ personalId, onClose }) 
   if (showForm) {
     return (
       <View style={styles.container}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => setShowForm(false)}>
-            <Text style={styles.closeText}>← Voltar</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>{editingId ? 'Editar Plano' : 'Novo Plano'}</Text>
-        </View>
+        <HeaderBack title={editingId ? 'Editar Plano' : 'Novo Plano'} onBack={() => setShowForm(false)} style={{ paddingHorizontal: 16 }} />
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           <Text style={styles.label}>Nome do plano</Text>
@@ -160,12 +156,7 @@ export default function ConsultationPlansManagerScreen({ personalId, onClose }) 
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Venda de Consultoria</Text>
-      </View>
+      <HeaderBack title="Venda de Consultoria" onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       <TouchableOpacity style={styles.newButton} onPress={handleOpenNew}>
         <Text style={styles.newButtonText}>+ Adicionar Novo Plano</Text>
@@ -203,9 +194,6 @@ export default function ConsultationPlansManagerScreen({ personalId, onClose }) 
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   newButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
   newButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },

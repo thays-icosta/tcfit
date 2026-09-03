@@ -4,6 +4,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
+import { HeaderBack } from './Header';
 
 const CATEGORIES = [
   { value: 'treino', label: 'Treino', color: '#f97316' },
@@ -203,12 +204,7 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>{filterStudentId ? `Financeiro · ${filterStudentName}` : 'Financeiro'}</Text>
-      </View>
+      <HeaderBack title={filterStudentId ? `Financeiro · ${filterStudentName}` : 'Financeiro'} onBack={onClose} />
 
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
@@ -417,9 +413,6 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   statsRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
   statBox: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   statValue: { color: '#22c55e', fontSize: 15, fontWeight: '800' },

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { ANAMNESE_QUESTION_TYPES } from './accessLevel';
+import { HeaderBack } from './Header';
 
 export default function AnamneseConfigScreen({ personalId, onClose }) {
   const [questions, setQuestions] = useState([]);
@@ -119,12 +120,7 @@ export default function AnamneseConfigScreen({ personalId, onClose }) {
   if (showForm) {
     return (
       <View style={styles.container}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => setShowForm(false)}>
-            <Text style={styles.closeText}>← Voltar</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>{editingId ? 'Editar Pergunta' : 'Nova Pergunta'}</Text>
-        </View>
+        <HeaderBack title={editingId ? 'Editar Pergunta' : 'Nova Pergunta'} onBack={() => setShowForm(false)} style={{ paddingHorizontal: 16 }} />
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           <Text style={styles.label}>Pergunta</Text>
@@ -181,12 +177,7 @@ export default function AnamneseConfigScreen({ personalId, onClose }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Configurar Anamnese</Text>
-      </View>
+      <HeaderBack title="Configurar Anamnese" onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       <Text style={styles.hint}>Objetivo, Local de Treino, Lesões e Zonas de Dor já vêm prontos pra todo mundo. Aqui você adiciona perguntas extras.</Text>
 
@@ -233,9 +224,6 @@ export default function AnamneseConfigScreen({ personalId, onClose }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   hint: { color: '#737373', fontSize: 11, paddingHorizontal: 16, marginBottom: 14, lineHeight: 16 },
   newButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
   newButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },

@@ -7,6 +7,7 @@ import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS, NUTRITION_TAGS } from './accessLevel';
+import { HeaderBack } from './Header';
 
 const TYPES = [
   { value: 'ebook_receitas', label: 'Guia de Receitas / E-book', icon: 'book-outline' },
@@ -357,12 +358,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 
     return (
       <View style={styles.container}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => setPreviewProduct(null)}>
-            <Text style={styles.closeText}>← Voltar</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>Ver como Aluno</Text>
-        </View>
+        <HeaderBack title="Ver como Aluno" onBack={() => setPreviewProduct(null)} style={{ paddingHorizontal: 16 }} />
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           <Text style={styles.previewSectionLabel}>Card de Venda Público (Visitante)</Text>
@@ -431,12 +427,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 
     return (
       <View style={styles.container}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => setManagingProduct(null)}>
-            <Text style={styles.closeText}>← Voltar</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>{managingProduct.name}</Text>
-        </View>
+        <HeaderBack title={managingProduct.name} onBack={() => setManagingProduct(null)} style={{ paddingHorizontal: 16 }} />
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           {managingProduct.type === 'treino_template' ? (
@@ -513,12 +504,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   if (showForm) {
     return (
       <View style={styles.container}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => setShowForm(false)}>
-            <Text style={styles.closeText}>← Voltar</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>{editingId ? 'Editar Produto' : 'Novo Produto'}</Text>
-        </View>
+        <HeaderBack title={editingId ? 'Editar Produto' : 'Novo Produto'} onBack={() => setShowForm(false)} style={{ paddingHorizontal: 16 }} />
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           <TouchableOpacity style={styles.coverPicker} onPress={handlePickCoverImage} disabled={uploadingCover}>
@@ -778,12 +764,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Produtos Adicionais</Text>
-      </View>
+      <HeaderBack title="Produtos Adicionais" onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       <Text style={styles.hint2}>E-books, desafios avulsos e guias — tudo que não é consultoria direta. Marque "oferta complementar" pra aparecer como upsell na vitrine.</Text>
 
@@ -861,9 +842,6 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   hint2: { color: '#737373', fontSize: 11, paddingHorizontal: 16, marginBottom: 14, lineHeight: 16 },
   newButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
   newButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },

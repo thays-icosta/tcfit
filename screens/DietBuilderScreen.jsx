@@ -6,6 +6,7 @@ import { supabase } from './supabaseClient';
 import DietMealsDetailScreen from './DietMealsDetailScreen';
 import { showAlert } from './alertUtils';
 import PromptModal from './PromptModal';
+import { HeaderBack } from './Header';
 
 function mapMealNameToType(name) {
   const n = (name || '').toLowerCase();
@@ -559,12 +560,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.studentLabel}>{studentName}</Text>
-      </View>
+      <HeaderBack title={studentName} onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       <View style={styles.dietRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
@@ -796,9 +792,6 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
   center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  studentLabel: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   dietRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 4 },
   dietTab: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
   dietTabActive: { backgroundColor: '#22c55e', borderColor: '#22c55e' },

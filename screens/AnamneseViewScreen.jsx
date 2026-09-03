@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { PROGRAM_GOALS, TRAINING_LOCATIONS, PAIN_ZONES, SEX_OPTIONS } from './accessLevel';
+import { HeaderBack } from './Header';
 
 export default function AnamneseViewScreen({ studentId, onClose }) {
   const [loading, setLoading] = useState(true);
@@ -66,12 +67,7 @@ export default function AnamneseViewScreen({ studentId, onClose }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Anamnese</Text>
-      </View>
+      <HeaderBack title="Anamnese" onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       {!response || !response.completed_at ? (
         <Text style={styles.emptyText}>O aluno ainda não preencheu a anamnese.</Text>
@@ -192,9 +188,6 @@ export default function AnamneseViewScreen({ studentId, onClose }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
   center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30, paddingHorizontal: 16 },
   card: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 12 },
   fieldLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginTop: 10, marginBottom: 4 },

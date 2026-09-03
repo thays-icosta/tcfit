@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { supabase } from './supabaseClient';
+import { HeaderBack } from './Header';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -109,12 +110,7 @@ export default function AlunoAgendaScreen({ studentId, onClose }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Minha Agenda</Text>
-      </View>
+      <HeaderBack title="Minha Agenda" onBack={onClose} />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayScroll}>
         <TouchableOpacity
@@ -180,9 +176,6 @@ export default function AlunoAgendaScreen({ studentId, onClose }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   dayScroll: { maxHeight: 62, marginBottom: 14 },
   dayChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8, alignItems: 'center', minWidth: 48, justifyContent: 'center' },
   dayChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },

@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
+import { HeaderBack } from './Header';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -155,12 +156,7 @@ export default function PlanPricesScreen({ onClose }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Venda de Consultoria</Text>
-      </View>
+      <HeaderBack title="Venda de Consultoria" onBack={onClose} />
 
       <Text style={styles.hint}>Cadastre quantos planos quiser (Mensal, Trimestral, Semestral...). Tudo aqui aparece na vitrine antes do login.</Text>
 
@@ -336,9 +332,6 @@ export default function PlanPricesScreen({ onClose }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
   center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   hint: { color: '#737373', fontSize: 11, marginBottom: 20, lineHeight: 16 },
   planCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 16 },
   planCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },

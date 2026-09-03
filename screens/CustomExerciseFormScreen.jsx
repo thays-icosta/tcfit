@@ -6,6 +6,7 @@ import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { getYoutubeVideoId, getYoutubeThumbnailUrl } from './youtubeUtils';
 import { showAlert } from './alertUtils';
+import { HeaderBack } from './Header';
 
 const MUSCLE_OPTIONS = ['peito', 'costas', 'ombro', 'biceps', 'triceps', 'abdomen', 'quadriceps', 'isquiotibiais', 'gluteo', 'panturrilha', 'aerobico'];
 const EQUIPMENT_OPTIONS = ['halter', 'barra', 'maquina', 'peso_corporal'];
@@ -91,12 +92,7 @@ export default function CustomExerciseFormScreen({ personalId, onClose, onCreate
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Novo Exercício</Text>
-      </View>
+      <HeaderBack title="Novo Exercício" onBack={onClose} />
 
       <View style={styles.formCard}>
         <Text style={styles.label}>Nome *</Text>
@@ -182,9 +178,6 @@ export default function CustomExerciseFormScreen({ personalId, onClose, onCreate
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   formCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 12 },
   input: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 13 },

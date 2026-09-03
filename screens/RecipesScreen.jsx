@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIn
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import RecipeDetailScreen from './RecipeDetailScreen';
+import { HeaderBack } from './Header';
 
 const WHATSAPP_NUMBER = '5537998231382';
 
@@ -60,12 +61,7 @@ export default function RecipesScreen({ studentId, hasFullAccess, onClose }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Guia de Receitas Fitness</Text>
-      </View>
+      <HeaderBack title="Guia de Receitas Fitness" onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       {!hasFullAccess && unlockedIds.size === 0 && (
         <TouchableOpacity style={styles.premiumBanner} onPress={handleWantGuide}>
@@ -131,9 +127,6 @@ export default function RecipesScreen({ studentId, hasFullAccess, onClose }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   premiumBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(234,179,8,0.1)', borderWidth: 1, borderColor: '#eab308', borderRadius: 10, padding: 12, marginHorizontal: 16, marginBottom: 12 },
   premiumBannerText: { color: '#eab308', fontSize: 11, fontWeight: '600', flexShrink: 1 },
   categoryScroll: { maxHeight: 40, marginBottom: 12, paddingHorizontal: 16 },

@@ -11,6 +11,7 @@ import ProductsManagerScreen from './ProductsManagerScreen';
 import PartnerBrandsManagerScreen from './PartnerBrandsManagerScreen';
 import AnamneseConfigScreen from './AnamneseConfigScreen';
 import { showAlert } from './alertUtils';
+import { HeaderBack } from './Header';
 
 const BRAND_COLOR_PRESETS = ['#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ef4444', '#eab308', '#ec4899', '#14b8a6'];
 
@@ -260,12 +261,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Meu Perfil</Text>
-      </View>
+      <HeaderBack title="Meu Perfil" onBack={onClose} />
 
       <View style={styles.avatarBox}>
         <TouchableOpacity onPress={handlePickAvatar} disabled={uploadingAvatar}>
@@ -454,9 +450,6 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
   center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   avatarBox: { alignItems: 'center', marginBottom: 20 },
   avatarCircle: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#171717', borderWidth: 2, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImage: { width: 88, height: 88 },

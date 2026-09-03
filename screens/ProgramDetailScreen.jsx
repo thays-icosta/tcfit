@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
+import { HeaderBack } from './Header';
 
 const WHATSAPP_NUMBER = '5537998231382';
 
@@ -116,12 +117,7 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title} numberOfLines={1}>{product.name}</Text>
-      </View>
+      <HeaderBack title={product.name} onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
         <View style={styles.posterWrap}>
@@ -221,9 +217,6 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16, flexShrink: 1 },
   posterWrap: { width: '100%', height: 220, borderRadius: 16, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', overflow: 'hidden', position: 'relative' },
   posterImage: { width: '100%', height: '100%' },
   posterPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },

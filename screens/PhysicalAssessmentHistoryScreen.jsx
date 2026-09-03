@@ -4,6 +4,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
+import { HeaderBack } from './Header';
 
 const SEGMENT_META = {
   braco_direito: { label: 'Braço Direito', area: 'armr' },
@@ -499,12 +500,7 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.studentLabel}>{studentName}</Text>
-      </View>
+      <HeaderBack title={studentName} onBack={onClose} />
 
       <Text style={styles.title}>Evolução Física</Text>
 
@@ -635,9 +631,6 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  studentLabel: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   title: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginBottom: 14 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
   pdfButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 16 },

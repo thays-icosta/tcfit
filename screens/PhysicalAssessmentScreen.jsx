@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import PhysicalAssessmentFormScreen from './PhysicalAssessmentFormScreen';
 import PhysicalAssessmentHistoryScreen from './PhysicalAssessmentHistoryScreen';
+import { HeaderBack } from './Header';
 
 export default function PhysicalAssessmentScreen({ studentId, studentName, personalId, onClose }) {
   const [mode, setMode] = useState(null);
@@ -31,12 +32,7 @@ export default function PhysicalAssessmentScreen({ studentId, studentName, perso
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Avaliação Física</Text>
-      </View>
+      <HeaderBack title="Avaliação Física" onBack={onClose} />
 
       <Text style={styles.studentLabel}>{studentName}</Text>
 
@@ -57,9 +53,6 @@ export default function PhysicalAssessmentScreen({ studentId, studentName, perso
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   studentLabel: { color: '#737373', fontSize: 12, marginBottom: 24 },
   optionCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 20, alignItems: 'center', marginBottom: 14 },
   optionTitle: { color: '#f5f5f5', fontSize: 15, fontWeight: '700', marginTop: 10 },

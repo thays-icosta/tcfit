@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './supabaseClient';
+import { HeaderBack } from './Header';
 
 function parseReps(repsStr) {
   if (!repsStr) return 10;
@@ -152,12 +153,7 @@ export default function VolumeSummaryScreen({ studentId, studentName, onClose })
     const { session, exercises } = detailSession;
     return (
       <View style={[styles.container, { paddingTop: Math.max(insets.top + 12, 24) }]}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => setDetailSession(null)}>
-            <Text style={styles.closeText}>← Voltar</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>Detalhe da Sessão</Text>
-        </View>
+        <HeaderBack title="Detalhe da Sessão" onBack={() => setDetailSession(null)} />
 
         <View style={styles.detailHeaderCard}>
           <Text style={styles.detailWorkoutName}>{session.name}</Text>
@@ -185,12 +181,7 @@ export default function VolumeSummaryScreen({ studentId, studentName, onClose })
 
   return (
     <View style={[styles.container, { paddingTop: Math.max(insets.top + 12, 24) }]}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Resumo Semanal</Text>
-      </View>
+      <HeaderBack title="Resumo Semanal" onBack={onClose} />
 
       {studentName && <Text style={styles.studentLabel}>{studentName}</Text>}
 
@@ -278,9 +269,6 @@ export default function VolumeSummaryScreen({ studentId, studentName, onClose })
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   studentLabel: { color: '#737373', fontSize: 12, marginBottom: 14 },
   periodRow: { flexDirection: 'row', backgroundColor: '#171717', borderRadius: 10, padding: 3, marginBottom: 18 },
   periodRowSpacing: { marginTop: 16 },
