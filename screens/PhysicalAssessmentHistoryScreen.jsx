@@ -279,7 +279,7 @@ function buildSegmentalMapHtml(segmental) {
 function buildReportHtml(studentName, assessments, branding) {
   const latest = assessments[0];
   const previous = assessments[1];
-  const brandColor = branding?.brandColor || '#f97316';
+  const brandColor = '#E05A17';
 
   const formatDate = (iso) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
@@ -495,13 +495,12 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
     if (!pid) { setBranding(null); return; }
     const { data } = await supabase
       .from('users')
-      .select('logo_url, brand_color, professional_register, phone, contact_instagram, contact_email')
+      .select('logo_url, professional_register, phone, contact_instagram, contact_email')
       .eq('id', pid)
       .single();
     if (data) {
       setBranding({
         logoUrl: data.logo_url,
-        brandColor: data.brand_color,
         professionalRegister: data.professional_register,
         phone: data.phone,
         contactInstagram: data.contact_instagram,

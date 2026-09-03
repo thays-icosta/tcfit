@@ -13,8 +13,6 @@ import AnamneseConfigScreen from './AnamneseConfigScreen';
 import { showAlert } from './alertUtils';
 import { HeaderBack } from './Header';
 
-const BRAND_COLOR_PRESETS = ['#f97316', '#22c55e', '#3b82f6', '#a855f7', '#ef4444', '#eab308', '#ec4899', '#14b8a6'];
-
 export default function PersonalProfileScreen({ user, onClose, onLogout }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,13 +32,11 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
   const [brandingExpanded, setBrandingExpanded] = useState(true);
   const [logoUrl, setLogoUrl] = useState(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [brandColor, setBrandColor] = useState('#f97316');
   const [professionalRegister, setProfessionalRegister] = useState('');
   const [phone, setPhone] = useState('');
   const [contactInstagram, setContactInstagram] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [pixKey, setPixKey] = useState('');
-  const [paymentLink, setPaymentLink] = useState('');
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -51,7 +47,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
     (async () => {
       const { data } = await supabase
         .from('users')
-        .select('name, email, avatar_url, logo_url, brand_color, professional_register, phone, contact_instagram, contact_email, pix_key, payment_link')
+        .select('name, email, avatar_url, logo_url, professional_register, phone, contact_instagram, contact_email, pix_key')
         .eq('id', user.id)
         .single();
       if (data) {
@@ -59,13 +55,11 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
         setEmail(data.email || '');
         setAvatarUrl(data.avatar_url || null);
         setLogoUrl(data.logo_url || null);
-        setBrandColor(data.brand_color || '#f97316');
         setProfessionalRegister(data.professional_register || '');
         setPhone(data.phone || '');
         setContactInstagram(data.contact_instagram || '');
         setContactEmail(data.contact_email || '');
         setPixKey(data.pix_key || '');
-        setPaymentLink(data.payment_link || '');
       }
       setLoading(false);
     })();
@@ -162,13 +156,11 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
       .from('users')
       .update({
         name: name.trim(),
-        brand_color: brandColor,
         professional_register: professionalRegister.trim() || null,
         phone: phone.trim() || null,
         contact_instagram: contactInstagram.trim() || null,
         contact_email: contactEmail.trim() || null,
         pix_key: pixKey.trim() || null,
-        payment_link: paymentLink.trim() || null,
       })
       .eq('id', user.id);
     setSaving(false);
@@ -361,18 +353,6 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
               <Text style={styles.logoHint}>Toque pra enviar sua logo. Salva na hora. Aparece nos seus PDFs.</Text>
             </View>
 
-            <Text style={styles.label}>Cor da sua marca</Text>
-            <View style={styles.colorRow}>
-              {BRAND_COLOR_PRESETS.map((c) => (
-                <TouchableOpacity
-                  key={c}
-                  style={[styles.colorSwatch, { backgroundColor: c }, brandColor.toLowerCase() === c.toLowerCase() && styles.colorSwatchSelected]}
-                  onPress={() => setBrandColor(c)}
-                />
-              ))}
-            </View>
-            <TextInput style={styles.input} placeholder="#FF6B00" placeholderTextColor="#525252" value={brandColor} onChangeText={setBrandColor} autoCapitalize="none" />
-
             <Text style={styles.label}>Registro profissional (CREF / CRN)</Text>
             <TextInput style={styles.input} placeholder="ex: CREF 000000-G/MG" placeholderTextColor="#525252" value={professionalRegister} onChangeText={setProfessionalRegister} />
 
@@ -391,9 +371,6 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
 
             <Text style={styles.label}>Chave Pix</Text>
             <TextInput style={styles.input} placeholder="ex: seu@email.com, CPF ou telefone" placeholderTextColor="#525252" value={pixKey} onChangeText={setPixKey} autoCapitalize="none" />
-
-            <Text style={styles.label}>Link de pagamento (opcional)</Text>
-            <TextInput style={styles.input} placeholder="ex: link do Mercado Pago / PagSeguro" placeholderTextColor="#525252" value={paymentLink} onChangeText={setPaymentLink} autoCapitalize="none" />
 
             <Text style={styles.brandingSavedHint}>A logo salva automaticamente. Os outros campos salvam junto com "Salvar Alterações" no final da página.</Text>
           </View>
@@ -479,9 +456,6 @@ const styles = StyleSheet.create({
   logoPlaceholderText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
   logoHint: { flex: 1, color: '#525252', fontSize: 10, lineHeight: 14 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 12 },
-  colorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
-  colorSwatch: { width: 32, height: 32, borderRadius: 16, borderWidth: 3, borderColor: 'transparent' },
-  colorSwatchSelected: { borderColor: '#f5f5f5' },
   input: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 14 },
   inputDisabled: { color: '#525252' },
   helperText: { color: '#525252', fontSize: 10, marginTop: 4, lineHeight: 14 },

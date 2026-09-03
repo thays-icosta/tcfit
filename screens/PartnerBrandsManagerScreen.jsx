@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Activi
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { HeaderBack } from './Header';
@@ -16,6 +17,7 @@ function uuidv4() {
 }
 
 export default function PartnerBrandsManagerScreen({ personalId, onClose }) {
+  const insets = useSafeAreaInsets();
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -147,7 +149,7 @@ export default function PartnerBrandsManagerScreen({ personalId, onClose }) {
 
   if (showForm) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: Math.max(insets.top + 12, 24) }]}>
         <HeaderBack title={editingId ? 'Editar Marca' : 'Nova Marca Parceira'} onBack={() => setShowForm(false)} style={{ paddingHorizontal: 16 }} />
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>

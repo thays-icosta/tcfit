@@ -29,7 +29,7 @@ function getMonday(d) {
 
 function buildDietHtml(studentName, dietName, meals, goals, branding) {
   const formatDate = () => new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const brandColor = branding?.brandColor || '#22c55e';
+  const brandColor = '#E05A17';
 
   const mealBlocks = meals.map((meal) => {
     const foodRows = (meal.diet_meal_foods || [])
@@ -178,13 +178,12 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
   const loadBranding = async () => {
     const { data } = await supabase
       .from('users')
-      .select('logo_url, brand_color, professional_register, phone, contact_instagram, contact_email')
+      .select('logo_url, professional_register, phone, contact_instagram, contact_email')
       .eq('id', personalId)
       .single();
     if (data) {
       setBranding({
         logoUrl: data.logo_url,
-        brandColor: data.brand_color,
         professionalRegister: data.professional_register,
         phone: data.phone,
         contactInstagram: data.contact_instagram,

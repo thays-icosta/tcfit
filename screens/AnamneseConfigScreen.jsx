@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { ANAMNESE_QUESTION_TYPES } from './accessLevel';
 import { HeaderBack } from './Header';
 
 export default function AnamneseConfigScreen({ personalId, onClose }) {
+  const insets = useSafeAreaInsets();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -119,7 +121,7 @@ export default function AnamneseConfigScreen({ personalId, onClose }) {
 
   if (showForm) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: Math.max(insets.top + 12, 24) }]}>
         <HeaderBack title={editingId ? 'Editar Pergunta' : 'Nova Pergunta'} onBack={() => setShowForm(false)} style={{ paddingHorizontal: 16 }} />
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
