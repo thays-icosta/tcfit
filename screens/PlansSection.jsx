@@ -40,6 +40,8 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
   const [pixCopied, setPixCopied] = useState(false);
   const [audience, setAudience] = useState('ela');
   const [billingPeriod, setBillingPeriod] = useState('trimestral');
+  const [showTreinosProntos, setShowTreinosProntos] = useState(true);
+  const [showProdutosAvulsos, setShowProdutosAvulsos] = useState(true);
   const modalAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -71,7 +73,7 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
       const cleanTargetPhone = WHATSAPP_NUMBER.replace(/\D/g, '');
       const { data: allPersonals } = await supabase
         .from('personal_public_info')
-        .select('id, name, pix_key, payment_link, phone');
+        .select('id, name, pix_key, payment_link, phone, show_treinos_prontos_section, show_produtos_avulsos_section');
 
       let found = null;
       if (allPersonals && allPersonals.length > 0) {
@@ -83,6 +85,8 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
       if (found) {
         setPaymentInfo({ pixKey: found.pix_key, paymentLink: found.payment_link });
         setMatchedPersonal({ id: found.id, name: found.name });
+        setShowTreinosProntos(found.show_treinos_prontos_section !== false);
+        setShowProdutosAvulsos(found.show_produtos_avulsos_section !== false);
       }
 
       setLoading(false);
@@ -409,7 +413,7 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
             </View>
           )}
 
-          {templates.length > 0 && (
+          {showTreinosProntos && templates.length > 0 && (
             <>
               <Text style={styles.sectionTitle}>Treinos Prontos</Text>
               <Text style={styles.sectionSubtitle}>Fichas montadas por especialista, prontas pra começar hoje</Text>
@@ -435,7 +439,7 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
             </>
           )}
 
-          {addonProducts.length > 0 && (
+          {showProdutosAvulsos && addonProducts.length > 0 && (
             <>
               <Text style={styles.sectionTitle}>Produtos Avulsos</Text>
               <Text style={styles.sectionSubtitle}>E-books, guias e materiais extras</Text>

@@ -46,6 +46,20 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [editCategory, setEditCategory] = useState(null);
   const [editWorkoutTags, setEditWorkoutTags] = useState([]);
   const [savingMeta, setSavingMeta] = useState(false);
+  const [sectionEnabled, setSectionEnabled] = useState(true);
+  const [savingSectionToggle, setSavingSectionToggle] = useState(false);
+
+  const loadSectionToggle = async () => {
+    const { data } = await supabase.from('users').select('show_treinos_prontos_section').eq('id', personalId).single();
+    setSectionEnabled(data?.show_treinos_prontos_section !== false);
+  };
+
+  const handleToggleSection = async (value) => {
+    setSectionEnabled(value);
+    setSavingSectionToggle(true);
+    await supabase.from('users').update({ show_treinos_prontos_section: value }).eq('id', personalId);
+    setSavingSectionToggle(false);
+  };
 
   const loadTemplates = async () => {
     const { data } = await supabase
@@ -87,6 +101,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       await loadTemplates();
       setLoading(false);
     })();
+    loadSectionToggle();
   }, []);
 
   useEffect(() => {
@@ -337,6 +352,14 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
     <View style={styles.container}>
       <HeaderBack title="Templates de Treino" onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
+      <View style={styles.sectionToggleBox}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.sectionToggleLabel}>Exibir seção “Treinos Prontos” na vitrine {savingSectionToggle && '(salvando...)'}</Text>
+          <Text style={styles.helperText}>Desligue pra esconder a seção inteira da página pública sem apagar os templates.</Text>
+        </View>
+        <Switch value={sectionEnabled} onValueChange={handleToggleSection} trackColor={{ false: '#292524', true: '#22c55e' }} thumbColor="#f5f5f5" />
+      </View>
+
       <TouchableOpacity style={styles.editingBar} onPress={() => setShowTemplatePicker(true)}>
         <View style={{ flex: 1 }}>
           <Text style={styles.editingBarLabel}>Editando</Text>
@@ -547,6 +570,8 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
   center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
+  sectionToggleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 14 },
+  sectionToggleLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', marginBottom: 4 },
   editingBar: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginHorizontal: 16, marginBottom: 16 },
   editingBarLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 2 },
   editingBarTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },

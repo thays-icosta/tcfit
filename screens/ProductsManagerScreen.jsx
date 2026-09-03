@@ -76,6 +76,20 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [goal, setGoal] = useState(null);
   const [materialType, setMaterialType] = useState(null);
   const [nutritionTags, setNutritionTags] = useState([]);
+  const [sectionEnabled, setSectionEnabled] = useState(true);
+  const [savingSectionToggle, setSavingSectionToggle] = useState(false);
+
+  const loadSectionToggle = async () => {
+    const { data } = await supabase.from('users').select('show_produtos_avulsos_section').eq('id', personalId).single();
+    setSectionEnabled(data?.show_produtos_avulsos_section !== false);
+  };
+
+  const handleToggleSection = async (value) => {
+    setSectionEnabled(value);
+    setSavingSectionToggle(true);
+    await supabase.from('users').update({ show_produtos_avulsos_section: value }).eq('id', personalId);
+    setSavingSectionToggle(false);
+  };
 
   const loadProducts = async () => {
     const { data } = await supabase.from('products').select('*').eq('personal_id', personalId).order('created_at', { ascending: false });
@@ -97,6 +111,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     loadProducts();
     loadRecipes();
     loadTemplates();
+    loadSectionToggle();
   }, []);
 
   const toggleSelectedRecipe = (recipeId) => {
@@ -766,6 +781,14 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     <View style={styles.container}>
       <HeaderBack title="Produtos Adicionais" onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
+      <View style={styles.sectionToggleBox}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.sectionToggleLabel}>Exibir seção “Produtos Avulsos” na vitrine {savingSectionToggle && '(salvando...)'}</Text>
+          <Text style={styles.helperText}>Desligue pra esconder a seção inteira da página pública sem apagar os produtos.</Text>
+        </View>
+        <Switch value={sectionEnabled} onValueChange={handleToggleSection} trackColor={{ false: '#292524', true: '#22c55e' }} thumbColor="#f5f5f5" />
+      </View>
+
       <Text style={styles.hint2}>E-books, desafios avulsos e guias — tudo que não é consultoria direta. Marque "oferta complementar" pra aparecer como upsell na vitrine.</Text>
 
       <TouchableOpacity style={styles.newButton} onPress={handleOpenNew}>
@@ -843,6 +866,8 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
   hint2: { color: '#737373', fontSize: 11, paddingHorizontal: 16, marginBottom: 14, lineHeight: 16 },
+  sectionToggleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 14 },
+  sectionToggleLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', marginBottom: 4 },
   newButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
   newButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
