@@ -8,7 +8,22 @@ export default function Root({ children }: PropsWithChildren) {
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover, maximum-scale=1" />
-        <meta name="description" content="TcFit — plataforma de treino e nutrição para personal trainers e alunos." />
+        <title>TcFit — Consultoria Fitness &amp; Nutrição</title>
+        <meta name="description" content="Acesse seus treinos personalizados, plano alimentar e acompanhe seus resultados em um só lugar." />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://tcfit.vercel.app/" />
+        <meta property="og:title" content="TcFit — Consultoria Fitness & Nutrição" />
+        <meta property="og:description" content="Acesse seus treinos personalizados, plano alimentar e acompanhe seus resultados em um só lugar." />
+        <meta property="og:image" content="https://tcfit.vercel.app/og-image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:locale" content="pt_BR" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="TcFit — Consultoria Fitness & Nutrição" />
+        <meta name="twitter:description" content="Acesse seus treinos personalizados, plano alimentar e acompanhe seus resultados em um só lugar." />
+        <meta name="twitter:image" content="https://tcfit.vercel.app/og-image.png" />
 
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#f97316" />
