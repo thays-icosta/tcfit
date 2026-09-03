@@ -88,7 +88,9 @@ function buildDietHtml(studentName, dietName, meals, goals, branding) {
     <html>
       <head>
         <meta charset="utf-8" />
+        <meta name="color-scheme" content="light" />
         <style>
+          html, body { background: #FFFFFF; background-color: #FFFFFF; color-scheme: light; }
           body { font-family: -apple-system, Helvetica, Arial, sans-serif; padding: 24px; color: #1a1a1a; }
           h1 { font-size: 22px; margin-bottom: 4px; }
           .header-with-logo { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }

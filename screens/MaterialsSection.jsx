@@ -63,7 +63,7 @@ export default function MaterialsSection({ onSelectMaterial, isDesktop }) {
       const [{ data }, { data: collectionRows }] = await Promise.all([
         supabase
           .from('products')
-          .select('id, name, description, cover_image_url, delivery_value, material_type, nutrition_tags, active, collection_id')
+          .select('id, name, description, cover_image_url, delivery_value, pdf_url, material_type, nutrition_tags, active, collection_id')
           .eq('active', true)
           .not('material_type', 'is', null)
           .order('created_at', { ascending: false }),
@@ -77,7 +77,7 @@ export default function MaterialsSection({ onSelectMaterial, isDesktop }) {
         description: p.description,
         nutritionTags: p.nutrition_tags || [],
         coverImage: p.cover_image_url,
-        fileUrl: p.delivery_value,
+        fileUrl: p.pdf_url || p.delivery_value,
         active: p.active,
         collectionId: p.collection_id,
       }));

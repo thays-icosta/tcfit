@@ -16,21 +16,15 @@ export default function AlunoDownloadsScreen({ studentId, personalId }) {
       }
       const [{ data: myRow }, { data: productRows }, { data: grantRows }] = await Promise.all([
         supabase.from('users').select('access_level').eq('id', studentId).single(),
-        supabase
-          .from('products')
-          .select('*')
-          .eq('personal_id', personalId)
-          .eq('active', true)
-          .eq('delivery_type', 'arquivo')
-          .not('delivery_value', 'is', null),
+        supabase.from('products').select('*').eq('personal_id', personalId).eq('active', true),
         supabase.from('product_grants').select('product_id').eq('student_id', studentId),
       ]);
 
       const level = myRow?.access_level || 'plataforma_base';
       const grantedIds = new Set((grantRows || []).map((g) => g.product_id));
-      const unlocked = (productRows || []).filter(
-        (p) => grantedIds.has(p.id) || hasAccessByLevel(level, p.required_access_level)
-      );
+      const unlocked = (productRows || [])
+        .filter((p) => p.pdf_url || (p.delivery_type === 'arquivo' && p.delivery_value))
+        .filter((p) => grantedIds.has(p.id) || hasAccessByLevel(level, p.required_access_level));
       setFiles(unlocked);
       setLoading(false);
     })();
@@ -47,13 +41,16 @@ export default function AlunoDownloadsScreen({ studentId, personalId }) {
         <Text style={styles.emptyText}>Nenhum arquivo desbloqueado ainda. Veja em “Conteúdos e Produtos” na Home o que tem disponível.</Text>
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }}>
-          {files.map((f) => (
-            <TouchableOpacity key={f.id} style={styles.fileRow} onPress={() => Linking.openURL(f.delivery_value).catch(() => {})}>
-              <Ionicons name={f.delivery_value.toLowerCase().includes('.pdf') ? 'document-text-outline' : 'link-outline'} size={20} color="#f97316" />
-              <Text style={styles.fileName} numberOfLines={1}>{f.name}</Text>
-              <Ionicons name="download-outline" size={18} color="#737373" />
-            </TouchableOpacity>
-          ))}
+          {files.map((f) => {
+            const fileUrl = f.pdf_url || f.delivery_value;
+            return (
+              <TouchableOpacity key={f.id} style={styles.fileRow} onPress={() => Linking.openURL(fileUrl).catch(() => {})}>
+                <Ionicons name={fileUrl.toLowerCase().includes('.pdf') ? 'document-text-outline' : 'link-outline'} size={20} color="#f97316" />
+                <Text style={styles.fileName} numberOfLines={1}>{f.name}</Text>
+                <Ionicons name="download-outline" size={18} color="#737373" />
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       )}
     </View>

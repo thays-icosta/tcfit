@@ -13,10 +13,17 @@ import { toTitleCase } from './textUtils';
 const TYPES = [
   { value: 'ebook_receitas', label: 'Guia de Receitas / E-book', icon: 'book-outline' },
   { value: 'treino_template', label: 'Template de Treino', icon: 'barbell-outline' },
+  { value: 'planilha_treino', label: 'Planilha / E-book de Treino', icon: 'document-text-outline' },
   { value: 'desafio', label: 'Inscrição em Desafio', icon: 'trophy-outline' },
   { value: 'substituicao_alimentar', label: 'Guia de Substituição Alimentar', icon: 'swap-horizontal-outline' },
   { value: 'outro', label: 'Outro', icon: 'pricetag-outline' },
 ];
+
+const WORKOUT_PRODUCT_TYPES = ['treino_template', 'planilha_treino'];
+
+function titlePlaceholderFor(type) {
+  return WORKOUT_PRODUCT_TYPES.includes(type) ? 'ex: Planilha de Corrida 0 aos 5km' : 'ex: Guia de Receitas Fitness';
+}
 
 function typeMeta(value) {
   return TYPES.find((t) => t.value === value) || TYPES[3];
@@ -56,8 +63,9 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [description, setDescription] = useState('');
   const [type, setType] = useState('ebook_receitas');
   const [price, setPrice] = useState('');
-  const [deliveryType, setDeliveryType] = useState('arquivo');
+  const [deliveryType, setDeliveryType] = useState(null);
   const [deliveryValue, setDeliveryValue] = useState('');
+  const [pdfUrl, setPdfUrl] = useState(null);
   const [showAsAddon, setShowAsAddon] = useState(false);
   const [active, setActive] = useState(true);
   const [selectedRecipeIds, setSelectedRecipeIds] = useState([]);
@@ -220,8 +228,9 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setDescription('');
     setType('ebook_receitas');
     setPrice('');
-    setDeliveryType('arquivo');
+    setDeliveryType(null);
     setDeliveryValue('');
+    setPdfUrl(null);
     setShowAsAddon(false);
     setActive(true);
     setSelectedRecipeIds([]);
@@ -283,7 +292,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       const { error } = await supabase.storage.from('product-files').upload(fileName, blob, { contentType: 'application/pdf' });
       if (error) throw error;
       const { data } = supabase.storage.from('product-files').getPublicUrl(fileName);
-      setDeliveryValue(data.publicUrl);
+      setPdfUrl(data.publicUrl);
     } catch {
       showAlert('Não deu pra enviar o PDF', 'Tenta de novo ou cole um link (Drive/Dropbox) manualmente.');
     }
@@ -302,8 +311,9 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setDescription(product.description || '');
     setType(product.type || 'ebook_receitas');
     setPrice(product.price != null ? String(product.price) : '');
-    setDeliveryType(product.delivery_type || 'arquivo');
-    setDeliveryValue(product.delivery_value || '');
+    setDeliveryType(product.delivery_type === 'arquivo' ? null : product.delivery_type || null);
+    setDeliveryValue(product.delivery_type === 'chave' ? product.delivery_value || '' : '');
+    setPdfUrl(product.pdf_url || (product.delivery_type === 'arquivo' ? product.delivery_value : null));
     setShowAsAddon(product.show_as_addon || false);
     setActive(product.active !== false);
     setSelectedRecipeIds(product.recipe_ids || []);
@@ -342,17 +352,18 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       type,
       price: price ? Number(price) : null,
       delivery_type: deliveryType,
-      delivery_value: deliveryType === 'receitas' ? null : deliveryValue.trim() || null,
+      delivery_value: deliveryType === 'chave' ? deliveryValue.trim() || null : null,
+      pdf_url: pdfUrl || null,
       show_as_addon: showAsAddon,
       active,
       product_key: type,
-      recipe_ids: type === 'treino_template' ? [] : deliveryType === 'receitas' ? selectedRecipeIds : [],
+      recipe_ids: deliveryType === 'receitas' ? selectedRecipeIds : [],
       cover_image_url: coverImageUrl,
       required_access_level: requiredAccessLevel,
       template_id: type === 'treino_template' ? selectedTemplateIds[0] : null,
       category,
-      level: type === 'treino_template' ? level : null,
-      goal: type === 'treino_template' ? goal : null,
+      level: WORKOUT_PRODUCT_TYPES.includes(type) ? level : null,
+      goal: WORKOUT_PRODUCT_TYPES.includes(type) ? goal : null,
       material_type: type === 'ebook_receitas' ? materialType : null,
       nutrition_tags: type === 'ebook_receitas' && materialType === 'plano_alimentar' ? nutritionTags : null,
       collection_id: collectionId,
@@ -734,7 +745,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           </View>
 
           <Text style={styles.label}>Título do Produto</Text>
-          <TextInput style={styles.input} placeholder="ex: Guia de Receitas Fitness" placeholderTextColor="#525252" value={title} onChangeText={(text) => setTitle(toTitleCase(text))} />
+          <TextInput style={styles.input} placeholder={titlePlaceholderFor(type)} placeholderTextColor="#525252" value={title} onChangeText={(text) => setTitle(toTitleCase(text))} />
 
           <Text style={styles.label}>Descrição / Benefícios</Text>
           <TextInput style={styles.textArea} multiline placeholder="O que o cliente recebe ao comprar" placeholderTextColor="#525252" value={description} onChangeText={setDescription} />
@@ -745,7 +756,38 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
             <TextInput style={styles.priceInput} keyboardType="decimal-pad" placeholder="ex: 47,00" placeholderTextColor="#525252" value={price} onChangeText={setPrice} />
           </View>
 
-          {type === 'treino_template' ? (
+          <Text style={styles.label}>Arquivo PDF / E-book (opcional)</Text>
+          <Text style={styles.helperText}>Disponível pra qualquer tipo de produto. Pode ser combinado com uma chave de liberação ou pacote de receitas abaixo.</Text>
+          <TouchableOpacity style={styles.filePickerButton} onPress={handlePickFile} disabled={uploadingFile}>
+            {uploadingFile ? (
+              <ActivityIndicator color="#f97316" size="small" />
+            ) : (
+              <>
+                <Ionicons name="cloud-upload-outline" size={16} color="#f97316" />
+                <Text style={styles.filePickerButtonText}>{pdfUrl ? 'Trocar PDF enviado' : 'Enviar PDF'}</Text>
+              </>
+            )}
+          </TouchableOpacity>
+          {pdfUrl ? (
+            <View style={styles.fileConfirmBadge}>
+              <Ionicons name="document-text-outline" size={16} color="#22c55e" />
+              <Text style={styles.fileConfirmText} numberOfLines={1}>{extractFileLabel(pdfUrl)} (Enviado com sucesso)</Text>
+              <TouchableOpacity hitSlop={8} onPress={() => setPdfUrl(null)}>
+                <Ionicons name="close-circle" size={16} color="#737373" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TextInput
+              style={styles.input}
+              placeholder="Ou cole o link do arquivo (Drive, Dropbox...)"
+              placeholderTextColor="#525252"
+              value={pdfUrl || ''}
+              onChangeText={setPdfUrl}
+              autoCapitalize="none"
+            />
+          )}
+
+          {WORKOUT_PRODUCT_TYPES.includes(type) ? (
             <>
               <Text style={styles.label}>Nível</Text>
               <View style={styles.accessLevelFormRow}>
@@ -773,7 +815,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                 ))}
               </View>
             </>
-          ) : (
+          ) : type === 'ebook_receitas' ? (
             <>
               <Text style={styles.label}>Tipo de Material</Text>
               <Text style={styles.helperText}>Define em qual card (Planos Alimentares / E-books e Receitas) esse produto aparece na landing page.</Text>
@@ -810,77 +852,53 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                   </View>
                 </>
               )}
+            </>
+          ) : null}
 
-              <Text style={styles.label}>Entregável / Acesso</Text>
-              <View style={styles.deliveryTypeRow}>
-                <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === 'arquivo' && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType('arquivo')}>
-                  <Text style={[styles.deliveryTypeChipText, deliveryType === 'arquivo' && styles.deliveryTypeChipTextActive]}>Arquivo (PDF/E-book)</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === 'chave' && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType('chave')}>
-                  <Text style={[styles.deliveryTypeChipText, deliveryType === 'chave' && styles.deliveryTypeChipTextActive]}>Chave de Liberação</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === 'receitas' && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType('receitas')}>
-                  <Text style={[styles.deliveryTypeChipText, deliveryType === 'receitas' && styles.deliveryTypeChipTextActive]}>Pacote de Receitas Internas</Text>
-                </TouchableOpacity>
-              </View>
+          <Text style={styles.label}>Acesso Adicional (opcional)</Text>
+          <Text style={styles.helperText}>Além do PDF acima, libere por chave de acesso (app externo) ou vincule um pacote de receitas internas.</Text>
+          <View style={styles.deliveryTypeRow}>
+            <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === null && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType(null)}>
+              <Text style={[styles.deliveryTypeChipText, deliveryType === null && styles.deliveryTypeChipTextActive]}>Nenhum</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === 'chave' && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType('chave')}>
+              <Text style={[styles.deliveryTypeChipText, deliveryType === 'chave' && styles.deliveryTypeChipTextActive]}>Chave de Liberação</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.deliveryTypeChip, deliveryType === 'receitas' && styles.deliveryTypeChipActive]} onPress={() => setDeliveryType('receitas')}>
+              <Text style={[styles.deliveryTypeChipText, deliveryType === 'receitas' && styles.deliveryTypeChipTextActive]}>Pacote de Receitas Internas</Text>
+            </TouchableOpacity>
+          </View>
 
-              {(deliveryType === 'arquivo' || deliveryType === 'chave') && (
-                <>
-                  {deliveryType === 'arquivo' && (
-                    <TouchableOpacity style={styles.filePickerButton} onPress={handlePickFile} disabled={uploadingFile}>
-                      {uploadingFile ? (
-                        <ActivityIndicator color="#f97316" size="small" />
-                      ) : (
-                        <>
-                          <Ionicons name="cloud-upload-outline" size={16} color="#f97316" />
-                          <Text style={styles.filePickerButtonText}>{deliveryValue ? 'Trocar PDF enviado' : 'Enviar PDF'}</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-                  )}
+          {deliveryType === 'chave' && (
+            <TextInput
+              style={styles.input}
+              placeholder="ex: RECEITAS2026"
+              placeholderTextColor="#525252"
+              value={deliveryValue}
+              onChangeText={setDeliveryValue}
+              autoCapitalize="none"
+            />
+          )}
 
-                  {deliveryType === 'arquivo' && deliveryValue ? (
-                    <View style={styles.fileConfirmBadge}>
-                      <Ionicons name="document-text-outline" size={16} color="#22c55e" />
-                      <Text style={styles.fileConfirmText} numberOfLines={1}>{extractFileLabel(deliveryValue)} (Enviado com sucesso)</Text>
-                      <TouchableOpacity hitSlop={8} onPress={() => setDeliveryValue('')}>
-                        <Ionicons name="close-circle" size={16} color="#737373" />
+          {deliveryType === 'receitas' && (
+            <>
+              <Text style={styles.label}>Conteúdo do Produto (Receitas Incluídas)</Text>
+              {recipes.length === 0 ? (
+                <Text style={styles.helperText}>Você ainda não cadastrou receitas em “Gerenciar Receitas”.</Text>
+              ) : (
+                <View style={styles.recipeChecklist}>
+                  {recipes.map((r) => {
+                    const checked = selectedRecipeIds.includes(r.id);
+                    return (
+                      <TouchableOpacity key={r.id} style={styles.recipeCheckRow} onPress={() => toggleSelectedRecipe(r.id)}>
+                        <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
+                          {checked && <Ionicons name="checkmark" size={13} color="#0a0a0a" />}
+                        </View>
+                        <Text style={styles.recipeCheckLabel}>{r.title}</Text>
                       </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <TextInput
-                      style={styles.input}
-                      placeholder={deliveryType === 'arquivo' ? 'Ou cole o link do arquivo (Drive, Dropbox...)' : 'ex: RECEITAS2026'}
-                      placeholderTextColor="#525252"
-                      value={deliveryValue}
-                      onChangeText={setDeliveryValue}
-                      autoCapitalize="none"
-                    />
-                  )}
-                </>
-              )}
-
-              {deliveryType === 'receitas' && (
-                <>
-                  <Text style={styles.label}>Conteúdo do Produto (Receitas Incluídas)</Text>
-                  {recipes.length === 0 ? (
-                    <Text style={styles.helperText}>Você ainda não cadastrou receitas em “Gerenciar Receitas”.</Text>
-                  ) : (
-                    <View style={styles.recipeChecklist}>
-                      {recipes.map((r) => {
-                        const checked = selectedRecipeIds.includes(r.id);
-                        return (
-                          <TouchableOpacity key={r.id} style={styles.recipeCheckRow} onPress={() => toggleSelectedRecipe(r.id)}>
-                            <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
-                              {checked && <Ionicons name="checkmark" size={13} color="#0a0a0a" />}
-                            </View>
-                            <Text style={styles.recipeCheckLabel}>{r.title}</Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  )}
-                </>
+                    );
+                  })}
+                </View>
               )}
             </>
           )}

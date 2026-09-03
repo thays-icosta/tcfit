@@ -357,10 +357,11 @@ function buildReportHtml(studentName, assessments, branding) {
     <html>
       <head>
         <meta charset="utf-8" />
+        <meta name="color-scheme" content="light" />
         <style>
           @page { size: A4; margin: 20mm 15mm; }
-          html, body { background: #FFFFFF; background-color: #FFFFFF; }
-          body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #111827; margin: 0; }
+          html, body { background: #FFFFFF; background-color: #FFFFFF; color-scheme: light; }
+          body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #111827; margin: 0; width: 100%; box-sizing: border-box; }
           h1 { font-size: 22px; margin-bottom: 4px; }
           .header-with-logo { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
           .logo { width: 56px; height: 56px; object-fit: contain; }

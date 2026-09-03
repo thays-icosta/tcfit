@@ -170,25 +170,29 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
                       ))}
                     </>
                   )}
-                  {selectedProduct?.delivery_type === 'arquivo' && selectedProduct?.delivery_value && (
-                    <>
-                      {Platform.OS === 'web' && selectedProduct.delivery_value.toLowerCase().includes('.pdf') && (
-                        <iframe
-                          src={selectedProduct.delivery_value}
-                          style={{ width: '100%', height: 340, border: 'none', borderRadius: 12, marginBottom: 10, background: '#0a0a0a' }}
-                          title="Pré-visualização do PDF"
-                        />
-                      )}
-                      <TouchableOpacity
-                        style={styles.unlockButton}
-                        onPress={() => Linking.openURL(selectedProduct.delivery_value).catch(() => {})}
-                      >
-                        <Text style={styles.unlockButtonText}>
-                          {selectedProduct.delivery_value.toLowerCase().includes('.pdf') ? '📄 Abrir E-book em PDF' : '📥 Abrir Arquivo'}
-                        </Text>
-                      </TouchableOpacity>
-                    </>
-                  )}
+                  {(() => {
+                    const fileUrl = selectedProduct?.pdf_url || (selectedProduct?.delivery_type === 'arquivo' ? selectedProduct?.delivery_value : null);
+                    if (!fileUrl) return null;
+                    return (
+                      <>
+                        {Platform.OS === 'web' && fileUrl.toLowerCase().includes('.pdf') && (
+                          <iframe
+                            src={fileUrl}
+                            style={{ width: '100%', height: 340, border: 'none', borderRadius: 12, marginBottom: 10, background: '#0a0a0a' }}
+                            title="Pré-visualização do PDF"
+                          />
+                        )}
+                        <TouchableOpacity
+                          style={styles.unlockButton}
+                          onPress={() => Linking.openURL(fileUrl).catch(() => {})}
+                        >
+                          <Text style={styles.unlockButtonText}>
+                            {fileUrl.toLowerCase().includes('.pdf') ? '📄 Abrir E-book em PDF' : '📥 Abrir Arquivo'}
+                          </Text>
+                        </TouchableOpacity>
+                      </>
+                    );
+                  })()}
                   {selectedProduct?.delivery_type === 'chave' && selectedProduct?.delivery_value && (
                     <View style={styles.keyBox}>
                       <Text style={styles.keyBoxLabel}>Chave de liberação</Text>
