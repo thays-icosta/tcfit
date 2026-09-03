@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { useGlobalSearchParams, useRouter } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import AuthScreen from '../../screens/AuthScreen';
 import PersonalHomeScreen from '../../screens/PersonalHomeScreen';
 import AlunoHomeScreen from '../../screens/AlunoHomeScreen';
 import WelcomeScreen from '../../screens/WelcomeScreen';
 import { supabase } from '../../screens/supabaseClient';
+import { registerPushToken, extractChatTarget } from '../../screens/pushNotifications';
 
 export default function HomeTab() {
   const router = useRouter();
   const params = useGlobalSearchParams<{ view?: string; mode?: string; role?: string; invite?: string }>();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<{ id: string; email?: string; name?: string } | null>(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authView, setAuthView] = useState('welcome');
+  const [chatTarget, setChatTarget] = useState<{ personalId: string | null; studentId: string | null } | null>(null);
 
   useEffect(() => {
     if (params.view === 'auth') {
@@ -59,6 +62,24 @@ export default function HomeTab() {
     return () => authListener.subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (user?.id) registerPushToken(user.id);
+  }, [user?.id]);
+
+  useEffect(() => {
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      const target = extractChatTarget(response);
+      if (target) setChatTarget(target);
+    });
+
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const target = extractChatTarget(response);
+      if (target) setChatTarget(target);
+    });
+
+    return () => subscription.remove();
+  }, []);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -93,8 +114,22 @@ export default function HomeTab() {
   }
 
   if (role === 'personal') {
-    return <PersonalHomeScreen user={user} onLogout={handleLogout} />;
+    return (
+      <PersonalHomeScreen
+        user={user}
+        onLogout={handleLogout}
+        initialChatStudentId={chatTarget?.studentId || null}
+        onConsumeInitialChat={() => setChatTarget(null)}
+      />
+    );
   }
 
-  return <AlunoHomeScreen user={user} onLogout={handleLogout} />;
+  return (
+    <AlunoHomeScreen
+      user={user}
+      onLogout={handleLogout}
+      openChatOnMount={!!chatTarget}
+      onConsumeInitialChat={() => setChatTarget(null)}
+    />
+  );
 }

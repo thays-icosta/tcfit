@@ -4,7 +4,7 @@ import { supabase } from './supabaseClient';
 import ChatScreen from './ChatScreen';
 import { HeaderBack } from './Header';
 
-export default function PersonalChatListScreen({ personalId, onClose }) {
+export default function PersonalChatListScreen({ personalId, onClose, initialStudentId, onConsumeInitialStudent }) {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openChatWith, setOpenChatWith] = useState(null);
@@ -52,6 +52,15 @@ export default function PersonalChatListScreen({ personalId, onClose }) {
   useEffect(() => {
     loadConversations();
   }, [personalId]);
+
+  useEffect(() => {
+    if (!initialStudentId || students.length === 0) return;
+    const match = students.find((s) => s.id === initialStudentId);
+    if (match) {
+      setOpenChatWith(match);
+      onConsumeInitialStudent?.();
+    }
+  }, [initialStudentId, students]);
 
   if (openChatWith) {
     return (

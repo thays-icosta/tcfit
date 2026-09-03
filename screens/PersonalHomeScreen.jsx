@@ -15,7 +15,7 @@ import AnamneseConfigScreen from './AnamneseConfigScreen';
 import { showAlert } from './alertUtils';
 import { HeaderWelcome } from './Header';
 
-export default function PersonalHomeScreen({ user, onLogout }) {
+export default function PersonalHomeScreen({ user, onLogout, initialChatStudentId, onConsumeInitialChat }) {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ownAvatarUrl, setOwnAvatarUrl] = useState(null);
@@ -35,6 +35,12 @@ export default function PersonalHomeScreen({ user, onLogout }) {
   const [financeSummary, setFinanceSummary] = useState({ monthlyRevenue: 0, dueCount: 0 });
 
   const todayStr = new Date().toISOString().slice(0, 10);
+
+  useEffect(() => {
+    if (initialChatStudentId) {
+      setShowChat(true);
+    }
+  }, [initialChatStudentId]);
 
   const handleCopyInvite = async () => {
     await Clipboard.setStringAsync(user.id);
@@ -168,6 +174,8 @@ export default function PersonalHomeScreen({ user, onLogout }) {
     return (
       <PersonalChatListScreen
         personalId={user.id}
+        initialStudentId={initialChatStudentId}
+        onConsumeInitialStudent={onConsumeInitialChat}
         onClose={() => setShowChat(false)}
       />
     );

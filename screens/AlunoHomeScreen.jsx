@@ -71,7 +71,7 @@ function mealLabel(code) {
   return MEAL_OPTIONS.find((m) => m.value === code)?.label || code;
 }
 
-export default function AlunoHomeScreen({ user, onLogout }) {
+export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onConsumeInitialChat }) {
   const [personalId, setPersonalId] = useState(null);
   const [myAccessLevel, setMyAccessLevel] = useState('plataforma_base');
   const [personalName, setPersonalName] = useState(null);
@@ -301,6 +301,13 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   useEffect(() => {
     loadData();
   }, [user.id]);
+
+  useEffect(() => {
+    if (openChatOnMount && personalId) {
+      handleOpenChatFor('');
+      onConsumeInitialChat?.();
+    }
+  }, [openChatOnMount, personalId]);
 
   useEffect(() => {
     if (activeDietId) loadMealsForDiet(activeDietId);
