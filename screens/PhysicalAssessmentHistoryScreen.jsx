@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Modal, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Modal, Switch, Platform } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { supabase } from './supabaseClient';
@@ -19,6 +19,57 @@ const CLASS_META = {
   padrao: { label: 'Padrão', color: '#22c55e' },
   acima: { label: 'Acima', color: '#f97316' },
 };
+
+// Renders `html` (a full <html>...</html> document string) into a hidden
+// offscreen iframe and rasterizes it into a PDF Blob via html2pdf.js —
+// avoids window.print()/the browser print dialog entirely.
+async function renderHtmlToPdfBlob(html, fileName) {
+  const { default: html2pdf } = await import('html2pdf.js');
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed; top:-10000px; left:-10000px; width:800px; height:1px; border:0;';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const blob = await html2pdf()
+      .from(iframe.contentDocument.body)
+      .set({
+        filename: fileName,
+        margin: 10,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] },
+      })
+      .outputPdf('blob');
+    return blob;
+  } finally {
+    document.body.removeChild(iframe);
+  }
+}
+
+// Delivers a PDF Blob to the user without ever opening the browser's
+// print dialog: Web Share API (lets them save to Files or send via
+// WhatsApp) when available, otherwise a direct file download.
+async function deliverPdfBlobWeb(blob, fileName) {
+  const file = new File([blob], fileName, { type: 'application/pdf' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    await navigator.share({ files: [file], title: fileName });
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 function withTimeout(promise, ms, timeoutMessage) {
   return Promise.race([
@@ -272,6 +323,7 @@ function buildReportHtml(studentName, assessments, branding) {
   const sumFolds = currentDobras?.skinfold_values?.values ? currentDobras.skinfold_values.values.reduce((a, b) => a + b, 0) : null;
 
   const bioRows = [
+    { label: 'IMC', value: latest.bmi, unit: '' },
     { label: 'Massa Magra', value: latest.skeletal_muscle_kg, unit: 'kg' },
     { label: 'Massa Gorda', value: latest.fat_mass_kg, unit: 'kg' },
     { label: '% Gordura', value: latest.body_fat_pct, unit: '%' },
@@ -284,8 +336,8 @@ function buildReportHtml(studentName, assessments, branding) {
     { label: 'Taxa Metabólica Basal', value: latest.bmr_kcal, unit: ' kcal' },
   ].filter((r) => r.value != null);
 
-  const bioimpedanciaBlock = latest.mode === 'bioimpedancia' && bioRows.length > 0 ? `
-    <h2>Dados de Bioimpedância</h2>
+  const bioimpedanciaBlock = bioRows.length > 0 ? `
+    <h2>${latest.mode === 'bioimpedancia' ? 'Dados de Bioimpedância' : 'Composição Corporal Calculada'}</h2>
     <div class="bio-box">
       ${bioRows.map((r) => `
         <div class="bio-item">
@@ -458,7 +510,7 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
     (async () => {
       const { data } = await supabase
         .from('physical_assessments')
-        .select('id, assessment_date, mode, weight_kg, body_fat_pct, skeletal_muscle_kg, fat_mass_kg, body_water_pct, body_water_kg, protein_kg, inorganic_salt_kg, subcutaneous_fat_pct, visceral_fat, bmr_kcal, protocol, perimeters, skinfold_values, segmental_analysis, report_url, notes, created_at')
+        .select('id, assessment_date, mode, weight_kg, height_cm, bmi, body_fat_pct, skeletal_muscle_kg, fat_mass_kg, body_water_pct, body_water_kg, protein_kg, inorganic_salt_kg, subcutaneous_fat_pct, visceral_fat, bmr_kcal, protocol, perimeters, skinfold_values, segmental_analysis, report_url, notes, created_at')
         .eq('student_id', studentId)
         .order('created_at', { ascending: false });
       setAssessments(data || []);
@@ -478,16 +530,27 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
         : assessments.map((a, i) => (i === 0 ? { ...a, report_url: null } : a));
 
       const html = buildReportHtml(studentName, assessmentsForPdf, brandingToUse);
-      const { uri } = await withTimeout(
-        Print.printToFileAsync({ html }),
-        25000,
-        'O PDF demorou demais pra gerar. Se você anexou uma foto de laudo, tente sem anexo — ou tente novamente com internet mais estável.'
-      );
-      const canShare = await Sharing.isAvailableAsync();
-      if (canShare) {
-        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Compartilhar relatório' });
+      const fileName = `Avaliacao_Fisica_TcFit_${studentName.replace(/\s+/g, '_')}.pdf`;
+
+      if (Platform.OS === 'web') {
+        const blob = await withTimeout(
+          renderHtmlToPdfBlob(html, fileName),
+          25000,
+          'O PDF demorou demais pra gerar. Se você anexou uma foto de laudo, tente sem anexo — ou tente novamente com internet mais estável.'
+        );
+        await deliverPdfBlobWeb(blob, fileName);
       } else {
-        showAlert('PDF gerado', 'O compartilhamento não está disponível nesse dispositivo, mas o PDF foi criado.');
+        const { uri } = await withTimeout(
+          Print.printToFileAsync({ html }),
+          25000,
+          'O PDF demorou demais pra gerar. Se você anexou uma foto de laudo, tente sem anexo — ou tente novamente com internet mais estável.'
+        );
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Compartilhar relatório' });
+        } else {
+          showAlert('PDF gerado', 'O compartilhamento não está disponível nesse dispositivo, mas o PDF foi criado.');
+        }
       }
     } catch (e) {
       showAlert('Erro ao gerar PDF', e.message);
@@ -532,6 +595,14 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
                   <Delta current={latest.weight_kg} previous={previous.weight_kg} unit="kg" />
                 </View>
 
+                {latest.bmi != null && (
+                  <View style={styles.comparisonRow}>
+                    <Text style={styles.comparisonLabel}>IMC</Text>
+                    <Text style={styles.comparisonValue}>{latest.bmi}</Text>
+                    <Delta current={latest.bmi} previous={previous.bmi} unit="" invertColor />
+                  </View>
+                )}
+
                 {latest.body_fat_pct != null && (
                   <View style={styles.comparisonRow}>
                     <Text style={styles.comparisonLabel}>% Gordura</Text>
@@ -572,6 +643,7 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
                 </View>
                 <View style={styles.assessmentStatsRow}>
                   <Text style={styles.assessmentStat}>{a.weight_kg}kg</Text>
+                  {a.bmi != null && <Text style={styles.assessmentStat}>IMC {a.bmi}</Text>}
                   {a.body_fat_pct != null && <Text style={styles.assessmentStat}>{a.body_fat_pct}% gordura</Text>}
                   {a.skeletal_muscle_kg != null && <Text style={styles.assessmentStat}>{a.skeletal_muscle_kg}kg magra</Text>}
                   {a.bmr_kcal != null && <Text style={styles.assessmentStat}>{a.bmr_kcal}kcal TMB</Text>}

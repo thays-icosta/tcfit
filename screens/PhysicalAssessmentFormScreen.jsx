@@ -7,6 +7,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
+import { HeaderBack } from './Header';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -28,6 +29,18 @@ function calculatePollock7(sex, age, sum) {
     ? 1.112 - 0.00043499 * sum + 0.00000055 * sum * sum - 0.00028826 * age
     : 1.097 - 0.00046971 * sum + 0.00000056 * sum * sum - 0.00012828 * age;
   return (495 / bd) - 450;
+}
+
+function calculateImc(weightKg, heightCm) {
+  const heightM = heightCm / 100;
+  return weightKg / (heightM * heightM);
+}
+
+// Mifflin-St Jeor BMR (kcal/day) from weight, height, age and sex.
+function calculateBmr(sex, weightKg, heightCm, age) {
+  return sex === 'M'
+    ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
+    : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
 }
 
 const POLLOCK7_LABELS = ['Peitoral (mm)', 'Axilar Média (mm)', 'Tríceps (mm)', 'Subescapular (mm)', 'Abdominal (mm)', 'Supra-ilíaca (mm)', 'Coxa (mm)'];
@@ -94,6 +107,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
   const [protocol, setProtocol] = useState('pollock3');
   const [sex, setSex] = useState('M');
   const [age, setAge] = useState('');
+  const [height, setHeight] = useState('');
   const [skinfold1, setSkinfold1] = useState('');
   const [skinfold2, setSkinfold2] = useState('');
   const [skinfold3, setSkinfold3] = useState('');
@@ -121,13 +135,16 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
   const allFilled = foldValues.every((v) => v && v.trim());
   const sum = allFilled ? foldValues.reduce((acc, v) => acc + Number(v), 0) : null;
 
-  const computed = (sum && age && weight)
+  const computed = (sum && age && weight && height)
     ? (() => {
         const bodyFatPct = is7 ? calculatePollock7(sex, Number(age), sum) : calculatePollock3(sex, Number(age), sum);
         const weightNum = Number(weight);
+        const heightNum = Number(height);
         const fatMass = weightNum * (bodyFatPct / 100);
         const leanMass = weightNum - fatMass;
-        return { bodyFatPct, fatMass, leanMass };
+        const imc = calculateImc(weightNum, heightNum);
+        const bmrCalc = calculateBmr(sex, weightNum, heightNum, Number(age));
+        return { bodyFatPct, fatMass, leanMass, imc, bmrCalc };
       })()
     : null;
 
@@ -342,8 +359,8 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
   };
 
   const handleSaveDobras = async () => {
-    if (!weight.trim() || !age.trim() || !computed) {
-      showAlert('Ops', `Preenche peso, idade e ${is7 ? 'as sete' : 'as três'} dobras pra calcular.`);
+    if (!weight.trim() || !height.trim() || !age.trim() || !computed) {
+      showAlert('Ops', `Preenche peso, altura, idade e ${is7 ? 'as sete' : 'as três'} dobras pra calcular.`);
       return;
     }
     setSaving(true);
@@ -369,9 +386,12 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
       personal_id: personalId,
       mode: 'dobras',
       weight_kg: Number(weight),
+      height_cm: Number(height),
       body_fat_pct: Number(computed.bodyFatPct.toFixed(1)),
       skeletal_muscle_kg: Number(computed.leanMass.toFixed(1)),
       fat_mass_kg: Number(computed.fatMass.toFixed(1)),
+      bmi: Number(computed.imc.toFixed(1)),
+      bmr_kcal: Math.round(computed.bmrCalc),
       protocol,
       age: Number(age),
       sex,
@@ -419,12 +439,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
   return (
     <>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-        <Text style={styles.studentLabel}>{studentName}</Text>
-      </View>
+      <HeaderBack title={studentName} onBack={onClose} />
 
       <Text style={styles.title}>Nova Avaliação Física</Text>
 
@@ -575,6 +590,9 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
           <Text style={styles.label}>Peso (kg) *</Text>
           <TextInput style={styles.input} placeholder="ex: 72.5" placeholderTextColor="#525252" keyboardType="decimal-pad" value={weight} onChangeText={setWeight} />
 
+          <Text style={styles.label}>Altura (cm) *</Text>
+          <TextInput style={styles.input} placeholder="ex: 175" placeholderTextColor="#525252" keyboardType="decimal-pad" value={height} onChangeText={setHeight} />
+
           <Text style={styles.label}>Sexo biológico *</Text>
           <View style={styles.sexRow}>
             <TouchableOpacity style={[styles.sexButton, sex === 'M' && styles.sexButtonActive]} onPress={() => setSex('M')}>
@@ -639,6 +657,10 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
               <Text style={styles.resultTitle}>Resultado calculado ({is7 ? 'Pollock 7' : 'Pollock 3'})</Text>
               <View style={styles.resultRow}>
                 <View style={styles.resultItem}>
+                  <Text style={styles.resultValue}>{computed.imc.toFixed(1)}</Text>
+                  <Text style={styles.resultLabel}>IMC</Text>
+                </View>
+                <View style={styles.resultItem}>
                   <Text style={styles.resultValue}>{computed.bodyFatPct.toFixed(1)}%</Text>
                   <Text style={styles.resultLabel}>Gordura</Text>
                 </View>
@@ -649,6 +671,10 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
                 <View style={styles.resultItem}>
                   <Text style={styles.resultValue}>{computed.leanMass.toFixed(1)}kg</Text>
                   <Text style={styles.resultLabel}>Massa magra</Text>
+                </View>
+                <View style={styles.resultItem}>
+                  <Text style={styles.resultValue}>{Math.round(computed.bmrCalc)}</Text>
+                  <Text style={styles.resultLabel}>TMB (kcal)</Text>
                 </View>
               </View>
             </View>
@@ -680,9 +706,6 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  topBar: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  studentLabel: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   title: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginBottom: 14 },
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   modeButton: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
@@ -729,8 +752,8 @@ const styles = StyleSheet.create({
   reportRemoveButtonText: { color: '#ef4444', fontSize: 11, fontWeight: '700' },
   resultBox: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#f97316', borderRadius: 10, padding: 12, marginTop: 16 },
   resultTitle: { color: '#f97316', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
-  resultRow: { flexDirection: 'row', justifyContent: 'space-around' },
-  resultItem: { alignItems: 'center' },
+  resultRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', rowGap: 12 },
+  resultItem: { alignItems: 'center', width: '33%' },
   resultValue: { color: '#f5f5f5', fontSize: 18, fontWeight: '800' },
   resultLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 2 },
   saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 20 },
