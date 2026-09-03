@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, Linking, Pressable, Platform } from 'react-native';
 import { supabase } from './supabaseClient';
+import { ACCENT, TRANSITION } from './vitrineStyles';
 
 function PartnerLogo({ partner }) {
   const url = partner.affiliate_link || null;
@@ -13,7 +14,7 @@ function PartnerLogo({ partner }) {
 
   return (
     <Pressable
-      style={styles.logoWrap}
+      style={({ hovered }) => [styles.logoWrap, hovered && styles.logoWrapHover]}
       onPress={handlePress}
       href={Platform.OS === 'web' && url ? url : undefined}
       hrefAttrs={Platform.OS === 'web' ? { target: '_blank', rel: 'noopener noreferrer' } : undefined}
@@ -79,9 +80,18 @@ const styles = StyleSheet.create({
     height: 70,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: 'transparent',
+    backgroundColor: '#18181B',
+    borderWidth: 1,
+    borderColor: '#27272A',
+    borderRadius: 12,
+    opacity: 0.85,
+    ...TRANSITION,
+  },
+  logoWrapHover: {
+    borderColor: ACCENT,
+    opacity: 1,
   },
   logoImage: { width: '100%', height: '100%' },
 });
