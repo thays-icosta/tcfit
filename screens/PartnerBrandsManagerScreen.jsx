@@ -170,6 +170,7 @@ export default function PartnerBrandsManagerScreen({ personalId, onClose }) {
           <TextInput style={styles.input} placeholder="ex: THAYS10" placeholderTextColor="#525252" value={couponCode} onChangeText={setCouponCode} autoCapitalize="characters" />
 
           <Text style={styles.label}>Link de Afiliado / Redirecionamento</Text>
+          <Text style={[styles.helperText, { marginBottom: 6 }]}>Pode colar o link já com cupom ou UTM anexado (ex: https://loja.com?cupom=THAYS10). Abre em nova aba no navegador.</Text>
           <TextInput style={styles.input} placeholder="https://..." placeholderTextColor="#525252" value={affiliateLink} onChangeText={setAffiliateLink} autoCapitalize="none" />
 
           <View style={styles.switchRow}>

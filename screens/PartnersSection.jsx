@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Linking, Pressable } from 'react-native';
+import { View, Text, Image, StyleSheet, Linking, Pressable, Platform } from 'react-native';
 import { supabase } from './supabaseClient';
 
 function PartnerLogo({ partner }) {
+  const url = partner.affiliate_link || null;
+
   const handlePress = () => {
-    if (partner.affiliate_link) {
-      Linking.openURL(partner.affiliate_link).catch(() => {});
+    if (Platform.OS !== 'web' && url) {
+      Linking.openURL(url).catch(() => {});
     }
   };
 
   return (
-    <Pressable style={styles.logoWrap} onPress={handlePress}>
+    <Pressable
+      style={styles.logoWrap}
+      onPress={handlePress}
+      href={Platform.OS === 'web' && url ? url : undefined}
+      hrefAttrs={Platform.OS === 'web' ? { target: '_blank', rel: 'noopener noreferrer' } : undefined}
+    >
       <Image source={{ uri: partner.logo_url }} style={styles.logoImage} resizeMode="contain" />
     </Pressable>
   );
@@ -66,7 +73,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 12,
   },
-  logoRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 20 },
-  logoWrap: { height: 80, minWidth: 100, alignItems: 'center', justifyContent: 'center' },
-  logoImage: { width: 170, height: 80 },
+  logoRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 16 },
+  logoWrap: {
+    width: 140,
+    height: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: 'transparent',
+  },
+  logoImage: { width: '100%', height: '100%' },
 });

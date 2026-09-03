@@ -41,6 +41,20 @@ function uuidv4() {
   });
 }
 
+const TITLE_CASE_STOPWORDS = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'a', 'o', 'as', 'os', 'com', 'para', 'por', 'no', 'na', 'nos', 'nas', 'um', 'uma']);
+
+function toTitleCase(text) {
+  return text
+    .split(' ')
+    .map((word, i) => {
+      if (!word) return word;
+      const lower = word.toLowerCase();
+      if (i !== 0 && TITLE_CASE_STOPWORDS.has(lower)) return lower;
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join(' ');
+}
+
 export default function ProductsManagerScreen({ personalId, onClose }) {
   const [products, setProducts] = useState([]);
   const [recipes, setRecipes] = useState([]);
@@ -143,8 +157,15 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setCategory(null);
     setLevel(null);
     setGoal(null);
-    setMaterialType(null);
+    setMaterialType('ebook_receita');
     setNutritionTags([]);
+  };
+
+  const handleSelectType = (value) => {
+    setType(value);
+    if (value === 'ebook_receitas' && !materialType) {
+      setMaterialType('ebook_receita');
+    }
   };
 
   const toggleNutritionTag = (value) => {
@@ -215,7 +236,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setCategory(product.category || null);
     setLevel(product.level || null);
     setGoal(product.goal || null);
-    setMaterialType(product.material_type || null);
+    setMaterialType(product.material_type || (product.type === 'ebook_receitas' ? 'ebook_receita' : null));
     setNutritionTags(product.nutrition_tags || []);
     setShowForm(true);
 
@@ -535,7 +556,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           <Text style={styles.label}>Tipo</Text>
           <View style={styles.typeRow}>
             {TYPES.map((t) => (
-              <TouchableOpacity key={t.value} style={[styles.typeChip, type === t.value && styles.typeChipActive]} onPress={() => setType(t.value)}>
+              <TouchableOpacity key={t.value} style={[styles.typeChip, type === t.value && styles.typeChipActive]} onPress={() => handleSelectType(t.value)}>
                 <Ionicons name={t.icon} size={14} color={type === t.value ? '#0a0a0a' : '#a3a3a3'} />
                 <Text style={[styles.typeChipText, type === t.value && styles.typeChipTextActive]}>{t.label}</Text>
               </TouchableOpacity>
@@ -543,7 +564,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           </View>
 
           <Text style={styles.label}>Título do Produto</Text>
-          <TextInput style={styles.input} placeholder="ex: Guia de Receitas Fitness" placeholderTextColor="#525252" value={title} onChangeText={setTitle} />
+          <TextInput style={styles.input} placeholder="ex: Guia de Receitas Fitness" placeholderTextColor="#525252" value={title} onChangeText={(text) => setTitle(toTitleCase(text))} />
 
           <Text style={styles.label}>Descrição / Benefícios</Text>
           <TextInput style={styles.textArea} multiline placeholder="O que o cliente recebe ao comprar" placeholderTextColor="#525252" value={description} onChangeText={setDescription} />
@@ -916,12 +937,12 @@ const styles = StyleSheet.create({
   grantLink: { color: '#f97316', fontSize: 12, fontWeight: '700' },
   revokeLink: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 14 },
-  coverPicker: { width: '100%', aspectRatio: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 6, overflow: 'hidden' },
+  coverPicker: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 6, overflow: 'hidden' },
   coverPreview: { width: '100%', height: '100%' },
   coverPickerText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
   typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   typeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  typeChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  typeChipActive: { backgroundColor: '#E05A17', borderColor: '#E05A17' },
   typeChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
   typeChipTextActive: { color: '#0a0a0a' },
   input: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13 },
@@ -931,7 +952,7 @@ const styles = StyleSheet.create({
   priceInput: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13 },
   deliveryTypeRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   deliveryTypeChip: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
-  deliveryTypeChipActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
+  deliveryTypeChipActive: { backgroundColor: '#E05A17', borderColor: '#E05A17' },
   deliveryTypeChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', textAlign: 'center' },
   deliveryTypeChipTextActive: { color: '#0a0a0a' },
   filePickerButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1, borderColor: '#f97316', borderStyle: 'dashed', borderRadius: 8, paddingVertical: 12, marginBottom: 8 },
@@ -941,7 +962,7 @@ const styles = StyleSheet.create({
   helperText: { color: '#525252', fontSize: 11 },
   accessLevelFormRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   accessLevelFormChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  accessLevelFormChipActive: { backgroundColor: '#a855f7', borderColor: '#a855f7' },
+  accessLevelFormChipActive: { backgroundColor: '#E05A17', borderColor: '#E05A17' },
   accessLevelFormChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
   accessLevelFormChipTextActive: { color: '#0a0a0a' },
   recipeChecklist: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 8 },

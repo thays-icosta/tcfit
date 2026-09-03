@@ -76,8 +76,9 @@ export const NUTRITION_TAGS = [
 export const WORKOUT_TAGS = [
   { value: 'mulheres', label: 'Mulheres', icon: 'woman-outline', badge: 'PARA MULHERES' },
   { value: 'homens', label: 'Homens', icon: 'man-outline', badge: 'PARA HOMENS' },
-  { value: 'academia', label: 'Academia', icon: 'barbell-outline', badge: 'NA ACADEMIA' },
-  { value: 'em_casa', label: 'Em Casa', icon: 'home-outline', badge: 'EM CASA' },
+  { value: 'academia', label: 'Academia', icon: 'barbell-outline', badge: 'ACADEMIA' },
+  { value: 'em_casa', label: 'Treino em Casa', icon: 'home-outline', badge: 'TREINO EM CASA' },
+  { value: 'corrida_cardio', label: 'Corrida & Cardios', icon: 'walk-outline', badge: 'CORRIDA & CARDIOS' },
   { value: 'planilhas', label: 'Planilhas', icon: 'document-text-outline', badge: 'EM PLANILHA' },
 ];
 
