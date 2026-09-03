@@ -18,8 +18,34 @@ import UpgradeLockModal from './UpgradeLockModal';
 import PhysicalAssessmentHistoryScreen from './PhysicalAssessmentHistoryScreen';
 import FoodSubstituteScreen from './FoodSubstituteScreen';
 import { showAlert } from './alertUtils';
-import { hasAccessByLevel, HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
-import { HeaderWelcome } from './Header';
+import { hasAccessByLevel, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
+import { HeaderWelcome, HeaderBack } from './Header';
+
+const ACCENT = '#E05A17';
+
+const PROGRAM_HUB_GROUPS = [
+  { key: 'academia', title: 'TREINOS NA ACADEMIA', categories: ['planilha_academia', 'treino_3d', 'treino_extra'], icon: 'barbell-outline' },
+  { key: 'corrida_cardio', title: 'CORRIDA & CARDIO', categories: ['modulo_corrida'], icon: 'walk-outline' },
+  { key: 'em_casa', title: 'TREINOS EM CASA', categories: ['planilha_casa'], icon: 'home-outline' },
+];
+
+const NUTRITION_LIBRARY_CATEGORIES = ['dieta_ebook'];
+
+function buildHubGroups(products) {
+  return PROGRAM_HUB_GROUPS.map((group) => {
+    const items = products.filter((p) => group.categories.includes(p.category));
+    if (items.length === 0) return null;
+    const cover = items.find((p) => p.cover_image_url)?.cover_image_url || null;
+    const badgeSet = new Set();
+    items.forEach((p) => {
+      const lvl = PROGRAM_LEVELS.find((l) => l.value === p.level)?.label;
+      const goal = PROGRAM_GOALS.find((g) => g.value === p.goal)?.label;
+      if (lvl) badgeSet.add(lvl);
+      if (goal) badgeSet.add(goal);
+    });
+    return { ...group, items, cover, badges: Array.from(badgeSet) };
+  }).filter(Boolean);
+}
 
 const MEAL_OPTIONS = [
   { value: 'cafe', label: 'Café da manhã' },
@@ -88,6 +114,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const [categorizedProducts, setCategorizedProducts] = useState([]);
   const [unlockedProductIds, setUnlockedProductIds] = useState(new Set());
   const [openProgram, setOpenProgram] = useState(null);
+  const [openCategoryGroup, setOpenCategoryGroup] = useState(null);
   const [showAnamnesePrompt, setShowAnamnesePrompt] = useState(false);
   const [showEvolution, setShowEvolution] = useState(false);
   const [showEvolutionLock, setShowEvolutionLock] = useState(false);
@@ -460,6 +487,58 @@ export default function AlunoHomeScreen({ user, onLogout }) {
         unlocked={unlockedProductIds.has(openProgram.id)}
         onClose={() => setOpenProgram(null)}
       />
+    );
+  }
+
+  if (openCategoryGroup) {
+    const items = categorizedProducts.filter((p) => openCategoryGroup.categories.includes(p.category));
+    return (
+      <View style={styles.subContainer}>
+        <HeaderBack title={openCategoryGroup.title} onBack={() => setOpenCategoryGroup(null)} style={{ paddingHorizontal: 16 }} />
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+          {items.length === 0 ? (
+            <Text style={styles.emptyText}>Nenhum conteúdo nessa categoria ainda.</Text>
+          ) : (
+            items.map((p) => {
+              const unlocked = unlockedProductIds.has(p.id);
+              const lvl = PROGRAM_LEVELS.find((l) => l.value === p.level)?.label;
+              const goal = PROGRAM_GOALS.find((g) => g.value === p.goal)?.label;
+              return (
+                <TouchableOpacity
+                  key={p.id}
+                  style={styles.categoryListCard}
+                  onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setActiveTab('loja'))}
+                >
+                  <View style={styles.categoryListCoverWrap}>
+                    {p.cover_image_url ? (
+                      <Image source={{ uri: p.cover_image_url }} style={styles.categoryListCoverImage} resizeMode="cover" />
+                    ) : (
+                      <View style={styles.categoryListCoverPlaceholder}>
+                        <Ionicons name={p.type === 'treino_template' ? 'barbell-outline' : 'book-outline'} size={20} color={ACCENT} />
+                      </View>
+                    )}
+                    {!unlocked && (
+                      <View style={styles.categoryLockOverlay}>
+                        <Ionicons name="lock-closed" size={14} color="#f5f5f5" />
+                      </View>
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.categoryListName} numberOfLines={2}>{p.name}</Text>
+                    {(lvl || goal) && (
+                      <View style={styles.hubBadgeRow}>
+                        {lvl ? <View style={styles.hubBadgeChip}><Text style={styles.hubBadgeChipText}>{lvl}</Text></View> : null}
+                        {goal ? <View style={styles.hubBadgeChip}><Text style={styles.hubBadgeChipText}>{goal}</Text></View> : null}
+                      </View>
+                    )}
+                  </View>
+                  <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </ScrollView>
+      </View>
     );
   }
 
@@ -873,13 +952,15 @@ export default function AlunoHomeScreen({ user, onLogout }) {
     );
   }
 
+  const hubGroups = buildHubGroups(categorizedProducts);
+  const nutritionItems = categorizedProducts.filter((p) => NUTRITION_LIBRARY_CATEGORIES.includes(p.category) || p.type === 'ebook_receitas');
+
   return (
     <View style={{ flex: 1 }}>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <HeaderWelcome
         avatarUrl={ownAvatarUrl}
         initial={user?.name?.charAt(0).toUpperCase() || '?'}
-        badge="ALUNO"
         greeting={`Olá, ${user?.name}!`}
         onAvatarPress={() => setActiveTab('perfil')}
         rightSlot={
@@ -895,10 +976,31 @@ export default function AlunoHomeScreen({ user, onLogout }) {
       />
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color={ACCENT} style={{ marginTop: 20 }} />
       ) : (
         <>
-          {nextDuePayment ? (
+          <View style={styles.topMetaRow}>
+            <View style={[styles.financePill, isOverdue && styles.financePillOverdue]}>
+              <Ionicons name={isOverdue ? 'alert-circle' : 'checkmark-circle'} size={13} color={isOverdue ? '#ef4444' : '#22c55e'} />
+              <Text style={[styles.financePillText, isOverdue && styles.financePillTextOverdue]} numberOfLines={1}>
+                {isOverdue ? 'Mensalidade vencida' : 'Financeiro em dia'}
+              </Text>
+            </View>
+            {personalId && (
+              <TouchableOpacity style={styles.personalPill} onPress={() => handleOpenChatFor('')}>
+                {personalAvatarUrl ? (
+                  <Image source={{ uri: personalAvatarUrl }} style={styles.personalPillAvatar} />
+                ) : (
+                  <View style={styles.personalPillAvatarPlaceholder}>
+                    <Text style={styles.personalPillAvatarLetter}>{personalName?.charAt(0).toUpperCase() || '?'}</Text>
+                  </View>
+                )}
+                <Text style={styles.personalPillName} numberOfLines={1}>{personalName || 'Seu Personal'}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {nextDuePayment && (
             <View style={[styles.financeBanner, isOverdue && styles.financeBannerOverdue]}>
               <View style={styles.financeBannerRow}>
                 <Ionicons name={isOverdue ? 'alert-circle-outline' : 'cash-outline'} size={16} color={isOverdue ? '#ef4444' : '#eab308'} />
@@ -920,159 +1022,159 @@ export default function AlunoHomeScreen({ user, onLogout }) {
                 </TouchableOpacity>
               </View>
             </View>
-          ) : (
-            <View style={[styles.financeBanner, styles.financeBannerOk]}>
-              <View style={styles.financeBannerRow}>
-                <Ionicons name="checkmark-circle-outline" size={16} color="#22c55e" />
-                <Text style={[styles.financeBannerText, { color: '#22c55e' }]}>Financeiro em dia</Text>
-              </View>
-            </View>
           )}
 
           {personalId && (
-            <View style={styles.personalCard}>
-              <TouchableOpacity style={styles.personalCardTop} onPress={() => setActiveTab('perfil')}>
-                {personalAvatarUrl ? (
-                  <Image source={{ uri: personalAvatarUrl }} style={styles.personalCardAvatar} />
-                ) : (
-                  <View style={styles.personalCardAvatarPlaceholder}>
-                    <Text style={styles.personalCardAvatarLetter}>{personalName?.charAt(0).toUpperCase() || '?'}</Text>
-                  </View>
-                )}
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.personalCardLabel}>Seu Personal</Text>
-                  <Text style={styles.personalCardName}>{personalName || 'Sem personal vinculado'}</Text>
-                </View>
-              </TouchableOpacity>
-              <View style={styles.personalCardActions}>
-                <TouchableOpacity style={styles.personalCardWhatsapp} onPress={handleOpenWhatsApp}>
-                  <Ionicons name="logo-whatsapp" size={16} color="#0a0a0a" />
-                  <Text style={styles.personalCardWhatsappText}>Falar no WhatsApp</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.personalCardChatIcon} onPress={() => handleOpenChatFor('')}>
-                  <Ionicons name="chatbubble-ellipses-outline" size={18} color="#a3a3a3" />
-                </TouchableOpacity>
-              </View>
-            </View>
+            <TouchableOpacity style={styles.whatsappStrip} onPress={handleOpenWhatsApp}>
+              <Ionicons name="logo-whatsapp" size={16} color="#0a0a0a" />
+              <Text style={styles.whatsappStripText}>Falar com {personalName || 'seu Personal'} no WhatsApp</Text>
+            </TouchableOpacity>
           )}
 
-          <View style={styles.gridWrap}>
-            <View style={styles.gridRow}>
-              <TouchableOpacity style={styles.gridCard} onPress={() => setActiveTab('treinos')}>
-                <Ionicons name="barbell-outline" size={26} color="#f97316" />
-                <Text style={styles.gridCardTitle}>Treinos</Text>
-                <Text style={styles.gridCardSubtitle}>{workouts.length} ficha{workouts.length !== 1 ? 's' : ''} · {weekDaysCount}/7 dias essa semana</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.gridCard} onPress={() => setMode('dieta')}>
-                <Ionicons name="restaurant-outline" size={26} color="#a3a3a3" />
-                <Text style={styles.gridCardTitle}>Dieta e Macros</Text>
-                <Text style={styles.gridCardSubtitle}>{diets.length} plano{diets.length !== 1 ? 's' : ''} · diário</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={styles.gridCardWide}
-              onPress={() => (myAccessLevel === 'consultoria_vip' ? setShowEvolution(true) : setShowEvolutionLock(true))}
-            >
-              <Ionicons name="trending-up-outline" size={24} color="#f97316" />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.gridCardTitle}>Evolução Física</Text>
-                <Text style={styles.gridCardSubtitle}>Fotos de progresso, peso e avaliações</Text>
+          <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>ACESSO RÁPIDO</Text>
+          <View style={styles.quickAccessRow}>
+            <TouchableOpacity style={styles.quickAccessCard} onPress={() => setActiveTab('treinos')}>
+              <View style={styles.quickAccessIconCircle}>
+                <Ionicons name="barbell-outline" size={22} color={ACCENT} />
               </View>
-              {myAccessLevel === 'consultoria_vip' ? (
-                <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
-              ) : (
-                <Ionicons name="lock-closed" size={16} color="#f97316" />
-              )}
+              <Text style={styles.quickAccessTitle}>Seu Treino de Hoje</Text>
+              <Text style={styles.quickAccessSubtitle}>
+                {workouts.length} ficha{workouts.length !== 1 ? 's' : ''} · {weekDaysCount}/7 dias essa semana
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.quickAccessCard} onPress={() => setMode('dieta')}>
+              <View style={styles.quickAccessIconCircle}>
+                <Ionicons name="restaurant-outline" size={22} color={ACCENT} />
+              </View>
+              <Text style={styles.quickAccessTitle}>Seu Plano Alimentar</Text>
+              <Text style={styles.quickAccessSubtitle}>
+                {diets.length} plano{diets.length !== 1 ? 's' : ''} · {Math.round(consumedTotals.kcal)} kcal hoje
+              </Text>
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>E-books e Conteúdos Exclusivos</Text>
-          <TouchableOpacity style={styles.ebookCard} onPress={() => setShowRecipes(true)}>
-            <View style={styles.ebookCardThumb}>
-              <Ionicons name="restaurant-outline" size={26} color="#f97316" />
-            </View>
+          <TouchableOpacity
+            style={styles.evolutionRow}
+            onPress={() => (myAccessLevel === 'consultoria_vip' ? setShowEvolution(true) : setShowEvolutionLock(true))}
+          >
+            <Ionicons name="trending-up-outline" size={20} color={ACCENT} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.ebookCardTitle}>Guia de Receitas Fitness</Text>
-              <Text style={styles.ebookCardSubtitle}>Receitas prontas com macros calculados</Text>
-              <Text style={styles.ebookCardCta}>Visualizar Receitas →</Text>
+              <Text style={styles.evolutionRowTitle}>Evolução Física</Text>
+              <Text style={styles.evolutionRowSubtitle}>Fotos de progresso, peso e avaliações</Text>
             </View>
+            {myAccessLevel === 'consultoria_vip' ? (
+              <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+            ) : (
+              <Ionicons name="lock-closed" size={16} color={ACCENT} />
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.productsBanner} onPress={() => setMode('downloads')}>
-            <Text style={styles.productsBannerText}>📥 Downloads</Text>
-          </TouchableOpacity>
-
-          {HOME_CATEGORIES.map((cat) => {
-            const items = categorizedProducts.filter((p) => p.category === cat.value);
-            if (items.length === 0) return null;
-            return (
-              <View key={cat.value} style={styles.partnersSection}>
-                <Text style={styles.sectionTitle}>{cat.label}</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-                  {items.map((p) => {
-                    const unlocked = unlockedProductIds.has(p.id);
-                    return (
-                      <TouchableOpacity
-                        key={p.id}
-                        style={styles.categoryCard}
-                        onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setActiveTab('loja'))}
-                      >
-                        <View style={styles.categoryCoverWrap}>
-                          {p.cover_image_url ? (
-                            <Image source={{ uri: p.cover_image_url }} style={styles.categoryCoverImage} resizeMode="cover" />
-                          ) : (
-                            <View style={styles.categoryCoverPlaceholder}>
-                              <Ionicons name={p.type === 'treino_template' ? 'barbell-outline' : 'book-outline'} size={22} color="#f97316" />
-                            </View>
-                          )}
-                          {!unlocked && (
-                            <View style={styles.categoryLockOverlay}>
-                              <Ionicons name="lock-closed" size={16} color="#f5f5f5" />
-                            </View>
-                          )}
+          {hubGroups.length > 0 && (
+            <>
+              <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>HUB DE PROGRAMAS</Text>
+              <View style={styles.hubList}>
+                {hubGroups.map((group) => (
+                  <TouchableOpacity key={group.key} style={styles.hubCard} onPress={() => setOpenCategoryGroup(group)}>
+                    <View style={styles.hubCoverWrap}>
+                      {group.cover ? (
+                        <Image source={{ uri: group.cover }} style={styles.hubCoverImage} resizeMode="cover" />
+                      ) : (
+                        <View style={styles.hubCoverPlaceholder}>
+                          <Ionicons name={group.icon} size={28} color={ACCENT} />
                         </View>
-                        <Text style={styles.categoryCardName} numberOfLines={2}>{p.name}</Text>
-                        {(p.level || p.goal) && (
-                          <Text style={styles.categoryCardMeta} numberOfLines={1}>
-                            {[PROGRAM_LEVELS.find((l) => l.value === p.level)?.label, PROGRAM_GOALS.find((g) => g.value === p.goal)?.label].filter(Boolean).join(' · ')}
-                          </Text>
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
+                      )}
+                    </View>
+                    <View style={styles.hubBody}>
+                      <Text style={styles.hubTitle}>{group.title}</Text>
+                      {group.badges.length > 0 && (
+                        <View style={styles.hubBadgeRow}>
+                          {group.badges.map((b) => (
+                            <View key={b} style={styles.hubBadgeChip}>
+                              <Text style={styles.hubBadgeChipText}>{b}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </View>
-            );
-          })}
+            </>
+          )}
+
+          <View style={styles.nutritionHeaderRow}>
+            <Text style={styles.sectionTitle}>BIBLIOTECA DE NUTRIÇÃO</Text>
+            <TouchableOpacity onPress={() => setShowRecipes(true)}>
+              <Text style={styles.nutritionHeaderLink}>Ver Receitas</Text>
+            </TouchableOpacity>
+          </View>
+          {nutritionItems.length === 0 ? (
+            <Text style={styles.emptyText}>Nenhum e-book ou guia disponível ainda.</Text>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+              {nutritionItems.map((p) => {
+                const unlocked = unlockedProductIds.has(p.id);
+                return (
+                  <TouchableOpacity
+                    key={p.id}
+                    style={styles.nutritionCard}
+                    onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setActiveTab('loja'))}
+                  >
+                    <View style={styles.nutritionCoverWrap}>
+                      {p.cover_image_url ? (
+                        <Image source={{ uri: p.cover_image_url }} style={styles.nutritionCoverImage} resizeMode="cover" />
+                      ) : (
+                        <View style={styles.nutritionCoverPlaceholder}>
+                          <Ionicons name="book-outline" size={22} color={ACCENT} />
+                        </View>
+                      )}
+                      {!unlocked && (
+                        <View style={styles.categoryLockOverlay}>
+                          <Ionicons name="lock-closed" size={14} color="#f5f5f5" />
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.nutritionCardName} numberOfLines={2}>{p.name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
+
+          <TouchableOpacity style={styles.downloadsStrip} onPress={() => setMode('downloads')}>
+            <Ionicons name="download-outline" size={16} color="#A1A1AA" />
+            <Text style={styles.downloadsStripText}>Downloads</Text>
+          </TouchableOpacity>
 
           {showPartnersSection && partnerBrands.length > 0 && (
-            <View style={styles.partnersSection}>
+            <View style={styles.partnersFooterSection}>
               <Text style={styles.sectionTitle}>Marcas Parceiras</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
                 {partnerBrands.map((b) => (
-                  <View key={b.id} style={styles.partnerCard}>
-                    <View style={styles.partnerLogoWrap}>
+                  <View key={b.id} style={styles.partnerBanner}>
+                    <View style={styles.partnerBannerLogoWrap}>
                       {b.logo_url ? (
-                        <Image source={{ uri: b.logo_url }} style={styles.partnerLogoImage} resizeMode="contain" />
+                        <Image source={{ uri: b.logo_url }} style={styles.partnerBannerLogoImage} resizeMode="contain" />
                       ) : (
-                        <Ionicons name="pricetag-outline" size={20} color="#f97316" />
+                        <Ionicons name="pricetag-outline" size={20} color={ACCENT} />
                       )}
                     </View>
-                    <Text style={styles.partnerName} numberOfLines={1}>{b.name}</Text>
-                    {b.coupon_code ? (
-                      <TouchableOpacity style={styles.partnerCouponButton} onPress={() => handleCopyCoupon(b)}>
-                        <Ionicons name={copiedCouponId === b.id ? 'checkmark-outline' : 'copy-outline'} size={12} color="#f97316" />
-                        <Text style={styles.partnerCouponButtonText}>
-                          {copiedCouponId === b.id ? 'Copiado!' : b.coupon_code}
-                        </Text>
-                      </TouchableOpacity>
-                    ) : b.affiliate_link ? (
-                      <TouchableOpacity style={styles.partnerCouponButton} onPress={() => handleCopyCoupon(b)}>
-                        <Text style={styles.partnerCouponButtonText}>Ver oferta</Text>
-                      </TouchableOpacity>
-                    ) : null}
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.partnerBannerName} numberOfLines={1}>{b.name}</Text>
+                      {b.coupon_code ? (
+                        <TouchableOpacity style={styles.partnerBannerCouponButton} onPress={() => handleCopyCoupon(b)}>
+                          <Ionicons name={copiedCouponId === b.id ? 'checkmark-outline' : 'copy-outline'} size={12} color={ACCENT} />
+                          <Text style={styles.partnerBannerCouponText}>
+                            {copiedCouponId === b.id ? 'Copiado!' : b.coupon_code}
+                          </Text>
+                        </TouchableOpacity>
+                      ) : b.affiliate_link ? (
+                        <TouchableOpacity style={styles.partnerBannerCouponButton} onPress={() => handleCopyCoupon(b)}>
+                          <Text style={styles.partnerBannerCouponText}>Ver oferta</Text>
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
                   </View>
                 ))}
               </ScrollView>
@@ -1112,45 +1214,59 @@ const styles = StyleSheet.create({
   payButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#22c55e', borderRadius: 10, paddingVertical: 10 },
   payButtonOverdue: { backgroundColor: '#ef4444' },
   payButtonText: { color: '#0a0a0a', fontSize: 11, fontWeight: '800' },
-  personalCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 16, marginBottom: 16 },
-  personalCardTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
-  personalCardAvatar: { width: 48, height: 48, borderRadius: 24 },
-  personalCardAvatarPlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  personalCardAvatarLetter: { color: '#f97316', fontSize: 18, fontWeight: '800' },
-  personalCardLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 2 },
-  personalCardName: { color: '#f5f5f5', fontSize: 15, fontWeight: '700' },
-  personalCardActions: { flexDirection: 'row', gap: 10 },
-  personalCardWhatsapp: { flex: 1, flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
-  personalCardWhatsappText: { color: '#0a0a0a', fontSize: 13, fontWeight: '800' },
-  personalCardChatIcon: { width: 42, height: 42, borderRadius: 10, borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center' },
-  gridWrap: { gap: 12 },
-  gridRow: { flexDirection: 'row', gap: 12 },
-  gridCard: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 18, alignItems: 'center', justifyContent: 'center', minHeight: 130 },
-  gridCardWide: { flexDirection: 'row', gap: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 18, alignItems: 'center' },
-  gridBigNumber: { color: '#f5f5f5', fontSize: 24, fontWeight: '800', marginTop: 6 },
-  gridCardTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginTop: 8, textAlign: 'center' },
-  gridCardSubtitle: { color: '#737373', fontSize: 10, marginTop: 4, textAlign: 'center' },
-  ebookCard: { flexDirection: 'row', gap: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 10 },
-  ebookCardThumb: { width: 56, height: 56, borderRadius: 10, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },
-  ebookCardTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
-  ebookCardSubtitle: { color: '#737373', fontSize: 11, marginTop: 2 },
-  ebookCardCta: { color: '#f97316', fontSize: 11, fontWeight: '700', marginTop: 6 },
-  productsBanner: { backgroundColor: 'rgba(168,85,247,0.12)', borderWidth: 1, borderColor: '#a855f7', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 12 },
-  productsBannerText: { color: '#a855f7', fontSize: 13, fontWeight: '700' },
-  partnersSection: { marginTop: 20 },
-  categoryCard: { width: 110 },
-  categoryCoverWrap: { width: 110, aspectRatio: 1, borderRadius: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', overflow: 'hidden', marginBottom: 6, position: 'relative' },
-  categoryCoverImage: { width: '100%', height: '100%' },
-  categoryCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  topMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
+  financePill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
+  financePillOverdue: { backgroundColor: 'rgba(239,68,68,0.12)' },
+  financePillText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
+  financePillTextOverdue: { color: '#ef4444' },
+  personalPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5, flexShrink: 1 },
+  personalPillAvatar: { width: 22, height: 22, borderRadius: 11 },
+  personalPillAvatarPlaceholder: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
+  personalPillAvatarLetter: { color: '#E05A17', fontSize: 10, fontWeight: '800' },
+  personalPillName: { color: '#D4D4D8', fontSize: 11, fontWeight: '700', flexShrink: 1 },
+  whatsappStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#E05A17', borderRadius: 16, paddingVertical: 12, marginBottom: 20 },
+  whatsappStripText: { color: '#0a0a0a', fontSize: 13, fontWeight: '800' },
+  sectionTitleSpaced: { marginTop: 4 },
+  quickAccessRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+  quickAccessCard: { flex: 1, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 16, minHeight: 120 },
+  quickAccessIconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(224,90,23,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  quickAccessTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  quickAccessSubtitle: { color: '#A1A1AA', fontSize: 10, marginTop: 4, lineHeight: 14 },
+  evolutionRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 16, marginBottom: 24 },
+  evolutionRowTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  evolutionRowSubtitle: { color: '#A1A1AA', fontSize: 11, marginTop: 2 },
+  hubList: { gap: 12, marginBottom: 24 },
+  hubCard: { backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, overflow: 'hidden' },
+  hubCoverWrap: { width: '100%', aspectRatio: 16 / 9 },
+  hubCoverImage: { width: '100%', height: '100%' },
+  hubCoverPlaceholder: { width: '100%', height: '100%', backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
+  hubBody: { padding: 14 },
+  hubTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800', letterSpacing: 0.4 },
+  hubBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  hubBadgeChip: { backgroundColor: '#27272A', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
+  hubBadgeChipText: { color: '#D4D4D8', fontSize: 10, fontWeight: '600' },
+  nutritionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  nutritionHeaderLink: { color: '#E05A17', fontSize: 12, fontWeight: '700' },
+  nutritionCard: { width: 160 },
+  nutritionCoverWrap: { width: 160, aspectRatio: 16 / 9, borderRadius: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', overflow: 'hidden', marginBottom: 6, position: 'relative' },
+  nutritionCoverImage: { width: '100%', height: '100%' },
+  nutritionCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  nutritionCardName: { color: '#f5f5f5', fontSize: 11, fontWeight: '600' },
+  downloadsStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#27272A', borderRadius: 14, paddingVertical: 12, marginTop: 20 },
+  downloadsStripText: { color: '#A1A1AA', fontSize: 12, fontWeight: '700' },
+  partnersFooterSection: { marginTop: 24 },
+  categoryListCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 10, marginBottom: 10 },
+  categoryListCoverWrap: { width: 72, aspectRatio: 16 / 9, borderRadius: 10, backgroundColor: '#0a0a0a', overflow: 'hidden', position: 'relative' },
+  categoryListCoverImage: { width: '100%', height: '100%' },
+  categoryListCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  categoryListName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
   categoryLockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
-  categoryCardName: { color: '#f5f5f5', fontSize: 11, fontWeight: '600' },
-  categoryCardMeta: { color: '#737373', fontSize: 9, fontWeight: '600', marginTop: 2 },
-  partnerCard: { width: 130, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 12, alignItems: 'center' },
-  partnerLogoWrap: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 8 },
-  partnerLogoImage: { width: '100%', height: '100%' },
-  partnerName: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', marginBottom: 8, textAlign: 'center' },
-  partnerCouponButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(249,115,22,0.12)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 6 },
-  partnerCouponButtonText: { color: '#f97316', fontSize: 10, fontWeight: '800' },
+  partnerBanner: { width: 260, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 12 },
+  partnerBannerLogoWrap: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  partnerBannerLogoImage: { width: '100%', height: '100%' },
+  partnerBannerName: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', marginBottom: 6 },
+  partnerBannerCouponButton: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: 'rgba(224,90,23,0.12)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5 },
+  partnerBannerCouponText: { color: '#E05A17', fontSize: 10, fontWeight: '800' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12 },
   button: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 24 },
   buttonText: { color: '#f97316', fontSize: 15, fontWeight: '700' },
