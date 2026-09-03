@@ -19,6 +19,7 @@ export default function PlanPricesScreen({ onClose }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingPlanKey, setUploadingPlanKey] = useState(null);
+  const [deletingPlanKey, setDeletingPlanKey] = useState(null);
 
   const loadPlans = async () => {
     const { data } = await supabase.from('plan_prices').select('*').order('plan_key');
@@ -84,8 +85,14 @@ export default function PlanPricesScreen({ onClose }) {
         text: 'Excluir',
         style: 'destructive',
         onPress: async () => {
-          await supabase.from('plan_prices').delete().eq('plan_key', planKey);
-          loadPlans();
+          setDeletingPlanKey(planKey);
+          const { error } = await supabase.from('plan_prices').delete().eq('plan_key', planKey);
+          setDeletingPlanKey(null);
+          if (error) {
+            showAlert('Erro ao excluir', error.message);
+            return;
+          }
+          setPlans((prev) => prev.filter((p) => p.plan_key !== planKey));
         },
       },
     ]);
@@ -109,10 +116,13 @@ export default function PlanPricesScreen({ onClose }) {
         is_featured: plan.isFeatured,
         is_public: plan.isPublic,
       };
-      if (plan.isNew) {
-        await supabase.from('plan_prices').insert(payload);
-      } else {
-        await supabase.from('plan_prices').update(payload).eq('plan_key', plan.plan_key);
+      const { error } = plan.isNew
+        ? await supabase.from('plan_prices').insert(payload)
+        : await supabase.from('plan_prices').update(payload).eq('plan_key', plan.plan_key);
+      if (error) {
+        setSaving(false);
+        showAlert('Erro ao salvar', `${plan.nameInput}: ${error.message}`);
+        return;
       }
     }
     setSaving(false);
@@ -170,8 +180,8 @@ export default function PlanPricesScreen({ onClose }) {
               value={plan.nameInput}
               onChangeText={(t) => handleChange(plan.plan_key, 'nameInput', t)}
             />
-            <TouchableOpacity onPress={() => handleDeletePlan(plan.plan_key, plan.isNew)}>
-              <Text style={styles.deleteLink}>🗑️</Text>
+            <TouchableOpacity onPress={() => handleDeletePlan(plan.plan_key, plan.isNew)} disabled={deletingPlanKey === plan.plan_key}>
+              {deletingPlanKey === plan.plan_key ? <ActivityIndicator color="#ef4444" size="small" /> : <Text style={styles.deleteLink}>🗑️</Text>}
             </TouchableOpacity>
           </View>
 
