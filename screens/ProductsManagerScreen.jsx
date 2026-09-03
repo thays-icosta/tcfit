@@ -70,7 +70,6 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [grants, setGrants] = useState([]);
   const [loadingGrants, setLoadingGrants] = useState(false);
   const [grantingStudentId, setGrantingStudentId] = useState(null);
-  const [templates, setTemplates] = useState([]);
   const [selectedTemplateIds, setSelectedTemplateIds] = useState([]);
   const [linkedTemplates, setLinkedTemplates] = useState([]);
   const [level, setLevel] = useState(null);
@@ -202,15 +201,9 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setRecipes(data || []);
   };
 
-  const loadTemplates = async () => {
-    const { data } = await supabase.from('workout_templates').select('id, name').eq('personal_id', personalId).order('name');
-    setTemplates(data || []);
-  };
-
   useEffect(() => {
     loadProducts();
     loadRecipes();
-    loadTemplates();
     loadSectionToggle();
     loadCollections();
   }, []);
@@ -218,12 +211,6 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const toggleSelectedRecipe = (recipeId) => {
     setSelectedRecipeIds((prev) =>
       prev.includes(recipeId) ? prev.filter((id) => id !== recipeId) : [...prev, recipeId]
-    );
-  };
-
-  const toggleSelectedTemplate = (templateId) => {
-    setSelectedTemplateIds((prev) =>
-      prev.includes(templateId) ? prev.filter((id) => id !== templateId) : [...prev, templateId]
     );
   };
 
@@ -345,10 +332,6 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const handleSave = async () => {
     if (!title.trim()) {
       showAlert('Ops', 'Digita o título do produto.');
-      return;
-    }
-    if (type === 'treino_template' && selectedTemplateIds.length === 0) {
-      showAlert('Ops', 'Escolhe pelo menos um treino (Treino A, B, C...) pra esse produto entregar.');
       return;
     }
     setSaving(true);
@@ -764,28 +747,6 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 
           {type === 'treino_template' ? (
             <>
-              <Text style={styles.label}>Quais Treinos esse programa entrega? (ex: Treino A, Treino B, Treino C)</Text>
-              {templates.length === 0 ? (
-                <Text style={styles.helperText}>Você ainda não criou nenhum template em “Biblioteca de Treinos”.</Text>
-              ) : (
-                <View style={styles.recipeChecklist}>
-                  {templates.map((t) => {
-                    const checked = selectedTemplateIds.includes(t.id);
-                    const order = selectedTemplateIds.indexOf(t.id);
-                    return (
-                      <TouchableOpacity key={t.id} style={styles.recipeCheckRow} onPress={() => toggleSelectedTemplate(t.id)}>
-                        <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
-                          {checked && <Ionicons name="checkmark" size={13} color="#0a0a0a" />}
-                        </View>
-                        <Text style={styles.recipeCheckLabel}>{t.name}</Text>
-                        {checked && <Text style={styles.templateOrderBadge}>{order + 1}º</Text>}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
-              <Text style={[styles.helperText, { marginTop: 8 }]}>A ordem que você marca é a ordem que aparece pro aluno (Treino A, B, C...). Ao liberar acesso, o aluno mesmo cria as fichas na aba dele com um toque.</Text>
-
               <Text style={styles.label}>Nível</Text>
               <View style={styles.accessLevelFormRow}>
                 {PROGRAM_LEVELS.map((l) => (
@@ -1185,7 +1146,6 @@ const styles = StyleSheet.create({
   checkbox: { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: '#292524', alignItems: 'center', justifyContent: 'center' },
   checkboxChecked: { backgroundColor: '#f97316', borderColor: '#f97316' },
   recipeCheckLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flexShrink: 1, flex: 1 },
-  templateOrderBadge: { color: '#f97316', fontSize: 10, fontWeight: '800', backgroundColor: 'rgba(249,115,22,0.12)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 },
   switchLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flexShrink: 1, marginRight: 8 },
   saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },

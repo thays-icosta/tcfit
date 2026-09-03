@@ -21,6 +21,7 @@ import { showAlert } from './alertUtils';
 import { hasAccessByLevel, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
 import { HeaderWelcome, HeaderBack } from './Header';
 import { toTitleCase } from './textUtils';
+import { COVER_TOP_IMAGE } from './vitrineStyles';
 
 const ACCENT = '#E05A17';
 
@@ -1175,9 +1176,6 @@ export default function AlunoHomeScreen({ user, onLogout }) {
                         <Ionicons name="folder-outline" size={22} color={ACCENT} />
                       </View>
                     )}
-                    <View style={styles.nutritionCollectionBadge}>
-                      <Text style={styles.nutritionCollectionBadgeText}>{c.items.length} material{c.items.length !== 1 ? 'is' : ''}</Text>
-                    </View>
                   </View>
                   <Text style={styles.nutritionCardName} numberOfLines={3}>{toTitleCase(c.name)}</Text>
                   <Text style={styles.nutritionCollectionCta}>Acessar Coleção →</Text>
@@ -1325,12 +1323,10 @@ const styles = StyleSheet.create({
   nutritionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   nutritionHeaderLink: { color: '#E05A17', fontSize: 12, fontWeight: '700' },
   nutritionCard: { width: 176 },
-  nutritionCoverWrap: { width: 176, aspectRatio: 16 / 9, borderRadius: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', overflow: 'hidden', marginBottom: 6, position: 'relative' },
-  nutritionCoverImage: { width: '100%', height: '100%' },
+  nutritionCoverWrap: { width: '100%', aspectRatio: 16 / 9, borderRadius: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', overflow: 'hidden', marginBottom: 6, position: 'relative' },
+  nutritionCoverImage: { ...COVER_TOP_IMAGE },
   nutritionCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   nutritionCardName: { color: '#f5f5f5', fontSize: 11, fontWeight: '600', lineHeight: 15 },
-  nutritionCollectionBadge: { position: 'absolute', bottom: 6, left: 6, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
-  nutritionCollectionBadgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '700' },
   nutritionCollectionCta: { color: ACCENT, fontSize: 10, fontWeight: '700', marginTop: 3 },
   downloadsStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 14, paddingVertical: 12, marginTop: 20 },
   downloadsStripText: { color: '#A1A1AA', fontSize: 12, fontWeight: '700' },

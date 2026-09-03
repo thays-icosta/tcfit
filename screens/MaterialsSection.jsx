@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { NUTRITION_TAGS } from './accessLevel';
-import { ACCENT, TRANSITION, FLAT_CARD, sectionTitleStyle, SUPPORT_TEXT } from './vitrineStyles';
+import { ACCENT, TRANSITION, FLAT_CARD, sectionTitleStyle, SUPPORT_TEXT, COVER_TOP_IMAGE } from './vitrineStyles';
 import { toTitleCase } from './textUtils';
 
 const MATERIAL_TYPE_META = {
@@ -20,7 +20,7 @@ function MaterialItemCard({ item, onSelectMaterial }) {
     <View style={styles.itemCard}>
       <View style={styles.bannerWrap}>
         {item.coverImage ? (
-          <Image source={{ uri: item.coverImage }} style={styles.itemCover} resizeMode="cover" />
+          <Image source={{ uri: item.coverImage }} style={styles.itemCoverImage} resizeMode="cover" />
         ) : (
           <View style={[styles.itemCover, styles.itemCoverPlaceholder]}>
             <Ionicons name={typeMeta?.icon || 'document-outline'} size={26} color="#525252" />
@@ -125,15 +125,12 @@ export default function MaterialsSection({ onSelectMaterial, isDesktop }) {
           <TouchableOpacity key={c.id} style={styles.itemCard} onPress={() => setSelectedCollection(c)}>
             <View style={styles.bannerWrap}>
               {c.cover_image_url ? (
-                <Image source={{ uri: c.cover_image_url }} style={styles.itemCover} resizeMode="cover" />
+                <Image source={{ uri: c.cover_image_url }} style={styles.itemCoverImage} resizeMode="cover" />
               ) : (
                 <View style={[styles.itemCover, styles.itemCoverPlaceholder]}>
                   <Ionicons name="folder-outline" size={26} color="#525252" />
                 </View>
               )}
-              <View style={styles.collectionCountBadge}>
-                <Text style={styles.collectionCountBadgeText}>{c.items.length} material{c.items.length !== 1 ? 'is' : ''}</Text>
-              </View>
             </View>
             <View style={styles.itemBody}>
               <Text style={styles.itemTitle} numberOfLines={2}>{toTitleCase(c.name)}</Text>
@@ -163,11 +160,10 @@ const styles = StyleSheet.create({
   },
   itemGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   itemCard: { width: '48%', ...FLAT_CARD, borderRadius: 12, padding: 0, overflow: 'hidden' },
-  bannerWrap: { width: '100%', aspectRatio: 16 / 9, position: 'relative' },
+  bannerWrap: { width: '100%', aspectRatio: 16 / 9, position: 'relative', overflow: 'hidden' },
   itemCover: { width: '100%', height: '100%', backgroundColor: '#171717' },
+  itemCoverImage: { ...COVER_TOP_IMAGE },
   itemCoverPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  collectionCountBadge: { position: 'absolute', bottom: 8, left: 8, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
-  collectionCountBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
   backLink: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center', marginBottom: 10 },
   backLinkText: { color: ACCENT, fontSize: 12, fontWeight: '700' },
   itemBody: { padding: 10 },
