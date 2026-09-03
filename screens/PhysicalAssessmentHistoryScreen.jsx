@@ -39,9 +39,9 @@ async function renderHtmlToPdfBlob(html, fileName) {
       .from(iframe.contentDocument.body)
       .set({
         filename: fileName,
-        margin: 10,
-        image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { scale: 2, useCORS: true },
+        margin: [20, 15, 20, 15],
+        image: { type: 'png' },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] },
       })
@@ -298,8 +298,8 @@ function buildReportHtml(studentName, assessments, branding) {
   };
 
   const headerBlock = branding?.useLogo && branding?.logoUrl
-    ? `<div class="header-with-logo"><img src="${branding.logoUrl}" class="logo" /><div><h1 style="color:${brandColor}">Relatório de Avaliação Física</h1><div class="subtitle">${studentName} · Gerado em ${formatDate(new Date().toISOString())}</div></div></div>`
-    : `<h1 style="color:${brandColor}">Relatório de Avaliação Física</h1><div class="subtitle">${studentName} · Gerado em ${formatDate(new Date().toISOString())}</div>`;
+    ? `<div class="header-with-logo avoid-break"><img src="${branding.logoUrl}" class="logo" /><div><h1 style="color:${brandColor}">Relatório de Avaliação Física</h1><div class="subtitle">${studentName} · Gerado em ${formatDate(new Date().toISOString())}</div></div></div>`
+    : `<div class="avoid-break"><h1 style="color:${brandColor}">Relatório de Avaliação Física</h1><div class="subtitle">${studentName} · Gerado em ${formatDate(new Date().toISOString())}</div></div>`;
 
   const footerParts = [];
   if (branding?.professionalRegister) footerParts.push(branding.professionalRegister);
@@ -358,18 +358,21 @@ function buildReportHtml(studentName, assessments, branding) {
       <head>
         <meta charset="utf-8" />
         <style>
-          body { font-family: -apple-system, Helvetica, Arial, sans-serif; padding: 24px; color: #1a1a1a; }
+          @page { size: A4; margin: 20mm 15mm; }
+          html, body { background: #FFFFFF; background-color: #FFFFFF; }
+          body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #111827; margin: 0; }
           h1 { font-size: 22px; margin-bottom: 4px; }
           .header-with-logo { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
-          .logo { width: 60px; height: 60px; object-fit: contain; }
-          .subtitle { color: #737373; font-size: 12px; margin-bottom: 24px; }
-          h2 { font-size: 15px; margin-top: 24px; margin-bottom: 8px; border-bottom: 2px solid ${brandColor}; padding-bottom: 4px; }
+          .logo { width: 56px; height: 56px; object-fit: contain; }
+          .subtitle { color: #374151; font-size: 10pt; margin-bottom: 24px; }
+          h2 { font-size: 15px; margin-top: 24px; margin-bottom: 8px; border-bottom: 2px solid ${brandColor}; padding-bottom: 4px; break-after: avoid-page; page-break-after: avoid; }
           table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
           td { padding: 8px 4px; border-bottom: 1px solid #eee; font-size: 13px; }
-          .label { color: #555; }
+          .label { color: #374151; }
           .value { text-align: right; font-weight: 700; }
           .footer { margin-top: 32px; color: #a3a3a3; font-size: 10px; text-align: center; border-top: 1px solid #eee; padding-top: 12px; }
           .page-break { page-break-before: always; }
+          .avoid-break { break-inside: avoid; page-break-inside: avoid; }
           .chart-page-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 3px solid ${brandColor}; }
           .chart-page-header .logo-mini { width: 40px; height: 40px; object-fit: contain; }
           .chart-page-header .chart-page-title { font-size: 18px; font-weight: 800; color: ${brandColor}; }
@@ -380,25 +383,25 @@ function buildReportHtml(studentName, assessments, branding) {
           .legend-box { margin-top: 6px; }
           .legend-row { display: flex; align-items: center; gap: 8px; font-size: 11px; margin-bottom: 4px; }
           .legend-dot { width: 8px; height: 8px; border-radius: 4px; display: inline-block; flex-shrink: 0; }
-          .legend-label { flex: 1; color: #333; }
+          .legend-label { flex: 1; color: #374151; }
           .legend-value { font-weight: 700; width: 50px; text-align: right; }
           .legend-delta { width: 60px; text-align: right; font-weight: 700; }
           .muted { color: #a3a3a3; font-size: 12px; font-style: italic; }
-          .bio-box { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; background: #f9f9f9; border-radius: 10px; padding: 14px; border: 1px solid #eee; }
+          .bio-box { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; background: #f9f9f9; border-radius: 10px; padding: 14px; border: 1px solid #eee; break-inside: avoid; page-break-inside: avoid; }
           .bio-item { width: 30%; text-align: center; padding: 6px 0; }
           .bio-value { font-size: 16px; font-weight: 800; color: ${brandColor}; }
           .bio-label { font-size: 9px; color: #737373; margin-top: 2px; text-transform: uppercase; }
           .parecer-box { background: #f9f9f9; border: 1px solid #eee; border-left: 4px solid ${brandColor}; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
           .parecer-title { font-size: 11px; font-weight: 800; color: ${brandColor}; text-transform: uppercase; margin-bottom: 8px; }
-          .parecer-text { font-size: 12px; color: #333; white-space: pre-wrap; line-height: 18px; }
+          .parecer-text { font-size: 12px; color: #374151; white-space: pre-wrap; line-height: 18px; }
           .report-image-full { width: 100%; border-radius: 10px; border: 1px solid #eee; }
           .pdf-note-box { background: #f9f9f9; border: 1px dashed #ccc; border-radius: 10px; padding: 16px; text-align: center; font-size: 12px; color: #555; }
           .seg-map { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-areas: "arml trunk armr" "legl spacer legr"; gap: 10px; margin-bottom: 16px; }
           .seg-cell { border: 2px solid #eee; border-radius: 10px; padding: 10px; text-align: center; }
           .seg-arml { grid-area: arml; } .seg-armr { grid-area: armr; } .seg-trunk { grid-area: trunk; }
           .seg-legl { grid-area: legl; } .seg-legr { grid-area: legr; } .seg-spacer { grid-area: spacer; border: none; }
-          .seg-name { font-size: 11px; font-weight: 700; color: #333; margin-bottom: 6px; }
-          .seg-value { font-size: 11px; color: #333; }
+          .seg-name { font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 6px; }
+          .seg-value { font-size: 11px; color: #374151; }
           .seg-value-label { color: #999; font-size: 9px; }
           .seg-badge { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 6px; color: #fff; font-size: 9px; font-weight: 800; }
         </style>
@@ -448,8 +451,10 @@ function buildReportHtml(studentName, assessments, branding) {
         <h2>Evolução de Perímetros (cm)</h2>
         ${perimeterChartHtml || '<p class="muted">Dados insuficientes de perímetros pra montar o gráfico (precisa de pelo menos 2 avaliações no modo Dobras Cutâneas com cintura, quadril, peitoral, braços e coxas preenchidos).</p>'}
 
-        <h2>Comparativo de Dobras Cutâneas (mm)</h2>
-        ${skinfoldChartHtml || '<p class="muted">Sem dados de dobras cutâneas suficientes pra comparar (precisa de pelo menos uma avaliação no modo Dobras Cutâneas).</p>'}
+        <div class="avoid-break">
+          <h2>Comparativo de Dobras Cutâneas (mm)</h2>
+          ${skinfoldChartHtml || '<p class="muted">Sem dados de dobras cutâneas suficientes pra comparar (precisa de pelo menos uma avaliação no modo Dobras Cutâneas).</p>'}
+        </div>
 
         ${latest.report_url ? `
           <div class="page-break"></div>
