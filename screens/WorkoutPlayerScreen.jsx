@@ -8,6 +8,7 @@ import { supabase } from './supabaseClient';
 import { loadPeriodizationPlan, getCurrentPhase } from './periodizationUtils';
 import { showAlert } from './alertUtils';
 import AlunoTabBar from './AlunoTabBar';
+import { HeaderBack } from './Header';
 
 function parseReps(repsStr) {
   if (!repsStr) return 10;
@@ -526,12 +527,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
-          <View style={styles.topBar}>
-            <TouchableOpacity onPress={handleExit}>
-              <Text style={styles.closeText}>← Sair</Text>
-            </TouchableOpacity>
-            <Text style={styles.workoutLabel}>{workout.name}</Text>
-          </View>
+          <HeaderBack backLabel="← Sair" title={workout.name} onBack={handleExit} style={{ paddingHorizontal: 16 }} />
 
           {currentPhaseInfo && (
             <View style={styles.phaseTopBadge}>
@@ -709,9 +705,6 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
   center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 8 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  workoutLabel: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   phaseTopBadge: { alignSelf: 'center', backgroundColor: 'rgba(168,85,247,0.12)', borderWidth: 1, borderColor: '#a855f7', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6, marginBottom: 10 },
   phaseTopBadgeText: { color: '#a855f7', fontSize: 11, fontWeight: '700' },
   offlineBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(239,68,68,0.12)', marginHorizontal: 16, borderRadius: 8, padding: 10, marginBottom: 10 },

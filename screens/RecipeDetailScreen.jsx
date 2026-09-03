@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
+import { HeaderBack } from './Header';
 
 const MEAL_OPTIONS = [
   { value: 'cafe', label: 'Café da manhã' },
@@ -38,11 +39,7 @@ export default function RecipeDetailScreen({ recipe, studentId, onClose }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>← Voltar</Text>
-        </TouchableOpacity>
-      </View>
+      <HeaderBack onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
         {recipe.photo_url ? (
@@ -113,8 +110,6 @@ export default function RecipeDetailScreen({ recipe, studentId, onClose }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  topBar: { paddingHorizontal: 16, marginBottom: 10 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
   photo: { width: '100%', height: 220 },
   photoPlaceholder: { width: '100%', height: 180, backgroundColor: '#171717', alignItems: 'center', justifyContent: 'center' },
   photoPlaceholderText: { fontSize: 40 },
