@@ -20,6 +20,7 @@ import FoodSubstituteScreen from './FoodSubstituteScreen';
 import { showAlert } from './alertUtils';
 import { hasAccessByLevel, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
 import { HeaderWelcome, HeaderBack } from './Header';
+import { toTitleCase } from './textUtils';
 
 const ACCENT = '#E05A17';
 
@@ -115,6 +116,8 @@ export default function AlunoHomeScreen({ user, onLogout }) {
   const [unlockedProductIds, setUnlockedProductIds] = useState(new Set());
   const [openProgram, setOpenProgram] = useState(null);
   const [openCategoryGroup, setOpenCategoryGroup] = useState(null);
+  const [collections, setCollections] = useState([]);
+  const [openCollection, setOpenCollection] = useState(null);
   const [showAnamnesePrompt, setShowAnamnesePrompt] = useState(false);
   const [showEvolution, setShowEvolution] = useState(false);
   const [showEvolutionLock, setShowEvolutionLock] = useState(false);
@@ -176,10 +179,12 @@ export default function AlunoHomeScreen({ user, onLogout }) {
         .order('created_at', { ascending: false });
       setPartnerBrands(brandRows || []);
 
-      const [{ data: productRows }, { data: grantRows }] = await Promise.all([
-        supabase.from('products').select('*').eq('personal_id', myRow.personal_id).eq('active', true).not('category', 'is', null),
+      const [{ data: productRows }, { data: grantRows }, { data: collectionRows }] = await Promise.all([
+        supabase.from('products').select('*').eq('personal_id', myRow.personal_id).eq('active', true),
         supabase.from('product_grants').select('product_id').eq('student_id', user.id),
+        supabase.from('product_collections').select('*').eq('personal_id', myRow.personal_id).order('order_index'),
       ]);
+      setCollections(collectionRows || []);
       const level = myRow?.access_level || 'plataforma_base';
       setMyAccessLevel(level);
       const grantedIds = new Set((grantRows || []).map((g) => g.product_id));
@@ -532,6 +537,49 @@ export default function AlunoHomeScreen({ user, onLogout }) {
                       </View>
                     )}
                   </View>
+                  <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </ScrollView>
+      </View>
+    );
+  }
+
+  if (openCollection) {
+    const items = categorizedProducts.filter((p) => p.collection_id === openCollection.id);
+    return (
+      <View style={styles.subContainer}>
+        <HeaderBack title={toTitleCase(openCollection.name)} onBack={() => setOpenCollection(null)} style={{ paddingHorizontal: 16 }} />
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+          {openCollection.description ? <Text style={styles.collectionDescription}>{openCollection.description}</Text> : null}
+          {items.length === 0 ? (
+            <Text style={styles.emptyText}>Nenhum item nessa coleção ainda.</Text>
+          ) : (
+            items.map((p) => {
+              const unlocked = unlockedProductIds.has(p.id);
+              return (
+                <TouchableOpacity
+                  key={p.id}
+                  style={styles.categoryListCard}
+                  onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setActiveTab('loja'))}
+                >
+                  <View style={styles.categoryListCoverWrap}>
+                    {p.cover_image_url ? (
+                      <Image source={{ uri: p.cover_image_url }} style={styles.categoryListCoverImage} resizeMode="cover" />
+                    ) : (
+                      <View style={styles.categoryListCoverPlaceholder}>
+                        <Ionicons name={p.type === 'treino_template' ? 'barbell-outline' : 'book-outline'} size={20} color={ACCENT} />
+                      </View>
+                    )}
+                    {!unlocked && (
+                      <View style={styles.categoryLockOverlay}>
+                        <Ionicons name="lock-closed" size={14} color="#f5f5f5" />
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.categoryListName} numberOfLines={2}>{toTitleCase(p.name)}</Text>
                   <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
                 </TouchableOpacity>
               );
@@ -954,6 +1002,10 @@ export default function AlunoHomeScreen({ user, onLogout }) {
 
   const hubGroups = buildHubGroups(categorizedProducts);
   const nutritionItems = categorizedProducts.filter((p) => NUTRITION_LIBRARY_CATEGORIES.includes(p.category) || p.type === 'ebook_receitas');
+  const nutritionCollections = collections
+    .map((c) => ({ ...c, items: nutritionItems.filter((p) => p.collection_id === c.id) }))
+    .filter((c) => c.items.length > 0);
+  const ungroupedNutritionItems = nutritionItems.filter((p) => !p.collection_id);
 
   return (
     <View style={{ flex: 1 }}>
@@ -1113,7 +1165,25 @@ export default function AlunoHomeScreen({ user, onLogout }) {
             <Text style={styles.emptyText}>Nenhum e-book ou guia disponível ainda.</Text>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-              {nutritionItems.map((p) => {
+              {nutritionCollections.map((c) => (
+                <TouchableOpacity key={c.id} style={styles.nutritionCard} onPress={() => setOpenCollection(c)}>
+                  <View style={styles.nutritionCoverWrap}>
+                    {c.cover_image_url ? (
+                      <Image source={{ uri: c.cover_image_url }} style={styles.nutritionCoverImage} resizeMode="cover" />
+                    ) : (
+                      <View style={styles.nutritionCoverPlaceholder}>
+                        <Ionicons name="folder-outline" size={22} color={ACCENT} />
+                      </View>
+                    )}
+                    <View style={styles.nutritionCollectionBadge}>
+                      <Text style={styles.nutritionCollectionBadgeText}>{c.items.length} material{c.items.length !== 1 ? 'is' : ''}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.nutritionCardName} numberOfLines={3}>{toTitleCase(c.name)}</Text>
+                  <Text style={styles.nutritionCollectionCta}>Acessar Coleção →</Text>
+                </TouchableOpacity>
+              ))}
+              {ungroupedNutritionItems.map((p) => {
                 const unlocked = unlockedProductIds.has(p.id);
                 return (
                   <TouchableOpacity
@@ -1135,7 +1205,7 @@ export default function AlunoHomeScreen({ user, onLogout }) {
                         </View>
                       )}
                     </View>
-                    <Text style={styles.nutritionCardName} numberOfLines={2}>{p.name}</Text>
+                    <Text style={styles.nutritionCardName} numberOfLines={3}>{toTitleCase(p.name)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -1162,6 +1232,13 @@ export default function AlunoHomeScreen({ user, onLogout }) {
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.partnerBannerName} numberOfLines={1}>{b.name}</Text>
+                      {(b.coupon_code || b.affiliate_link) && (
+                        <View style={styles.partnerBannerTagBadge}>
+                          <Text style={styles.partnerBannerTagBadgeText}>
+                            {b.coupon_code ? 'CUPOM DISPONÍVEL' : 'DESCONTO EXCLUSIVO'}
+                          </Text>
+                        </View>
+                      )}
                       {b.coupon_code ? (
                         <TouchableOpacity style={styles.partnerBannerCouponButton} onPress={() => handleCopyCoupon(b)}>
                           <Ionicons name={copiedCouponId === b.id ? 'checkmark-outline' : 'copy-outline'} size={12} color={ACCENT} />
@@ -1247,24 +1324,30 @@ const styles = StyleSheet.create({
   hubBadgeChipText: { color: '#D4D4D8', fontSize: 10, fontWeight: '600' },
   nutritionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   nutritionHeaderLink: { color: '#E05A17', fontSize: 12, fontWeight: '700' },
-  nutritionCard: { width: 160 },
-  nutritionCoverWrap: { width: 160, aspectRatio: 16 / 9, borderRadius: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', overflow: 'hidden', marginBottom: 6, position: 'relative' },
+  nutritionCard: { width: 176 },
+  nutritionCoverWrap: { width: 176, aspectRatio: 16 / 9, borderRadius: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', overflow: 'hidden', marginBottom: 6, position: 'relative' },
   nutritionCoverImage: { width: '100%', height: '100%' },
   nutritionCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  nutritionCardName: { color: '#f5f5f5', fontSize: 11, fontWeight: '600' },
-  downloadsStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#27272A', borderRadius: 14, paddingVertical: 12, marginTop: 20 },
+  nutritionCardName: { color: '#f5f5f5', fontSize: 11, fontWeight: '600', lineHeight: 15 },
+  nutritionCollectionBadge: { position: 'absolute', bottom: 6, left: 6, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
+  nutritionCollectionBadgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '700' },
+  nutritionCollectionCta: { color: ACCENT, fontSize: 10, fontWeight: '700', marginTop: 3 },
+  downloadsStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 14, paddingVertical: 12, marginTop: 20 },
   downloadsStripText: { color: '#A1A1AA', fontSize: 12, fontWeight: '700' },
   partnersFooterSection: { marginTop: 24 },
   categoryListCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 10, marginBottom: 10 },
   categoryListCoverWrap: { width: 72, aspectRatio: 16 / 9, borderRadius: 10, backgroundColor: '#0a0a0a', overflow: 'hidden', position: 'relative' },
   categoryListCoverImage: { width: '100%', height: '100%' },
   categoryListCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  categoryListName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  categoryListName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700', flex: 1 },
+  collectionDescription: { color: '#A1A1AA', fontSize: 12, lineHeight: 17, marginBottom: 14 },
   categoryLockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
   partnerBanner: { width: 260, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 12 },
   partnerBannerLogoWrap: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   partnerBannerLogoImage: { width: '100%', height: '100%' },
-  partnerBannerName: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', marginBottom: 6 },
+  partnerBannerName: { color: '#f5f5f5', fontSize: 12, fontWeight: '700' },
+  partnerBannerTagBadge: { alignSelf: 'flex-start', backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2, marginTop: 3, marginBottom: 6 },
+  partnerBannerTagBadgeText: { color: '#22c55e', fontSize: 8, fontWeight: '800', letterSpacing: 0.3 },
   partnerBannerCouponButton: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: 'rgba(224,90,23,0.12)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5 },
   partnerBannerCouponText: { color: '#E05A17', fontSize: 10, fontWeight: '800' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12 },

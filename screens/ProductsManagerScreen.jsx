@@ -8,6 +8,7 @@ import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS, NUTRITION_TAGS } from './accessLevel';
 import { HeaderBack } from './Header';
+import { toTitleCase } from './textUtils';
 
 const TYPES = [
   { value: 'ebook_receitas', label: 'Guia de Receitas / E-book', icon: 'book-outline' },
@@ -39,20 +40,6 @@ function uuidv4() {
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
-}
-
-const TITLE_CASE_STOPWORDS = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'a', 'o', 'as', 'os', 'com', 'para', 'por', 'no', 'na', 'nos', 'nas', 'um', 'uma']);
-
-function toTitleCase(text) {
-  return text
-    .split(' ')
-    .map((word, i) => {
-      if (!word) return word;
-      const lower = word.toLowerCase();
-      if (i !== 0 && TITLE_CASE_STOPWORDS.has(lower)) return lower;
-      return lower.charAt(0).toUpperCase() + lower.slice(1);
-    })
-    .join(' ');
 }
 
 export default function ProductsManagerScreen({ personalId, onClose }) {
@@ -92,6 +79,105 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [nutritionTags, setNutritionTags] = useState([]);
   const [sectionEnabled, setSectionEnabled] = useState(true);
   const [savingSectionToggle, setSavingSectionToggle] = useState(false);
+  const [collections, setCollections] = useState([]);
+  const [collectionId, setCollectionId] = useState(null);
+  const [showCollectionForm, setShowCollectionForm] = useState(false);
+  const [editingCollectionId, setEditingCollectionId] = useState(null);
+  const [collectionName, setCollectionName] = useState('');
+  const [collectionDescription, setCollectionDescription] = useState('');
+  const [collectionCoverUrl, setCollectionCoverUrl] = useState(null);
+  const [uploadingCollectionCover, setUploadingCollectionCover] = useState(false);
+  const [savingCollection, setSavingCollection] = useState(false);
+
+  const loadCollections = async () => {
+    const { data } = await supabase.from('product_collections').select('*').eq('personal_id', personalId).order('order_index');
+    setCollections(data || []);
+  };
+
+  const resetCollectionForm = () => {
+    setEditingCollectionId(null);
+    setCollectionName('');
+    setCollectionDescription('');
+    setCollectionCoverUrl(null);
+  };
+
+  const handleOpenNewCollection = () => {
+    resetCollectionForm();
+    setShowCollectionForm(true);
+  };
+
+  const handleOpenEditCollection = (c) => {
+    setEditingCollectionId(c.id);
+    setCollectionName(c.name || '');
+    setCollectionDescription(c.description || '');
+    setCollectionCoverUrl(c.cover_image_url || null);
+    setShowCollectionForm(true);
+  };
+
+  const handlePickCollectionCover = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      showAlert('Permissão necessária', 'Autorize o acesso às fotos.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.6, base64: true });
+    if (result.canceled || !result.assets?.[0]?.base64) return;
+
+    setUploadingCollectionCover(true);
+    try {
+      const fileName = `${uuidv4()}.jpg`;
+      const { error } = await supabase.storage.from('product-covers').upload(fileName, decode(result.assets[0].base64), { contentType: 'image/jpeg' });
+      if (error) throw error;
+      const { data } = supabase.storage.from('product-covers').getPublicUrl(fileName);
+      setCollectionCoverUrl(data.publicUrl);
+    } catch {
+      showAlert('Não deu pra enviar a capa', 'Sem problema, você pode salvar a coleção sem foto e adicionar depois.');
+    }
+    setUploadingCollectionCover(false);
+  };
+
+  const handleSaveCollection = async () => {
+    if (!collectionName.trim()) {
+      showAlert('Ops', 'Digita o nome da coleção.');
+      return;
+    }
+    setSavingCollection(true);
+    const payload = {
+      personal_id: personalId,
+      name: collectionName.trim(),
+      description: collectionDescription.trim() || null,
+      cover_image_url: collectionCoverUrl,
+    };
+    let error;
+    if (editingCollectionId) {
+      ({ error } = await supabase.from('product_collections').update(payload).eq('id', editingCollectionId));
+    } else {
+      ({ error } = await supabase.from('product_collections').insert({ ...payload, order_index: collections.length }));
+    }
+    setSavingCollection(false);
+    if (error) {
+      showAlert('Erro', error.message);
+    } else {
+      setShowCollectionForm(false);
+      resetCollectionForm();
+      loadCollections();
+    }
+  };
+
+  const handleDeleteCollection = (idToDelete) => {
+    showAlert('Excluir coleção', 'Os produtos dessa coleção não serão apagados, só deixarão de estar agrupados. Tem certeza?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: async () => {
+          await supabase.from('product_collections').delete().eq('id', idToDelete);
+          loadCollections();
+          loadProducts();
+        },
+      },
+    ]);
+  };
 
   const loadSectionToggle = async () => {
     const { data } = await supabase.from('users').select('show_produtos_avulsos_section').eq('id', personalId).single();
@@ -126,6 +212,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     loadRecipes();
     loadTemplates();
     loadSectionToggle();
+    loadCollections();
   }, []);
 
   const toggleSelectedRecipe = (recipeId) => {
@@ -159,6 +246,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setGoal(null);
     setMaterialType('ebook_receita');
     setNutritionTags([]);
+    setCollectionId(null);
   };
 
   const handleSelectType = (value) => {
@@ -215,8 +303,9 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setUploadingFile(false);
   };
 
-  const handleOpenNew = () => {
+  const handleOpenNew = (presetCollectionId) => {
     resetForm();
+    if (presetCollectionId) setCollectionId(presetCollectionId);
     setShowForm(true);
   };
 
@@ -238,6 +327,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setGoal(product.goal || null);
     setMaterialType(product.material_type || (product.type === 'ebook_receitas' ? 'ebook_receita' : null));
     setNutritionTags(product.nutrition_tags || []);
+    setCollectionId(product.collection_id || null);
     setShowForm(true);
 
     if (product.type === 'treino_template') {
@@ -282,6 +372,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       goal: type === 'treino_template' ? goal : null,
       material_type: type === 'ebook_receitas' ? materialType : null,
       nutrition_tags: type === 'ebook_receitas' && materialType === 'plano_alimentar' ? nutritionTags : null,
+      collection_id: collectionId,
     };
 
     let error;
@@ -387,6 +478,102 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       },
     ]);
   };
+
+  const renderProductCard = (p) => {
+    const meta = typeMeta(p.type);
+    return (
+      <View key={p.id} style={styles.productGridCard}>
+        <View style={styles.productCoverWrap}>
+          {p.cover_image_url ? (
+            <Image source={{ uri: p.cover_image_url }} style={styles.productCoverImage} resizeMode="cover" />
+          ) : (
+            <View style={styles.productCoverPlaceholder}>
+              <Ionicons name={meta.icon} size={28} color="#f97316" />
+            </View>
+          )}
+          {p.show_as_addon && (
+            <View style={styles.addonTagOverlay}>
+              <Text style={styles.addonTagText}>UPSELL</Text>
+            </View>
+          )}
+          {!p.active && (
+            <View style={styles.inactiveOverlay}>
+              <Text style={styles.inactiveOverlayText}>INATIVO</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.productGridInfo}>
+          <Text style={styles.productGridName} numberOfLines={2}>{p.name}</Text>
+          {(p.level || p.goal) && (
+            <View style={styles.metaBadgeRow}>
+              {p.level ? <Text style={styles.metaBadge}>{PROGRAM_LEVELS.find((l) => l.value === p.level)?.label}</Text> : null}
+              {p.goal ? <Text style={styles.metaBadge}>{PROGRAM_GOALS.find((g) => g.value === p.goal)?.label}</Text> : null}
+            </View>
+          )}
+          <Text style={styles.productGridPrice}>{p.price != null ? `R$ ${Number(p.price).toFixed(2)}` : 'Consulte'}</Text>
+
+          <View style={styles.productGridActions}>
+            <TouchableOpacity hitSlop={6} onPress={() => handleOpenPreview(p)}>
+              <Ionicons name="eye-outline" size={18} color="#a855f7" />
+            </TouchableOpacity>
+            <TouchableOpacity hitSlop={6} onPress={() => handleOpenManage(p)}>
+              <Ionicons name="folder-outline" size={18} color="#22c55e" />
+            </TouchableOpacity>
+            <TouchableOpacity hitSlop={6} onPress={() => handleOpenEdit(p)}>
+              <Ionicons name="create-outline" size={18} color="#3b82f6" />
+            </TouchableOpacity>
+            <TouchableOpacity hitSlop={6} onPress={() => handleDelete(p.id)}>
+              <Ionicons name="trash-outline" size={18} color="#ef4444" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  if (showCollectionForm) {
+    return (
+      <View style={styles.container}>
+        <HeaderBack title={editingCollectionId ? 'Editar Coleção' : 'Nova Coleção'} onBack={() => setShowCollectionForm(false)} style={{ paddingHorizontal: 16 }} />
+
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+          <TouchableOpacity style={styles.coverPicker} onPress={handlePickCollectionCover} disabled={uploadingCollectionCover}>
+            {uploadingCollectionCover ? (
+              <ActivityIndicator color="#f97316" />
+            ) : collectionCoverUrl ? (
+              <Image source={{ uri: collectionCoverUrl }} style={styles.coverPreview} resizeMode="cover" />
+            ) : (
+              <Text style={styles.coverPickerText}>📷 Adicionar capa (16:9)</Text>
+            )}
+          </TouchableOpacity>
+
+          <Text style={styles.label}>Nome da Coleção</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="ex: Receitas & Nutrição"
+            placeholderTextColor="#525252"
+            value={collectionName}
+            onChangeText={(text) => setCollectionName(toTitleCase(text))}
+          />
+
+          <Text style={styles.label}>Descrição</Text>
+          <TextInput
+            style={styles.textArea}
+            multiline
+            placeholder="O que o aluno encontra nessa coleção"
+            placeholderTextColor="#525252"
+            value={collectionDescription}
+            onChangeText={setCollectionDescription}
+          />
+
+          <TouchableOpacity style={styles.saveButton} onPress={handleSaveCollection} disabled={savingCollection}>
+            {savingCollection ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Salvar Coleção</Text>}
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    );
+  }
 
   if (previewProduct) {
     const meta = typeMeta(previewProduct.type);
@@ -760,6 +947,26 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
             </TouchableOpacity>
           </View>
 
+          <Text style={styles.label}>Coleção</Text>
+          <Text style={styles.helperText}>Agrupa esse produto com outros dentro de uma pasta na vitrine e na Home do aluno.</Text>
+          <View style={styles.accessLevelFormRow}>
+            <TouchableOpacity
+              style={[styles.accessLevelFormChip, collectionId === null && styles.accessLevelFormChipActive]}
+              onPress={() => setCollectionId(null)}
+            >
+              <Text style={[styles.accessLevelFormChipText, collectionId === null && styles.accessLevelFormChipTextActive]}>Sem coleção</Text>
+            </TouchableOpacity>
+            {collections.map((c) => (
+              <TouchableOpacity
+                key={c.id}
+                style={[styles.accessLevelFormChip, collectionId === c.id && styles.accessLevelFormChipActive]}
+                onPress={() => setCollectionId(c.id)}
+              >
+                <Text style={[styles.accessLevelFormChipText, collectionId === c.id && styles.accessLevelFormChipTextActive]}>{c.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
           <Text style={styles.label}>Categoria na Home do Aluno</Text>
           <Text style={styles.helperText}>Define em qual seção esse produto aparece na tela inicial do aluno.</Text>
           <View style={styles.accessLevelFormRow}>
@@ -812,7 +1019,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 
       <Text style={styles.hint2}>E-books, desafios avulsos e guias — tudo que não é consultoria direta. Marque "oferta complementar" pra aparecer como upsell na vitrine.</Text>
 
-      <TouchableOpacity style={styles.newButton} onPress={handleOpenNew}>
+      <TouchableOpacity style={styles.newButton} onPress={() => handleOpenNew()}>
         <Text style={styles.newButtonText}>+ Novo Produto</Text>
       </TouchableOpacity>
 
@@ -820,63 +1027,60 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
-          {products.length === 0 ? (
+          <View style={styles.collectionsHeaderRow}>
+            <Text style={styles.label}>Coleções</Text>
+            <TouchableOpacity onPress={handleOpenNewCollection}>
+              <Text style={styles.collectionsAddLink}>+ Nova Coleção</Text>
+            </TouchableOpacity>
+          </View>
+
+          {products.length === 0 && collections.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum produto cadastrado ainda.</Text>
           ) : (
-            <View style={styles.productGrid}>
-              {products.map((p) => {
-                const meta = typeMeta(p.type);
+            <>
+              {collections.map((c) => {
+                const items = products.filter((p) => p.collection_id === c.id);
                 return (
-                  <View key={p.id} style={styles.productGridCard}>
-                    <View style={styles.productCoverWrap}>
-                      {p.cover_image_url ? (
-                        <Image source={{ uri: p.cover_image_url }} style={styles.productCoverImage} resizeMode="cover" />
-                      ) : (
-                        <View style={styles.productCoverPlaceholder}>
-                          <Ionicons name={meta.icon} size={28} color="#f97316" />
-                        </View>
-                      )}
-                      {p.show_as_addon && (
-                        <View style={styles.addonTagOverlay}>
-                          <Text style={styles.addonTagText}>UPSELL</Text>
-                        </View>
-                      )}
-                      {!p.active && (
-                        <View style={styles.inactiveOverlay}>
-                          <Text style={styles.inactiveOverlayText}>INATIVO</Text>
-                        </View>
-                      )}
-                    </View>
-
-                    <View style={styles.productGridInfo}>
-                      <Text style={styles.productGridName} numberOfLines={2}>{p.name}</Text>
-                      {(p.level || p.goal) && (
-                        <View style={styles.metaBadgeRow}>
-                          {p.level ? <Text style={styles.metaBadge}>{PROGRAM_LEVELS.find((l) => l.value === p.level)?.label}</Text> : null}
-                          {p.goal ? <Text style={styles.metaBadge}>{PROGRAM_GOALS.find((g) => g.value === p.goal)?.label}</Text> : null}
-                        </View>
-                      )}
-                      <Text style={styles.productGridPrice}>{p.price != null ? `R$ ${Number(p.price).toFixed(2)}` : 'Consulte'}</Text>
-
-                      <View style={styles.productGridActions}>
-                        <TouchableOpacity hitSlop={6} onPress={() => handleOpenPreview(p)}>
-                          <Ionicons name="eye-outline" size={18} color="#a855f7" />
-                        </TouchableOpacity>
-                        <TouchableOpacity hitSlop={6} onPress={() => handleOpenManage(p)}>
-                          <Ionicons name="folder-outline" size={18} color="#22c55e" />
-                        </TouchableOpacity>
-                        <TouchableOpacity hitSlop={6} onPress={() => handleOpenEdit(p)}>
-                          <Ionicons name="create-outline" size={18} color="#3b82f6" />
-                        </TouchableOpacity>
-                        <TouchableOpacity hitSlop={6} onPress={() => handleDelete(p.id)}>
-                          <Ionicons name="trash-outline" size={18} color="#ef4444" />
-                        </TouchableOpacity>
+                  <View key={c.id} style={styles.collectionGroup}>
+                    <TouchableOpacity style={styles.collectionGroupHeader} onPress={() => handleOpenEditCollection(c)}>
+                      <View style={styles.collectionGroupCoverWrap}>
+                        {c.cover_image_url ? (
+                          <Image source={{ uri: c.cover_image_url }} style={styles.collectionGroupCoverImage} resizeMode="cover" />
+                        ) : (
+                          <View style={styles.collectionGroupCoverPlaceholder}>
+                            <Ionicons name="folder-outline" size={16} color="#f97316" />
+                          </View>
+                        )}
                       </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.collectionGroupName}>{c.name}</Text>
+                        <Text style={styles.collectionGroupCount}>{items.length} produto{items.length !== 1 ? 's' : ''}</Text>
+                      </View>
+                      <TouchableOpacity hitSlop={6} onPress={() => handleDeleteCollection(c.id)}>
+                        <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+
+                    <View style={styles.productGrid}>
+                      {items.map(renderProductCard)}
+                      <TouchableOpacity style={styles.addToCollectionCard} onPress={() => handleOpenNew(c.id)}>
+                        <Ionicons name="add-circle-outline" size={22} color="#f97316" />
+                        <Text style={styles.addToCollectionCardText}>Adicionar aqui</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 );
               })}
-            </View>
+
+              {products.some((p) => !p.collection_id) && (
+                <View style={styles.collectionGroup}>
+                  <Text style={[styles.label, collections.length > 0 && { marginTop: 4 }]}>Sem coleção</Text>
+                  <View style={styles.productGrid}>
+                    {products.filter((p) => !p.collection_id).map(renderProductCard)}
+                  </View>
+                </View>
+              )}
+            </>
           )}
         </ScrollView>
       )}
@@ -904,6 +1108,17 @@ const styles = StyleSheet.create({
   productActionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 10 },
   previewLink: { color: '#a855f7', fontSize: 12, fontWeight: '700' },
   manageLink: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
+  collectionsHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+  collectionsAddLink: { color: '#f97316', fontSize: 12, fontWeight: '700', marginTop: 14 },
+  collectionGroup: { marginBottom: 20 },
+  collectionGroupHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 10, marginTop: 8, marginBottom: 10 },
+  collectionGroupCoverWrap: { width: 44, height: 44, borderRadius: 8, backgroundColor: '#0a0a0a', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  collectionGroupCoverImage: { width: '100%', height: '100%' },
+  collectionGroupCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  collectionGroupName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  collectionGroupCount: { color: '#737373', fontSize: 10, marginTop: 2 },
+  addToCollectionCard: { width: '47%', minHeight: 140, borderWidth: 1, borderColor: '#292524', borderStyle: 'dashed', borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  addToCollectionCardText: { color: '#f97316', fontSize: 11, fontWeight: '700' },
   productGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   productGridCard: { width: '47%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, overflow: 'hidden' },
   productCoverWrap: { width: '100%', aspectRatio: 1, backgroundColor: '#0a0a0a', position: 'relative' },

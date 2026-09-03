@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { NUTRITION_TAGS } from './accessLevel';
 import { ACCENT, TRANSITION, FLAT_CARD, sectionTitleStyle, SUPPORT_TEXT } from './vitrineStyles';
+import { toTitleCase } from './textUtils';
 
 const MATERIAL_TYPE_META = {
   plano_alimentar: { label: 'Plano Alimentar', icon: 'restaurant-outline' },
@@ -13,17 +14,61 @@ const MATERIAL_TYPE_META = {
 const NUTRITION_LABELS = {};
 NUTRITION_TAGS.forEach((t) => { NUTRITION_LABELS[t.value] = t.label; });
 
+function MaterialItemCard({ item, onSelectMaterial }) {
+  const typeMeta = MATERIAL_TYPE_META[item.category];
+  return (
+    <View style={styles.itemCard}>
+      <View style={styles.bannerWrap}>
+        {item.coverImage ? (
+          <Image source={{ uri: item.coverImage }} style={styles.itemCover} resizeMode="cover" />
+        ) : (
+          <View style={[styles.itemCover, styles.itemCoverPlaceholder]}>
+            <Ionicons name={typeMeta?.icon || 'document-outline'} size={26} color="#525252" />
+          </View>
+        )}
+      </View>
+      <View style={styles.itemBody}>
+        <Text style={styles.itemTitle} numberOfLines={2}>{toTitleCase(item.title)}</Text>
+        {(typeMeta || item.nutritionTags.length > 0) && (
+          <View style={styles.tagRow}>
+            {typeMeta && (
+              <View style={styles.tagChip}>
+                <Text style={styles.tagChipText}>{typeMeta.label}</Text>
+              </View>
+            )}
+            {item.nutritionTags.map((t) => (
+              <View key={t} style={styles.tagChip}>
+                <Text style={styles.tagChipText}>{NUTRITION_LABELS[t] || t}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        {item.description ? <Text style={styles.itemDescription} numberOfLines={2}>{item.description}</Text> : null}
+        <TouchableOpacity style={styles.viewButton} onPress={() => onSelectMaterial?.(item)}>
+          <Text style={styles.viewButtonText}>Ver Mais</Text>
+          <Ionicons name="arrow-forward" size={13} color={ACCENT} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 export default function MaterialsSection({ onSelectMaterial, isDesktop }) {
   const [materialsData, setMaterialsData] = useState([]);
+  const [collections, setCollections] = useState([]);
+  const [selectedCollection, setSelectedCollection] = useState(null);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from('products')
-        .select('id, name, description, cover_image_url, delivery_value, material_type, nutrition_tags, active')
-        .eq('active', true)
-        .not('material_type', 'is', null)
-        .order('created_at', { ascending: false });
+      const [{ data }, { data: collectionRows }] = await Promise.all([
+        supabase
+          .from('products')
+          .select('id, name, description, cover_image_url, delivery_value, material_type, nutrition_tags, active, collection_id')
+          .eq('active', true)
+          .not('material_type', 'is', null)
+          .order('created_at', { ascending: false }),
+        supabase.from('product_collections').select('*').order('order_index'),
+      ]);
 
       const normalized = (data || []).map((p) => ({
         id: p.id,
@@ -34,12 +79,39 @@ export default function MaterialsSection({ onSelectMaterial, isDesktop }) {
         coverImage: p.cover_image_url,
         fileUrl: p.delivery_value,
         active: p.active,
+        collectionId: p.collection_id,
       }));
       setMaterialsData(normalized);
+      setCollections(collectionRows || []);
     })();
   }, []);
 
   if (materialsData.length === 0) return null;
+
+  const groupedCollections = collections
+    .map((c) => ({ ...c, items: materialsData.filter((m) => m.collectionId === c.id) }))
+    .filter((c) => c.items.length > 0);
+  const ungroupedItems = materialsData.filter((m) => !m.collectionId);
+
+  if (selectedCollection) {
+    return (
+      <View>
+        <TouchableOpacity style={styles.backLink} onPress={() => setSelectedCollection(null)}>
+          <Ionicons name="arrow-back" size={14} color={ACCENT} />
+          <Text style={styles.backLinkText}>Todas as coleções</Text>
+        </TouchableOpacity>
+        <Text style={sectionTitleStyle(isDesktop)}>{toTitleCase(selectedCollection.name).toUpperCase()}</Text>
+        {selectedCollection.description ? (
+          <Text style={styles.sectionSupport}>{selectedCollection.description}</Text>
+        ) : null}
+        <View style={styles.itemGrid}>
+          {selectedCollection.items.map((item) => (
+            <MaterialItemCard key={item.id} item={item} onSelectMaterial={onSelectMaterial} />
+          ))}
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View>
@@ -49,44 +121,32 @@ export default function MaterialsSection({ onSelectMaterial, isDesktop }) {
       </Text>
 
       <View style={styles.itemGrid}>
-        {materialsData.map((item) => {
-          const typeMeta = MATERIAL_TYPE_META[item.category];
-          return (
-            <View key={item.id} style={styles.itemCard}>
-              <View style={styles.bannerWrap}>
-                {item.coverImage ? (
-                  <Image source={{ uri: item.coverImage }} style={styles.itemCover} resizeMode="cover" />
-                ) : (
-                  <View style={[styles.itemCover, styles.itemCoverPlaceholder]}>
-                    <Ionicons name={typeMeta?.icon || 'document-outline'} size={26} color="#525252" />
-                  </View>
-                )}
-              </View>
-              <View style={styles.itemBody}>
-                <Text style={styles.itemTitle} numberOfLines={2}>{item.title}</Text>
-                {(typeMeta || item.nutritionTags.length > 0) && (
-                  <View style={styles.tagRow}>
-                    {typeMeta && (
-                      <View style={styles.tagChip}>
-                        <Text style={styles.tagChipText}>{typeMeta.label}</Text>
-                      </View>
-                    )}
-                    {item.nutritionTags.map((t) => (
-                      <View key={t} style={styles.tagChip}>
-                        <Text style={styles.tagChipText}>{NUTRITION_LABELS[t] || t}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-                {item.description ? <Text style={styles.itemDescription} numberOfLines={2}>{item.description}</Text> : null}
-                <TouchableOpacity style={styles.viewButton} onPress={() => onSelectMaterial?.(item)}>
-                  <Text style={styles.viewButtonText}>Ver Mais</Text>
-                  <Ionicons name="arrow-forward" size={13} color={ACCENT} />
-                </TouchableOpacity>
+        {groupedCollections.map((c) => (
+          <TouchableOpacity key={c.id} style={styles.itemCard} onPress={() => setSelectedCollection(c)}>
+            <View style={styles.bannerWrap}>
+              {c.cover_image_url ? (
+                <Image source={{ uri: c.cover_image_url }} style={styles.itemCover} resizeMode="cover" />
+              ) : (
+                <View style={[styles.itemCover, styles.itemCoverPlaceholder]}>
+                  <Ionicons name="folder-outline" size={26} color="#525252" />
+                </View>
+              )}
+              <View style={styles.collectionCountBadge}>
+                <Text style={styles.collectionCountBadgeText}>{c.items.length} material{c.items.length !== 1 ? 'is' : ''}</Text>
               </View>
             </View>
-          );
-        })}
+            <View style={styles.itemBody}>
+              <Text style={styles.itemTitle} numberOfLines={2}>{toTitleCase(c.name)}</Text>
+              <View style={styles.viewButton}>
+                <Text style={styles.viewButtonText}>Acessar Coleção</Text>
+                <Ionicons name="arrow-forward" size={13} color={ACCENT} />
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+        {ungroupedItems.map((item) => (
+          <MaterialItemCard key={item.id} item={item} onSelectMaterial={onSelectMaterial} />
+        ))}
       </View>
     </View>
   );
@@ -103,9 +163,13 @@ const styles = StyleSheet.create({
   },
   itemGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   itemCard: { width: '48%', ...FLAT_CARD, borderRadius: 12, padding: 0, overflow: 'hidden' },
-  bannerWrap: { width: '100%', height: 120, position: 'relative' },
+  bannerWrap: { width: '100%', aspectRatio: 16 / 9, position: 'relative' },
   itemCover: { width: '100%', height: '100%', backgroundColor: '#171717' },
   itemCoverPlaceholder: { alignItems: 'center', justifyContent: 'center' },
+  collectionCountBadge: { position: 'absolute', bottom: 8, left: 8, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
+  collectionCountBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
+  backLink: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center', marginBottom: 10 },
+  backLinkText: { color: ACCENT, fontSize: 12, fontWeight: '700' },
   itemBody: { padding: 10 },
   itemTitle: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
