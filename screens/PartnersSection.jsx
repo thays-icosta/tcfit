@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, Platform, Linking, Pressable } from 'react-native';
 import { supabase } from './supabaseClient';
 
-const GRAYSCALE_FILTER = Platform.OS === 'web'
-  ? { filter: 'grayscale(1) opacity(0.8)', transitionProperty: 'filter', transitionDuration: '200ms' }
-  : {};
-const COLOR_FILTER = Platform.OS === 'web' ? { filter: 'grayscale(0) opacity(1)' } : {};
+// Note: CSS `filter` and `mix-blend-mode` can't be combined here — RN-Web renders
+// the logo via a nested background-image div and applies `filter` inline on that
+// inner div while `mixBlendMode` lands on its wrapper, and that split silently
+// breaks the blend. Opacity alone (a plain, unsplit property) works reliably.
+const DIM_STYLE = Platform.OS === 'web'
+  ? { opacity: 0.85, mixBlendMode: 'multiply', transitionProperty: 'opacity', transitionDuration: '200ms' }
+  : { opacity: 0.85 };
+const FULL_STYLE = Platform.OS === 'web' ? { opacity: 1, mixBlendMode: 'multiply' } : { opacity: 1 };
 
 function PartnerLogo({ partner }) {
   const [hovered, setHovered] = useState(false);
@@ -25,7 +29,7 @@ function PartnerLogo({ partner }) {
     >
       <Image
         source={{ uri: partner.logo_url }}
-        style={[styles.logoImage, hovered ? COLOR_FILTER : GRAYSCALE_FILTER]}
+        style={[styles.logoImage, hovered ? FULL_STYLE : DIM_STYLE]}
         resizeMode="contain"
       />
     </Pressable>
@@ -82,7 +86,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 12,
   },
-  logoRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 24 },
-  logoWrap: { height: 40, minWidth: 60, alignItems: 'center', justifyContent: 'center' },
-  logoImage: { width: 90, height: 40 },
+  logoRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 32 },
+  logoWrap: { height: 56, minWidth: 80, alignItems: 'center', justifyContent: 'center', backgroundColor: '#101218', borderRadius: 8 },
+  logoImage: { width: 120, height: 56 },
 });
