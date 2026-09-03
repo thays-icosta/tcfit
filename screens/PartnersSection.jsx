@@ -1,19 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Platform, Linking, Pressable } from 'react-native';
+import { View, Text, Image, StyleSheet, Linking, Pressable } from 'react-native';
 import { supabase } from './supabaseClient';
 
-// Note: CSS `filter` and `mix-blend-mode` can't be combined here — RN-Web renders
-// the logo via a nested background-image div and applies `filter` inline on that
-// inner div while `mixBlendMode` lands on its wrapper, and that split silently
-// breaks the blend. Opacity alone (a plain, unsplit property) works reliably.
-const DIM_STYLE = Platform.OS === 'web'
-  ? { opacity: 0.85, mixBlendMode: 'multiply', transitionProperty: 'opacity', transitionDuration: '200ms' }
-  : { opacity: 0.85 };
-const FULL_STYLE = Platform.OS === 'web' ? { opacity: 1, mixBlendMode: 'multiply' } : { opacity: 1 };
-
 function PartnerLogo({ partner }) {
-  const [hovered, setHovered] = useState(false);
-
   const handlePress = () => {
     if (partner.affiliate_link) {
       Linking.openURL(partner.affiliate_link).catch(() => {});
@@ -21,17 +10,8 @@ function PartnerLogo({ partner }) {
   };
 
   return (
-    <Pressable
-      style={styles.logoWrap}
-      onPress={handlePress}
-      onHoverIn={() => setHovered(true)}
-      onHoverOut={() => setHovered(false)}
-    >
-      <Image
-        source={{ uri: partner.logo_url }}
-        style={[styles.logoImage, hovered ? FULL_STYLE : DIM_STYLE]}
-        resizeMode="contain"
-      />
+    <Pressable style={styles.logoWrap} onPress={handlePress}>
+      <Image source={{ uri: partner.logo_url }} style={styles.logoImage} resizeMode="contain" />
     </Pressable>
   );
 }
@@ -86,7 +66,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 12,
   },
-  logoRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 32 },
-  logoWrap: { height: 56, minWidth: 80, alignItems: 'center', justifyContent: 'center', backgroundColor: '#101218', borderRadius: 8 },
-  logoImage: { width: 120, height: 56 },
+  logoRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 20 },
+  logoWrap: { height: 80, minWidth: 100, alignItems: 'center', justifyContent: 'center' },
+  logoImage: { width: 170, height: 80 },
 });
