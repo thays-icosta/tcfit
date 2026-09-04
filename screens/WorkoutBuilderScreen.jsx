@@ -61,6 +61,12 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
 
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiInstruction, setAiInstruction] = useState('');
+  const [aiProcessing, setAiProcessing] = useState(false);
+  const [aiRecording, setAiRecording] = useState(false);
+  const [aiRecognitionRef, setAiRecognitionRef] = useState(null);
+
   const loadWorkouts = async () => {
     const { data } = await supabase
       .from('workouts')
@@ -336,6 +342,103 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     showAlert('Aplicado!', `Ficha "${template.name}" criada com ${templateItems?.length || 0} exercício(s) a partir do template.`);
   };
 
+  const handleOpenAiModal = () => {
+    setAiInstruction('');
+    setShowAiModal(true);
+  };
+
+  const handleToggleAiRecording = () => {
+    const SpeechRecognitionCtor = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    if (!SpeechRecognitionCtor) {
+      showAlert('Não disponível', 'Reconhecimento de voz não é suportado nesse navegador. Digite o pedido no campo de texto.');
+      return;
+    }
+
+    if (aiRecording) {
+      aiRecognitionRef?.stop();
+      return;
+    }
+
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = 'pt-BR';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results?.[0]?.[0]?.transcript || '';
+      setAiInstruction((prev) => (prev ? `${prev} ${transcript}` : transcript));
+    };
+    recognition.onerror = () => setAiRecording(false);
+    recognition.onend = () => setAiRecording(false);
+
+    setAiRecognitionRef(recognition);
+    setAiRecording(true);
+    recognition.start();
+  };
+
+  const handleGenerateWorkoutWithAi = async () => {
+    if (!aiInstruction.trim()) {
+      showAlert('Ops', 'Descreve o treino que você quer gerar (ex: "treino de quadríceps, 5 exercícios, 4 séries de 10 a 12").');
+      return;
+    }
+    setAiProcessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-workout', {
+        body: { instruction: aiInstruction.trim() },
+      });
+
+      if (error || data?.error) {
+        showAlert('Não deu pra gerar o treino', data?.error || error?.message || 'Tenta de novo em alguns instantes.');
+        setAiProcessing(false);
+        return;
+      }
+
+      if (!data.exercises || data.exercises.length === 0) {
+        showAlert('Nenhum exercício reconhecido', 'A IA não conseguiu combinar o pedido com exercícios da sua biblioteca. Tenta descrever de outro jeito.');
+        setAiProcessing(false);
+        return;
+      }
+
+      const currentPhase = getCurrentPhase(periodizationPlan, periodizationPhases);
+      const { data: newWorkout, error: workoutError } = await supabase
+        .from('workouts')
+        .insert({
+          student_id: studentId,
+          personal_id: personalId,
+          name: data.workout_name || 'Treino Gerado por IA',
+          active: true,
+          phase_id: currentPhase ? currentPhase.phase.id : null,
+        })
+        .select()
+        .single();
+
+      if (workoutError || !newWorkout) {
+        showAlert('Erro', workoutError?.message || 'Não foi possível criar a ficha.');
+        setAiProcessing(false);
+        return;
+      }
+
+      const rows = data.exercises.map((ex, index) => ({
+        workout_id: newWorkout.id,
+        exercise_id: ex.exercise_id,
+        order_index: index,
+        sets: ex.sets,
+        reps: ex.reps,
+        rest_time_seconds: ex.rest_time_seconds,
+      }));
+      await supabase.from('workout_exercises').insert(rows);
+
+      setAiProcessing(false);
+      setShowAiModal(false);
+      await loadWorkouts();
+      setActiveWorkoutId(newWorkout.id);
+      showAlert('Treino gerado!', `"${newWorkout.name}" criado com ${rows.length} exercício(s). Revisa e ajusta o que quiser antes de salvar.`);
+    } catch (e) {
+      setAiProcessing(false);
+      showAlert('Erro', e?.message || 'Não foi possível gerar o treino agora.');
+    }
+  };
+
   const handleConfirmAddExercise = async (exercise, config) => {
     if (!activeWorkoutId) {
       showAlert('Ops', 'Cria ou seleciona uma ficha primeiro.');
@@ -522,6 +625,12 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       {workouts.length > 0 && (
         <Text style={styles.hintText}>Segure uma aba pra renomear, duplicar ou excluir</Text>
       )}
+
+      <TouchableOpacity style={styles.aiButton} onPress={handleOpenAiModal}>
+        <Ionicons name="sparkles" size={16} color="#0a0a0a" />
+        <Text style={styles.aiButtonText}>Gerar Treino com IA</Text>
+      </TouchableOpacity>
+
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.actionsRow} contentContainerStyle={styles.actionsRowContent}>
         <TouchableOpacity style={styles.actionChip} onPress={() => setShowCreateFichaModal(true)}>
           <Text style={styles.actionChipText}>+ Nova Ficha</Text>
@@ -661,6 +770,47 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         <Text style={styles.saveButtonText}>Salvar Ficha</Text>
       </TouchableOpacity>
       </ScrollView>
+
+      <Modal visible={showAiModal} transparent animationType="slide" onRequestClose={() => setShowAiModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>✨ Gerar Treino com IA</Text>
+            <Text style={styles.modalSubtitle}>
+              Descreve o treino que você quer (objetivo, grupo muscular, quantidade de exercícios, séries/reps). A IA só usa exercícios que já estão na sua biblioteca.
+            </Text>
+
+            <TextInput
+              style={[styles.modalInput, { minHeight: 90, textAlignVertical: 'top' }]}
+              placeholder='ex: "Treino de quadríceps com 5 exercícios, 4 séries de 10 a 12 repetições, 60 segundos de descanso"'
+              placeholderTextColor="#525252"
+              value={aiInstruction}
+              onChangeText={setAiInstruction}
+              multiline
+              editable={!aiProcessing}
+            />
+
+            <TouchableOpacity
+              style={[styles.aiMicButton, aiRecording && styles.aiMicButtonActive]}
+              onPress={handleToggleAiRecording}
+              disabled={aiProcessing}
+            >
+              <Ionicons name={aiRecording ? 'mic' : 'mic-outline'} size={18} color={aiRecording ? '#ef4444' : '#a3a3a3'} />
+              <Text style={[styles.aiMicButtonText, aiRecording && styles.aiMicButtonTextActive]}>
+                {aiRecording ? 'Gravando... toque pra parar' : 'Falar em vez de digitar'}
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.modalButtonRow}>
+              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setShowAiModal(false)} disabled={aiProcessing}>
+                <Text style={styles.modalCancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalConfirmButton} onPress={handleGenerateWorkoutWithAi} disabled={aiProcessing}>
+                {aiProcessing ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.modalConfirmButtonText}>Processar e Preencher</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <PromptModal
         visible={!!renamingWorkout}
@@ -832,6 +982,12 @@ const styles = StyleSheet.create({
   fichaTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   fichaTabTextActive: { color: '#0a0a0a' },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 6 },
+  aiButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#E05A17', borderRadius: 12, paddingVertical: 13, marginHorizontal: 16, marginBottom: 10 },
+  aiButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
+  aiMicButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, marginTop: 12 },
+  aiMicButtonActive: { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
+  aiMicButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  aiMicButtonTextActive: { color: '#ef4444' },
   actionsRow: { marginBottom: 8 },
   actionsRowContent: { paddingHorizontal: 16, gap: 8 },
   actionChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
