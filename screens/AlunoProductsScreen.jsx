@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Image, Linking, Modal, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Image, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import RecipeDetailScreen from './RecipeDetailScreen';
 import ProgramDetailScreen from './ProgramDetailScreen';
+import ProductDetailModal from './ProductDetailModal';
 import { hasAccessByLevel } from './accessLevel';
 import { HeaderBack } from './Header';
 
@@ -56,11 +57,6 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
     })();
   }, [studentId, personalId]);
 
-  const handleUnlockRequest = (product) => {
-    const message = `Olá! Vi o conteúdo "${product.name}" no app e quero desbloquear.`;
-    Linking.openURL(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`).catch(() => {});
-  };
-
   const handleUpsellConsultoria = () => {
     const phone = (personalPhone || WHATSAPP_NUMBER).replace(/\D/g, '') || WHATSAPP_NUMBER;
     const message = `Olá${personalName ? `, ${personalName}` : ''}! Vi no app e quero saber mais sobre a consultoria individual com acompanhamento exclusivo.`;
@@ -83,7 +79,6 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
     );
   }
 
-  const linkedRecipes = selectedProduct ? recipes.filter((r) => (selectedProduct.recipe_ids || []).includes(r.id)) : [];
   const selectedUnlocked = selectedProduct ? unlockedProductIds.has(selectedProduct.id) : false;
 
   return (
@@ -145,75 +140,15 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
         </ScrollView>
       )}
 
-      <Modal visible={!!selectedProduct} transparent animationType="slide" onRequestClose={() => setSelectedProduct(null)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <ScrollView>
-              {selectedProduct?.cover_image_url ? (
-                <Image source={{ uri: selectedProduct.cover_image_url }} style={styles.modalCover} resizeMode="cover" />
-              ) : null}
-              <Text style={styles.modalTitle}>{selectedProduct?.name}</Text>
-              {selectedProduct?.description ? <Text style={styles.modalDescription}>{selectedProduct.description}</Text> : null}
-              <Text style={styles.modalPrice}>{selectedProduct?.price != null ? `R$ ${Number(selectedProduct.price).toFixed(2)}` : 'Consulte'}</Text>
-
-              {selectedUnlocked ? (
-                <>
-                  {linkedRecipes.length > 0 && (
-                    <>
-                      <Text style={styles.modalSectionLabel}>O que está incluso</Text>
-                      {linkedRecipes.map((r) => (
-                        <TouchableOpacity key={r.id} style={styles.includedRow} onPress={() => setSelectedRecipe(r)}>
-                          <Ionicons name="restaurant-outline" size={16} color="#f97316" />
-                          <Text style={styles.includedRowText}>{r.title}</Text>
-                          <Text style={styles.chevron}>›</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </>
-                  )}
-                  {(() => {
-                    const fileUrl = selectedProduct?.pdf_url || (selectedProduct?.delivery_type === 'arquivo' ? selectedProduct?.delivery_value : null);
-                    if (!fileUrl) return null;
-                    return (
-                      <>
-                        {Platform.OS === 'web' && fileUrl.toLowerCase().includes('.pdf') && (
-                          <iframe
-                            src={fileUrl}
-                            style={{ width: '100%', height: 340, border: 'none', borderRadius: 12, marginBottom: 10, background: '#0a0a0a' }}
-                            title="Pré-visualização do PDF"
-                          />
-                        )}
-                        <TouchableOpacity
-                          style={styles.unlockButton}
-                          onPress={() => Linking.openURL(fileUrl).catch(() => {})}
-                        >
-                          <Text style={styles.unlockButtonText}>
-                            {fileUrl.toLowerCase().includes('.pdf') ? '📄 Abrir E-book em PDF' : '📥 Abrir Arquivo'}
-                          </Text>
-                        </TouchableOpacity>
-                      </>
-                    );
-                  })()}
-                  {selectedProduct?.delivery_type === 'chave' && selectedProduct?.delivery_value && (
-                    <View style={styles.keyBox}>
-                      <Text style={styles.keyBoxLabel}>Chave de liberação</Text>
-                      <Text style={styles.keyBoxValue}>{selectedProduct.delivery_value}</Text>
-                    </View>
-                  )}
-                </>
-              ) : (
-                <TouchableOpacity style={styles.unlockButton} onPress={() => handleUnlockRequest(selectedProduct)}>
-                  <Ionicons name="lock-open-outline" size={16} color="#0a0a0a" />
-                  <Text style={styles.unlockButtonText}>Desbloquear Conteúdo / Assinar Plano</Text>
-                </TouchableOpacity>
-              )}
-
-              <TouchableOpacity style={styles.modalCloseButton} onPress={() => setSelectedProduct(null)}>
-                <Text style={styles.modalCloseButtonText}>Fechar</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+      <ProductDetailModal
+        product={selectedProduct}
+        unlocked={selectedUnlocked}
+        recipes={recipes}
+        onSelectRecipe={setSelectedRecipe}
+        onClose={() => setSelectedProduct(null)}
+        personalName={personalName}
+        personalPhone={personalPhone}
+      />
     </View>
   );
 }
@@ -235,23 +170,4 @@ const styles = StyleSheet.create({
   cardInfo: { padding: 10 },
   cardName: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', minHeight: 32 },
   cardPrice: { color: '#f97316', fontSize: 15, fontWeight: '800', marginTop: 6 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#171717', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '85%' },
-  modalCover: { width: '100%', aspectRatio: 1, borderRadius: 12, marginBottom: 14, backgroundColor: '#0a0a0a' },
-  modalTitle: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginBottom: 6 },
-  modalDescription: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginBottom: 10 },
-  modalPrice: { color: '#f97316', fontSize: 20, fontWeight: '800', marginBottom: 16 },
-  modalSectionLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8 },
-  includedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#0a0a0a', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8 },
-  includedRowText: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flex: 1 },
-  chevron: { color: '#525252', fontSize: 18 },
-  unlockButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
-  unlockButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
-  addedBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(34,197,94,0.1)', borderRadius: 10, padding: 12, marginTop: 8 },
-  addedBoxText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
-  keyBox: { backgroundColor: '#0a0a0a', borderRadius: 10, padding: 14, marginTop: 8 },
-  keyBoxLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6 },
-  keyBoxValue: { color: '#22c55e', fontSize: 15, fontWeight: '800', fontFamily: 'Courier' },
-  modalCloseButton: { paddingVertical: 12, alignItems: 'center', marginTop: 12 },
-  modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
 });

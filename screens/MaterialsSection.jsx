@@ -134,10 +134,6 @@ export default function MaterialsSection({ onSelectMaterial, isDesktop }) {
             </View>
             <View style={styles.itemBody}>
               <Text style={styles.itemTitle} numberOfLines={2}>{toTitleCase(c.name)}</Text>
-              <View style={styles.viewButton}>
-                <Text style={styles.viewButtonText}>Acessar Coleção</Text>
-                <Ionicons name="arrow-forward" size={13} color={ACCENT} />
-              </View>
             </View>
           </TouchableOpacity>
         ))}

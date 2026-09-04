@@ -131,10 +131,6 @@ export default function WorkoutProgramsSection({ onSelectProgram, isDesktop }) {
                     ))}
                   </View>
                 )}
-                <View style={styles.viewButton}>
-                  <Text style={styles.viewButtonText}>Acessar Coleção</Text>
-                  <Ionicons name="arrow-forward" size={13} color={ACCENT} />
-                </View>
               </View>
             </TouchableOpacity>
           );

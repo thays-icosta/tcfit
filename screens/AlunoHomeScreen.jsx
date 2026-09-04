@@ -22,6 +22,7 @@ import { hasAccessByLevel, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
 import { HeaderWelcome, HeaderBack } from './Header';
 import { toTitleCase } from './textUtils';
 import { COVER_TOP_IMAGE } from './vitrineStyles';
+import ProductDetailModal from './ProductDetailModal';
 
 const ACCENT = '#E05A17';
 
@@ -119,6 +120,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [openCategoryGroup, setOpenCategoryGroup] = useState(null);
   const [collections, setCollections] = useState([]);
   const [openCollection, setOpenCollection] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [showAnamnesePrompt, setShowAnamnesePrompt] = useState(false);
   const [showEvolution, setShowEvolution] = useState(false);
   const [showEvolutionLock, setShowEvolutionLock] = useState(false);
@@ -520,7 +522,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 <TouchableOpacity
                   key={p.id}
                   style={styles.categoryListCard}
-                  onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setActiveTab('loja'))}
+                  onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setSelectedProduct(p))}
                 >
                   <View style={styles.categoryListCoverWrap}>
                     {p.cover_image_url ? (
@@ -551,6 +553,14 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             })
           )}
         </ScrollView>
+        <ProductDetailModal
+          product={selectedProduct}
+          unlocked={selectedProduct ? unlockedProductIds.has(selectedProduct.id) : false}
+          recipes={[]}
+          onClose={() => setSelectedProduct(null)}
+          personalName={personalName}
+          personalPhone={personalPhone}
+        />
       </View>
     );
   }
@@ -571,7 +581,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 <TouchableOpacity
                   key={p.id}
                   style={styles.categoryListCard}
-                  onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setActiveTab('loja'))}
+                  onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setSelectedProduct(p))}
                 >
                   <View style={styles.categoryListCoverWrap}>
                     {p.cover_image_url ? (
@@ -594,6 +604,14 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             })
           )}
         </ScrollView>
+        <ProductDetailModal
+          product={selectedProduct}
+          unlocked={selectedProduct ? unlockedProductIds.has(selectedProduct.id) : false}
+          recipes={[]}
+          onClose={() => setSelectedProduct(null)}
+          personalName={personalName}
+          personalPhone={personalPhone}
+        />
       </View>
     );
   }
@@ -1028,9 +1046,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             <TouchableOpacity style={styles.iconButton} onPress={() => setMode('agenda')}>
               <Ionicons name="calendar-outline" size={20} color="#a3a3a3" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton} onPress={() => handleOpenChatFor('')}>
-              <Ionicons name="chatbubbles-outline" size={20} color="#a3a3a3" />
-            </TouchableOpacity>
           </View>
         }
       />
@@ -1133,33 +1148,31 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
           {hubGroups.length > 0 && (
             <>
               <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>HUB DE PROGRAMAS</Text>
-              <View style={styles.hubList}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginBottom: 24 }}>
                 {hubGroups.map((group) => (
-                  <TouchableOpacity key={group.key} style={styles.hubCard} onPress={() => setOpenCategoryGroup(group)}>
-                    <View style={styles.hubCoverWrap}>
+                  <TouchableOpacity key={group.key} style={styles.nutritionCard} onPress={() => setOpenCategoryGroup(group)}>
+                    <View style={styles.nutritionCoverWrap}>
                       {group.cover ? (
-                        <Image source={{ uri: group.cover }} style={styles.hubCoverImage} resizeMode="cover" />
+                        <Image source={{ uri: group.cover }} style={styles.nutritionCoverImage} resizeMode="cover" />
                       ) : (
-                        <View style={styles.hubCoverPlaceholder}>
-                          <Ionicons name={group.icon} size={28} color={ACCENT} />
+                        <View style={styles.nutritionCoverPlaceholder}>
+                          <Ionicons name={group.icon} size={22} color={ACCENT} />
                         </View>
                       )}
                     </View>
-                    <View style={styles.hubBody}>
-                      <Text style={styles.hubTitle}>{group.title}</Text>
-                      {group.badges.length > 0 && (
-                        <View style={styles.hubBadgeRow}>
-                          {group.badges.map((b) => (
-                            <View key={b} style={styles.hubBadgeChip}>
-                              <Text style={styles.hubBadgeChipText}>{b}</Text>
-                            </View>
-                          ))}
-                        </View>
-                      )}
-                    </View>
+                    <Text style={styles.nutritionCardName} numberOfLines={2}>{group.title}</Text>
+                    {group.badges.length > 0 && (
+                      <View style={styles.hubBadgeRow}>
+                        {group.badges.map((b) => (
+                          <View key={b} style={styles.hubBadgeChip}>
+                            <Text style={styles.hubBadgeChipText}>{b}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
                   </TouchableOpacity>
                 ))}
-              </View>
+              </ScrollView>
             </>
           )}
 
@@ -1185,7 +1198,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                     )}
                   </View>
                   <Text style={styles.nutritionCardName} numberOfLines={3}>{toTitleCase(c.name)}</Text>
-                  <Text style={styles.nutritionCollectionCta}>Acessar Coleção →</Text>
                 </TouchableOpacity>
               ))}
               {ungroupedNutritionItems.map((p) => {
@@ -1194,7 +1206,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                   <TouchableOpacity
                     key={p.id}
                     style={styles.nutritionCard}
-                    onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setActiveTab('loja'))}
+                    onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setSelectedProduct(p))}
                   >
                     <View style={styles.nutritionCoverWrap}>
                       {p.cover_image_url ? (
@@ -1277,6 +1289,14 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
       personalPhone={personalPhone}
       featureLabel="Evolução Física"
     />
+    <ProductDetailModal
+      product={selectedProduct}
+      unlocked={selectedProduct ? unlockedProductIds.has(selectedProduct.id) : false}
+      recipes={[]}
+      onClose={() => setSelectedProduct(null)}
+      personalName={personalName}
+      personalPhone={personalPhone}
+    />
     </View>
   );
 }
@@ -1317,13 +1337,6 @@ const styles = StyleSheet.create({
   evolutionRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 16, marginBottom: 24 },
   evolutionRowTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
   evolutionRowSubtitle: { color: '#A1A1AA', fontSize: 11, marginTop: 2 },
-  hubList: { gap: 12, marginBottom: 24 },
-  hubCard: { backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, overflow: 'hidden' },
-  hubCoverWrap: { width: '100%', aspectRatio: 16 / 9 },
-  hubCoverImage: { width: '100%', height: '100%' },
-  hubCoverPlaceholder: { width: '100%', height: '100%', backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  hubBody: { padding: 14 },
-  hubTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800', letterSpacing: 0.4 },
   hubBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   hubBadgeChip: { backgroundColor: '#27272A', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
   hubBadgeChipText: { color: '#D4D4D8', fontSize: 10, fontWeight: '600' },
@@ -1334,7 +1347,6 @@ const styles = StyleSheet.create({
   nutritionCoverImage: { ...COVER_TOP_IMAGE },
   nutritionCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   nutritionCardName: { color: '#f5f5f5', fontSize: 11, fontWeight: '600', lineHeight: 15 },
-  nutritionCollectionCta: { color: ACCENT, fontSize: 10, fontWeight: '700', marginTop: 3 },
   downloadsStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 14, paddingVertical: 12, marginTop: 20 },
   downloadsStripText: { color: '#A1A1AA', fontSize: 12, fontWeight: '700' },
   partnersFooterSection: { marginTop: 24 },
