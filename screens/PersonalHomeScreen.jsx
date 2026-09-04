@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Share, Modal, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Share, Modal, Image, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from './supabaseClient';
@@ -33,6 +33,8 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [showAnamneseConfig, setShowAnamneseConfig] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
   const [financeSummary, setFinanceSummary] = useState({ monthlyRevenue: 0, dueCount: 0 });
+  const [studentFilter, setStudentFilter] = useState('todos');
+  const [studentSearch, setStudentSearch] = useState('');
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -214,6 +216,18 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     );
   }
 
+  const filteredStudents = students
+    .filter((s) => {
+      if (studentFilter === 'vip') return s.access_level === 'consultoria_vip';
+      if (studentFilter === 'app') return s.access_level !== 'consultoria_vip';
+      return true;
+    })
+    .filter((s) => {
+      const q = studentSearch.trim().toLowerCase();
+      if (!q) return true;
+      return s.name?.toLowerCase().includes(q) || s.email?.toLowerCase().includes(q);
+    });
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <HeaderWelcome
@@ -290,15 +304,50 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
 
       <Text style={styles.sectionTitle}>Meus Alunos</Text>
 
+      <View style={styles.studentFilterTabs}>
+        {[
+          { value: 'todos', label: 'Todos' },
+          { value: 'vip', label: 'Consultoria VIP' },
+          { value: 'app', label: 'Membros do App' },
+        ].map((tab) => (
+          <TouchableOpacity
+            key={tab.value}
+            style={[styles.studentFilterTab, studentFilter === tab.value && styles.studentFilterTabActive]}
+            onPress={() => setStudentFilter(tab.value)}
+          >
+            <Text style={[styles.studentFilterTabText, studentFilter === tab.value && styles.studentFilterTabTextActive]}>{tab.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={styles.studentSearchBox}>
+        <Ionicons name="search-outline" size={16} color="#737373" />
+        <TextInput
+          style={styles.studentSearchInput}
+          placeholder="Buscar por nome ou e-mail"
+          placeholderTextColor="#525252"
+          value={studentSearch}
+          onChangeText={setStudentSearch}
+        />
+        {studentSearch.length > 0 && (
+          <TouchableOpacity hitSlop={8} onPress={() => setStudentSearch('')}>
+            <Ionicons name="close-circle" size={16} color="#525252" />
+          </TouchableOpacity>
+        )}
+      </View>
+
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : students.length === 0 ? (
         <Text style={styles.emptyText}>Nenhum aluno ainda. Toque em &quot;+ Aluno&quot; pra começar.</Text>
+      ) : filteredStudents.length === 0 ? (
+        <Text style={styles.emptyText}>Nenhum aluno encontrado.</Text>
       ) : (
-        students.map((item) => {
+        filteredStudents.map((item) => {
           const done = completedToday[item.id];
           const daysSince = daysSinceLastTrained[item.id];
           const showAlert = !done && (daysSince === null || daysSince >= 3);
+          const isVip = item.access_level === 'consultoria_vip';
           return (
             <TouchableOpacity key={item.id} style={styles.studentCard} onPress={() => setDetailFor(item)}>
               <View style={styles.avatarCircle}>
@@ -311,6 +360,11 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
               <View style={{ flex: 1 }}>
                 <Text style={styles.studentName}>{item.name}</Text>
                 <Text style={styles.studentEmail}>{item.email}</Text>
+                <View style={[styles.planBadge, isVip ? styles.planBadgeVip : styles.planBadgeApp]}>
+                  <Text style={[styles.planBadgeText, isVip ? styles.planBadgeTextVip : styles.planBadgeTextApp]}>
+                    {isVip ? 'Consultoria VIP' : 'Acesso App'}
+                  </Text>
+                </View>
               </View>
               <View style={styles.statusTag}>
                 <View style={[styles.statusDot, done ? styles.statusDotDone : styles.statusDotPending]} />
@@ -379,12 +433,25 @@ const styles = StyleSheet.create({
   chatBannerSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
   sectionTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginBottom: 12 },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12 },
+  studentFilterTabs: { flexDirection: 'row', backgroundColor: '#171717', borderRadius: 10, padding: 3, marginBottom: 10, gap: 4 },
+  studentFilterTab: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 8 },
+  studentFilterTabActive: { backgroundColor: '#f97316' },
+  studentFilterTabText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', textAlign: 'center' },
+  studentFilterTabTextActive: { color: '#0a0a0a' },
+  studentSearchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 14 },
+  studentSearchInput: { flex: 1, color: '#f5f5f5', fontSize: 13 },
   studentCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, marginBottom: 10 },
   avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center', marginRight: 12, overflow: 'hidden' },
   avatarImage: { width: 44, height: 44 },
   avatarLetter: { color: '#f97316', fontSize: 17, fontWeight: '800' },
   studentName: { color: '#f5f5f5', fontSize: 15, fontWeight: '600' },
   studentEmail: { color: '#737373', fontSize: 11, marginTop: 1 },
+  planBadge: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, marginTop: 5 },
+  planBadgeVip: { backgroundColor: 'rgba(168,85,247,0.12)' },
+  planBadgeApp: { backgroundColor: 'rgba(115,115,115,0.16)' },
+  planBadgeText: { fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
+  planBadgeTextVip: { color: '#a855f7' },
+  planBadgeTextApp: { color: '#a3a3a3' },
   statusTag: { alignItems: 'flex-end', marginRight: 8 },
   statusDot: { width: 8, height: 8, borderRadius: 4, marginBottom: 3 },
   statusDotDone: { backgroundColor: '#22c55e' },

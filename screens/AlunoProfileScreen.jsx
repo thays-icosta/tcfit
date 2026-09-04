@@ -350,7 +350,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
 
           <TouchableOpacity style={[styles.shortcutCard, styles.shortcutCardOrange]} onPress={() => setShowVolume(true)}>
             <Ionicons name="barbell-outline" size={24} color="#f97316" />
-            <Text style={styles.shortcutCardText}>Resumo Semanal</Text>
+            <Text style={styles.shortcutCardText}>Meu Histórico de Treinos</Text>
           </TouchableOpacity>
         </View>
 
