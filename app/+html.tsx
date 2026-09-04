@@ -43,14 +43,24 @@ export default function Root({ children }: PropsWithChildren) {
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js');
-                });
-                navigator.serviceWorker.addEventListener('controllerchange', () => {
-                  window.location.reload();
-                });
-              }
+              try {
+                if ('serviceWorker' in navigator) {
+                  window.addEventListener('load', () => {
+                    try {
+                      navigator.serviceWorker.register('/sw.js').catch(function () {});
+                    } catch (e) {}
+                  });
+
+                  var swReloaded = false;
+                  navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (swReloaded) return;
+                    swReloaded = true;
+                    try {
+                      window.location.reload();
+                    } catch (e) {}
+                  });
+                }
+              } catch (e) {}
             `,
           }}
         />

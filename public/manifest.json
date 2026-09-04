@@ -3,6 +3,7 @@
   "short_name": "TcFit",
   "description": "TcFit — plataforma de treino e nutrição para personal trainers e alunos.",
   "start_url": "/",
+  "scope": "/",
   "id": "/",
   "display": "standalone",
   "orientation": "portrait",

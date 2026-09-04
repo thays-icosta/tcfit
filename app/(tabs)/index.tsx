@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator, Platform } from 'react-native';
 import { useGlobalSearchParams, useRouter } from 'expo-router';
 import * as Notifications from 'expo-notifications';
-import * as Updates from 'expo-updates';
 import AuthScreen from '../../screens/AuthScreen';
 import PersonalHomeScreen from '../../screens/PersonalHomeScreen';
 import AlunoHomeScreen from '../../screens/AlunoHomeScreen';
@@ -24,24 +23,6 @@ export default function HomeTab() {
       setAuthView('auth');
     }
   }, [params.view]);
-
-  // By default an OTA update only downloads in the background on launch and
-  // renders on the *next* one — actively checking, fetching and reloading here
-  // means a fresh install shows the latest bundle the very first time it's opened.
-  useEffect(() => {
-    if (Platform.OS === 'web' || __DEV__) return;
-    (async () => {
-      try {
-        const result = await Updates.checkForUpdateAsync();
-        if (result.isAvailable) {
-          await Updates.fetchUpdateAsync();
-          await Updates.reloadAsync();
-        }
-      } catch (e) {
-        console.log('update check failed', (e as Error)?.message);
-      }
-    })();
-  }, []);
 
   const loadProfile = async (sessionUser) => {
     const { data, error } = await supabase
