@@ -11,7 +11,7 @@ import { registerPushToken, extractChatTarget } from '../../screens/pushNotifica
 
 export default function HomeTab() {
   const router = useRouter();
-  const params = useGlobalSearchParams<{ view?: string; mode?: string; role?: string; invite?: string }>();
+  const params = useGlobalSearchParams<{ view?: string; mode?: string; role?: string; invite?: string; chatPersonalId?: string; chatStudentId?: string }>();
   const [user, setUser] = useState<{ id: string; email?: string; name?: string } | null>(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -81,6 +81,15 @@ export default function HomeTab() {
 
     return () => subscription.remove();
   }, []);
+
+  // Web equivalent of the native tap listener above: the service worker's
+  // notificationclick handler focuses/opens the app at a URL carrying these
+  // params instead of delivering a native notification-response object.
+  useEffect(() => {
+    if (params.chatPersonalId || params.chatStudentId) {
+      setChatTarget({ personalId: params.chatPersonalId || null, studentId: params.chatStudentId || null });
+    }
+  }, [params.chatPersonalId, params.chatStudentId]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
