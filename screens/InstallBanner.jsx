@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, Linking, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const ANDROID_APK_URL = 'https://github.com/thays-icosta/tcfit/releases/download/v1.0.0-android/tcfit-latest.apk';
+const GUIDES = {
+  android: {
+    icon: 'ellipsis-vertical-outline',
+    text: 'Abra este site no Chrome, toque no menu (⋮) no canto superior direito e escolha “Adicionar à tela inicial” ou “Instalar aplicativo”. O TcFit aparece na sua tela como um app de verdade.',
+  },
+  ios: {
+    icon: 'share-outline',
+    text: 'Abra este site no Safari, toque no ícone de Compartilhar e escolha “Adicionar à Tela de Início”. O TcFit aparece na sua tela como um app de verdade.',
+  },
+};
 
 function isMobileBrowser() {
   if (typeof navigator === 'undefined' || !navigator.userAgent) return false;
@@ -10,13 +19,9 @@ function isMobileBrowser() {
 }
 
 export default function InstallBanner() {
-  const [showIosGuide, setShowIosGuide] = useState(false);
+  const [guide, setGuide] = useState(null);
 
   if (Platform.OS !== 'web' || !isMobileBrowser()) return null;
-
-  const handleInstallAndroid = () => {
-    Linking.openURL(ANDROID_APK_URL).catch(() => {});
-  };
 
   return (
     <View style={styles.section}>
@@ -26,27 +31,25 @@ export default function InstallBanner() {
       </Text>
 
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.installButton} onPress={handleInstallAndroid}>
+        <TouchableOpacity style={styles.installButton} onPress={() => setGuide('android')}>
           <Ionicons name="logo-android" size={18} color="#FFFFFF" />
           <Text style={styles.installButtonText}>Instalar no Android</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.installButton} onPress={() => setShowIosGuide(true)}>
+        <TouchableOpacity style={styles.installButton} onPress={() => setGuide('ios')}>
           <Ionicons name="logo-apple" size={18} color="#FFFFFF" />
           <Text style={styles.installButtonText}>Abrir no iPhone</Text>
         </TouchableOpacity>
       </View>
 
-      <Modal visible={showIosGuide} transparent animationType="fade" onRequestClose={() => setShowIosGuide(false)}>
+      <Modal visible={!!guide} transparent animationType="fade" onRequestClose={() => setGuide(null)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalIconCircle}>
-              <Ionicons name="share-outline" size={22} color="#E05A17" />
+              <Ionicons name={guide ? GUIDES[guide].icon : 'share-outline'} size={22} color="#E05A17" />
             </View>
             <Text style={styles.modalTitle}>Adicionar à Tela de Início</Text>
-            <Text style={styles.modalText}>
-              Abra este site no Safari, toque no ícone de Compartilhar e escolha “Adicionar à Tela de Início”. O TcFit aparece na sua tela como um app de verdade.
-            </Text>
-            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowIosGuide(false)}>
+            <Text style={styles.modalText}>{guide ? GUIDES[guide].text : ''}</Text>
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setGuide(null)}>
               <Text style={styles.modalCloseButtonText}>Entendi</Text>
             </TouchableOpacity>
           </View>
