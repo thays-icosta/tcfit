@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 import WorkoutBuilderScreen from './WorkoutBuilderScreen';
 import DietBuilderScreen from './DietBuilderScreen';
 import PhysicalAssessmentScreen from './PhysicalAssessmentScreen';
@@ -39,9 +40,15 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
   const handleChangeAccessLevel = async (level) => {
     if (level === accessLevel) return;
     setSavingAccessLevel(true);
-    const { error } = await supabase.from('users').update({ access_level: level }).eq('id', student.id);
+    const { data, error } = await supabase.from('users').update({ access_level: level }).eq('id', student.id).select().maybeSingle();
     setSavingAccessLevel(false);
-    if (!error) setAccessLevel(level);
+    if (error) {
+      showAlert('Erro', error.message);
+    } else if (!data) {
+      showAlert('Não foi possível atualizar', 'O nível de acesso não foi alterado. Tenta de novo em alguns instantes.');
+    } else {
+      setAccessLevel(level);
+    }
   };
 
   const [buildingFor, setBuildingFor] = useState(false);
