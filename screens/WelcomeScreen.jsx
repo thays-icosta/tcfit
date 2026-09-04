@@ -6,6 +6,7 @@ import InstallBanner from './InstallBanner';
 import PlansSection from './PlansSection';
 import MaterialsSection from './MaterialsSection';
 import WorkoutsSection from './WorkoutsSection';
+import WorkoutProgramsSection from './WorkoutProgramsSection';
 import PartnersSection from './PartnersSection';
 import { ACCENT, TRANSITION, FLAT_CARD, sectionTitleStyle, CARD_TITLE, GRID_GAP } from './vitrineStyles';
 
@@ -137,6 +138,8 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
         </View>
 
         <WorkoutsSection onSelectWorkout={scrollToPlanos} isDesktop={isDesktop} />
+
+        <WorkoutProgramsSection onSelectProgram={scrollToPlanos} isDesktop={isDesktop} />
 
         <MaterialsSection onSelectMaterial={scrollToPlanos} isDesktop={isDesktop} />
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Platform } from 'react-native';
 import { useGlobalSearchParams, useRouter } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import AuthScreen from '../../screens/AuthScreen';
@@ -67,10 +67,12 @@ export default function HomeTab() {
   }, [user?.id]);
 
   useEffect(() => {
+    if (Platform.OS === 'web') return;
+
     Notifications.getLastNotificationResponseAsync().then((response) => {
       const target = extractChatTarget(response);
       if (target) setChatTarget(target);
-    });
+    }).catch(() => {});
 
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const target = extractChatTarget(response);
