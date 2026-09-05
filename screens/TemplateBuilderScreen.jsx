@@ -34,8 +34,10 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   const [watchingVideo, setWatchingVideo] = useState(null);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [showSettingsSheet, setShowSettingsSheet] = useState(false);
 
   const [newTemplateName, setNewTemplateName] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -296,6 +298,19 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
     }
   };
 
+  const handleConfirmEditItem = async (exercise, config) => {
+    const { error } = await supabase
+      .from('workout_template_exercises')
+      .update({ exercise_id: exercise.id, ...config })
+      .eq('id', editingItem.id);
+    if (error) {
+      showAlert('Erro ao salvar', error.message);
+    } else {
+      setEditingItem(null);
+      loadItems(activeSessionId);
+    }
+  };
+
   const handleRemoveItem = (itemId) => {
     showAlert('Remover exercício', 'Tem certeza?', [
       { text: 'Cancelar', style: 'cancel' },
@@ -328,12 +343,16 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
     );
   }
 
-  if (showAddModal) {
+  if (showAddModal || editingItem) {
     return (
       <AddExerciseModal
         personalId={personalId}
-        onConfirm={handleConfirmAddExercise}
-        onClose={() => setShowAddModal(false)}
+        editingItem={editingItem}
+        onConfirm={editingItem ? handleConfirmEditItem : handleConfirmAddExercise}
+        onClose={() => {
+          setShowAddModal(false);
+          setEditingItem(null);
+        }}
       />
     );
   }
@@ -350,15 +369,18 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
 
   return (
     <View style={styles.container}>
-      <HeaderBack title="Templates de Treino" onBack={onClose} style={{ paddingHorizontal: 16 }} />
-
-      <View style={styles.sectionToggleBox}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.sectionToggleLabel}>Exibir seção “Treinos Prontos” na vitrine {savingSectionToggle && '(salvando...)'}</Text>
-          <Text style={styles.helperText}>Desligue pra esconder a seção inteira da página pública sem apagar os templates.</Text>
-        </View>
-        <Switch value={sectionEnabled} onValueChange={handleToggleSection} trackColor={{ false: '#292524', true: '#22c55e' }} thumbColor="#f5f5f5" />
-      </View>
+      <HeaderBack
+        title="Templates de Treino"
+        onBack={onClose}
+        style={{ paddingHorizontal: 16 }}
+        rightSlot={
+          activeTemplateId ? (
+            <TouchableOpacity onPress={() => setShowSettingsSheet(true)} hitSlop={8}>
+              <Ionicons name="settings-outline" size={22} color="#f97316" />
+            </TouchableOpacity>
+          ) : null
+        }
+      />
 
       <TouchableOpacity style={styles.editingBar} onPress={() => setShowTemplatePicker(true)}>
         <View style={{ flex: 1 }}>
@@ -416,152 +438,201 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
         </View>
       </Modal>
 
+      <Modal visible={showSettingsSheet} transparent animationType="slide" onRequestClose={() => setShowSettingsSheet(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalSheet, { maxHeight: '88%' }]}>
+            <Text style={styles.modalTitle}>Configurações e Publicação</Text>
+            <ScrollView>
+              <View style={styles.sectionToggleBox}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sectionToggleLabel}>Exibir seção “Treinos Prontos” na vitrine {savingSectionToggle && '(salvando...)'}</Text>
+                  <Text style={styles.helperText}>Desligue pra esconder a seção inteira da página pública sem apagar os templates.</Text>
+                </View>
+                <Switch value={sectionEnabled} onValueChange={handleToggleSection} trackColor={{ false: '#292524', true: '#22c55e' }} thumbColor="#f5f5f5" />
+              </View>
+
+              <Text style={styles.metaLabel}>Descrição</Text>
+              <TextInput
+                style={styles.metaInput}
+                placeholder="ex: Treino full body de 3x na semana pra iniciantes"
+                placeholderTextColor="#525252"
+                value={editDescription}
+                onChangeText={setEditDescription}
+                multiline
+              />
+
+              <View style={styles.publicRow}>
+                <Text style={styles.publicLabel}>Vender esse template na vitrine</Text>
+                <Switch value={editIsPublic} onValueChange={setEditIsPublic} trackColor={{ false: '#292524', true: '#f97316' }} thumbColor="#f5f5f5" />
+              </View>
+
+              {editIsPublic && (
+                <>
+                  <Text style={styles.metaLabel}>Foto de Capa (Poster)</Text>
+                  <TouchableOpacity style={styles.coverPicker} onPress={handlePickCoverImage} disabled={uploadingCover}>
+                    {uploadingCover ? (
+                      <ActivityIndicator color="#f97316" />
+                    ) : editCoverImageUrl ? (
+                      <Image source={{ uri: editCoverImageUrl }} style={styles.coverPreview} resizeMode="cover" />
+                    ) : (
+                      <Text style={styles.coverPickerText}>📷 Adicionar foto de capa</Text>
+                    )}
+                  </TouchableOpacity>
+
+                  <Text style={styles.metaLabel}>Preço (R$)</Text>
+                  <TextInput
+                    style={styles.metaInput}
+                    keyboardType="decimal-pad"
+                    placeholder="ex: 97"
+                    placeholderTextColor="#525252"
+                    value={editPrice}
+                    onChangeText={setEditPrice}
+                  />
+
+                  <Text style={styles.metaLabel}>Categoria de Exibição na Vitrine</Text>
+                  <View style={styles.categoryRow}>
+                    {HOME_CATEGORIES.map((c) => (
+                      <TouchableOpacity
+                        key={c.value}
+                        style={[styles.categoryChip, editCategory === c.value && styles.categoryChipActive]}
+                        onPress={() => setEditCategory(editCategory === c.value ? null : c.value)}
+                      >
+                        <Text style={[styles.categoryChipText, editCategory === c.value && styles.categoryChipTextActive]}>{c.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  <Text style={styles.metaLabel}>Tags (seção &quot;Metodologia e Programas de Treino&quot;)</Text>
+                  <Text style={styles.helperText}>Usadas nos filtros em pílula da landing page. Pode marcar mais de uma.</Text>
+                  <View style={styles.categoryRow}>
+                    {WORKOUT_TAGS.map((opt) => {
+                      const active = editWorkoutTags.includes(opt.value);
+                      return (
+                        <TouchableOpacity
+                          key={opt.value}
+                          style={[styles.categoryChip, active && styles.categoryChipActive]}
+                          onPress={() => setEditWorkoutTags((prev) => (prev.includes(opt.value) ? prev.filter((v) => v !== opt.value) : [...prev, opt.value]))}
+                        >
+                          <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>{opt.label}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </>
+              )}
+
+              <TouchableOpacity style={styles.saveMetaButton} onPress={handleSaveMeta} disabled={savingMeta}>
+                {savingMeta ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.saveMetaButtonText}>Salvar informações</Text>}
+              </TouchableOpacity>
+            </ScrollView>
+
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowSettingsSheet(false)}>
+              <Text style={styles.modalCloseButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {!activeTemplateId ? (
         <Text style={styles.emptyText}>Cria um template pra começar.</Text>
       ) : (
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 30 }}>
-          <View style={styles.metaCard}>
-            <Text style={styles.metaLabel}>Descrição</Text>
-            <TextInput
-              style={styles.metaInput}
-              placeholder="ex: Treino full body de 3x na semana pra iniciantes"
-              placeholderTextColor="#525252"
-              value={editDescription}
-              onChangeText={setEditDescription}
-              multiline
-            />
-
-            <View style={styles.publicRow}>
-              <Text style={styles.publicLabel}>Vender esse template na vitrine</Text>
-              <Switch value={editIsPublic} onValueChange={setEditIsPublic} trackColor={{ false: '#292524', true: '#f97316' }} thumbColor="#f5f5f5" />
-            </View>
-
-            {editIsPublic && (
-              <>
-                <Text style={styles.metaLabel}>Foto de Capa (Poster)</Text>
-                <TouchableOpacity style={styles.coverPicker} onPress={handlePickCoverImage} disabled={uploadingCover}>
-                  {uploadingCover ? (
-                    <ActivityIndicator color="#f97316" />
-                  ) : editCoverImageUrl ? (
-                    <Image source={{ uri: editCoverImageUrl }} style={styles.coverPreview} resizeMode="cover" />
-                  ) : (
-                    <Text style={styles.coverPickerText}>📷 Adicionar foto de capa</Text>
-                  )}
-                </TouchableOpacity>
-
-                <Text style={styles.metaLabel}>Preço (R$)</Text>
-                <TextInput
-                  style={styles.metaInput}
-                  keyboardType="decimal-pad"
-                  placeholder="ex: 97"
-                  placeholderTextColor="#525252"
-                  value={editPrice}
-                  onChangeText={setEditPrice}
-                />
-
-                <Text style={styles.metaLabel}>Categoria de Exibição na Vitrine</Text>
-                <View style={styles.categoryRow}>
-                  {HOME_CATEGORIES.map((c) => (
-                    <TouchableOpacity
-                      key={c.value}
-                      style={[styles.categoryChip, editCategory === c.value && styles.categoryChipActive]}
-                      onPress={() => setEditCategory(editCategory === c.value ? null : c.value)}
-                    >
-                      <Text style={[styles.categoryChipText, editCategory === c.value && styles.categoryChipTextActive]}>{c.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <Text style={styles.metaLabel}>Tags (seção &quot;Metodologia e Programas de Treino&quot;)</Text>
-                <Text style={styles.helperText}>Usadas nos filtros em pílula da landing page. Pode marcar mais de uma.</Text>
-                <View style={styles.categoryRow}>
-                  {WORKOUT_TAGS.map((opt) => {
-                    const active = editWorkoutTags.includes(opt.value);
-                    return (
-                      <TouchableOpacity
-                        key={opt.value}
-                        style={[styles.categoryChip, active && styles.categoryChipActive]}
-                        onPress={() => setEditWorkoutTags((prev) => (prev.includes(opt.value) ? prev.filter((v) => v !== opt.value) : [...prev, opt.value]))}
-                      >
-                        <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>{opt.label}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </>
-            )}
-
-            <TouchableOpacity style={styles.saveMetaButton} onPress={handleSaveMeta} disabled={savingMeta}>
-              {savingMeta ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.saveMetaButtonText}>Salvar informações</Text>}
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.sectionTitle}>Sessões deste template</Text>
-          <View style={styles.sessionRow}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
+        <>
+          <View style={styles.sessionChipsRow}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sessionChipsContent}>
               {sessions.map((s) => (
                 <TouchableOpacity
                   key={s.id}
-                  style={[styles.sessionTab, activeSessionId === s.id && styles.sessionTabActive]}
+                  style={[styles.sessionChip, activeSessionId === s.id && styles.sessionChipActive]}
                   onPress={() => setActiveSessionId(s.id)}
                   onLongPress={() => handleDeleteSession(s)}
                 >
-                  <Text style={[styles.sessionTabText, activeSessionId === s.id && styles.sessionTabTextActive]}>{s.name}</Text>
+                  <Text style={[styles.sessionChipText, activeSessionId === s.id && styles.sessionChipTextActive]}>{s.name}</Text>
                 </TouchableOpacity>
               ))}
+              <TouchableOpacity style={styles.sessionChipAdd} onPress={handleAddSession}>
+                <Ionicons name="add" size={14} color="#f97316" />
+                <Text style={styles.sessionChipAddText}>Nova Sessão</Text>
+              </TouchableOpacity>
             </ScrollView>
-            <TouchableOpacity style={styles.addSessionButton} onPress={handleAddSession}>
-              <Text style={styles.addSessionButtonText}>+ Treino</Text>
-            </TouchableOpacity>
           </View>
           <Text style={styles.hintText}>Segure uma sessão pra excluir · agrupe Treino A, B, C sob o mesmo produto</Text>
 
-          <TouchableOpacity style={styles.addExerciseButton} onPress={() => setShowAddModal(true)}>
-            <Text style={styles.addExerciseButtonText}>+ Adicionar Exercício</Text>
-          </TouchableOpacity>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 16 }}>
+            <Text style={styles.sectionTitle}>Exercícios de {sessions.find((s) => s.id === activeSessionId)?.name || 'Treino'} ({items.length})</Text>
+            {items.length === 0 ? (
+              <Text style={styles.emptyText}>Nenhum exercício ainda.</Text>
+            ) : (
+              items.map((item, index) => {
+                const hasVideo = !!item.exercises?.video_url;
+                return (
+                  <View key={item.id} style={styles.exerciseCard}>
+                    <View style={styles.exerciseCardTop}>
+                      <TouchableOpacity
+                        onPress={() => hasVideo && setWatchingVideo({ url: item.exercises.video_url, name: item.exercises.name })}
+                        disabled={!hasVideo}
+                        style={styles.exerciseThumbWrap}
+                      >
+                        {item.exercises?.thumbnail_url ? (
+                          <Image source={{ uri: item.exercises.thumbnail_url }} style={styles.exerciseThumbImage} />
+                        ) : (
+                          <View style={styles.exerciseThumbPlaceholder}>
+                            <Text style={styles.exerciseThumbMuscle}>{item.exercises?.muscle_group?.toUpperCase() || '?'}</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
 
-          <Text style={styles.sectionTitle}>Exercícios de {sessions.find((s) => s.id === activeSessionId)?.name || 'Treino'} ({items.length})</Text>
-          {items.length === 0 ? (
-            <Text style={styles.emptyText}>Nenhum exercício ainda.</Text>
-          ) : (
-            items.map((item, index) => {
-              const hasVideo = !!item.exercises?.video_url;
-              const summaryLine = `${item.sets || 3}x ${item.reps || '-'} · ${METHOD_LABELS[item.execution_method] || item.execution_method}${item.rest_time_seconds != null ? ` · Descanso: ${item.rest_time_seconds}s` : ''}`;
-              return (
-                <View key={item.id} style={styles.exerciseCard}>
-                  <TouchableOpacity
-                    onPress={() => hasVideo && setWatchingVideo({ url: item.exercises.video_url, name: item.exercises.name })}
-                    disabled={!hasVideo}
-                    style={styles.exerciseThumbWrap}
-                  >
-                    {item.exercises?.thumbnail_url ? (
-                      <Image source={{ uri: item.exercises.thumbnail_url }} style={styles.exerciseThumbImage} />
-                    ) : (
-                      <View style={styles.exerciseThumbPlaceholder}>
-                        <Text style={styles.exerciseThumbMuscle}>{item.exercises?.muscle_group?.toUpperCase() || '?'}</Text>
+                      <View style={styles.exerciseInfo}>
+                        <Text style={styles.exerciseName}>{item.exercises?.name}</Text>
+                        <View style={styles.exercisePillsRow}>
+                          <View style={styles.exercisePill}>
+                            <Text style={styles.exercisePillText}>{item.sets || 3} séries</Text>
+                          </View>
+                          <View style={styles.exercisePill}>
+                            <Text style={styles.exercisePillText}>{item.reps || '-'} reps</Text>
+                          </View>
+                          <View style={styles.exercisePill}>
+                            <Text style={styles.exercisePillText}>{METHOD_LABELS[item.execution_method] || item.execution_method}</Text>
+                          </View>
+                          {item.rest_time_seconds != null && (
+                            <View style={styles.exercisePill}>
+                              <Text style={styles.exercisePillText}>{item.rest_time_seconds}s descanso</Text>
+                            </View>
+                          )}
+                        </View>
                       </View>
-                    )}
-                  </TouchableOpacity>
-                  <View style={styles.exerciseInfo}>
-                    <Text style={styles.exerciseName}>{item.exercises?.name}</Text>
-                    <Text style={styles.exerciseSummary}>{summaryLine}</Text>
+
+                      <View style={styles.reorderHandle}>
+                        <TouchableOpacity onPress={() => handleMove(index, -1)} disabled={index === 0} hitSlop={4}>
+                          <Ionicons name="chevron-up" size={14} color={index === 0 ? '#292524' : '#a3a3a3'} />
+                        </TouchableOpacity>
+                        <Ionicons name="reorder-three-outline" size={16} color="#525252" />
+                        <TouchableOpacity onPress={() => handleMove(index, 1)} disabled={index === items.length - 1} hitSlop={4}>
+                          <Ionicons name="chevron-down" size={14} color={index === items.length - 1 ? '#292524' : '#a3a3a3'} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    <View style={styles.exerciseQuickActions}>
+                      <TouchableOpacity style={styles.quickActionButton} onPress={() => setEditingItem(item)}>
+                        <Ionicons name="pencil-outline" size={14} color="#a3a3a3" />
+                        <Text style={styles.quickActionText}>Editar</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.quickActionButton} onPress={() => handleRemoveItem(item.id)}>
+                        <Ionicons name="trash-outline" size={14} color="#ef4444" />
+                        <Text style={[styles.quickActionText, styles.quickActionTextDanger]}>Excluir</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <View style={styles.exerciseActionsRow}>
-                    <TouchableOpacity onPress={() => handleMove(index, -1)} disabled={index === 0}>
-                      <Text style={[styles.moveArrow, index === 0 && styles.moveArrowDisabled]}>▲</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleMove(index, 1)} disabled={index === items.length - 1}>
-                      <Text style={[styles.moveArrow, index === items.length - 1 && styles.moveArrowDisabled]}>▼</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleRemoveItem(item.id)}>
-                      <Text style={styles.removeX}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })
-          )}
-        </ScrollView>
+                );
+              })
+            )}
+          </ScrollView>
+
+          <TouchableOpacity style={styles.addExerciseButton} onPress={() => setShowAddModal(true)}>
+            <Ionicons name="add-circle" size={18} color="#0a0a0a" />
+            <Text style={styles.addExerciseButtonText}>Adicionar Exercício</Text>
+          </TouchableOpacity>
+        </>
       )}
     </View>
   );
@@ -591,7 +662,6 @@ const styles = StyleSheet.create({
   addButton: { backgroundColor: '#f97316', width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   addButtonText: { color: '#0a0a0a', fontSize: 20, fontWeight: '700' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
-  metaCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 14 },
   metaLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 8 },
   helperText: { color: '#525252', fontSize: 11, marginBottom: 8 },
   metaInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 13, minHeight: 50, textAlignVertical: 'top' },
@@ -607,26 +677,31 @@ const styles = StyleSheet.create({
   categoryChipActive: { backgroundColor: '#a855f7', borderColor: '#a855f7' },
   categoryChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
   categoryChipTextActive: { color: '#0a0a0a' },
-  sessionRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 4, gap: 8 },
-  sessionTab: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
-  sessionTabActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
-  sessionTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  sessionTabTextActive: { color: '#0a0a0a' },
-  addSessionButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
-  addSessionButtonText: { color: '#f97316', fontSize: 11, fontWeight: '700' },
-  addExerciseButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
-  addExerciseButtonText: { color: '#f97316', fontSize: 13, fontWeight: '700' },
-  sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
-  exerciseCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, marginHorizontal: 16, marginBottom: 10, padding: 10 },
+  sessionChipsRow: { marginBottom: 4 },
+  sessionChipsContent: { paddingHorizontal: 16, gap: 8 },
+  sessionChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 9, marginRight: 8 },
+  sessionChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  sessionChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  sessionChipTextActive: { color: '#0a0a0a' },
+  sessionChipAdd: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1, borderColor: '#f97316', borderStyle: 'dashed', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
+  sessionChipAddText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
+  addExerciseButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 14, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginHorizontal: 16, marginTop: 8, marginBottom: 16, shadowColor: '#f97316', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 },
+  addExerciseButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
+  sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8, marginTop: 12 },
+  exerciseCard: { backgroundColor: '#1E1E1E', borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 16, marginHorizontal: 16, marginBottom: 10, padding: 12 },
+  exerciseCardTop: { flexDirection: 'row', alignItems: 'center' },
   exerciseThumbWrap: { marginRight: 10 },
   exerciseThumbImage: { width: 52, height: 52, borderRadius: 10 },
   exerciseThumbPlaceholder: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
   exerciseThumbMuscle: { color: '#f97316', fontSize: 11, fontWeight: '800' },
   exerciseInfo: { flex: 1 },
-  exerciseName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
-  exerciseSummary: { color: '#f97316', fontSize: 10, marginTop: 3 },
-  exerciseActionsRow: { flexDirection: 'row', gap: 12 },
-  moveArrow: { color: '#f97316', fontSize: 12 },
-  moveArrowDisabled: { color: '#292524' },
-  removeX: { color: '#ef4444', fontSize: 14 },
+  exerciseName: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
+  exercisePillsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 6 },
+  exercisePill: { backgroundColor: 'rgba(249,115,22,0.12)', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
+  exercisePillText: { color: '#f97316', fontSize: 10, fontWeight: '700' },
+  reorderHandle: { alignItems: 'center', gap: 2, marginLeft: 8, paddingLeft: 8, borderLeftWidth: 1, borderLeftColor: '#2a2a2a' },
+  exerciseQuickActions: { flexDirection: 'row', gap: 16, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#2a2a2a' },
+  quickActionButton: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  quickActionText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  quickActionTextDanger: { color: '#ef4444' },
 });

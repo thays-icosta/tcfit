@@ -31,23 +31,23 @@ function isGifUrl(url) {
   return !!url && url.toLowerCase().split('?')[0].endsWith('.gif');
 }
 
-export default function AddExerciseModal({ personalId, onConfirm, onClose }) {
-  const [mode, setMode] = useState('browse');
+export default function AddExerciseModal({ personalId, editingItem, onConfirm, onClose }) {
+  const [mode, setMode] = useState(editingItem ? 'configure' : 'browse');
   const [allExercises, setAllExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [muscleFilter, setMuscleFilter] = useState('todos');
   const [search, setSearch] = useState('');
-  const [selectedExercise, setSelectedExercise] = useState(null);
+  const [selectedExercise, setSelectedExercise] = useState(editingItem?.exercises || null);
   const [previewExercise, setPreviewExercise] = useState(null);
   const [gifPreviewExercise, setGifPreviewExercise] = useState(null);
 
-  const [sets, setSets] = useState('3');
-  const [reps, setReps] = useState('10');
-  const [loadKg, setLoadKg] = useState('');
-  const [cadence, setCadence] = useState('');
-  const [restSeconds, setRestSeconds] = useState('60');
-  const [method, setMethod] = useState('tradicional');
-  const [notes, setNotes] = useState('');
+  const [sets, setSets] = useState(editingItem?.sets != null ? String(editingItem.sets) : '3');
+  const [reps, setReps] = useState(editingItem?.reps || '10');
+  const [loadKg, setLoadKg] = useState(editingItem?.load_kg != null ? String(editingItem.load_kg) : '');
+  const [cadence, setCadence] = useState(editingItem?.cadence || '');
+  const [restSeconds, setRestSeconds] = useState(editingItem?.rest_time_seconds != null ? String(editingItem.rest_time_seconds) : '60');
+  const [method, setMethod] = useState(editingItem?.execution_method || 'tradicional');
+  const [notes, setNotes] = useState(editingItem?.notes || '');
 
   const loadExercises = async () => {
     const { data } = await supabase.from('exercises').select('id, name, muscle_group, equipment, thumbnail_url, personal_id, video_url').order('name');
@@ -138,9 +138,18 @@ export default function AddExerciseModal({ personalId, onConfirm, onClose }) {
     return (
       <View style={styles.container}>
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => setMode('browse')}>
-            <Text style={styles.closeText}>← Trocar exercício</Text>
-          </TouchableOpacity>
+          {editingItem ? (
+            <>
+              <Text style={styles.title}>Editar Exercício</Text>
+              <TouchableOpacity onPress={onClose}>
+                <Text style={styles.closeText}>Cancelar</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity onPress={() => setMode('browse')}>
+              <Text style={styles.closeText}>← Trocar exercício</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <ScrollView style={{ flex: 1, paddingHorizontal: 16 }}>
@@ -205,7 +214,7 @@ export default function AddExerciseModal({ personalId, onConfirm, onClose }) {
         </ScrollView>
 
         <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-          <Text style={styles.confirmButtonText}>Adicionar à ficha</Text>
+          <Text style={styles.confirmButtonText}>{editingItem ? 'Salvar alterações' : 'Adicionar à ficha'}</Text>
         </TouchableOpacity>
       </View>
     );
