@@ -9,6 +9,7 @@ const INACTIVE_COLOR = '#666666';
 const TABS = [
   { key: 'inicio', label: 'Início', icon: 'home-outline', iconActive: 'home' },
   { key: 'treinos', label: 'Treinos', icon: 'barbell-outline', iconActive: 'barbell' },
+  { key: 'nutricao', label: 'Nutrição', icon: 'nutrition-outline', iconActive: 'nutrition' },
   { key: 'loja', label: 'Loja', icon: 'storefront-outline', iconActive: 'storefront' },
   { key: 'perfil', label: 'Perfil', icon: 'person-outline', iconActive: 'person' },
 ];

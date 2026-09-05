@@ -373,6 +373,33 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     }
   };
 
+  const handleCompleteMeal = async (meal) => {
+    const foods = meal.diet_meal_foods || [];
+    if (foods.length === 0) return;
+    const mealKey = `${meal.id}-meal`;
+    setRegisteringKey(mealKey);
+    const { error } = await supabase.from('food_diary_entries').insert(
+      foods.map((food) => ({
+        student_id: user.id,
+        food_name: food.food_name,
+        quantity_g: food.quantity_g,
+        calories_kcal: food.calories_kcal,
+        protein_g: food.protein_g,
+        carbs_g: food.carbs_g,
+        fat_g: food.fat_g,
+        meal_type: mapMealNameToType(meal.name),
+        entry_date: todayStr,
+      }))
+    );
+    setRegisteringKey(null);
+    if (error) {
+      showAlert('Erro', error.message);
+    } else {
+      setDiaryRefreshKey((k) => k + 1);
+      showAlert('Refeição concluída!', `${meal.name} registrada no seu diário de hoje.`);
+    }
+  };
+
   const handleAddWater = async (ml) => {
     await supabase.from('water_entries').insert({ student_id: user.id, entry_date: todayStr, amount_ml: ml });
     setDiaryRefreshKey((k) => k + 1);
@@ -723,15 +750,48 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     );
   }
 
-  if (mode === 'dieta') {
+  if (activeTab === 'nutricao') {
     return (
       <View style={{ flex: 1 }}>
       <View style={styles.subContainer}>
         <View style={styles.subTopBar}>
-          <TouchableOpacity onPress={() => setMode(null)}>
-            <Text style={styles.subCloseText}>← Voltar</Text>
+          <Text style={styles.subTitle}>Nutrição</Text>
+        </View>
+
+        <View style={{ paddingHorizontal: 16 }}>
+          <View style={styles.nutriTopCard}>
+            <View style={styles.nutriTopHeaderRow}>
+              <Text style={styles.hojeTitle}>Resumo do Dia</Text>
+              <Text style={styles.hojeSummary}>
+                {Math.round(consumedTotals.kcal)}{diets[0]?.goal_kcal ? ` / ${diets[0].goal_kcal}` : ''} kcal
+              </Text>
+            </View>
+            <View style={styles.hojeBody}>
+              {[
+                { label: 'Proteína', value: consumedTotals.protein, goal: diets[0]?.goal_protein_g, unit: 'g', color: '#a3a3a3' },
+                { label: 'Carboidrato', value: consumedTotals.carbs, goal: diets[0]?.goal_carbs_g, unit: 'g', color: '#eab308' },
+                { label: 'Gordura', value: consumedTotals.fat, goal: diets[0]?.goal_fat_g, unit: 'g', color: '#ef4444' },
+              ].map((macro) => (
+                <View key={macro.label} style={styles.macroRow}>
+                  <View style={styles.macroLabelRow}>
+                    <Text style={styles.macroLabel}>{macro.label}</Text>
+                    <Text style={styles.macroValue}>
+                      {Math.round(macro.value)}{macro.goal ? ` / ${macro.goal}` : ''}{macro.unit}
+                    </Text>
+                  </View>
+                  <View style={styles.macroBarTrack}>
+                    <View style={[styles.macroBarFill, { width: macro.goal ? `${Math.min(100, (macro.value / macro.goal) * 100)}%` : '0%', backgroundColor: macro.color }]} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.nutriLibraryShortcut} onPress={() => setShowRecipes(true)}>
+            <Ionicons name="book-outline" size={18} color={ACCENT} />
+            <Text style={styles.nutriLibraryShortcutText}>Biblioteca de Receitas e E-books</Text>
+            <Ionicons name="chevron-forward-outline" size={16} color="#525252" />
           </TouchableOpacity>
-          <Text style={styles.subTitle}>Dieta</Text>
         </View>
 
         <View style={styles.dietSubTabRow}>
@@ -782,6 +842,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 mealsForActiveDiet.map((meal) => {
                   const isExpanded = expandedMealId === meal.id;
                   const mealTotals = (meal.diet_meal_foods || []).reduce((sum, f) => sum + (f.calories_kcal || 0), 0);
+                  const mealKey = `${meal.id}-meal`;
                   return (
                     <View key={meal.id} style={styles.mealAccordionCard}>
                       <TouchableOpacity
@@ -794,6 +855,20 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                             {meal.meal_time ? `${meal.meal_time} · ` : ''}{Math.round(mealTotals)} kcal
                           </Text>
                         </View>
+                        <TouchableOpacity
+                          style={styles.completeMealButton}
+                          onPress={() => handleCompleteMeal(meal)}
+                          disabled={registeringKey === mealKey}
+                        >
+                          {registeringKey === mealKey ? (
+                            <ActivityIndicator color="#22c55e" size="small" />
+                          ) : (
+                            <>
+                              <Ionicons name="checkmark-circle-outline" size={14} color="#22c55e" />
+                              <Text style={styles.completeMealButtonText}>Concluída</Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
                         <Ionicons name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={18} color="#737373" />
                       </TouchableOpacity>
 
@@ -992,7 +1067,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
           </ScrollView>
         )}
       </View>
-      <AlunoTabBar activeTab="inicio" onChange={(tab) => { setMode(null); setActiveTab(tab); }} />
+      <AlunoTabBar activeTab={activeTab} onChange={setActiveTab} />
       </View>
     );
   }
@@ -1118,7 +1193,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.quickAccessCard} onPress={() => setMode('dieta')}>
+            <TouchableOpacity style={styles.quickAccessCard} onPress={() => setActiveTab('nutricao')}>
               <View style={styles.quickAccessIconCircle}>
                 <Ionicons name="restaurant-outline" size={22} color={ACCENT} />
               </View>
@@ -1408,6 +1483,12 @@ const styles = StyleSheet.create({
   orConnector: { color: '#525252', fontSize: 9, fontWeight: '700', marginVertical: 4, marginLeft: 8 },
   substitutesBox: { marginLeft: 8, marginTop: 2 },
   substituteText: { color: '#737373', fontSize: 11, flexShrink: 1 },
+  nutriTopCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, marginTop: 14, marginBottom: 14, overflow: 'hidden' },
+  nutriTopHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
+  nutriLibraryShortcut: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 14 },
+  nutriLibraryShortcutText: { flex: 1, color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
+  completeMealButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, marginRight: 8 },
+  completeMealButtonText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
   hojeCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, marginBottom: 14, overflow: 'hidden' },
   hojeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
   hojeTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
