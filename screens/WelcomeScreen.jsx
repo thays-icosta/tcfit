@@ -139,9 +139,9 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
 
         <WorkoutsSection onSelectWorkout={scrollToPlanos} isDesktop={isDesktop} />
 
-        <WorkoutProgramsSection onSelectProgram={scrollToPlanos} isDesktop={isDesktop} />
+        <WorkoutProgramsSection isDesktop={isDesktop} />
 
-        <MaterialsSection onSelectMaterial={scrollToPlanos} isDesktop={isDesktop} />
+        <MaterialsSection isDesktop={isDesktop} />
 
         <Text style={sectionTitleStyle(isDesktop)}>ESCOLHA O SEU PLANO</Text>
         <PlansSection
