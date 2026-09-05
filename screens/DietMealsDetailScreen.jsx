@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, InputAccessoryView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, InputAccessoryView, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import FoodCatalogScreen from './FoodCatalogScreen';
 import { showAlert } from './alertUtils';
+import { useSpeechToText } from './useSpeechToText';
 
 const KEYBOARD_TOOLBAR_ID = 'dietDetailKeyboardToolbar';
 
@@ -24,6 +26,15 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
   const [substituteInputs, setSubstituteInputs] = useState({});
   const [savingSubstituteFor, setSavingSubstituteFor] = useState(null);
   const [catalogForSubstituteFoodId, setCatalogForSubstituteFoodId] = useState(null);
+
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiInstruction, setAiInstruction] = useState('');
+  const [aiProcessing, setAiProcessing] = useState(false);
+  const { recording: aiRecording, toggle: handleToggleAiRecording } = useSpeechToText({
+    active: showAiModal,
+    getBaseText: () => aiInstruction,
+    onTranscriptChange: setAiInstruction,
+  });
 
   const loadMeals = async () => {
     const { data } = await supabase
@@ -62,6 +73,85 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
       setNewMealTime('');
       setShowAddMealForm(false);
       loadMeals();
+    }
+  };
+
+  const handleOpenAiModal = () => {
+    setAiInstruction('');
+    setShowAiModal(true);
+  };
+
+  const handleGenerateDietWithAi = async () => {
+    if (!aiInstruction.trim()) {
+      showAlert('Ops', 'Descreve o plano alimentar que você quer gerar (ex: "dieta de 2000kcal pra emagrecimento, 4 refeições, sem lactose").');
+      return;
+    }
+    setAiProcessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-diet', {
+        body: { instruction: aiInstruction.trim() },
+      });
+
+      if (error || data?.error) {
+        showAlert('Não deu pra gerar a dieta', data?.error || error?.message || 'Tenta de novo em alguns instantes.');
+        setAiProcessing(false);
+        return;
+      }
+
+      if (!data.meals || data.meals.length === 0) {
+        showAlert('Nenhuma refeição gerada', 'A IA não retornou refeições. Tenta descrever de outro jeito.');
+        setAiProcessing(false);
+        return;
+      }
+
+      for (let mealIndex = 0; mealIndex < data.meals.length; mealIndex++) {
+        const meal = data.meals[mealIndex];
+        const { data: newMeal, error: mealError } = await supabase
+          .from('diet_meals')
+          .insert({
+            diet_id: dietId,
+            name: meal.name || 'Refeição',
+            meal_time: meal.meal_time || null,
+            order_index: meals.length + mealIndex,
+          })
+          .select()
+          .single();
+        if (mealError || !newMeal) continue;
+
+        const foodRows = (meal.foods || []).map((food, foodIndex) => ({
+          meal_id: newMeal.id,
+          food_name: food.food_name || 'Alimento',
+          quantity_g: food.quantity_g ?? null,
+          calories_kcal: food.calories_kcal ?? null,
+          protein_g: food.protein_g ?? null,
+          carbs_g: food.carbs_g ?? null,
+          fat_g: food.fat_g ?? null,
+          order_index: foodIndex,
+        }));
+        if (foodRows.length > 0) {
+          await supabase.from('diet_meal_foods').insert(foodRows);
+        }
+      }
+
+      if (data.goal_kcal || data.goal_protein_g || data.goal_carbs_g || data.goal_fat_g) {
+        await supabase
+          .from('diets')
+          .update({
+            goal_kcal: data.goal_kcal ?? null,
+            goal_protein_g: data.goal_protein_g ?? null,
+            goal_carbs_g: data.goal_carbs_g ?? null,
+            goal_fat_g: data.goal_fat_g ?? null,
+          })
+          .eq('id', dietId);
+      }
+
+      setAiProcessing(false);
+      setShowAiModal(false);
+      await loadMeals();
+      showAlert('Dieta gerada!', `${data.meals.length} refeição(ões) criada(s). Revisa e ajusta o que quiser antes de salvar.`);
+    } catch (e) {
+      setAiProcessing(false);
+      showAlert('Erro', e?.message || 'Não foi possível gerar a dieta agora.');
     }
   };
 
@@ -218,6 +308,11 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
           </View>
 
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+            <TouchableOpacity style={styles.aiButton} onPress={handleOpenAiModal}>
+              <Ionicons name="sparkles" size={16} color="#0a0a0a" />
+              <Text style={styles.aiButtonText}>Gerar Dieta com IA</Text>
+            </TouchableOpacity>
+
             {!showAddMealForm ? (
               <TouchableOpacity style={styles.addMealButton} onPress={() => setShowAddMealForm(true)}>
                 <Text style={styles.addMealButtonText}>+ Adicionar Refeição</Text>
@@ -393,6 +488,47 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
           </View>
         </InputAccessoryView>
       )}
+
+      <Modal visible={showAiModal} transparent animationType="slide" onRequestClose={() => setShowAiModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>✨ Gerar Dieta com IA</Text>
+            <Text style={styles.modalSubtitle}>
+              Descreve o plano alimentar que você quer (objetivo, calorias/macros, restrições, quantidade de refeições).
+            </Text>
+
+            <TextInput
+              style={[styles.input, { minHeight: 90, textAlignVertical: 'top' }]}
+              placeholder='ex: "Dieta de 2000kcal pra emagrecimento, 4 refeições, sem lactose"'
+              placeholderTextColor="#525252"
+              value={aiInstruction}
+              onChangeText={setAiInstruction}
+              multiline
+              editable={!aiProcessing}
+            />
+
+            <TouchableOpacity
+              style={[styles.aiMicButton, aiRecording && styles.aiMicButtonActive]}
+              onPress={handleToggleAiRecording}
+              disabled={aiProcessing}
+            >
+              <Ionicons name={aiRecording ? 'mic' : 'mic-outline'} size={18} color={aiRecording ? '#ef4444' : '#a3a3a3'} />
+              <Text style={[styles.aiMicButtonText, aiRecording && styles.aiMicButtonTextActive]}>
+                {aiRecording ? 'Gravando... toque pra parar' : 'Falar em vez de digitar'}
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.addMealFormButtonRow}>
+              <TouchableOpacity style={styles.addMealCancelButton} onPress={() => setShowAiModal(false)} disabled={aiProcessing}>
+                <Text style={styles.addMealCancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.addMealConfirmButton} onPress={handleGenerateDietWithAi} disabled={aiProcessing}>
+                {aiProcessing ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.addMealConfirmButtonText}>Processar e Preencher</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -404,6 +540,16 @@ const styles = StyleSheet.create({
   closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
   title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 20 },
+  aiButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#E05A17', borderRadius: 12, paddingVertical: 13, marginBottom: 12 },
+  aiButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
+  aiMicButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, marginTop: 12 },
+  aiMicButtonActive: { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
+  aiMicButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  aiMicButtonTextActive: { color: '#ef4444' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
+  modalCard: { backgroundColor: '#171717', borderRadius: 16, padding: 20 },
+  modalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 6 },
+  modalSubtitle: { color: '#a3a3a3', fontSize: 11, marginBottom: 16, lineHeight: 16 },
   addMealButton: { borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginBottom: 14 },
   addMealButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
   addMealFormCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 14 },
