@@ -1,5 +1,21 @@
 import { Alert, Platform } from 'react-native';
 
+// Turns a supabase.functions.invoke() {error, data} pair into a message a
+// personal/aluno can actually act on, and always logs the raw error so it
+// shows up in the browser console for debugging.
+export function describeFunctionError(error, data, fallback) {
+  if (error) {
+    console.error('Edge Function invoke error:', error, 'data:', data);
+    if (error.name === 'FunctionsFetchError') {
+      return 'Não conseguimos falar com o servidor de IA agora. Verifique sua internet e tente novamente em instantes.';
+    }
+    if (error.context?.status === 401) {
+      return 'Sua sessão expirou. Saia e entre novamente pra continuar.';
+    }
+  }
+  return data?.error || error?.message || fallback;
+}
+
 // React Native Web's Alert.alert is a no-op stub — it never shows anything,
 // and callback buttons never fire. This wraps it with the exact same
 // signature so it's a drop-in replacement everywhere in the app.

@@ -6,7 +6,7 @@ import AddExerciseModal from './AddExerciseModal';
 import EditExerciseModal from './EditExerciseModal';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { loadPeriodizationPlan, getCurrentPhase } from './periodizationUtils';
-import { showAlert } from './alertUtils';
+import { showAlert, describeFunctionError } from './alertUtils';
 import { useSpeechToText } from './useSpeechToText';
 import PromptModal from './PromptModal';
 import { HeaderBack } from './Header';
@@ -364,7 +364,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       });
 
       if (error || data?.error) {
-        showAlert('Não deu pra gerar o treino', data?.error || error?.message || 'Tenta de novo em alguns instantes.');
+        showAlert('Não deu pra gerar o treino', describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
         setAiProcessing(false);
         return;
       }
@@ -410,6 +410,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       setActiveWorkoutId(newWorkout.id);
       showAlert('Treino gerado!', `"${newWorkout.name}" criado com ${rows.length} exercício(s). Revisa e ajusta o que quiser antes de salvar.`);
     } catch (e) {
+      console.error('Erro ao gerar treino com IA:', e);
       setAiProcessing(false);
       showAlert('Erro', e?.message || 'Não foi possível gerar o treino agora.');
     }

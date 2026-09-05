@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert,
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import FoodCatalogScreen from './FoodCatalogScreen';
-import { showAlert } from './alertUtils';
+import { showAlert, describeFunctionError } from './alertUtils';
 import { useSpeechToText } from './useSpeechToText';
 
 const KEYBOARD_TOOLBAR_ID = 'dietDetailKeyboardToolbar';
@@ -93,7 +93,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
       });
 
       if (error || data?.error) {
-        showAlert('Não deu pra gerar a dieta', data?.error || error?.message || 'Tenta de novo em alguns instantes.');
+        showAlert('Não deu pra gerar a dieta', describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
         setAiProcessing(false);
         return;
       }
@@ -150,6 +150,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
       await loadMeals();
       showAlert('Dieta gerada!', `${data.meals.length} refeição(ões) criada(s). Revisa e ajusta o que quiser antes de salvar.`);
     } catch (e) {
+      console.error('Erro ao gerar dieta com IA:', e);
       setAiProcessing(false);
       showAlert('Erro', e?.message || 'Não foi possível gerar a dieta agora.');
     }
