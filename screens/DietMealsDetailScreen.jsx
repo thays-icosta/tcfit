@@ -8,7 +8,7 @@ import { useSpeechToText } from './useSpeechToText';
 
 const KEYBOARD_TOOLBAR_ID = 'dietDetailKeyboardToolbar';
 
-export default function DietMealsDetailScreen({ dietId, dietName, studentId, onClose }) {
+export default function DietMealsDetailScreen({ dietId, dietName, studentId, personalId, onClose }) {
   const [meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,6 +35,13 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
     getBaseText: () => aiInstruction,
     onTranscriptChange: setAiInstruction,
   });
+
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importStudents, setImportStudents] = useState([]);
+  const [importStudentSearch, setImportStudentSearch] = useState('');
+  const [importSelectedStudent, setImportSelectedStudent] = useState(null);
+  const [importStudentDiets, setImportStudentDiets] = useState([]);
+  const [importing, setImporting] = useState(false);
 
   const loadMeals = async () => {
     const { data } = await supabase
@@ -154,6 +161,110 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
       setAiProcessing(false);
       showAlert('Erro', e?.message || 'Não foi possível gerar a dieta agora.');
     }
+  };
+
+  const handleOpenImportModal = async () => {
+    setImportSelectedStudent(null);
+    setImportStudentDiets([]);
+    setImportStudentSearch('');
+    setShowImportModal(true);
+    const { data } = await supabase
+      .from('users')
+      .select('id, name, email')
+      .eq('personal_id', personalId)
+      .eq('role', 'aluno')
+      .neq('id', studentId)
+      .order('name');
+    setImportStudents(data || []);
+  };
+
+  const handlePickImportStudent = async (student) => {
+    setImportSelectedStudent(student);
+    setImportStudentDiets([]);
+    const { data } = await supabase
+      .from('diets')
+      .select('id, name, active')
+      .eq('student_id', student.id)
+      .order('created_at', { ascending: false });
+    setImportStudentDiets(data || []);
+  };
+
+  const handleImportDiet = async (sourceDiet) => {
+    setImporting(true);
+    const { data: sourceMeals, error: loadError } = await supabase
+      .from('diet_meals')
+      .select('name, meal_time, order_index, diet_meal_foods (food_name, quantity, quantity_g, calories_kcal, protein_g, carbs_g, fat_g, food_id, order_index, diet_meal_food_substitutes (food_name, quantity, quantity_g, calories_kcal, protein_g, carbs_g, fat_g, order_index))')
+      .eq('diet_id', sourceDiet.id)
+      .order('order_index', { ascending: true });
+
+    if (loadError) {
+      setImporting(false);
+      showAlert('Erro', loadError.message);
+      return;
+    }
+
+    if (!sourceMeals || sourceMeals.length === 0) {
+      setImporting(false);
+      showAlert('Dieta vazia', 'Essa dieta ainda não tem refeições pra importar.');
+      return;
+    }
+
+    const baseOrder = meals.length;
+    for (let i = 0; i < sourceMeals.length; i++) {
+      const sourceMeal = sourceMeals[i];
+      const { data: newMeal, error: mealError } = await supabase
+        .from('diet_meals')
+        .insert({ diet_id: dietId, name: sourceMeal.name, meal_time: sourceMeal.meal_time, order_index: baseOrder + i })
+        .select()
+        .single();
+      if (mealError || !newMeal) continue;
+
+      const foods = (sourceMeal.diet_meal_foods || []).sort((a, b) => a.order_index - b.order_index);
+      for (let j = 0; j < foods.length; j++) {
+        const food = foods[j];
+        const { data: newFood, error: foodError } = await supabase
+          .from('diet_meal_foods')
+          .insert({
+            meal_id: newMeal.id,
+            food_name: food.food_name,
+            quantity: food.quantity,
+            quantity_g: food.quantity_g,
+            calories_kcal: food.calories_kcal,
+            protein_g: food.protein_g,
+            carbs_g: food.carbs_g,
+            fat_g: food.fat_g,
+            food_id: food.food_id,
+            order_index: j,
+          })
+          .select()
+          .single();
+        if (foodError || !newFood) continue;
+
+        const substitutes = (food.diet_meal_food_substitutes || []).sort((a, b) => a.order_index - b.order_index);
+        if (substitutes.length > 0) {
+          await supabase.from('diet_meal_food_substitutes').insert(
+            substitutes.map((sub, k) => ({
+              diet_meal_food_id: newFood.id,
+              food_name: sub.food_name,
+              quantity: sub.quantity,
+              quantity_g: sub.quantity_g,
+              calories_kcal: sub.calories_kcal,
+              protein_g: sub.protein_g,
+              carbs_g: sub.carbs_g,
+              fat_g: sub.fat_g,
+              order_index: k,
+            }))
+          );
+        }
+      }
+    }
+
+    setImporting(false);
+    setShowImportModal(false);
+    setImportSelectedStudent(null);
+    setImportStudentDiets([]);
+    await loadMeals();
+    showAlert('Dieta importada!', `${sourceMeals.length} refeição(ões) copiada(s) de ${importSelectedStudent?.name}. Revisa e ajusta o que quiser antes de salvar.`);
   };
 
   const handleRemoveMeal = (mealId) => {
@@ -309,10 +420,18 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
           </View>
 
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-            <TouchableOpacity style={styles.aiButton} onPress={handleOpenAiModal}>
-              <Ionicons name="sparkles" size={16} color="#0a0a0a" />
-              <Text style={styles.aiButtonText}>Gerar Dieta com IA</Text>
-            </TouchableOpacity>
+            <View style={styles.aiButtonRow}>
+              <TouchableOpacity style={[styles.aiButton, { flex: 1 }]} onPress={handleOpenAiModal}>
+                <Ionicons name="sparkles" size={16} color="#0a0a0a" />
+                <Text style={styles.aiButtonText}>Gerar Dieta com IA</Text>
+              </TouchableOpacity>
+              {personalId && (
+                <TouchableOpacity style={styles.importButton} onPress={handleOpenImportModal}>
+                  <Ionicons name="download-outline" size={16} color="#f97316" />
+                  <Text style={styles.importButtonText}>Importar de outro Aluno</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
             {!showAddMealForm ? (
               <TouchableOpacity style={styles.addMealButton} onPress={() => setShowAddMealForm(true)}>
@@ -530,6 +649,77 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
           </View>
         </View>
       </Modal>
+
+      <Modal visible={showImportModal} transparent animationType="slide" onRequestClose={() => setShowImportModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            {!importSelectedStudent ? (
+              <>
+                <Text style={styles.modalTitle}>Importar Dieta de outro Aluno</Text>
+                <Text style={styles.modalSubtitle}>Escolha o aluno de onde você quer copiar um plano alimentar.</Text>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Buscar aluno por nome..."
+                  placeholderTextColor="#525252"
+                  value={importStudentSearch}
+                  onChangeText={setImportStudentSearch}
+                />
+
+                <ScrollView style={{ maxHeight: 320, marginTop: 8 }}>
+                  {importStudents
+                    .filter((s) => s.name?.toLowerCase().includes(importStudentSearch.trim().toLowerCase()))
+                    .map((s) => (
+                      <TouchableOpacity key={s.id} style={styles.importStudentRow} onPress={() => handlePickImportStudent(s)}>
+                        <Text style={styles.importStudentName}>{s.name}</Text>
+                        <Ionicons name="chevron-forward-outline" size={16} color="#525252" />
+                      </TouchableOpacity>
+                    ))}
+                  {importStudents.length === 0 && (
+                    <Text style={styles.emptyText}>Você ainda não tem outros alunos cadastrados.</Text>
+                  )}
+                </ScrollView>
+
+                <TouchableOpacity style={styles.addMealCancelButton} onPress={() => setShowImportModal(false)}>
+                  <Text style={styles.addMealCancelButtonText}>Fechar</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <TouchableOpacity onPress={() => setImportSelectedStudent(null)} style={{ marginBottom: 8 }}>
+                  <Text style={styles.closeText}>← Escolher outro aluno</Text>
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>Planos de {importSelectedStudent.name}</Text>
+                <Text style={styles.modalSubtitle}>Escolha qual plano copiar. As refeições, alimentos e substituições serão adicionados aqui, sem alterar o plano original.</Text>
+
+                <ScrollView style={{ maxHeight: 320 }}>
+                  {importStudentDiets.map((d) => (
+                    <TouchableOpacity
+                      key={d.id}
+                      style={styles.importStudentRow}
+                      onPress={() => handleImportDiet(d)}
+                      disabled={importing}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.importStudentName}>{d.name}</Text>
+                        {d.active && <Text style={styles.importDietActiveTag}>Ativo</Text>}
+                      </View>
+                      {importing ? <ActivityIndicator color="#f97316" size="small" /> : <Ionicons name="download-outline" size={18} color="#f97316" />}
+                    </TouchableOpacity>
+                  ))}
+                  {importStudentDiets.length === 0 && (
+                    <Text style={styles.emptyText}>Esse aluno ainda não tem planos alimentares.</Text>
+                  )}
+                </ScrollView>
+
+                <TouchableOpacity style={styles.addMealCancelButton} onPress={() => setShowImportModal(false)} disabled={importing}>
+                  <Text style={styles.addMealCancelButtonText}>Fechar</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -541,8 +731,14 @@ const styles = StyleSheet.create({
   closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
   title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 20 },
-  aiButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#E05A17', borderRadius: 12, paddingVertical: 13, marginBottom: 12 },
+  aiButtonRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  aiButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#E05A17', borderRadius: 12, paddingVertical: 13 },
   aiButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
+  importButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, paddingVertical: 13, paddingHorizontal: 12 },
+  importButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
+  importStudentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 8 },
+  importStudentName: { color: '#f5f5f5', fontSize: 14, fontWeight: '600' },
+  importDietActiveTag: { color: '#22c55e', fontSize: 10, fontWeight: '700', marginTop: 2 },
   aiMicButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, marginTop: 12 },
   aiMicButtonActive: { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
   aiMicButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },

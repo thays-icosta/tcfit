@@ -551,6 +551,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
         dietId={activeDietId}
         dietName={activeDiet?.name || 'Dieta'}
         studentId={studentId}
+        personalId={personalId}
         onClose={() => {
           setShowMealsDetail(false);
           loadMeals(activeDietId);
