@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
@@ -65,7 +65,9 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const [aiInstruction, setAiInstruction] = useState('');
   const [aiProcessing, setAiProcessing] = useState(false);
   const [aiRecording, setAiRecording] = useState(false);
-  const [aiRecognitionRef, setAiRecognitionRef] = useState(null);
+  const aiRecognitionRef = useRef(null);
+  const aiRecordingTimeoutRef = useRef(null);
+  const aiBaseTextRef = useRef('');
 
   const loadWorkouts = async () => {
     const { data } = await supabase
@@ -347,34 +349,93 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     setShowAiModal(true);
   };
 
+  const clearAiRecordingTimeout = () => {
+    if (aiRecordingTimeoutRef.current) {
+      clearTimeout(aiRecordingTimeoutRef.current);
+      aiRecordingTimeoutRef.current = null;
+    }
+  };
+
+  // Stops (and hard-aborts) the live recognition session and resets the button
+  // synchronously — never waits on `onend` alone, since that event isn't
+  // guaranteed to fire promptly (or at all) on every browser/condition.
+  const stopAiRecording = () => {
+    clearAiRecordingTimeout();
+    setAiRecording(false);
+    const recognition = aiRecognitionRef.current;
+    aiRecognitionRef.current = null;
+    if (recognition) {
+      try { recognition.stop(); } catch (e) {}
+      try { recognition.abort(); } catch (e) {}
+    }
+  };
+
   const handleToggleAiRecording = () => {
+    if (aiRecording) {
+      stopAiRecording();
+      return;
+    }
+
     const SpeechRecognitionCtor = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
     if (!SpeechRecognitionCtor) {
       showAlert('Não disponível', 'Reconhecimento de voz não é suportado nesse navegador. Digite o pedido no campo de texto.');
       return;
     }
 
-    if (aiRecording) {
-      aiRecognitionRef?.stop();
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = 'pt-BR';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    aiBaseTextRef.current = aiInstruction;
+
+    recognition.onresult = (event) => {
+      try {
+        let combined = '';
+        for (let i = 0; i < event.results.length; i++) {
+          combined += event.results[i][0]?.transcript || '';
+        }
+        const base = aiBaseTextRef.current;
+        setAiInstruction(base ? `${base} ${combined}` : combined);
+      } catch (e) {
+        // no-op: a malformed result event shouldn't kill the recording session
+      }
+    };
+    recognition.onerror = () => {
+      try { stopAiRecording(); } catch (e) { setAiRecording(false); }
+    };
+    recognition.onend = () => {
+      try { stopAiRecording(); } catch (e) { setAiRecording(false); }
+    };
+
+    aiRecognitionRef.current = recognition;
+    setAiRecording(true);
+    try {
+      recognition.start();
+    } catch (e) {
+      stopAiRecording();
       return;
     }
 
-    const recognition = new SpeechRecognitionCtor();
-    recognition.lang = 'pt-BR';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = (event) => {
-      const transcript = event.results?.[0]?.[0]?.transcript || '';
-      setAiInstruction((prev) => (prev ? `${prev} ${transcript}` : transcript));
-    };
-    recognition.onerror = () => setAiRecording(false);
-    recognition.onend = () => setAiRecording(false);
-
-    setAiRecognitionRef(recognition);
-    setAiRecording(true);
-    recognition.start();
+    // Safety net: never leave the mic listening (or the button stuck) forever.
+    // Whatever was transcribed up to this point already sits in the field via
+    // the live onresult updates above.
+    clearAiRecordingTimeout();
+    aiRecordingTimeoutRef.current = setTimeout(() => {
+      stopAiRecording();
+    }, 30000);
   };
+
+  // If the modal gets closed mid-recording, stop the mic instead of letting it
+  // keep listening in the background.
+  useEffect(() => {
+    if (!showAiModal) stopAiRecording();
+  }, [showAiModal]);
+
+  useEffect(() => {
+    return () => stopAiRecording();
+  }, []);
 
   const handleGenerateWorkoutWithAi = async () => {
     if (!aiInstruction.trim()) {
