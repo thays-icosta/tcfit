@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -6,7 +6,11 @@ import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { getYoutubeVideoId, getYoutubeThumbnailUrl } from './youtubeUtils';
 import { showAlert, describeFunctionError } from './alertUtils';
+import { translateExerciseNamePtToEn } from './exerciseTermsPt';
 import { HeaderBack } from './Header';
+
+const AUTO_SEARCH_DEBOUNCE_MS = 700;
+const AUTO_SEARCH_MIN_CHARS = 3;
 
 const MUSCLE_OPTIONS = ['peito', 'costas', 'ombro', 'biceps', 'triceps', 'abdomen', 'quadriceps', 'isquiotibiais', 'gluteo', 'panturrilha', 'aerobico'];
 const EQUIPMENT_OPTIONS = ['halter', 'barra', 'maquina', 'peso_corporal'];
@@ -27,40 +31,46 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
   const [equipment, setEquipment] = useState(exercise?.equipment || 'halter');
   const [instructions, setInstructions] = useState(exercise?.instructions || '');
   const [thumbnailUrl, setThumbnailUrl] = useState(exercise?.thumbnail_url || '');
-  const [videoMode, setVideoMode] = useState('youtube');
+  const [videoMode, setVideoMode] = useState('database');
   const [videoUrl, setVideoUrl] = useState(exercise?.video_url || '');
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [dbSearch, setDbSearch] = useState('');
   const [dbSearching, setDbSearching] = useState(false);
   const [dbResults, setDbResults] = useState([]);
+  const [dbSearched, setDbSearched] = useState(false);
   const [dbImportingId, setDbImportingId] = useState(null);
+  const dbDebounceRef = useRef(null);
 
-  const handleSearchExerciseDb = async () => {
-    if (!dbSearch.trim()) {
-      showAlert('Ops', 'Digite o nome do exercício pra buscar (ex: "supino").');
-      return;
+  // Auto-search the moment the name field looks like a real exercise name —
+  // no manual "Buscar" step, so the personal never has to leave the keyboard
+  // just to look up a demo video.
+  useEffect(() => {
+    if (videoMode !== 'database') return undefined;
+    if (name.trim().length < AUTO_SEARCH_MIN_CHARS) {
+      setDbResults([]);
+      setDbSearched(false);
+      return undefined;
     }
-    setDbSearching(true);
-    setDbResults([]);
-    try {
-      const { data, error } = await supabase.functions.invoke('search-exercisedb', {
-        body: { query: dbSearch.trim() },
-      });
-      if (error || data?.error) {
-        showAlert('Não deu pra buscar', await describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
-      } else if (!data.results || data.results.length === 0) {
-        showAlert('Nada encontrado', 'Não achei nenhum exercício com esse nome no banco. Tenta em inglês ou um termo mais simples.');
-      } else {
-        setDbResults(data.results);
+
+    if (dbDebounceRef.current) clearTimeout(dbDebounceRef.current);
+    dbDebounceRef.current = setTimeout(async () => {
+      setDbSearching(true);
+      try {
+        const query = translateExerciseNamePtToEn(name.trim());
+        const { data, error } = await supabase.functions.invoke('search-exercisedb', { body: { query } });
+        if (!error && !data?.error) {
+          setDbResults(data.results || []);
+        }
+      } catch (e) {
+        console.error('Erro ao buscar no ExerciseDB:', e);
       }
-    } catch (e) {
-      console.error('Erro ao buscar no ExerciseDB:', e);
-      showAlert('Erro', e?.message || 'Não foi possível buscar agora.');
-    }
-    setDbSearching(false);
-  };
+      setDbSearching(false);
+      setDbSearched(true);
+    }, AUTO_SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(dbDebounceRef.current);
+  }, [name, videoMode]);
 
   const handleImportExerciseDbResult = async (result) => {
     setDbImportingId(result.id);
@@ -73,6 +83,9 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
       } else {
         setVideoUrl(data.url);
         if (!thumbnailUrl.trim()) setThumbnailUrl(data.url);
+        if (!instructions.trim() && result.instructions?.length > 0) {
+          setInstructions(result.instructions.map((step, i) => `${i + 1}. ${step}`).join('\n'));
+        }
         showAlert('Vídeo importado!', `Vídeo de "${result.name}" pronto. Você pode trocar por outro a qualquer momento.`);
       }
     } catch (e) {
@@ -200,21 +213,15 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
 
         {videoMode === 'database' ? (
           <>
-            <View style={styles.dbSearchRow}>
-              <TextInput
-                style={[styles.input, { flex: 1 }]}
-                placeholder='ex: "bench press", "squat"'
-                placeholderTextColor="#525252"
-                value={dbSearch}
-                onChangeText={setDbSearch}
-                autoCapitalize="none"
-                onSubmitEditing={handleSearchExerciseDb}
-              />
-              <TouchableOpacity style={styles.dbSearchButton} onPress={handleSearchExerciseDb} disabled={dbSearching}>
-                {dbSearching ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.dbSearchButtonText}>Buscar</Text>}
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.helperText}>Busque em inglês pra mais resultados (ex: &quot;bench press&quot; em vez de &quot;supino&quot;).</Text>
+            <Text style={styles.helperText}>
+              {name.trim().length < AUTO_SEARCH_MIN_CHARS
+                ? 'Digite o nome do exercício acima pra buscar automaticamente no banco.'
+                : dbSearching
+                ? 'Buscando exercícios parecidos...'
+                : dbSearched && dbResults.length === 0
+                ? 'Nada encontrado com esse nome. Tenta um termo mais simples ou em inglês.'
+                : 'Toque em "Usar" pra importar o vídeo (e as instruções, se estiverem em branco).'}
+            </Text>
 
             {videoUrl.trim() && dbResults.length === 0 ? (
               <Image source={{ uri: videoUrl }} style={styles.videoPreview} resizeMode="cover" />
@@ -277,9 +284,6 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
   formCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14 },
-  dbSearchRow: { flexDirection: 'row', gap: 8 },
-  dbSearchButton: { backgroundColor: '#f97316', borderRadius: 8, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
-  dbSearchButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '700' },
   dbResultRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 8, marginTop: 8 },
   dbResultThumb: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#171717' },
   dbResultName: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
