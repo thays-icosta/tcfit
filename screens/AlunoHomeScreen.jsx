@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from './supabaseClient';
 import WorkoutPlayerScreen from './WorkoutPlayerScreen';
+import WorkoutPreviewScreen from './WorkoutPreviewScreen';
 import AlunoProfileScreen from './AlunoProfileScreen';
 import FoodCatalogScreen from './FoodCatalogScreen';
 import AlunoAgendaScreen from './AlunoAgendaScreen';
@@ -103,6 +104,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [nextDuePayment, setNextDuePayment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [playingWorkout, setPlayingWorkout] = useState(null);
+  const [previewWorkout, setPreviewWorkout] = useState(null);
   const [showRecipes, setShowRecipes] = useState(false);
   const [addingFoodForMeal, setAddingFoodForMeal] = useState(null);
   const [showMealPicker, setShowMealPicker] = useState(false);
@@ -476,6 +478,20 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
 
   const isOverdue = nextDuePayment && todayStr >= nextDuePayment.due_date;
 
+  if (previewWorkout) {
+    return (
+      <WorkoutPreviewScreen
+        workout={previewWorkout}
+        muscleSummary={muscleSummaryByWorkout[previewWorkout.id]}
+        onStart={() => {
+          setPlayingWorkout(previewWorkout);
+          setPreviewWorkout(null);
+        }}
+        onClose={() => setPreviewWorkout(null)}
+      />
+    );
+  }
+
   if (playingWorkout) {
     return (
       <WorkoutPlayerScreen
@@ -702,7 +718,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
               const done = completedToday[item.id];
               const summary = muscleSummaryByWorkout[item.id] || [];
               return (
-                <View style={styles.workoutCard}>
+                <TouchableOpacity style={styles.workoutCard} onPress={() => setPreviewWorkout(item)} activeOpacity={0.7}>
                   <View style={styles.workoutTopRow}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.workoutName}>{item.name}</Text>
@@ -724,7 +740,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                   <TouchableOpacity style={styles.startButton} onPress={() => setPlayingWorkout(item)}>
                     <Text style={styles.startButtonText}>Iniciar Treino</Text>
                   </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
               );
             }}
           />
