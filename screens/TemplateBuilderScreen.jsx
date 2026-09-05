@@ -7,7 +7,8 @@ import { supabase } from './supabaseClient';
 import AddExerciseModal from './AddExerciseModal';
 import ExerciseCatalogScreen from './ExerciseCatalogScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
-import { showAlert } from './alertUtils';
+import { showAlert, describeFunctionError } from './alertUtils';
+import { useSpeechToText } from './useSpeechToText';
 import { HOME_CATEGORIES, WORKOUT_TAGS } from './accessLevel';
 import { HeaderBack } from './Header';
 
@@ -40,6 +41,15 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [watchingVideo, setWatchingVideo] = useState(null);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showSettingsSheet, setShowSettingsSheet] = useState(false);
+  const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
+  const [showAiTemplateModal, setShowAiTemplateModal] = useState(false);
+  const [aiTemplateInstruction, setAiTemplateInstruction] = useState('');
+  const [aiTemplateProcessing, setAiTemplateProcessing] = useState(false);
+  const { recording: aiTemplateRecording, toggle: handleToggleAiTemplateRecording } = useSpeechToText({
+    active: showAiTemplateModal,
+    getBaseText: () => aiTemplateInstruction,
+    onTranscriptChange: setAiTemplateInstruction,
+  });
 
   const [newTemplateName, setNewTemplateName] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -131,7 +141,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const handleCreateTemplate = async () => {
     if (!newTemplateName.trim()) {
       showAlert('Ops', 'Dá um nome pro template (ex: "Hipertrofia Full Body").');
-      return;
+      return false;
     }
     const { data, error } = await supabase
       .from('workout_templates')
@@ -140,12 +150,85 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       .single();
     if (error) {
       showAlert('Erro', error.message);
-      return;
+      return false;
     }
     await supabase.from('template_sessions').insert({ template_id: data.id, personal_id: personalId, name: 'Treino A', order_index: 0 });
     setNewTemplateName('');
     await loadTemplates();
     setActiveTemplateId(data.id);
+    return true;
+  };
+
+  const handleGenerateTemplateWithAi = async () => {
+    if (!aiTemplateInstruction.trim()) {
+      showAlert('Ops', 'Descreve o template que você quer gerar (ex: "treino ABC de hipertrofia, 3x na semana").');
+      return;
+    }
+    setAiTemplateProcessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-workout-template', {
+        body: { instruction: aiTemplateInstruction.trim() },
+      });
+
+      if (error || data?.error) {
+        showAlert('Não deu pra gerar o template', describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
+        setAiTemplateProcessing(false);
+        return;
+      }
+
+      if (!data.sessions || data.sessions.length === 0) {
+        showAlert('Nenhuma sessão gerada', 'A IA não conseguiu combinar o pedido com exercícios da sua biblioteca. Tenta descrever de outro jeito.');
+        setAiTemplateProcessing(false);
+        return;
+      }
+
+      const { data: newTemplate, error: templateError } = await supabase
+        .from('workout_templates')
+        .insert({ personal_id: personalId, name: data.template_name || 'Template Gerado por IA' })
+        .select()
+        .single();
+
+      if (templateError || !newTemplate) {
+        showAlert('Erro', templateError?.message || 'Não foi possível criar o template.');
+        setAiTemplateProcessing(false);
+        return;
+      }
+
+      for (let i = 0; i < data.sessions.length; i++) {
+        const session = data.sessions[i];
+        const { data: newSession, error: sessionError } = await supabase
+          .from('template_sessions')
+          .insert({ template_id: newTemplate.id, personal_id: personalId, name: session.name || `Treino ${String.fromCharCode(65 + i)}`, order_index: i })
+          .select()
+          .single();
+        if (sessionError || !newSession) continue;
+
+        const rows = (session.exercises || []).map((ex, index) => ({
+          template_id: newTemplate.id,
+          session_id: newSession.id,
+          exercise_id: ex.exercise_id,
+          order_index: index,
+          sets: ex.sets,
+          reps: ex.reps,
+          rest_time_seconds: ex.rest_time_seconds,
+          execution_method: 'tradicional',
+        }));
+        if (rows.length > 0) {
+          await supabase.from('workout_template_exercises').insert(rows);
+        }
+      }
+
+      setAiTemplateProcessing(false);
+      setShowAiTemplateModal(false);
+      setAiTemplateInstruction('');
+      await loadTemplates();
+      setActiveTemplateId(newTemplate.id);
+      showAlert('Template gerado!', `"${newTemplate.name}" criado com ${data.sessions.length} sessão(ões). Revisa e ajusta o que quiser antes de disponibilizar.`);
+    } catch (e) {
+      console.error('Erro ao gerar template com IA:', e);
+      setAiTemplateProcessing(false);
+      showAlert('Erro', e?.message || 'Não foi possível gerar o template agora.');
+    }
   };
 
   const handleDeleteTemplate = (template) => {
@@ -376,10 +459,17 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
         onBack={onClose}
         style={{ paddingHorizontal: 16 }}
         rightSlot={
-          activeMainTab === 'templates' && activeTemplateId ? (
-            <TouchableOpacity onPress={() => setShowSettingsSheet(true)} hitSlop={8}>
-              <Ionicons name="settings-outline" size={22} color="#f97316" />
-            </TouchableOpacity>
+          activeMainTab === 'templates' ? (
+            <View style={styles.headerActionsRow}>
+              <TouchableOpacity onPress={() => setShowCreateTemplateModal(true)} hitSlop={8}>
+                <Ionicons name="add-circle-outline" size={22} color="#f97316" />
+              </TouchableOpacity>
+              {activeTemplateId && (
+                <TouchableOpacity onPress={() => setShowSettingsSheet(true)} hitSlop={8}>
+                  <Ionicons name="settings-outline" size={22} color="#f97316" />
+                </TouchableOpacity>
+              )}
+            </View>
           ) : null
         }
       />
@@ -558,8 +648,89 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
         </View>
       </Modal>
 
+      <Modal visible={showCreateTemplateModal} transparent animationType="slide" onRequestClose={() => setShowCreateTemplateModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Criar Novo Template</Text>
+            <Text style={styles.modalSubtitle}>Dá um nome pro template. Ele já nasce com a primeira sessão (Treino A) pra você montar.</Text>
+            <View style={styles.newRow}>
+              <TextInput
+                style={styles.newInput}
+                placeholder="ex: Hipertrofia Full Body"
+                placeholderTextColor="#737373"
+                value={newTemplateName}
+                onChangeText={setNewTemplateName}
+              />
+            </View>
+            <TouchableOpacity
+              style={styles.saveMetaButton}
+              onPress={async () => {
+                const ok = await handleCreateTemplate();
+                if (ok) setShowCreateTemplateModal(false);
+              }}
+            >
+              <Text style={styles.saveMetaButtonText}>Criar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowCreateTemplateModal(false)}>
+              <Text style={styles.modalCloseButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showAiTemplateModal} transparent animationType="slide" onRequestClose={() => setShowAiTemplateModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>✨ Gerar Template com IA</Text>
+            <Text style={styles.modalSubtitle}>Descreva o template (ex: &quot;treino ABC de hipertrofia, 3x na semana&quot;). A IA monta as sessões usando exercícios da sua biblioteca.</Text>
+            <View style={styles.aiInputRow}>
+              <TextInput
+                style={[styles.metaInput, { flex: 1 }]}
+                placeholder="Descreva o template..."
+                placeholderTextColor="#525252"
+                value={aiTemplateInstruction}
+                onChangeText={setAiTemplateInstruction}
+                multiline
+              />
+              <TouchableOpacity
+                style={[styles.aiMicButton, aiTemplateRecording && styles.aiMicButtonActive]}
+                onPress={handleToggleAiTemplateRecording}
+              >
+                <Ionicons name={aiTemplateRecording ? 'stop' : 'mic-outline'} size={18} color={aiTemplateRecording ? '#0a0a0a' : '#f97316'} />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.saveMetaButton} onPress={handleGenerateTemplateWithAi} disabled={aiTemplateProcessing}>
+              {aiTemplateProcessing ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.saveMetaButtonText}>Gerar Template</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => {
+                setShowAiTemplateModal(false);
+                setAiTemplateInstruction('');
+              }}
+            >
+              <Text style={styles.modalCloseButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {!activeTemplateId ? (
-        <Text style={styles.emptyText}>Cria um template pra começar.</Text>
+        <View style={styles.emptyStateBox}>
+          <Ionicons name="albums-outline" size={36} color="#525252" />
+          <Text style={styles.emptyStateTitle}>Nenhum template ainda</Text>
+          <Text style={styles.emptyStateSubtitle}>Crie o primeiro modelo de treino da sua biblioteca pra reaproveitar com seus alunos.</Text>
+
+          <TouchableOpacity style={styles.emptyStatePrimaryButton} onPress={() => setShowCreateTemplateModal(true)}>
+            <Ionicons name="add" size={18} color="#0a0a0a" />
+            <Text style={styles.emptyStatePrimaryButtonText}>Criar Template Manualmente</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.emptyStateAiButton} onPress={() => setShowAiTemplateModal(true)}>
+            <Ionicons name="sparkles" size={18} color="#f97316" />
+            <Text style={styles.emptyStateAiButtonText}>Gerar Template com IA</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <>
           <View style={styles.sessionChipsRow}>
@@ -682,6 +853,11 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   modalSheet: { backgroundColor: '#171717', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '80%' },
   modalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 14 },
+  modalSubtitle: { color: '#a3a3a3', fontSize: 12, marginBottom: 16, marginTop: -8 },
+  headerActionsRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  aiInputRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', marginBottom: 16 },
+  aiMicButton: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center' },
+  aiMicButtonActive: { backgroundColor: '#f97316' },
   templateListRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, marginBottom: 8 },
   templateListRowActive: { borderColor: '#f97316' },
   templateListRowText: { flex: 1, color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
@@ -694,6 +870,13 @@ const styles = StyleSheet.create({
   addButton: { backgroundColor: '#f97316', width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   addButtonText: { color: '#0a0a0a', fontSize: 20, fontWeight: '700' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
+  emptyStateBox: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 8 },
+  emptyStateTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginTop: 8 },
+  emptyStateSubtitle: { color: '#737373', fontSize: 13, textAlign: 'center', marginBottom: 16 },
+  emptyStatePrimaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center', width: '100%' },
+  emptyStatePrimaryButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
+  emptyStateAiButton: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1, borderColor: '#f97316', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: 10 },
+  emptyStateAiButtonText: { color: '#f97316', fontSize: 14, fontWeight: '800' },
   metaLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 8 },
   helperText: { color: '#525252', fontSize: 11, marginBottom: 8 },
   metaInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 13, minHeight: 50, textAlignVertical: 'top' },
