@@ -43,20 +43,16 @@ export default function Root({ children }: PropsWithChildren) {
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // Register the cache-busting SW, but do NOT force a reload when it
+              // takes over — an earlier version reloaded on every controllerchange,
+              // which on a low-end/older Android device compounding with several
+              // deploys in a row is the most likely cause of a repeated crash/reload
+              // loop. New content still applies naturally next time the tab reloads.
               try {
                 if ('serviceWorker' in navigator) {
                   window.addEventListener('load', () => {
                     try {
                       navigator.serviceWorker.register('/sw.js').catch(function () {});
-                    } catch (e) {}
-                  });
-
-                  var swReloaded = false;
-                  navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    if (swReloaded) return;
-                    swReloaded = true;
-                    try {
-                      window.location.reload();
                     } catch (e) {}
                   });
                 }
