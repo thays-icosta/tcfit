@@ -171,7 +171,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       });
 
       if (error || data?.error) {
-        showAlert('Não deu pra gerar o template', describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
+        showAlert('Não deu pra gerar o template', await describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
         setAiTemplateProcessing(false);
         return;
       }

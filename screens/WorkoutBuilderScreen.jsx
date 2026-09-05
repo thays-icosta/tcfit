@@ -364,7 +364,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       });
 
       if (error || data?.error) {
-        showAlert('Não deu pra gerar o treino', describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
+        showAlert('Não deu pra gerar o treino', await describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
         setAiProcessing(false);
         return;
       }

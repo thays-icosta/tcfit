@@ -93,7 +93,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, onC
       });
 
       if (error || data?.error) {
-        showAlert('Não deu pra gerar a dieta', describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
+        showAlert('Não deu pra gerar a dieta', await describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
         setAiProcessing(false);
         return;
       }

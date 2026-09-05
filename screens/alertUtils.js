@@ -3,7 +3,13 @@ import { Alert, Platform } from 'react-native';
 // Turns a supabase.functions.invoke() {error, data} pair into a message a
 // personal/aluno can actually act on, and always logs the raw error so it
 // shows up in the browser console for debugging.
-export function describeFunctionError(error, data, fallback) {
+//
+// supabase-js throws FunctionsHttpError as soon as it sees a non-2xx status,
+// BEFORE reading the response body — so `data` is always null for our own
+// {error: "..."} JSON bodies (400/401/403/500/502) and only the SDK's generic
+// "Edge Function returned a non-2xx status code" message survives, unless we
+// read the body ourselves from error.context (the raw, still-unread Response).
+export async function describeFunctionError(error, data, fallback) {
   if (error) {
     console.error('Edge Function invoke error:', error, 'data:', data);
     if (error.name === 'FunctionsFetchError') {
@@ -11,6 +17,14 @@ export function describeFunctionError(error, data, fallback) {
     }
     if (error.context?.status === 401) {
       return 'Sua sessão expirou. Saia e entre novamente pra continuar.';
+    }
+    if (error.name === 'FunctionsHttpError' && error.context) {
+      try {
+        const body = await error.context.clone().json();
+        if (body?.error) return body.error;
+      } catch (_e) {
+        // response body wasn't JSON — fall through to the generic message below
+      }
     }
   }
   return data?.error || error?.message || fallback;
