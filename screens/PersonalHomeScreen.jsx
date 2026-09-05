@@ -10,8 +10,10 @@ import PersonalFinanceScreen from './PersonalFinanceScreen';
 import TemplateBuilderScreen from './TemplateBuilderScreen';
 import ProductsManagerScreen from './ProductsManagerScreen';
 import FoodCatalogScreen from './FoodCatalogScreen';
+import RecipeManagerScreen from './RecipeManagerScreen';
 import AlunoDetailScreen from './AlunoDetailScreen';
 import AnamneseConfigScreen from './AnamneseConfigScreen';
+import PersonalTabBar from './PersonalTabBar';
 import { showAlert } from './alertUtils';
 import { HeaderWelcome } from './Header';
 
@@ -23,18 +25,20 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [daysSinceLastTrained, setDaysSinceLastTrained] = useState({});
   const [detailFor, setDetailFor] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
+  const [activeTab, setActiveTab] = useState('inicio');
   const [showAgenda, setShowAgenda] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showFinance, setShowFinance] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
   const [showProductsManager, setShowProductsManager] = useState(false);
   const [showFoodCatalog, setShowFoodCatalog] = useState(false);
+  const [showRecipeManager, setShowRecipeManager] = useState(false);
   const [showAnamneseConfig, setShowAnamneseConfig] = useState(false);
+  const [showStudentPicker, setShowStudentPicker] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
   const [financeSummary, setFinanceSummary] = useState({ monthlyRevenue: 0, dueCount: 0 });
   const [studentFilter, setStudentFilter] = useState('todos');
   const [studentSearch, setStudentSearch] = useState('');
+  const [recentDiets, setRecentDiets] = useState([]);
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -130,10 +134,21 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     setLoading(false);
   };
 
+  const loadRecentDiets = async () => {
+    const { data } = await supabase
+      .from('diets')
+      .select('id, name, active, created_at, student:student_id(id, name)')
+      .eq('personal_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    setRecentDiets(data || []);
+  };
+
   useEffect(() => {
     loadStudents();
     loadOwnProfile();
     loadFinanceSummary();
+    loadRecentDiets();
   }, [user.id]);
 
   if (detailFor) {
@@ -149,17 +164,22 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     );
   }
 
-  if (showProfile) {
+  if (activeTab === 'perfil') {
     return (
-      <PersonalProfileScreen
-        user={user}
-        onLogout={onLogout}
-        onClose={() => {
-          setShowProfile(false);
-          loadStudents();
-          loadOwnProfile();
-        }}
-      />
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <PersonalProfileScreen
+            user={user}
+            onLogout={onLogout}
+            onClose={() => {
+              setActiveTab('inicio');
+              loadStudents();
+              loadOwnProfile();
+            }}
+          />
+        </View>
+        <PersonalTabBar activeTab={activeTab} onChange={setActiveTab} />
+      </View>
     );
   }
 
@@ -199,8 +219,15 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     return <AnamneseConfigScreen personalId={user.id} onClose={() => setShowAnamneseConfig(false)} />;
   }
 
-  if (showTemplates) {
-    return <TemplateBuilderScreen personalId={user.id} onClose={() => setShowTemplates(false)} />;
+  if (activeTab === 'treinos') {
+    return (
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <TemplateBuilderScreen personalId={user.id} onClose={() => setActiveTab('inicio')} />
+        </View>
+        <PersonalTabBar activeTab={activeTab} onChange={setActiveTab} />
+      </View>
+    );
   }
 
   if (showProductsManager) {
@@ -216,6 +243,10 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     );
   }
 
+  if (showRecipeManager) {
+    return <RecipeManagerScreen personalId={user.id} onClose={() => setShowRecipeManager(false)} />;
+  }
+
   const filteredStudents = students
     .filter((s) => {
       if (studentFilter === 'vip') return s.access_level === 'consultoria_vip';
@@ -228,14 +259,192 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       return s.name?.toLowerCase().includes(q) || s.email?.toLowerCase().includes(q);
     });
 
+  if (activeTab === 'alunos') {
+    return (
+      <View style={{ flex: 1 }}>
+        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 24 }}>
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Meus Alunos</Text>
+
+          <View style={styles.studentFilterTabs}>
+            {[
+              { value: 'todos', label: 'Todos' },
+              { value: 'vip', label: 'Consultoria VIP' },
+              { value: 'app', label: 'Membros do App' },
+            ].map((tab) => (
+              <TouchableOpacity
+                key={tab.value}
+                style={[styles.studentFilterTab, studentFilter === tab.value && styles.studentFilterTabActive]}
+                onPress={() => setStudentFilter(tab.value)}
+              >
+                <Text style={[styles.studentFilterTabText, studentFilter === tab.value && styles.studentFilterTabTextActive]}>{tab.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.studentSearchBox}>
+            <Ionicons name="search-outline" size={16} color="#737373" />
+            <TextInput
+              style={styles.studentSearchInput}
+              placeholder="Buscar por nome ou e-mail"
+              placeholderTextColor="#525252"
+              value={studentSearch}
+              onChangeText={setStudentSearch}
+            />
+            {studentSearch.length > 0 && (
+              <TouchableOpacity hitSlop={8} onPress={() => setStudentSearch('')}>
+                <Ionicons name="close-circle" size={16} color="#525252" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {loading ? (
+            <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+          ) : students.length === 0 ? (
+            <Text style={styles.emptyText}>Nenhum aluno ainda. Toque em &quot;+ Aluno&quot; na Início pra começar.</Text>
+          ) : filteredStudents.length === 0 ? (
+            <Text style={styles.emptyText}>Nenhum aluno encontrado.</Text>
+          ) : (
+            filteredStudents.map((item) => {
+              const done = completedToday[item.id];
+              const daysSince = daysSinceLastTrained[item.id];
+              const showAlertTag = !done && (daysSince === null || daysSince >= 3);
+              const isVip = item.access_level === 'consultoria_vip';
+              return (
+                <TouchableOpacity key={item.id} style={styles.studentCard} onPress={() => setDetailFor(item)}>
+                  <View style={styles.avatarCircle}>
+                    {item.avatar_url ? (
+                      <Image source={{ uri: item.avatar_url }} style={styles.avatarImage} />
+                    ) : (
+                      <Text style={styles.avatarLetter}>{item.name?.charAt(0).toUpperCase() || '?'}</Text>
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.studentName}>{item.name}</Text>
+                    <Text style={styles.studentEmail}>{item.email}</Text>
+                    <View style={[styles.planBadge, isVip ? styles.planBadgeVip : styles.planBadgeApp]}>
+                      <Text style={[styles.planBadgeText, isVip ? styles.planBadgeTextVip : styles.planBadgeTextApp]}>
+                        {isVip ? 'Consultoria VIP' : 'Acesso App'}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.statusTag}>
+                    <View style={[styles.statusDot, done ? styles.statusDotDone : styles.statusDotPending]} />
+                    <Text style={styles.statusTagText}>{done ? 'Treinou hoje' : 'Ainda não treinou'}</Text>
+                    {showAlertTag && (
+                      <View style={styles.alertTag}>
+                        <Text style={styles.alertTagText}>
+                          {daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.chevron}>›</Text>
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </ScrollView>
+        <PersonalTabBar activeTab={activeTab} onChange={setActiveTab} />
+      </View>
+    );
+  }
+
+  if (activeTab === 'nutricao') {
+    return (
+      <View style={{ flex: 1 }}>
+        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 24 }}>
+          <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Nutrição</Text>
+
+          <TouchableOpacity style={styles.aiShortcutCard} onPress={() => setShowStudentPicker(true)}>
+            <Ionicons name="sparkles" size={20} color="#f97316" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.aiShortcutTitle}>Gerar Dieta com IA</Text>
+              <Text style={styles.aiShortcutSubtitle}>Escolha um aluno e monte um plano alimentar automaticamente</Text>
+            </View>
+            <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+          </TouchableOpacity>
+
+          <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Biblioteca de Dietas e Receitas</Text>
+          <View style={styles.shortcutGrid}>
+            <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowFoodCatalog(true)}>
+              <View style={styles.shortcutIconCircle}>
+                <Ionicons name="nutrition-outline" size={20} color="#f97316" />
+              </View>
+              <Text style={styles.shortcutText}>Catálogo de Alimentos</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowRecipeManager(true)}>
+              <View style={styles.shortcutIconCircle}>
+                <Ionicons name="book-outline" size={20} color="#f97316" />
+              </View>
+              <Text style={styles.shortcutText}>Receitas e E-books</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Planos Recentes</Text>
+          {recentDiets.length === 0 ? (
+            <Text style={styles.emptyText}>Nenhum plano alimentar criado ainda.</Text>
+          ) : (
+            recentDiets.map((diet) => (
+              <TouchableOpacity
+                key={diet.id}
+                style={styles.recentDietCard}
+                onPress={() => diet.student && setDetailFor(students.find((s) => s.id === diet.student.id) || diet.student)}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.recentDietName}>{diet.name}</Text>
+                  <Text style={styles.recentDietStudent}>{diet.student?.name || 'Aluno removido'}</Text>
+                </View>
+                {diet.active && (
+                  <View style={styles.recentDietActiveBadge}>
+                    <Text style={styles.recentDietActiveBadgeText}>Ativo</Text>
+                  </View>
+                )}
+                <Text style={styles.chevron}>›</Text>
+              </TouchableOpacity>
+            ))
+          )}
+        </ScrollView>
+        <PersonalTabBar activeTab={activeTab} onChange={setActiveTab} />
+
+        <Modal visible={showStudentPicker} transparent animationType="slide" onRequestClose={() => setShowStudentPicker(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalSheet}>
+              <Text style={styles.modalTitle}>Escolha um aluno</Text>
+              <Text style={styles.modalSubtitle}>Você vai gerar a dieta na tela de perfil desse aluno.</Text>
+              <ScrollView style={{ maxHeight: 320 }}>
+                {students.map((s) => (
+                  <TouchableOpacity
+                    key={s.id}
+                    style={styles.studentPickerRow}
+                    onPress={() => {
+                      setShowStudentPicker(false);
+                      setDetailFor(s);
+                    }}
+                  >
+                    <Text style={styles.studentPickerName}>{s.name}</Text>
+                    <Text style={styles.chevron}>›</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowStudentPicker(false)}>
+                <Text style={styles.modalCloseButtonText}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    );
+  }
+
   return (
+    <View style={{ flex: 1 }}>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <HeaderWelcome
         avatarUrl={ownAvatarUrl}
         initial={user?.name?.charAt(0).toUpperCase() || '?'}
         badge="PERSONAL"
         greeting={`Olá, ${user?.name}!`}
-        onAvatarPress={() => setShowProfile(true)}
+        onAvatarPress={() => setActiveTab('perfil')}
         rightSlot={
           <TouchableOpacity style={styles.inviteButton} onPress={() => setShowInviteModal(true)}>
             <Text style={styles.inviteButtonText}>+ Aluno</Text>
@@ -261,7 +470,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       </TouchableOpacity>
 
       <View style={styles.shortcutGrid}>
-        <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowTemplates(true)}>
+        <TouchableOpacity style={styles.shortcutCard} onPress={() => setActiveTab('treinos')}>
           <View style={styles.shortcutIconCircle}>
             <Ionicons name="barbell-outline" size={20} color="#f97316" />
           </View>
@@ -302,86 +511,16 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         </View>
       )}
 
-      <Text style={styles.sectionTitle}>Meus Alunos</Text>
-
-      <View style={styles.studentFilterTabs}>
-        {[
-          { value: 'todos', label: 'Todos' },
-          { value: 'vip', label: 'Consultoria VIP' },
-          { value: 'app', label: 'Membros do App' },
-        ].map((tab) => (
-          <TouchableOpacity
-            key={tab.value}
-            style={[styles.studentFilterTab, studentFilter === tab.value && styles.studentFilterTabActive]}
-            onPress={() => setStudentFilter(tab.value)}
-          >
-            <Text style={[styles.studentFilterTabText, studentFilter === tab.value && styles.studentFilterTabTextActive]}>{tab.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={styles.studentSearchBox}>
-        <Ionicons name="search-outline" size={16} color="#737373" />
-        <TextInput
-          style={styles.studentSearchInput}
-          placeholder="Buscar por nome ou e-mail"
-          placeholderTextColor="#525252"
-          value={studentSearch}
-          onChangeText={setStudentSearch}
-        />
-        {studentSearch.length > 0 && (
-          <TouchableOpacity hitSlop={8} onPress={() => setStudentSearch('')}>
-            <Ionicons name="close-circle" size={16} color="#525252" />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
-      ) : students.length === 0 ? (
-        <Text style={styles.emptyText}>Nenhum aluno ainda. Toque em &quot;+ Aluno&quot; pra começar.</Text>
-      ) : filteredStudents.length === 0 ? (
-        <Text style={styles.emptyText}>Nenhum aluno encontrado.</Text>
-      ) : (
-        filteredStudents.map((item) => {
-          const done = completedToday[item.id];
-          const daysSince = daysSinceLastTrained[item.id];
-          const showAlert = !done && (daysSince === null || daysSince >= 3);
-          const isVip = item.access_level === 'consultoria_vip';
-          return (
-            <TouchableOpacity key={item.id} style={styles.studentCard} onPress={() => setDetailFor(item)}>
-              <View style={styles.avatarCircle}>
-                {item.avatar_url ? (
-                  <Image source={{ uri: item.avatar_url }} style={styles.avatarImage} />
-                ) : (
-                  <Text style={styles.avatarLetter}>{item.name?.charAt(0).toUpperCase() || '?'}</Text>
-                )}
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.studentName}>{item.name}</Text>
-                <Text style={styles.studentEmail}>{item.email}</Text>
-                <View style={[styles.planBadge, isVip ? styles.planBadgeVip : styles.planBadgeApp]}>
-                  <Text style={[styles.planBadgeText, isVip ? styles.planBadgeTextVip : styles.planBadgeTextApp]}>
-                    {isVip ? 'Consultoria VIP' : 'Acesso App'}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.statusTag}>
-                <View style={[styles.statusDot, done ? styles.statusDotDone : styles.statusDotPending]} />
-                <Text style={styles.statusTagText}>{done ? 'Treinou hoje' : 'Ainda não treinou'}</Text>
-                {showAlert && (
-                  <View style={styles.alertTag}>
-                    <Text style={styles.alertTagText}>
-                      {daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.chevron}>›</Text>
-            </TouchableOpacity>
-          );
-        })
-      )}
+      <TouchableOpacity style={styles.viewStudentsRow} onPress={() => setActiveTab('alunos')}>
+        <Ionicons name="people-outline" size={18} color="#f97316" />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.viewStudentsTitle}>Meus Alunos</Text>
+          <Text style={styles.viewStudentsSubtitle}>
+            {students.length} aluno{students.length !== 1 ? 's' : ''} · ver lista completa
+          </Text>
+        </View>
+        <Text style={styles.chevron}>›</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={onLogout}>
         <Text style={styles.buttonText}>Sair</Text>
@@ -408,6 +547,8 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         </View>
       </Modal>
     </ScrollView>
+      <PersonalTabBar activeTab={activeTab} onChange={setActiveTab} />
+    </View>
   );
 }
 
@@ -432,7 +573,21 @@ const styles = StyleSheet.create({
   chatBannerTitle: { color: '#22c55e', fontSize: 13, fontWeight: '700', marginTop: 4 },
   chatBannerSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
   sectionTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginBottom: 12 },
+  sectionTitleSpaced: { marginTop: 20 },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12 },
+  viewStudentsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, marginTop: 4 },
+  viewStudentsTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
+  viewStudentsSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
+  aiShortcutCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1, borderColor: '#f97316', borderRadius: 14, padding: 16, marginBottom: 8 },
+  aiShortcutTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
+  aiShortcutSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
+  recentDietCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 10 },
+  recentDietName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  recentDietStudent: { color: '#737373', fontSize: 11, marginTop: 2 },
+  recentDietActiveBadge: { backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  recentDietActiveBadgeText: { color: '#22c55e', fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
+  studentPickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#292524' },
+  studentPickerName: { color: '#f5f5f5', fontSize: 14, fontWeight: '600' },
   studentFilterTabs: { flexDirection: 'row', backgroundColor: '#171717', borderRadius: 10, padding: 3, marginBottom: 10, gap: 4 },
   studentFilterTab: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 8 },
   studentFilterTabActive: { backgroundColor: '#f97316' },
