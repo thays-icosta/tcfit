@@ -14,6 +14,18 @@ import PersonalFinanceScreen from './PersonalFinanceScreen';
 import ChatScreen from './ChatScreen';
 import AnamneseViewScreen from './AnamneseViewScreen';
 import { HeaderBack } from './Header';
+import MetricsMiniCards from './MetricsMiniCards';
+import WeightEvolutionChart from './WeightEvolutionChart';
+
+function mapMealNameToType(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('café') || n.includes('cafe') || n.includes('manhã') || n.includes('manha')) return 'cafe';
+  if (n.includes('almo')) return 'almoco';
+  if (n.includes('lanche')) return 'lanche';
+  if (n.includes('jant')) return 'jantar';
+  if (n.includes('ceia')) return 'ceia';
+  return 'lanche';
+}
 
 function getRpeTag(pse) {
   if (!pse) return null;
@@ -30,6 +42,10 @@ const ACCESS_LEVELS = [
 export default function AlunoDetailScreen({ student, personalId, onClose }) {
   const [lastSession, setLastSession] = useState(null);
   const [diaryTotals, setDiaryTotals] = useState(null);
+  const [waterMl, setWaterMl] = useState(0);
+  const [mealsCompleted, setMealsCompleted] = useState(0);
+  const [mealsTotal, setMealsTotal] = useState(0);
+  const [weekDaysCount, setWeekDaysCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isOverdue, setIsOverdue] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -77,23 +93,50 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
       .limit(1);
     setLastSession(sessionRows && sessionRows.length > 0 ? sessionRows[0] : null);
 
-    const { data: goalRows } = await supabase
+    const { data: activeDietRows } = await supabase
       .from('diets')
-      .select('goal_kcal')
+      .select('id, goal_kcal')
       .eq('student_id', student.id)
       .eq('active', true)
-      .not('goal_kcal', 'is', null)
       .order('created_at', { ascending: false })
       .limit(1);
-    const goalKcal = goalRows && goalRows.length > 0 ? goalRows[0].goal_kcal : null;
+    const activeDiet = activeDietRows && activeDietRows.length > 0 ? activeDietRows[0] : null;
+    const goalKcal = activeDiet?.goal_kcal ?? null;
 
     const { data: entries } = await supabase
       .from('food_diary_entries')
-      .select('calories_kcal')
+      .select('calories_kcal, meal_type')
       .eq('student_id', student.id)
       .eq('entry_date', todayStr);
     const consumedKcal = (entries || []).reduce((sum, e) => sum + (e.calories_kcal || 0), 0);
     setDiaryTotals({ goalKcal, consumedKcal });
+
+    if (activeDiet) {
+      const { data: mealRows } = await supabase.from('diet_meals').select('name').eq('diet_id', activeDiet.id);
+      const consumedMealTypes = new Set((entries || []).map((e) => e.meal_type));
+      setMealsTotal((mealRows || []).length);
+      setMealsCompleted((mealRows || []).filter((m) => consumedMealTypes.has(mapMealNameToType(m.name))).length);
+    } else {
+      setMealsTotal(0);
+      setMealsCompleted(0);
+    }
+
+    const { data: waterRows } = await supabase
+      .from('water_entries')
+      .select('amount_ml')
+      .eq('student_id', student.id)
+      .eq('entry_date', todayStr);
+    setWaterMl((waterRows || []).reduce((sum, w) => sum + w.amount_ml, 0));
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const { data: weekCompletions } = await supabase
+      .from('workout_completions')
+      .select('completed_at')
+      .eq('student_id', student.id)
+      .gte('completed_at', sevenDaysAgo.toISOString());
+    const uniqueDays = new Set((weekCompletions || []).map((c) => c.completed_at.slice(0, 10)));
+    setWeekDaysCount(uniqueDays.size);
 
     const { data: overdueRows } = await supabase
       .from('payments')
@@ -241,6 +284,17 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
           <Text style={styles.anamneseButtonText}>Abrir Anamnese</Text>
         </TouchableOpacity>
       </View>
+
+      <MetricsMiniCards
+        caloriesConsumed={diaryTotals?.consumedKcal || 0}
+        caloriesGoal={diaryTotals?.goalKcal}
+        waterMl={waterMl}
+        mealsCompleted={mealsCompleted}
+        mealsTotal={mealsTotal}
+        weeklyPercent={(weekDaysCount / 7) * 100}
+      />
+
+      <WeightEvolutionChart studentId={student.id} />
 
       <View style={styles.accessLevelBox}>
         <Text style={styles.accessLevelLabel}>Nível de acesso {savingAccessLevel && '(salvando...)'}</Text>

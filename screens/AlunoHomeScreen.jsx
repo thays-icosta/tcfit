@@ -5,6 +5,8 @@ import * as Clipboard from 'expo-clipboard';
 import { supabase } from './supabaseClient';
 import WorkoutPlayerScreen from './WorkoutPlayerScreen';
 import WorkoutPreviewScreen from './WorkoutPreviewScreen';
+import MetricsMiniCards from './MetricsMiniCards';
+import WeightEvolutionChart from './WeightEvolutionChart';
 import AlunoProfileScreen from './AlunoProfileScreen';
 import FoodCatalogScreen from './FoodCatalogScreen';
 import AlunoAgendaScreen from './AlunoAgendaScreen';
@@ -1130,6 +1132,17 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
         <ActivityIndicator color={ACCENT} style={{ marginTop: 20 }} />
       ) : (
         <>
+          <MetricsMiniCards
+            caloriesConsumed={consumedTotals.kcal}
+            caloriesGoal={diets[0]?.goal_kcal}
+            waterMl={waterMl}
+            mealsCompleted={mealsForActiveDiet.filter((m) => todaysEntries.some((e) => e.meal_type === mapMealNameToType(m.name))).length}
+            mealsTotal={mealsForActiveDiet.length}
+            weeklyPercent={(weekDaysCount / 7) * 100}
+          />
+
+          {myAccessLevel === 'consultoria_vip' && <WeightEvolutionChart studentId={user.id} />}
+
           <View style={styles.topMetaRow}>
             <View style={[styles.financePill, isOverdue && styles.financePillOverdue]}>
               <Ionicons name={isOverdue ? 'alert-circle' : 'checkmark-circle'} size={13} color={isOverdue ? '#ef4444' : '#22c55e'} />
