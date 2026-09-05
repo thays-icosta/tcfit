@@ -4,6 +4,7 @@ import { supabase } from './supabaseClient';
 import CustomExerciseFormScreen from './CustomExerciseFormScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { showAlert } from './alertUtils';
+import { translateExerciseNamePtToEn } from './exerciseTermsPt';
 
 const MUSCLE_CHIPS = [
   { value: 'todos', label: 'Todos' },
@@ -49,6 +50,8 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
   const [editingExercise, setEditingExercise] = useState(null);
   const [previewExercise, setPreviewExercise] = useState(null);
   const [gifPreviewExercise, setGifPreviewExercise] = useState(null);
+  const [bulkLinking, setBulkLinking] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0, linked: 0 });
 
   // These sub-views replace this whole screen's return, so the parent
   // (TemplateBuilderScreen) needs to know to hide its own header/tab
@@ -67,6 +70,45 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
   useEffect(() => {
     loadExercises();
   }, []);
+
+  const handleBulkLinkVideos = async () => {
+    const missing = allExercises.filter((ex) => ex.personal_id === null && !ex.video_url);
+    if (missing.length === 0) {
+      showAlert('Tudo em dia', 'Todos os exercícios da Biblioteca do App já têm vídeo vinculado.');
+      return;
+    }
+    showAlert(
+      'Vincular vídeos automaticamente?',
+      `Vou buscar e vincular vídeos pra ${missing.length} exercício${missing.length !== 1 ? 's' : ''} da Biblioteca do App que ainda não têm um. Isso pode levar alguns minutos.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Vincular',
+          onPress: async () => {
+            setBulkLinking(true);
+            setBulkProgress({ done: 0, total: missing.length, linked: 0 });
+            let linkedCount = 0;
+            for (let i = 0; i < missing.length; i++) {
+              const ex = missing[i];
+              try {
+                const { data, error } = await supabase.functions.invoke('link-library-exercise-video', {
+                  body: { exerciseId: ex.id, query: translateExerciseNamePtToEn(ex.name) },
+                });
+                if (!error && data?.linked) linkedCount += 1;
+              } catch (e) {
+                console.error('Erro ao vincular vídeo em lote:', e);
+              }
+              setBulkProgress({ done: i + 1, total: missing.length, linked: linkedCount });
+              await new Promise((resolve) => setTimeout(resolve, 350));
+            }
+            setBulkLinking(false);
+            await loadExercises();
+            showAlert('Concluído!', `${linkedCount} de ${missing.length} exercício${missing.length !== 1 ? 's' : ''} ganharam vídeo automaticamente. Os demais não tiveram correspondência no banco.`);
+          },
+        },
+      ]
+    );
+  };
 
   const filtered = allExercises.filter((ex) => {
     if (muscleFilter !== 'todos' && ex.muscle_group !== muscleFilter) return false;
@@ -164,6 +206,17 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
     <View style={styles.container}>
       <TouchableOpacity style={styles.createButton} onPress={() => setShowCreateForm(true)}>
         <Text style={styles.createButtonText}>+ Criar exercício personalizado</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.bulkLinkButton} onPress={handleBulkLinkVideos} disabled={bulkLinking}>
+        {bulkLinking ? (
+          <>
+            <ActivityIndicator color="#3b82f6" size="small" />
+            <Text style={styles.bulkLinkButtonText}>Vinculando {bulkProgress.done}/{bulkProgress.total} ({bulkProgress.linked} encontrados)...</Text>
+          </>
+        ) : (
+          <Text style={styles.bulkLinkButtonText}>🔗 Vincular vídeos automaticamente na Biblioteca</Text>
+        )}
       </TouchableOpacity>
 
       <View style={styles.searchRow}>
@@ -294,6 +347,8 @@ const styles = StyleSheet.create({
   closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
   createButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginBottom: 12 },
   createButtonText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
+  bulkLinkButton: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(59,130,246,0.1)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  bulkLinkButtonText: { color: '#3b82f6', fontSize: 11, fontWeight: '700', textAlign: 'center' },
   searchInput: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: '#f5f5f5', fontSize: 13, marginBottom: 10 },
   searchRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   filterButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 14, justifyContent: 'center' },

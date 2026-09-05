@@ -60,12 +60,64 @@ const TERMS = {
   gemeos: 'calf raise',
 };
 
+// Whole-phrase overrides checked BEFORE the word-by-word fallback, for exercise
+// names where translating word-by-word gives a poor (or wrong) match against
+// ExerciseDB's actual catalog names.
+const PHRASES = {
+  'abdominal bicicleta': 'bicycle crunch',
+  'bicicleta': 'bicycle crunch',
+  'supino reto': 'barbell bench press',
+  'supino inclinado': 'incline bench press',
+  'supino declinado': 'decline bench press',
+  'agachamento livre': 'barbell squat',
+  'agachamento smith': 'smith machine squat',
+  'agachamento sumo': 'sumo squat',
+  'cadeira extensora': 'leg extension',
+  'cadeira flexora': 'leg curl',
+  'mesa flexora': 'lying leg curl',
+  'leg press': 'leg press',
+  'remada curvada': 'bent over row',
+  'remada cavalinho': 't bar row',
+  'remada baixa': 'seated cable row',
+  'puxada frente': 'lat pulldown',
+  'puxada costas': 'lat pulldown',
+  'puxada alta': 'lat pulldown',
+  'desenvolvimento ombro': 'shoulder press',
+  'desenvolvimento militar': 'military press',
+  'elevacao lateral': 'lateral raise',
+  'elevacao frontal': 'front raise',
+  'rosca direta': 'biceps curl',
+  'rosca alternada': 'dumbbell curl',
+  'rosca martelo': 'hammer curl',
+  'rosca scott': 'preacher curl',
+  'triceps testa': 'skull crusher',
+  'triceps corda': 'triceps pushdown',
+  'triceps pulley': 'triceps pushdown',
+  'triceps frances': 'overhead triceps extension',
+  'panturrilha em pe': 'standing calf raise',
+  'panturrilha sentado': 'seated calf raise',
+  'abdominal infra': 'leg raise',
+  'abdominal supra': 'crunch',
+  'abdominal canivete': 'v up',
+  'abdominal obliquo': 'oblique crunch',
+  'prancha': 'plank',
+  'crucifixo reto': 'chest fly',
+  'flexao de braco': 'push up',
+  'flexao de bracos': 'push up',
+  'barra fixa': 'pull up',
+  'levantamento terra': 'deadlift',
+  'encolhimento de ombros': 'shrug',
+};
+
 function stripAccents(text) {
   return text.normalize('NFD').replace(/\p{Diacritic}/gu, '');
 }
 
 export function translateExerciseNamePtToEn(name) {
   if (!name) return '';
-  const words = stripAccents(name.toLowerCase()).split(/\s+/).filter(Boolean);
+  const cleaned = stripAccents(name.toLowerCase()).trim();
+  if (PHRASES[cleaned]) return PHRASES[cleaned];
+
+  const words = cleaned.split(/\s+/).filter(Boolean);
   return words.map((word) => TERMS[word] || word).join(' ');
 }

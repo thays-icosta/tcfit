@@ -40,6 +40,7 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
   const [dbResults, setDbResults] = useState([]);
   const [dbSearched, setDbSearched] = useState(false);
   const [dbImportingId, setDbImportingId] = useState(null);
+  const [dbImportedId, setDbImportedId] = useState(null);
   const dbDebounceRef = useRef(null);
 
   // Auto-search the moment the name field looks like a real exercise name —
@@ -82,11 +83,12 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
         showAlert('Não deu pra importar', await describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
       } else {
         setVideoUrl(data.url);
-        if (!thumbnailUrl.trim()) setThumbnailUrl(data.url);
+        setThumbnailUrl(data.url);
         if (!instructions.trim() && result.instructions?.length > 0) {
           setInstructions(result.instructions.map((step, i) => `${i + 1}. ${step}`).join('\n'));
         }
-        showAlert('Vídeo importado!', `Vídeo de "${result.name}" pronto. Você pode trocar por outro a qualquer momento.`);
+        setDbImportedId(result.id);
+        showAlert('Vídeo importado!', `Vídeo de "${result.name}" vinculado. Você pode trocar por outro a qualquer momento.`);
       }
     } catch (e) {
       console.error('Erro ao importar vídeo do ExerciseDB:', e);
@@ -223,14 +225,22 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
                 : 'Toque em "Usar" pra importar o vídeo (e as instruções, se estiverem em branco).'}
             </Text>
 
-            {videoUrl.trim() && dbResults.length === 0 ? (
-              <Image source={{ uri: videoUrl }} style={styles.videoPreview} resizeMode="cover" />
+            {videoUrl.trim() ? (
+              <View style={styles.dbSelectedBox}>
+                <Image source={{ uri: videoUrl }} style={styles.videoPreview} resizeMode="cover" />
+                <Text style={styles.dbSelectedText}>✓ Vídeo vinculado a este exercício</Text>
+              </View>
+            ) : dbSearched && dbResults.length === 0 ? (
+              <View style={styles.muscleFallbackBox}>
+                <Text style={styles.muscleFallbackLabel}>{muscleGroup}</Text>
+                <Text style={styles.helperText}>Sem correspondência no banco — usando um ícone genérico do grupo muscular por enquanto.</Text>
+              </View>
             ) : null}
 
             {dbResults.map((r) => (
               <TouchableOpacity
                 key={r.id}
-                style={styles.dbResultRow}
+                style={[styles.dbResultRow, dbImportedId === r.id && styles.dbResultRowActive]}
                 onPress={() => handleImportExerciseDbResult(r)}
                 disabled={dbImportingId === r.id}
               >
@@ -239,7 +249,13 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
                   <Text style={styles.dbResultName} numberOfLines={1}>{r.name}</Text>
                   <Text style={styles.dbResultMeta}>{r.bodyPart} · {r.target}{r.equipment ? ` · ${r.equipment}` : ''}</Text>
                 </View>
-                {dbImportingId === r.id ? <ActivityIndicator color="#f97316" size="small" /> : <Text style={styles.dbResultUseText}>Usar</Text>}
+                {dbImportingId === r.id ? (
+                  <ActivityIndicator color="#f97316" size="small" />
+                ) : dbImportedId === r.id ? (
+                  <Text style={styles.dbResultUseTextActive}>✓ Usando</Text>
+                ) : (
+                  <Text style={styles.dbResultUseText}>Usar</Text>
+                )}
               </TouchableOpacity>
             ))}
           </>
@@ -284,11 +300,17 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
   formCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14 },
+  dbSelectedBox: { marginTop: 8 },
+  dbSelectedText: { color: '#22c55e', fontSize: 11, fontWeight: '700', marginTop: 6 },
+  muscleFallbackBox: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 8 },
+  muscleFallbackLabel: { color: '#f97316', fontSize: 14, fontWeight: '800', textTransform: 'capitalize', marginBottom: 4 },
   dbResultRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 8, marginTop: 8 },
+  dbResultRowActive: { borderColor: '#22c55e' },
   dbResultThumb: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#171717' },
   dbResultName: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
   dbResultMeta: { color: '#737373', fontSize: 10, marginTop: 2, textTransform: 'capitalize' },
   dbResultUseText: { color: '#f97316', fontSize: 11, fontWeight: '700' },
+  dbResultUseTextActive: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 12 },
   input: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 13 },
   textArea: { height: 80, textAlignVertical: 'top' },
