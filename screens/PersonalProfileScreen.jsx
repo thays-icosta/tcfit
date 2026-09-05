@@ -5,7 +5,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import PlanPricesScreen from './PlanPricesScreen';
-import RecipeManagerScreen from './RecipeManagerScreen';
 import TemplateBuilderScreen from './TemplateBuilderScreen';
 import ProductsManagerScreen from './ProductsManagerScreen';
 import PartnerBrandsManagerScreen from './PartnerBrandsManagerScreen';
@@ -22,7 +21,6 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
   const [saving, setSaving] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [showPlanPrices, setShowPlanPrices] = useState(false);
-  const [showRecipeManager, setShowRecipeManager] = useState(false);
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
   const [showProductsManager, setShowProductsManager] = useState(false);
   const [showPartnerBrands, setShowPartnerBrands] = useState(false);
@@ -223,10 +221,6 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
     return <PlanPricesScreen onClose={() => setShowPlanPrices(false)} />;
   }
 
-  if (showRecipeManager) {
-    return <RecipeManagerScreen personalId={user.id} onClose={() => setShowRecipeManager(false)} />;
-  }
-
   if (showTemplateBuilder) {
     return <TemplateBuilderScreen personalId={user.id} onClose={() => setShowTemplateBuilder(false)} />;
   }
@@ -308,13 +302,6 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
             <Ionicons name="cube-outline" size={22} color="#f97316" />
           </View>
           <Text style={styles.shortcutText}>Produtos Adicionais</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowRecipeManager(true)}>
-          <View style={styles.shortcutIconCircle}>
-            <Ionicons name="restaurant-outline" size={22} color="#f97316" />
-          </View>
-          <Text style={styles.shortcutText}>Gerenciar Receitas</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowPartnerBrands(true)}>
