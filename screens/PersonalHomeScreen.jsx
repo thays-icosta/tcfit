@@ -12,7 +12,6 @@ import ProductsManagerScreen from './ProductsManagerScreen';
 import FoodCatalogScreen from './FoodCatalogScreen';
 import RecipeManagerScreen from './RecipeManagerScreen';
 import AlunoDetailScreen from './AlunoDetailScreen';
-import AnamneseConfigScreen from './AnamneseConfigScreen';
 import PersonalTabBar from './PersonalTabBar';
 import { showAlert } from './alertUtils';
 import { HeaderWelcome } from './Header';
@@ -32,7 +31,6 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [showProductsManager, setShowProductsManager] = useState(false);
   const [showFoodCatalog, setShowFoodCatalog] = useState(false);
   const [showRecipeManager, setShowRecipeManager] = useState(false);
-  const [showAnamneseConfig, setShowAnamneseConfig] = useState(false);
   const [showStudentPicker, setShowStudentPicker] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
   const [financeSummary, setFinanceSummary] = useState({ monthlyRevenue: 0, dueCount: 0 });
@@ -213,10 +211,6 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         }}
       />
     );
-  }
-
-  if (showAnamneseConfig) {
-    return <AnamneseConfigScreen personalId={user.id} onClose={() => setShowAnamneseConfig(false)} />;
   }
 
   if (activeTab === 'treinos') {
@@ -487,12 +481,6 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
             <Ionicons name="bag-handle-outline" size={20} color="#f97316" />
           </View>
           <Text style={styles.shortcutText}>Produtos Adicionais</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowAnamneseConfig(true)}>
-          <View style={styles.shortcutIconCircle}>
-            <Ionicons name="clipboard-outline" size={20} color="#f97316" />
-          </View>
-          <Text style={styles.shortcutText}>Configurar Anamnese</Text>
         </TouchableOpacity>
       </View>
 
