@@ -10,7 +10,6 @@ import AlunoAgendaScreen from './AlunoAgendaScreen';
 import ChatScreen from './ChatScreen';
 import RecipesScreen from './RecipesScreen';
 import AlunoProductsScreen from './AlunoProductsScreen';
-import AlunoDownloadsScreen from './AlunoDownloadsScreen';
 import AlunoTabBar from './AlunoTabBar';
 import ProgramDetailScreen from './ProgramDetailScreen';
 import AnamneseFormScreen from './AnamneseFormScreen';
@@ -667,20 +666,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     return <AlunoAgendaScreen studentId={user.id} onClose={() => setMode(null)} />;
   }
 
-  if (mode === 'downloads') {
-    return (
-      <View style={styles.subContainer}>
-        <View style={styles.subTopBar}>
-          <TouchableOpacity onPress={() => setMode(null)}>
-            <Text style={styles.subCloseText}>← Voltar</Text>
-          </TouchableOpacity>
-          <Text style={styles.subTitle}>Downloads</Text>
-        </View>
-        <AlunoDownloadsScreen studentId={user.id} personalId={personalId} />
-      </View>
-    );
-  }
-
   if (mode === 'chat' && personalId) {
     return (
       <ChatScreen
@@ -1191,6 +1176,9 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
               <Text style={styles.quickAccessSubtitle}>
                 {workouts.length} ficha{workouts.length !== 1 ? 's' : ''} · {weekDaysCount}/7 dias essa semana
               </Text>
+              <View style={styles.quickAccessProgressTrack}>
+                <View style={[styles.quickAccessProgressFill, { width: `${Math.min(100, (weekDaysCount / 7) * 100)}%` }]} />
+              </View>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickAccessCard} onPress={() => setActiveTab('nutricao')}>
@@ -1304,11 +1292,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             </ScrollView>
           )}
 
-          <TouchableOpacity style={styles.downloadsStrip} onPress={() => setMode('downloads')}>
-            <Ionicons name="download-outline" size={16} color="#A1A1AA" />
-            <Text style={styles.downloadsStripText}>Downloads</Text>
-          </TouchableOpacity>
-
           {showPartnersSection && partnerBrands.length > 0 && (
             <View style={styles.partnersFooterSection}>
               <Text style={styles.sectionTitle}>Marcas Parceiras</Text>
@@ -1409,6 +1392,8 @@ const styles = StyleSheet.create({
   quickAccessIconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(224,90,23,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   quickAccessTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
   quickAccessSubtitle: { color: '#A1A1AA', fontSize: 10, marginTop: 4, lineHeight: 14 },
+  quickAccessProgressTrack: { height: 4, backgroundColor: '#27272A', borderRadius: 2, marginTop: 8, overflow: 'hidden' },
+  quickAccessProgressFill: { height: '100%', borderRadius: 2, backgroundColor: ACCENT },
   evolutionRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 16, marginBottom: 24 },
   evolutionRowTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
   evolutionRowSubtitle: { color: '#A1A1AA', fontSize: 11, marginTop: 2 },
@@ -1418,12 +1403,10 @@ const styles = StyleSheet.create({
   nutritionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   nutritionHeaderLink: { color: '#E05A17', fontSize: 12, fontWeight: '700' },
   nutritionCard: { width: 176 },
-  nutritionCoverWrap: { width: '100%', aspectRatio: 16 / 9, borderRadius: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', overflow: 'hidden', marginBottom: 6, position: 'relative' },
+  nutritionCoverWrap: { width: '100%', aspectRatio: 16 / 9, borderRadius: 16, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', overflow: 'hidden', marginBottom: 6, position: 'relative' },
   nutritionCoverImage: { ...COVER_TOP_IMAGE },
   nutritionCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   nutritionCardName: { color: '#f5f5f5', fontSize: 11, fontWeight: '600', lineHeight: 15 },
-  downloadsStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 14, paddingVertical: 12, marginTop: 20 },
-  downloadsStripText: { color: '#A1A1AA', fontSize: 12, fontWeight: '700' },
   partnersFooterSection: { marginTop: 24 },
   categoryListCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 10, marginBottom: 10 },
   categoryListCoverWrap: { width: 72, aspectRatio: 16 / 9, borderRadius: 10, backgroundColor: '#0a0a0a', overflow: 'hidden', position: 'relative' },
