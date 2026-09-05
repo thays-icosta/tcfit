@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ScrollVi
 import { supabase } from './supabaseClient';
 import CustomExerciseFormScreen from './CustomExerciseFormScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
+import { showAlert } from './alertUtils';
 
 const MUSCLE_CHIPS = [
   { value: 'todos', label: 'Todos' },
@@ -74,6 +75,35 @@ export default function ExerciseCatalogScreen({ personalId }) {
     } else {
       setPreviewExercise(exercise);
     }
+  };
+
+  const handleEditPress = async (item) => {
+    if (item.personal_id === personalId) {
+      setEditingExercise(item);
+      return;
+    }
+
+    // Not owned by this personal (Biblioteca do App or another personal's) —
+    // make a personal copy first so editing it never affects other personals.
+    const { data, error } = await supabase
+      .from('exercises')
+      .insert({
+        personal_id: personalId,
+        name: item.name,
+        muscle_group: item.muscle_group,
+        equipment: item.equipment,
+        instructions: item.instructions,
+        thumbnail_url: item.thumbnail_url,
+        video_url: item.video_url,
+      })
+      .select()
+      .single();
+    if (error) {
+      showAlert('Erro ao copiar exercício', error.message);
+      return;
+    }
+    await loadExercises();
+    setEditingExercise(data);
   };
 
   if (showCreateForm || editingExercise) {
@@ -205,11 +235,9 @@ export default function ExerciseCatalogScreen({ personalId }) {
                     </TouchableOpacity>
                   )}
                 </View>
-                {isCustom && (
-                  <TouchableOpacity style={styles.editButton} onPress={() => setEditingExercise(item)} hitSlop={8}>
-                    <Text style={styles.editButtonText}>Editar</Text>
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity style={styles.editButton} onPress={() => handleEditPress(item)} hitSlop={8}>
+                  <Text style={styles.editButtonText}>{isCustom ? 'Editar' : 'Copiar e Editar'}</Text>
+                </TouchableOpacity>
               </View>
             );
           }}
