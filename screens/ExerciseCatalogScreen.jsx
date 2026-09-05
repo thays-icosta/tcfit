@@ -37,7 +37,7 @@ function isGifUrl(url) {
   return !!url && url.toLowerCase().split('?')[0].endsWith('.gif');
 }
 
-export default function ExerciseCatalogScreen({ personalId }) {
+export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }) {
   const [allExercises, setAllExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [muscleFilter, setMuscleFilter] = useState('todos');
@@ -49,6 +49,14 @@ export default function ExerciseCatalogScreen({ personalId }) {
   const [editingExercise, setEditingExercise] = useState(null);
   const [previewExercise, setPreviewExercise] = useState(null);
   const [gifPreviewExercise, setGifPreviewExercise] = useState(null);
+
+  // These sub-views replace this whole screen's return, so the parent
+  // (TemplateBuilderScreen) needs to know to hide its own header/tab
+  // row too — otherwise its "← Voltar Treinos" bar stacks above this
+  // component's own full-screen header.
+  useEffect(() => {
+    onFullScreenChange?.(showCreateForm || !!editingExercise || !!previewExercise || !!gifPreviewExercise);
+  }, [showCreateForm, editingExercise, previewExercise, gifPreviewExercise, onFullScreenChange]);
 
   const loadExercises = async () => {
     const { data } = await supabase.from('exercises').select('id, name, muscle_group, equipment, personal_id, thumbnail_url, video_url, instructions').order('name');

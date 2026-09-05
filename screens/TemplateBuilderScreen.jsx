@@ -30,6 +30,7 @@ const METHOD_LABELS = {
 
 export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [activeMainTab, setActiveMainTab] = useState('templates');
+  const [exerciseSubScreenActive, setExerciseSubScreenActive] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [activeTemplateId, setActiveTemplateId] = useState(null);
   const [sessions, setSessions] = useState([]);
@@ -454,44 +455,48 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
 
   return (
     <View style={styles.container}>
-      <HeaderBack
-        title="Treinos"
-        onBack={onClose}
-        style={{ paddingHorizontal: 16 }}
-        rightSlot={
-          activeMainTab === 'templates' ? (
-            <View style={styles.headerActionsRow}>
-              <TouchableOpacity onPress={() => setShowCreateTemplateModal(true)} hitSlop={8}>
-                <Ionicons name="add-circle-outline" size={22} color="#f97316" />
-              </TouchableOpacity>
-              {activeTemplateId && (
-                <TouchableOpacity onPress={() => setShowSettingsSheet(true)} hitSlop={8}>
-                  <Ionicons name="settings-outline" size={22} color="#f97316" />
-                </TouchableOpacity>
-              )}
-            </View>
-          ) : null
-        }
-      />
+      {!exerciseSubScreenActive && (
+        <>
+          <HeaderBack
+            title="Treinos"
+            onBack={onClose}
+            style={{ paddingHorizontal: 16 }}
+            rightSlot={
+              activeMainTab === 'templates' ? (
+                <View style={styles.headerActionsRow}>
+                  <TouchableOpacity onPress={() => setShowCreateTemplateModal(true)} hitSlop={8}>
+                    <Ionicons name="add-circle-outline" size={22} color="#f97316" />
+                  </TouchableOpacity>
+                  {activeTemplateId && (
+                    <TouchableOpacity onPress={() => setShowSettingsSheet(true)} hitSlop={8}>
+                      <Ionicons name="settings-outline" size={22} color="#f97316" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ) : null
+            }
+          />
 
-      <View style={styles.mainTabRow}>
-        <TouchableOpacity
-          style={[styles.mainTabButton, activeMainTab === 'exercicios' && styles.mainTabButtonActive]}
-          onPress={() => setActiveMainTab('exercicios')}
-        >
-          <Text style={[styles.mainTabText, activeMainTab === 'exercicios' && styles.mainTabTextActive]}>Exercícios Cadastrados</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.mainTabButton, activeMainTab === 'templates' && styles.mainTabButtonActive]}
-          onPress={() => setActiveMainTab('templates')}
-        >
-          <Text style={[styles.mainTabText, activeMainTab === 'templates' && styles.mainTabTextActive]}>Templates / Programas</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.mainTabRow}>
+            <TouchableOpacity
+              style={[styles.mainTabButton, activeMainTab === 'exercicios' && styles.mainTabButtonActive]}
+              onPress={() => setActiveMainTab('exercicios')}
+            >
+              <Text style={[styles.mainTabText, activeMainTab === 'exercicios' && styles.mainTabTextActive]}>Exercícios Cadastrados</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.mainTabButton, activeMainTab === 'templates' && styles.mainTabButtonActive]}
+              onPress={() => setActiveMainTab('templates')}
+            >
+              <Text style={[styles.mainTabText, activeMainTab === 'templates' && styles.mainTabTextActive]}>Templates / Programas</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
 
       {activeMainTab === 'exercicios' && (
         <View style={{ flex: 1 }}>
-          <ExerciseCatalogScreen personalId={personalId} />
+          <ExerciseCatalogScreen personalId={personalId} onFullScreenChange={setExerciseSubScreenActive} />
         </View>
       )}
 
