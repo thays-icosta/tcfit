@@ -36,15 +36,13 @@ function isGifUrl(url) {
   return !!url && url.toLowerCase().split('?')[0].endsWith('.gif');
 }
 
-export default function ExerciseCatalogScreen({ personalId, onAddExercise, onClose }) {
+export default function ExerciseCatalogScreen({ personalId }) {
   const [allExercises, setAllExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [muscleFilter, setMuscleFilter] = useState('todos');
   const [equipmentFilter, setEquipmentFilter] = useState('todos');
   const [originFilter, setOriginFilter] = useState('todos');
   const [search, setSearch] = useState('');
-  const [addedIds, setAddedIds] = useState({});
-  const [addingId, setAddingId] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [previewExercise, setPreviewExercise] = useState(null);
   const [gifPreviewExercise, setGifPreviewExercise] = useState(null);
@@ -67,16 +65,6 @@ export default function ExerciseCatalogScreen({ personalId, onAddExercise, onClo
     if (search.trim() && !ex.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
-
-  const handleAdd = async (exercise) => {
-    setAddingId(exercise.id);
-    await onAddExercise(exercise);
-    setAddingId(null);
-    setAddedIds((prev) => ({ ...prev, [exercise.id]: true }));
-    setTimeout(() => {
-      setAddedIds((prev) => ({ ...prev, [exercise.id]: false }));
-    }, 2000);
-  };
 
   const handlePreview = (exercise) => {
     if (!exercise.video_url) return;
@@ -125,13 +113,6 @@ export default function ExerciseCatalogScreen({ personalId, onAddExercise, onClo
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <Text style={styles.title}>Catálogo de Exercícios</Text>
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Text style={styles.closeButtonText}>Concluir</Text>
-        </TouchableOpacity>
-      </View>
-
       <TouchableOpacity style={styles.createButton} onPress={() => setShowCreateForm(true)}>
         <Text style={styles.createButtonText}>+ Criar exercício personalizado</Text>
       </TouchableOpacity>
@@ -192,7 +173,6 @@ export default function ExerciseCatalogScreen({ personalId, onAddExercise, onClo
           style={{ flex: 1, marginTop: 10 }}
           ListEmptyComponent={<Text style={styles.emptyText}>Nenhum exercício encontrado com esses filtros.</Text>}
           renderItem={({ item }) => {
-            const justAdded = addedIds[item.id];
             const isCustom = item.personal_id === personalId;
             const hasVideo = !!item.video_url;
             return (
@@ -223,17 +203,6 @@ export default function ExerciseCatalogScreen({ personalId, onAddExercise, onClo
                     </TouchableOpacity>
                   )}
                 </View>
-                <TouchableOpacity
-                  style={[styles.addButton, justAdded && styles.addButtonDone]}
-                  onPress={() => handleAdd(item)}
-                  disabled={addingId === item.id}
-                >
-                  {addingId === item.id ? (
-                    <ActivityIndicator color="#0a0a0a" size="small" />
-                  ) : (
-                    <Text style={styles.addButtonIcon}>{justAdded ? '✓' : '+'}</Text>
-                  )}
-                </TouchableOpacity>
               </View>
             );
           }}
@@ -244,11 +213,7 @@ export default function ExerciseCatalogScreen({ personalId, onAddExercise, onClo
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  title: { color: '#f5f5f5', fontSize: 17, fontWeight: '700' },
-  closeButton: { backgroundColor: '#f97316', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
-  closeButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  container: { flex: 1, backgroundColor: '#0a0a0a', paddingHorizontal: 16, paddingTop: 12 },
   closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
   createButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginBottom: 12 },
   createButtonText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
@@ -272,9 +237,6 @@ const styles = StyleSheet.create({
   customTag: { color: '#22c55e', fontSize: 9, fontWeight: '700', borderWidth: 1, borderColor: '#22c55e', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 },
   exerciseMeta: { color: '#737373', fontSize: 11, marginTop: 3, textTransform: 'capitalize' },
   execucaoLink: { color: '#f97316', fontSize: 10, fontWeight: '700', marginTop: 4 },
-  addButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f97316', alignItems: 'center', justifyContent: 'center', marginLeft: 8 },
-  addButtonDone: { backgroundColor: '#22c55e' },
-  addButtonIcon: { color: '#0a0a0a', fontSize: 20, fontWeight: '800' },
   gifContainer: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
   gifTopBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 16 },
   gifTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },

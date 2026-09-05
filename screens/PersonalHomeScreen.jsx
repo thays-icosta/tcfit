@@ -464,12 +464,6 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       </TouchableOpacity>
 
       <View style={styles.shortcutGrid}>
-        <TouchableOpacity style={styles.shortcutCard} onPress={() => setActiveTab('treinos')}>
-          <View style={styles.shortcutIconCircle}>
-            <Ionicons name="barbell-outline" size={20} color="#f97316" />
-          </View>
-          <Text style={styles.shortcutText}>Biblioteca de Treinos</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowFoodCatalog(true)}>
           <View style={styles.shortcutIconCircle}>
             <Ionicons name="nutrition-outline" size={20} color="#f97316" />

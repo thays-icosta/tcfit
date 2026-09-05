@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import AddExerciseModal from './AddExerciseModal';
+import ExerciseCatalogScreen from './ExerciseCatalogScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { showAlert } from './alertUtils';
 import { HOME_CATEGORIES, WORKOUT_TAGS } from './accessLevel';
@@ -27,6 +28,7 @@ const METHOD_LABELS = {
 };
 
 export default function TemplateBuilderScreen({ personalId, onClose }) {
+  const [activeMainTab, setActiveMainTab] = useState('templates');
   const [templates, setTemplates] = useState([]);
   const [activeTemplateId, setActiveTemplateId] = useState(null);
   const [sessions, setSessions] = useState([]);
@@ -370,11 +372,11 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   return (
     <View style={styles.container}>
       <HeaderBack
-        title="Templates de Treino"
+        title="Treinos"
         onBack={onClose}
         style={{ paddingHorizontal: 16 }}
         rightSlot={
-          activeTemplateId ? (
+          activeMainTab === 'templates' && activeTemplateId ? (
             <TouchableOpacity onPress={() => setShowSettingsSheet(true)} hitSlop={8}>
               <Ionicons name="settings-outline" size={22} color="#f97316" />
             </TouchableOpacity>
@@ -382,6 +384,29 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
         }
       />
 
+      <View style={styles.mainTabRow}>
+        <TouchableOpacity
+          style={[styles.mainTabButton, activeMainTab === 'exercicios' && styles.mainTabButtonActive]}
+          onPress={() => setActiveMainTab('exercicios')}
+        >
+          <Text style={[styles.mainTabText, activeMainTab === 'exercicios' && styles.mainTabTextActive]}>Exercícios Cadastrados</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.mainTabButton, activeMainTab === 'templates' && styles.mainTabButtonActive]}
+          onPress={() => setActiveMainTab('templates')}
+        >
+          <Text style={[styles.mainTabText, activeMainTab === 'templates' && styles.mainTabTextActive]}>Templates / Programas</Text>
+        </TouchableOpacity>
+      </View>
+
+      {activeMainTab === 'exercicios' && (
+        <View style={{ flex: 1 }}>
+          <ExerciseCatalogScreen personalId={personalId} />
+        </View>
+      )}
+
+      {activeMainTab === 'templates' && (
+      <>
       <TouchableOpacity style={styles.editingBar} onPress={() => setShowTemplatePicker(true)}>
         <View style={{ flex: 1 }}>
           <Text style={styles.editingBarLabel}>Editando</Text>
@@ -634,6 +659,8 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
           </TouchableOpacity>
         </>
       )}
+      </>
+      )}
     </View>
   );
 }
@@ -641,6 +668,11 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
   center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
+  mainTabRow: { flexDirection: 'row', backgroundColor: '#171717', borderRadius: 10, padding: 3, marginHorizontal: 16, marginBottom: 16, gap: 4 },
+  mainTabButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
+  mainTabButtonActive: { backgroundColor: '#f97316' },
+  mainTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700', textAlign: 'center' },
+  mainTabTextActive: { color: '#0a0a0a' },
   sectionToggleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 14 },
   sectionToggleLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', marginBottom: 4 },
   editingBar: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginHorizontal: 16, marginBottom: 16 },
