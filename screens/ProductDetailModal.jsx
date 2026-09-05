@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Linking, Modal, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Linking, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import PdfViewerScreen from './PdfViewerScreen';
 
 const WHATSAPP_NUMBER = '5537998231382';
 
@@ -19,6 +20,13 @@ export default function ProductDetailModal({ product, unlocked, recipes, onSelec
   };
 
   const fileUrl = product.pdf_url || (product.delivery_type === 'arquivo' ? product.delivery_value : null);
+  const isPdf = !!fileUrl && fileUrl.toLowerCase().includes('.pdf');
+
+  // An unlocked e-book/guide PDF skips the confirmation sheet entirely and
+  // opens straight into the embedded in-app reader.
+  if (unlocked && isPdf) {
+    return <PdfViewerScreen fileUrl={fileUrl} title={product.name} onClose={onClose} />;
+  }
 
   return (
     <Modal visible={!!product} transparent animationType="slide" onRequestClose={onClose}>
@@ -47,20 +55,9 @@ export default function ProductDetailModal({ product, unlocked, recipes, onSelec
                   </>
                 )}
                 {fileUrl && (
-                  <>
-                    {Platform.OS === 'web' && fileUrl.toLowerCase().includes('.pdf') && (
-                      <iframe
-                        src={fileUrl}
-                        style={{ width: '100%', height: 340, border: 'none', borderRadius: 12, marginBottom: 10, background: '#0a0a0a' }}
-                        title="Pré-visualização do PDF"
-                      />
-                    )}
-                    <TouchableOpacity style={styles.unlockButton} onPress={() => Linking.openURL(fileUrl).catch(() => {})}>
-                      <Text style={styles.unlockButtonText}>
-                        {fileUrl.toLowerCase().includes('.pdf') ? '📄 Abrir E-book em PDF' : '📥 Abrir Arquivo'}
-                      </Text>
-                    </TouchableOpacity>
-                  </>
+                  <TouchableOpacity style={styles.unlockButton} onPress={() => Linking.openURL(fileUrl).catch(() => {})}>
+                    <Text style={styles.unlockButtonText}>📥 Abrir Arquivo</Text>
+                  </TouchableOpacity>
                 )}
                 {product.delivery_type === 'chave' && product.delivery_value && (
                   <View style={styles.keyBox}>

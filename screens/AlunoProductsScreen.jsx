@@ -10,6 +10,21 @@ import { HeaderBack } from './Header';
 
 const WHATSAPP_NUMBER = '5537998231382';
 
+const STORE_TABS = [
+  { value: 'todos', label: 'Todos' },
+  { value: 'treino', label: 'Programas de Treino' },
+  { value: 'nutricao', label: 'Nutrição & Receitas' },
+  { value: 'guias', label: 'Guias & E-books' },
+];
+
+const TREINO_CATEGORIES = new Set(['planilha_academia', 'planilha_casa', 'treino_3d', 'treino_extra', 'modulo_corrida']);
+
+function bucketForProduct(p) {
+  if (p.type === 'treino_template' || TREINO_CATEGORIES.has(p.category)) return 'treino';
+  if (p.category === 'dieta_ebook') return 'nutricao';
+  return 'guias';
+}
+
 export default function AlunoProductsScreen({ studentId, personalId, onClose }) {
   const [products, setProducts] = useState([]);
   const [recipes, setRecipes] = useState([]);
@@ -19,6 +34,7 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [openProgram, setOpenProgram] = useState(null);
   const [studentAccessLevel, setStudentAccessLevel] = useState('plataforma_base');
+  const [activeStoreTab, setActiveStoreTab] = useState('todos');
   const [personalName, setPersonalName] = useState(null);
   const [personalPhone, setPersonalPhone] = useState(null);
 
@@ -80,6 +96,7 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
   }
 
   const selectedUnlocked = selectedProduct ? unlockedProductIds.has(selectedProduct.id) : false;
+  const filteredProducts = products.filter((p) => activeStoreTab === 'todos' || bucketForProduct(p) === activeStoreTab);
 
   return (
     <View style={styles.container}>
@@ -98,15 +115,31 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
         </View>
       )}
 
+      {!loading && products.length > 0 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
+          {STORE_TABS.map((tab) => (
+            <TouchableOpacity
+              key={tab.value}
+              style={[styles.tabChip, activeStoreTab === tab.value && styles.tabChipActive]}
+              onPress={() => setActiveStoreTab(tab.value)}
+            >
+              <Text style={[styles.tabChipText, activeStoreTab === tab.value && styles.tabChipTextActive]}>{tab.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           {products.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum conteúdo disponível ainda.</Text>
+          ) : filteredProducts.length === 0 ? (
+            <Text style={styles.emptyText}>Nada nessa categoria ainda.</Text>
           ) : (
             <View style={styles.grid}>
-              {products.map((p) => {
+              {filteredProducts.map((p) => {
                 const unlocked = unlockedProductIds.has(p.id);
                 return (
                   <TouchableOpacity
@@ -161,6 +194,11 @@ const styles = StyleSheet.create({
   upsellText: { color: '#a3a3a3', fontSize: 12, lineHeight: 17, marginBottom: 14 },
   upsellButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
   upsellButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '800' },
+  tabScroll: { marginBottom: 14, flexGrow: 0 },
+  tabChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
+  tabChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  tabChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
+  tabChipTextActive: { color: '#0a0a0a' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   card: { width: '47%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, overflow: 'hidden' },
   coverWrap: { width: '100%', aspectRatio: 1, backgroundColor: '#0a0a0a', position: 'relative' },
