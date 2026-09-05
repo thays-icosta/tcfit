@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Vibration, Image, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, InputAccessoryView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Vibration, Image, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, InputAccessoryView, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
@@ -7,8 +7,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './supabaseClient';
 import { loadPeriodizationPlan, getCurrentPhase } from './periodizationUtils';
 import { showAlert } from './alertUtils';
+import { getYoutubeVideoId } from './youtubeUtils';
 import AlunoTabBar from './AlunoTabBar';
 import { HeaderBack } from './Header';
+
+function isGifUrl(url) {
+  return !!url && url.toLowerCase().split('?')[0].endsWith('.gif');
+}
 
 function parseReps(repsStr) {
   if (!repsStr) return 10;
@@ -78,6 +83,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
   const [savingKey, setSavingKey] = useState(null);
 
   const [restSecondsLeft, setRestSecondsLeft] = useState(null);
+  const [videoModalFor, setVideoModalFor] = useState(null);
 
   const [substituteOpenFor, setSubstituteOpenFor] = useState(null);
   const [alternativesCache, setAlternativesCache] = useState({});
@@ -163,7 +169,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
       if (online) {
         const { data } = await supabase
           .from('workout_exercises')
-          .select('id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes, exercise_id, exercises (name, muscle_group, thumbnail_url)')
+          .select('id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes, exercise_id, exercises (name, muscle_group, thumbnail_url, video_url, instructions)')
           .eq('workout_id', workout.id)
           .order('order_index', { ascending: true });
         exData = data;
@@ -573,7 +579,18 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                       </View>
                     )}
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.exerciseName}>{displayName}</Text>
+                      <View style={styles.exerciseNameRow}>
+                        <Text style={styles.exerciseName}>{displayName}</Text>
+                        {(ex.exercises?.video_url || ex.exercises?.instructions) && (
+                          <TouchableOpacity
+                            style={styles.videoIconButton}
+                            onPress={() => setVideoModalFor(ex)}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
+                            <Ionicons name="play-circle" size={20} color="#f97316" />
+                          </TouchableOpacity>
+                        )}
+                      </View>
                       <Text style={styles.exerciseSubtitle}>
                         {METHOD_LABELS[ex.execution_method] || ex.execution_method}
                         {ex.rest_time_seconds != null ? ` · ${ex.rest_time_seconds}s descanso` : ''}
@@ -628,8 +645,8 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                     return (
                       <View key={key} style={styles.tableRow}>
                         <Text style={[styles.setNumberText, styles.colSet]}>{setNumber}</Text>
-                        <Text style={[styles.prevText, styles.colPrev]}>
-                          {prevLoad != null ? `${prevLoad}kg x ${ex.reps}` : '—'}
+                        <Text style={[styles.prevText, styles.colPrev]} numberOfLines={1}>
+                          {prevLoad != null ? `${prevLoad}kg×${ex.reps}` : '—'}
                         </Text>
                         <TextInput
                           style={[styles.cellInput, styles.colKg, done && styles.cellInputDone]}
@@ -677,9 +694,14 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                 <Text style={styles.restLabel}>Descanso</Text>
                 <Text style={styles.restCountdown}>{restSecondsLeft}s</Text>
               </View>
-              <TouchableOpacity style={styles.restSkipButton} onPress={skipRest}>
-                <Text style={styles.restSkip}>Pular</Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity style={styles.restAddButton} onPress={() => setRestSecondsLeft((s) => (s || 0) + 30)}>
+                  <Text style={styles.restAdd}>+30s</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.restSkipButton} onPress={skipRest}>
+                  <Text style={styles.restSkip}>Pular</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
 
@@ -698,6 +720,46 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
           </View>
         </InputAccessoryView>
       )}
+
+      <Modal visible={!!videoModalFor} animationType="slide" transparent onRequestClose={() => setVideoModalFor(null)}>
+        <View style={styles.videoModalOverlay}>
+          <View style={styles.videoModalCard}>
+            <View style={styles.videoModalHeader}>
+              <Text style={styles.videoModalTitle} numberOfLines={1}>
+                {videoModalFor ? (substitutions[videoModalFor.id]?.name || videoModalFor.exercises?.name) : ''}
+              </Text>
+              <TouchableOpacity onPress={() => setVideoModalFor(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Ionicons name="close" size={24} color="#a3a3a3" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.videoModalBody}>
+              {videoModalFor?.exercises?.video_url ? (
+                isGifUrl(videoModalFor.exercises.video_url) ? (
+                  <Image source={{ uri: videoModalFor.exercises.video_url }} style={styles.videoModalMedia} resizeMode="contain" />
+                ) : getYoutubeVideoId(videoModalFor.exercises.video_url) ? (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${getYoutubeVideoId(videoModalFor.exercises.video_url)}?autoplay=1&playsinline=1`}
+                    style={{ width: '100%', height: 220, border: 0, backgroundColor: '#0a0a0a', borderRadius: 10 }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video
+                    src={videoModalFor.exercises.video_url}
+                    style={{ width: '100%', height: 220, borderRadius: 10, backgroundColor: '#0a0a0a' }}
+                    controls
+                    autoPlay
+                    loop
+                  />
+                )
+              ) : null}
+              {videoModalFor?.exercises?.instructions ? (
+                <Text style={styles.videoModalInstructions}>{videoModalFor.exercises.instructions}</Text>
+              ) : null}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -716,7 +778,9 @@ const styles = StyleSheet.create({
   thumb: { width: 44, height: 44, borderRadius: 10, marginRight: 10 },
   thumbPlaceholder: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   thumbPlaceholderText: { color: '#f97316', fontSize: 16, fontWeight: '800' },
+  exerciseNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   exerciseName: { color: '#f5f5f5', fontSize: 15, fontWeight: '700' },
+  videoIconButton: { padding: 2 },
   exerciseSubtitle: { color: '#f97316', fontSize: 10, marginTop: 2 },
   subTagRow: { flexDirection: 'row', alignItems: 'center', marginTop: 3, gap: 8 },
   subTag: { color: '#22c55e', fontSize: 9 },
@@ -729,14 +793,14 @@ const styles = StyleSheet.create({
   tableHeader: { flexDirection: 'row', marginTop: 14, marginBottom: 6, borderBottomWidth: 1, borderBottomColor: '#0a0a0a', paddingBottom: 6 },
   tableHeaderText: { color: '#525252', fontSize: 9, textTransform: 'uppercase', fontWeight: '700', textAlign: 'center' },
   tableRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  colSet: { width: 32 },
-  colPrev: { width: 78 },
-  colKg: { flex: 1, marginHorizontal: 3 },
-  colReps: { flex: 1, marginHorizontal: 3 },
-  colCheck: { width: 40, alignItems: 'center' },
+  colSet: { width: 28 },
+  colPrev: { width: 56, overflow: 'hidden' },
+  colKg: { flex: 1, minWidth: 0, marginHorizontal: 3 },
+  colReps: { flex: 1, minWidth: 0, marginHorizontal: 3 },
+  colCheck: { width: 36, alignItems: 'center' },
   setNumberText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700', textAlign: 'center' },
-  prevText: { color: '#525252', fontSize: 10, textAlign: 'center' },
-  cellInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingVertical: 8, color: '#f5f5f5', fontSize: 13, textAlign: 'center' },
+  prevText: { color: '#525252', fontSize: 9, textAlign: 'center' },
+  cellInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 2, minWidth: 0, color: '#f5f5f5', fontSize: 13, textAlign: 'center' },
   cellInputDone: { opacity: 0.5 },
   checkCircle: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: '#292524', alignItems: 'center', justifyContent: 'center' },
   checkCircleDone: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
@@ -744,12 +808,21 @@ const styles = StyleSheet.create({
   restFloating: { position: 'absolute', bottom: 70, left: 16, right: 16, backgroundColor: '#171717', borderWidth: 1, borderColor: '#f97316', borderRadius: 14, paddingHorizontal: 18, paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   restLabel: { color: '#f97316', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
   restCountdown: { color: '#f5f5f5', fontSize: 22, fontWeight: '800' },
+  restAddButton: { backgroundColor: '#0a0a0a', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: '#f97316' },
+  restAdd: { color: '#f97316', fontSize: 12, fontWeight: '700' },
   restSkipButton: { backgroundColor: '#0a0a0a', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
   restSkip: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   finishButton: { backgroundColor: '#f97316', margin: 16, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   finishButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
   keyboardToolbar: { backgroundColor: '#171717', borderTopWidth: 1, borderTopColor: '#292524', paddingVertical: 8, paddingHorizontal: 16, alignItems: 'flex-end' },
   keyboardToolbarText: { color: '#f97316', fontSize: 14, fontWeight: '700' },
+  videoModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  videoModalCard: { backgroundColor: '#171717', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%', paddingBottom: 24 },
+  videoModalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#292524' },
+  videoModalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', flex: 1, marginRight: 12 },
+  videoModalBody: { paddingHorizontal: 18, paddingTop: 14 },
+  videoModalMedia: { width: '100%', height: 220, borderRadius: 10, backgroundColor: '#0a0a0a' },
+  videoModalInstructions: { color: '#d4d4d4', fontSize: 13, lineHeight: 20, marginTop: 14, marginBottom: 4 },
   celebrationContainer: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 60, paddingHorizontal: 24 },
   trophyCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#171717', borderWidth: 2, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   celebrationTitle: { color: '#f5f5f5', fontSize: 22, fontWeight: '800', textAlign: 'center' },
