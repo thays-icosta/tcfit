@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ScrollView, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator, Image, Modal } from 'react-native';
 import { supabase } from './supabaseClient';
 import CustomExerciseFormScreen from './CustomExerciseFormScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
@@ -45,6 +45,7 @@ export default function ExerciseCatalogScreen({ personalId }) {
   const [originFilter, setOriginFilter] = useState('todos');
   const [search, setSearch] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [editingExercise, setEditingExercise] = useState(null);
   const [previewExercise, setPreviewExercise] = useState(null);
   const [gifPreviewExercise, setGifPreviewExercise] = useState(null);
@@ -67,6 +68,14 @@ export default function ExerciseCatalogScreen({ personalId }) {
     if (search.trim() && !ex.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+
+  const activeFilterCount = [muscleFilter, equipmentFilter, originFilter].filter((f) => f !== 'todos').length;
+
+  const handleClearFilters = () => {
+    setMuscleFilter('todos');
+    setEquipmentFilter('todos');
+    setOriginFilter('todos');
+  };
 
   const handlePreview = (exercise) => {
     if (!exercise.video_url) return;
@@ -149,52 +158,79 @@ export default function ExerciseCatalogScreen({ personalId }) {
         <Text style={styles.createButtonText}>+ Criar exercício personalizado</Text>
       </TouchableOpacity>
 
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Buscar exercício..."
-        placeholderTextColor="#525252"
-        value={search}
-        onChangeText={setSearch}
-      />
+      <View style={styles.searchRow}>
+        <TextInput
+          style={[styles.searchInput, { flex: 1, marginBottom: 0 }]}
+          placeholder="Buscar exercício..."
+          placeholderTextColor="#525252"
+          value={search}
+          onChangeText={setSearch}
+        />
+        <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilterSheet(true)}>
+          <Text style={styles.filterButtonText}>Filtrar</Text>
+          {activeFilterCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
 
-      <Text style={styles.filterLabel}>Origem</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-        {ORIGIN_CHIPS.map((item) => (
-          <TouchableOpacity
-            key={item.value}
-            style={[styles.chip, originFilter === item.value && styles.chipActive]}
-            onPress={() => setOriginFilter(item.value)}
-          >
-            <Text style={[styles.chipText, originFilter === item.value && styles.chipTextActive]}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <Modal visible={showFilterSheet} transparent animationType="slide" onRequestClose={() => setShowFilterSheet(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Filtrar Exercícios</Text>
 
-      <Text style={styles.filterLabel}>Grupo muscular</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-        {MUSCLE_CHIPS.map((item) => (
-          <TouchableOpacity
-            key={item.value}
-            style={[styles.chip, muscleFilter === item.value && styles.chipActive]}
-            onPress={() => setMuscleFilter(item.value)}
-          >
-            <Text style={[styles.chipText, muscleFilter === item.value && styles.chipTextActive]}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+            <Text style={styles.filterLabel}>Origem</Text>
+            <View style={styles.chipWrapRow}>
+              {ORIGIN_CHIPS.map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[styles.chip, originFilter === item.value && styles.chipActive]}
+                  onPress={() => setOriginFilter(item.value)}
+                >
+                  <Text style={[styles.chipText, originFilter === item.value && styles.chipTextActive]}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-      <Text style={styles.filterLabel}>Equipamento</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-        {EQUIPMENT_CHIPS.map((item) => (
-          <TouchableOpacity
-            key={item.value}
-            style={[styles.chip, equipmentFilter === item.value && styles.chipActive]}
-            onPress={() => setEquipmentFilter(item.value)}
-          >
-            <Text style={[styles.chipText, equipmentFilter === item.value && styles.chipTextActive]}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+            <Text style={styles.filterLabel}>Grupo muscular</Text>
+            <View style={styles.chipWrapRow}>
+              {MUSCLE_CHIPS.map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[styles.chip, muscleFilter === item.value && styles.chipActive]}
+                  onPress={() => setMuscleFilter(item.value)}
+                >
+                  <Text style={[styles.chipText, muscleFilter === item.value && styles.chipTextActive]}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.filterLabel}>Equipamento</Text>
+            <View style={styles.chipWrapRow}>
+              {EQUIPMENT_CHIPS.map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[styles.chip, equipmentFilter === item.value && styles.chipActive]}
+                  onPress={() => setEquipmentFilter(item.value)}
+                >
+                  <Text style={[styles.chipText, equipmentFilter === item.value && styles.chipTextActive]}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.filterSheetButtonRow}>
+              <TouchableOpacity style={styles.filterClearButton} onPress={handleClearFilters}>
+                <Text style={styles.filterClearButtonText}>Limpar filtros</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.filterApplyButton} onPress={() => setShowFilterSheet(false)}>
+                <Text style={styles.filterApplyButtonText}>Ver resultados ({filtered.length})</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
@@ -208,7 +244,7 @@ export default function ExerciseCatalogScreen({ personalId }) {
             const isCustom = item.personal_id === personalId;
             const hasVideo = !!item.video_url;
             return (
-              <View style={styles.exerciseCard}>
+              <TouchableOpacity style={styles.exerciseCard} onPress={() => handleEditPress(item)} activeOpacity={0.7}>
                 <TouchableOpacity onPress={() => handlePreview(item)} disabled={!hasVideo} style={styles.thumbWrap}>
                   {item.thumbnail_url ? (
                     <Image source={{ uri: item.thumbnail_url }} style={styles.thumb} />
@@ -235,10 +271,8 @@ export default function ExerciseCatalogScreen({ personalId }) {
                     </TouchableOpacity>
                   )}
                 </View>
-                <TouchableOpacity style={styles.editButton} onPress={() => handleEditPress(item)} hitSlop={8}>
-                  <Text style={styles.editButtonText}>{isCustom ? 'Editar' : 'Copiar e Editar'}</Text>
-                </TouchableOpacity>
-              </View>
+                <Text style={styles.editHintText}>{isCustom ? 'Editar' : 'Copiar e Editar'}</Text>
+              </TouchableOpacity>
             );
           }}
         />
@@ -253,14 +287,28 @@ const styles = StyleSheet.create({
   createButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginBottom: 12 },
   createButtonText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
   searchInput: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: '#f5f5f5', fontSize: 13, marginBottom: 10 },
-  filterLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 4 },
-  chipScroll: { maxHeight: 28, marginBottom: 6 },
-  chip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, paddingHorizontal: 9, paddingVertical: 4, marginRight: 5, height: 24, justifyContent: 'center' },
+  searchRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
+  filterButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 14, justifyContent: 'center' },
+  filterButtonText: { color: '#f5f5f5', fontSize: 12, fontWeight: '700' },
+  filterBadge: { backgroundColor: '#f97316', borderRadius: 9, width: 18, height: 18, alignItems: 'center', justifyContent: 'center' },
+  filterBadgeText: { color: '#0a0a0a', fontSize: 10, fontWeight: '800' },
+  filterLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 4, marginTop: 14 },
+  chipWrapRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 16, paddingHorizontal: 9, paddingVertical: 4, marginRight: 5, height: 24, justifyContent: 'center' },
   chipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
   chipText: { color: '#a3a3a3', fontSize: 10, fontWeight: '600' },
   chipTextActive: { color: '#0a0a0a' },
+  filterSheetButtonRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
+  filterClearButton: { flex: 1, borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  filterClearButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
+  filterApplyButton: { flex: 1, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  filterApplyButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '700' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: '#171717', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '85%' },
+  modalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
   exerciseCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 10, marginBottom: 8 },
+  editHintText: { color: '#525252', fontSize: 9, fontWeight: '600', textAlign: 'center', marginLeft: 8, maxWidth: 50 },
   thumbWrap: { position: 'relative' },
   thumb: { width: 56, height: 56, borderRadius: 10 },
   thumbPlaceholder: { width: 56, height: 56, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
@@ -272,8 +320,6 @@ const styles = StyleSheet.create({
   customTag: { color: '#22c55e', fontSize: 9, fontWeight: '700', borderWidth: 1, borderColor: '#22c55e', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 },
   exerciseMeta: { color: '#737373', fontSize: 11, marginTop: 3, textTransform: 'capitalize' },
   execucaoLink: { color: '#f97316', fontSize: 10, fontWeight: '700', marginTop: 4 },
-  editButton: { borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, marginLeft: 8 },
-  editButtonText: { color: '#a3a3a3', fontSize: 10, fontWeight: '700' },
   gifContainer: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
   gifTopBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 16 },
   gifTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
