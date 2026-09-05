@@ -464,13 +464,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       </TouchableOpacity>
 
       <View style={styles.shortcutGrid}>
-        <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowFoodCatalog(true)}>
-          <View style={styles.shortcutIconCircle}>
-            <Ionicons name="nutrition-outline" size={20} color="#f97316" />
-          </View>
-          <Text style={styles.shortcutText}>Dietas</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowProductsManager(true)}>
+        <TouchableOpacity style={[styles.shortcutCard, { width: '100%' }]} onPress={() => setShowProductsManager(true)}>
           <View style={styles.shortcutIconCircle}>
             <Ionicons name="bag-handle-outline" size={20} color="#f97316" />
           </View>
@@ -491,6 +485,32 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
             <Text style={styles.chatBannerSubtitle}>Falar com alunos</Text>
           </TouchableOpacity>
         </View>
+      )}
+
+      {students.length > 0 && (
+        <>
+          <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Check-ins de Hoje</Text>
+          {students.filter((s) => completedToday[s.id]).length === 0 ? (
+            <Text style={styles.emptyText}>Nenhum aluno treinou ainda hoje.</Text>
+          ) : (
+            students.filter((s) => completedToday[s.id]).map((s) => (
+              <TouchableOpacity key={s.id} style={styles.checkinRow} onPress={() => setDetailFor(s)}>
+                <View style={styles.checkinAvatarCircle}>
+                  {s.avatar_url ? (
+                    <Image source={{ uri: s.avatar_url }} style={styles.checkinAvatarImage} />
+                  ) : (
+                    <Text style={styles.checkinAvatarLetter}>{s.name?.charAt(0).toUpperCase() || '?'}</Text>
+                  )}
+                </View>
+                <Text style={styles.checkinName}>{s.name}</Text>
+                <View style={styles.checkinDoneTag}>
+                  <Ionicons name="checkmark-circle" size={14} color="#22c55e" />
+                  <Text style={styles.checkinDoneTagText}>Treinou hoje</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </>
       )}
 
       <TouchableOpacity style={styles.viewStudentsRow} onPress={() => setActiveTab('alunos')}>
@@ -557,6 +577,13 @@ const styles = StyleSheet.create({
   sectionTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginBottom: 12 },
   sectionTitleSpaced: { marginTop: 20 },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12 },
+  checkinRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 12, marginBottom: 8 },
+  checkinAvatarCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  checkinAvatarImage: { width: 36, height: 36 },
+  checkinAvatarLetter: { color: '#f97316', fontSize: 13, fontWeight: '800' },
+  checkinName: { flex: 1, color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
+  checkinDoneTag: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  checkinDoneTagText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
   viewStudentsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, marginTop: 4 },
   viewStudentsTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
   viewStudentsSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },

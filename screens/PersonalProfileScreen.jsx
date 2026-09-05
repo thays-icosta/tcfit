@@ -6,7 +6,6 @@ import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import PlanPricesScreen from './PlanPricesScreen';
 import TemplateBuilderScreen from './TemplateBuilderScreen';
-import ProductsManagerScreen from './ProductsManagerScreen';
 import PartnerBrandsManagerScreen from './PartnerBrandsManagerScreen';
 import AnamneseConfigScreen from './AnamneseConfigScreen';
 import { showAlert } from './alertUtils';
@@ -22,7 +21,6 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [showPlanPrices, setShowPlanPrices] = useState(false);
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
-  const [showProductsManager, setShowProductsManager] = useState(false);
   const [showPartnerBrands, setShowPartnerBrands] = useState(false);
   const [showAnamneseConfig, setShowAnamneseConfig] = useState(false);
   const [studentCount, setStudentCount] = useState(0);
@@ -225,10 +223,6 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
     return <TemplateBuilderScreen personalId={user.id} onClose={() => setShowTemplateBuilder(false)} />;
   }
 
-  if (showProductsManager) {
-    return <ProductsManagerScreen personalId={user.id} onClose={() => setShowProductsManager(false)} />;
-  }
-
   if (showPartnerBrands) {
     return <PartnerBrandsManagerScreen personalId={user.id} onClose={() => setShowPartnerBrands(false)} />;
   }
@@ -295,13 +289,6 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
             <Ionicons name="cash-outline" size={22} color="#f97316" />
           </View>
           <Text style={styles.shortcutText}>Venda de Consultoria</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowProductsManager(true)}>
-          <View style={styles.shortcutIconCircle}>
-            <Ionicons name="cube-outline" size={22} color="#f97316" />
-          </View>
-          <Text style={styles.shortcutText}>Produtos Adicionais</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowPartnerBrands(true)}>
