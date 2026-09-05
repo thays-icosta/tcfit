@@ -44,11 +44,12 @@ export default function ExerciseCatalogScreen({ personalId }) {
   const [originFilter, setOriginFilter] = useState('todos');
   const [search, setSearch] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingExercise, setEditingExercise] = useState(null);
   const [previewExercise, setPreviewExercise] = useState(null);
   const [gifPreviewExercise, setGifPreviewExercise] = useState(null);
 
   const loadExercises = async () => {
-    const { data } = await supabase.from('exercises').select('id, name, muscle_group, equipment, personal_id, thumbnail_url, video_url').order('name');
+    const { data } = await supabase.from('exercises').select('id, name, muscle_group, equipment, personal_id, thumbnail_url, video_url, instructions').order('name');
     setAllExercises(data || []);
     setLoading(false);
   };
@@ -75,11 +76,12 @@ export default function ExerciseCatalogScreen({ personalId }) {
     }
   };
 
-  if (showCreateForm) {
+  if (showCreateForm || editingExercise) {
     return (
       <CustomExerciseFormScreen
         personalId={personalId}
-        onClose={() => setShowCreateForm(false)}
+        exercise={editingExercise}
+        onClose={() => { setShowCreateForm(false); setEditingExercise(null); }}
         onCreated={loadExercises}
       />
     );
@@ -203,6 +205,11 @@ export default function ExerciseCatalogScreen({ personalId }) {
                     </TouchableOpacity>
                   )}
                 </View>
+                {isCustom && (
+                  <TouchableOpacity style={styles.editButton} onPress={() => setEditingExercise(item)} hitSlop={8}>
+                    <Text style={styles.editButtonText}>Editar</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             );
           }}
@@ -237,6 +244,8 @@ const styles = StyleSheet.create({
   customTag: { color: '#22c55e', fontSize: 9, fontWeight: '700', borderWidth: 1, borderColor: '#22c55e', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 },
   exerciseMeta: { color: '#737373', fontSize: 11, marginTop: 3, textTransform: 'capitalize' },
   execucaoLink: { color: '#f97316', fontSize: 10, fontWeight: '700', marginTop: 4 },
+  editButton: { borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, marginLeft: 8 },
+  editButtonText: { color: '#a3a3a3', fontSize: 10, fontWeight: '700' },
   gifContainer: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
   gifTopBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 16 },
   gifTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },

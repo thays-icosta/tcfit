@@ -5,7 +5,7 @@ import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { getYoutubeVideoId, getYoutubeThumbnailUrl } from './youtubeUtils';
-import { showAlert } from './alertUtils';
+import { showAlert, describeFunctionError } from './alertUtils';
 import { HeaderBack } from './Header';
 
 const MUSCLE_OPTIONS = ['peito', 'costas', 'ombro', 'biceps', 'triceps', 'abdomen', 'quadriceps', 'isquiotibiais', 'gluteo', 'panturrilha', 'aerobico'];
@@ -20,16 +20,67 @@ function uuidv4() {
   });
 }
 
-export default function CustomExerciseFormScreen({ personalId, onClose, onCreated }) {
-  const [name, setName] = useState('');
-  const [muscleGroup, setMuscleGroup] = useState('peito');
-  const [equipment, setEquipment] = useState('halter');
-  const [instructions, setInstructions] = useState('');
-  const [thumbnailUrl, setThumbnailUrl] = useState('');
+export default function CustomExerciseFormScreen({ personalId, exercise, onClose, onCreated }) {
+  const isEditing = !!exercise;
+  const [name, setName] = useState(exercise?.name || '');
+  const [muscleGroup, setMuscleGroup] = useState(exercise?.muscle_group || 'peito');
+  const [equipment, setEquipment] = useState(exercise?.equipment || 'halter');
+  const [instructions, setInstructions] = useState(exercise?.instructions || '');
+  const [thumbnailUrl, setThumbnailUrl] = useState(exercise?.thumbnail_url || '');
   const [videoMode, setVideoMode] = useState('youtube');
-  const [videoUrl, setVideoUrl] = useState('');
+  const [videoUrl, setVideoUrl] = useState(exercise?.video_url || '');
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const [dbSearch, setDbSearch] = useState('');
+  const [dbSearching, setDbSearching] = useState(false);
+  const [dbResults, setDbResults] = useState([]);
+  const [dbImportingId, setDbImportingId] = useState(null);
+
+  const handleSearchExerciseDb = async () => {
+    if (!dbSearch.trim()) {
+      showAlert('Ops', 'Digite o nome do exercício pra buscar (ex: "supino").');
+      return;
+    }
+    setDbSearching(true);
+    setDbResults([]);
+    try {
+      const { data, error } = await supabase.functions.invoke('search-exercisedb', {
+        body: { query: dbSearch.trim() },
+      });
+      if (error || data?.error) {
+        showAlert('Não deu pra buscar', await describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
+      } else if (!data.results || data.results.length === 0) {
+        showAlert('Nada encontrado', 'Não achei nenhum exercício com esse nome no banco. Tenta em inglês ou um termo mais simples.');
+      } else {
+        setDbResults(data.results);
+      }
+    } catch (e) {
+      console.error('Erro ao buscar no ExerciseDB:', e);
+      showAlert('Erro', e?.message || 'Não foi possível buscar agora.');
+    }
+    setDbSearching(false);
+  };
+
+  const handleImportExerciseDbResult = async (result) => {
+    setDbImportingId(result.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('import-exercisedb-gif', {
+        body: { gifUrl: result.gifUrl },
+      });
+      if (error || data?.error) {
+        showAlert('Não deu pra importar', await describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
+      } else {
+        setVideoUrl(data.url);
+        if (!thumbnailUrl.trim()) setThumbnailUrl(data.url);
+        showAlert('Vídeo importado!', `Vídeo de "${result.name}" pronto. Você pode trocar por outro a qualquer momento.`);
+      }
+    } catch (e) {
+      console.error('Erro ao importar vídeo do ExerciseDB:', e);
+      showAlert('Erro', e?.message || 'Não foi possível importar agora.');
+    }
+    setDbImportingId(null);
+  };
 
   const handlePickVideo = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -71,20 +122,22 @@ export default function CustomExerciseFormScreen({ personalId, onClose, onCreate
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from('exercises').insert({
-      personal_id: personalId,
+    const payload = {
       name: name.trim(),
       muscle_group: muscleGroup,
       equipment,
       instructions: instructions.trim() || null,
       thumbnail_url: thumbnailUrl.trim() || null,
       video_url: videoUrl.trim() || null,
-    });
+    };
+    const { error } = isEditing
+      ? await supabase.from('exercises').update(payload).eq('id', exercise.id)
+      : await supabase.from('exercises').insert({ personal_id: personalId, ...payload });
     setSaving(false);
     if (error) {
       showAlert('Erro', error.message);
     } else {
-      showAlert('Exercício criado!', `"${name}" foi adicionado aos seus exercícios.`, [
+      showAlert(isEditing ? 'Exercício atualizado!' : 'Exercício criado!', `"${name}" foi ${isEditing ? 'atualizado' : 'adicionado aos seus exercícios'}.`, [
         { text: 'OK', onPress: () => { onCreated(); onClose(); } },
       ]);
     }
@@ -92,7 +145,7 @@ export default function CustomExerciseFormScreen({ personalId, onClose, onCreate
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <HeaderBack title="Novo Exercício" onBack={onClose} />
+      <HeaderBack title={isEditing ? 'Editar Exercício' : 'Novo Exercício'} onBack={onClose} />
 
       <View style={styles.formCard}>
         <Text style={styles.label}>Nome *</Text>
@@ -123,7 +176,14 @@ export default function CustomExerciseFormScreen({ personalId, onClose, onCreate
         <TextInput style={styles.input} placeholder="cole um link de imagem ou GIF" placeholderTextColor="#525252" value={thumbnailUrl} onChangeText={setThumbnailUrl} autoCapitalize="none" />
 
         <Text style={styles.label}>Vídeo de demonstração (opcional)</Text>
+        {videoUrl.trim() ? <Text style={styles.helperText}>Já tem um vídeo definido. Escolha um modo abaixo pra trocar por outro a qualquer momento.</Text> : null}
         <View style={styles.modeRow}>
+          <TouchableOpacity
+            style={[styles.modeButton, videoMode === 'database' && styles.modeButtonActive]}
+            onPress={() => { setVideoMode('database'); setVideoUrl(''); }}
+          >
+            <Text style={[styles.modeButtonText, videoMode === 'database' && styles.modeButtonTextActive]}>Banco de exercícios</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.modeButton, videoMode === 'youtube' && styles.modeButtonActive]}
             onPress={() => { setVideoMode('youtube'); setVideoUrl(''); }}
@@ -138,7 +198,45 @@ export default function CustomExerciseFormScreen({ personalId, onClose, onCreate
           </TouchableOpacity>
         </View>
 
-        {videoMode === 'youtube' ? (
+        {videoMode === 'database' ? (
+          <>
+            <View style={styles.dbSearchRow}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder='ex: "bench press", "squat"'
+                placeholderTextColor="#525252"
+                value={dbSearch}
+                onChangeText={setDbSearch}
+                autoCapitalize="none"
+                onSubmitEditing={handleSearchExerciseDb}
+              />
+              <TouchableOpacity style={styles.dbSearchButton} onPress={handleSearchExerciseDb} disabled={dbSearching}>
+                {dbSearching ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.dbSearchButtonText}>Buscar</Text>}
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.helperText}>Busque em inglês pra mais resultados (ex: &quot;bench press&quot; em vez de &quot;supino&quot;).</Text>
+
+            {videoUrl.trim() && dbResults.length === 0 ? (
+              <Image source={{ uri: videoUrl }} style={styles.videoPreview} resizeMode="cover" />
+            ) : null}
+
+            {dbResults.map((r) => (
+              <TouchableOpacity
+                key={r.id}
+                style={styles.dbResultRow}
+                onPress={() => handleImportExerciseDbResult(r)}
+                disabled={dbImportingId === r.id}
+              >
+                <Image source={{ uri: r.gifUrl }} style={styles.dbResultThumb} resizeMode="cover" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.dbResultName} numberOfLines={1}>{r.name}</Text>
+                  <Text style={styles.dbResultMeta}>{r.bodyPart} · {r.target}{r.equipment ? ` · ${r.equipment}` : ''}</Text>
+                </View>
+                {dbImportingId === r.id ? <ActivityIndicator color="#f97316" size="small" /> : <Text style={styles.dbResultUseText}>Usar</Text>}
+              </TouchableOpacity>
+            ))}
+          </>
+        ) : videoMode === 'youtube' ? (
           <>
             <TextInput
               style={styles.input}
@@ -169,7 +267,7 @@ export default function CustomExerciseFormScreen({ personalId, onClose, onCreate
         )}
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Criar Exercício</Text>}
+          {saving ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>{isEditing ? 'Salvar Alterações' : 'Criar Exercício'}</Text>}
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -179,6 +277,14 @@ export default function CustomExerciseFormScreen({ personalId, onClose, onCreate
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
   formCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14 },
+  dbSearchRow: { flexDirection: 'row', gap: 8 },
+  dbSearchButton: { backgroundColor: '#f97316', borderRadius: 8, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
+  dbSearchButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '700' },
+  dbResultRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 8, marginTop: 8 },
+  dbResultThumb: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#171717' },
+  dbResultName: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
+  dbResultMeta: { color: '#737373', fontSize: 10, marginTop: 2, textTransform: 'capitalize' },
+  dbResultUseText: { color: '#f97316', fontSize: 11, fontWeight: '700' },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 12 },
   input: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 13 },
   textArea: { height: 80, textAlignVertical: 'top' },
