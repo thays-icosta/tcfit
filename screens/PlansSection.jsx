@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking, Modal, Animated, Platform, Pressable, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking, Modal, Animated, Pressable, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Clipboard from 'expo-clipboard';
@@ -490,11 +490,16 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
                     const isSelected = selectedAddons.some((p) => p.id === product.id);
                     return (
                       <TouchableOpacity key={product.id} style={[styles.addonRow, isSelected && styles.addonRowSelected]} onPress={() => handleToggleAddon(product)}>
+                        <Ionicons
+                          name={isSelected ? 'checkbox' : 'square-outline'}
+                          size={20}
+                          color={isSelected ? '#22c55e' : '#737373'}
+                          style={{ marginRight: 10 }}
+                        />
                         <View style={{ flex: 1 }}>
                           <Text style={styles.addonName}>{product.name}</Text>
-                          {product.price != null && <Text style={styles.addonPrice}>+ R$ {Number(product.price).toFixed(2)}</Text>}
+                          <Text style={styles.addonPrice}>{product.price != null ? `+ R$ ${Number(product.price).toFixed(2)}` : 'Sob consulta'}</Text>
                         </View>
-                        <Text style={styles.addonCheck}>{isSelected ? '✓' : ''}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -587,7 +592,7 @@ const styles = StyleSheet.create({
   templateWantButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '800' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(5,6,10,0.75)', justifyContent: 'flex-end' },
   checkoutSheet: {
-    backgroundColor: 'rgba(23,23,28,0.85)',
+    backgroundColor: '#171717',
     borderWidth: 1,
     borderColor: 'rgba(224,90,23,0.18)',
     borderTopLeftRadius: 24,
@@ -595,15 +600,13 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 40,
     maxHeight: '85%',
-    ...(Platform.OS === 'web' ? { backdropFilter: 'blur(20px)' } : {}),
   },
-  modalTitle: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginBottom: 8 },
-  modalSubtitle: { color: '#a3a3a3', fontSize: 12, marginBottom: 14 },
-  addonRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 12, marginBottom: 8 },
+  modalTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '800', marginBottom: 8, paddingRight: 4 },
+  modalSubtitle: { color: '#D4D4D8', fontSize: 12, marginBottom: 14 },
+  addonRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 12, marginBottom: 8 },
   addonRowSelected: { borderColor: '#22c55e' },
-  addonName: { color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
+  addonName: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
   addonPrice: { color: '#22c55e', fontSize: 11, marginTop: 2 },
-  addonCheck: { color: '#22c55e', fontSize: 16, fontWeight: '800', marginLeft: 10 },
   copyPixButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, paddingVertical: 12, marginBottom: 8 },
   copyPixButtonText: { color: '#3b82f6', fontSize: 13, fontWeight: '700' },
   modalButtonRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
