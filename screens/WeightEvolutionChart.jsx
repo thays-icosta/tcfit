@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Platform, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceDot } from 'recharts';
 import { supabase } from './supabaseClient';
 
@@ -16,6 +17,7 @@ function formatShortDate(iso) {
 export default function WeightEvolutionChart({ studentId }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -57,39 +59,45 @@ export default function WeightEvolutionChart({ studentId }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Evolução do Aluno</Text>
-      <div style={{ width: '100%', height: 200 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 24, right: 20, left: -16, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#292524" vertical={false} />
-            <XAxis dataKey="date" tick={{ fill: '#737373', fontSize: 10 }} axisLine={{ stroke: '#292524' }} tickLine={false} />
-            <YAxis tick={{ fill: '#737373', fontSize: 10 }} axisLine={false} tickLine={false} domain={['dataMin - 2', 'dataMax + 2']} />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#171717', border: '1px solid #292524', borderRadius: 8 }}
-              labelStyle={{ color: '#a3a3a3' }}
-              itemStyle={{ color: ACCENT }}
-              formatter={(value) => [`${value} kg`, 'Peso']}
-            />
-            <Line type="monotone" dataKey="weight" stroke={ACCENT} strokeWidth={2} dot={{ fill: ACCENT, r: 3 }} activeDot={{ r: 5 }} />
-            <ReferenceDot
-              x={lastPoint.date}
-              y={lastPoint.weight}
-              r={5}
-              fill={ACCENT}
-              stroke="#171717"
-              strokeWidth={2}
-              label={{ value: `${lastPoint.weight} kg`, position: 'top', fill: ACCENT, fontSize: 12, fontWeight: 700 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <TouchableOpacity style={styles.headerRow} onPress={() => setExpanded((v) => !v)} activeOpacity={0.7}>
+        <Text style={styles.title}>Evolução do Aluno</Text>
+        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color="#737373" />
+      </TouchableOpacity>
+      {expanded && (
+        <div style={{ width: '100%', height: 200 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 24, right: 20, left: -16, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#292524" vertical={false} />
+              <XAxis dataKey="date" tick={{ fill: '#737373', fontSize: 10 }} axisLine={{ stroke: '#292524' }} tickLine={false} />
+              <YAxis tick={{ fill: '#737373', fontSize: 10 }} axisLine={false} tickLine={false} domain={['dataMin - 2', 'dataMax + 2']} />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#171717', border: '1px solid #292524', borderRadius: 8 }}
+                labelStyle={{ color: '#a3a3a3' }}
+                itemStyle={{ color: ACCENT }}
+                formatter={(value) => [`${value} kg`, 'Peso']}
+              />
+              <Line type="monotone" dataKey="weight" stroke={ACCENT} strokeWidth={2} dot={{ fill: ACCENT, r: 3 }} activeDot={{ r: 5 }} />
+              <ReferenceDot
+                x={lastPoint.date}
+                y={lastPoint.weight}
+                r={5}
+                fill={ACCENT}
+                stroke="#171717"
+                strokeWidth={2}
+                label={{ value: `${lastPoint.weight} kg`, position: 'top', fill: ACCENT, fontSize: 12, fontWeight: 700 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, marginBottom: 16 },
-  title: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginBottom: 8 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  title: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
   emptyBox: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, marginBottom: 16 },
   emptyText: { color: '#525252', fontSize: 12, marginTop: 8 },
 });

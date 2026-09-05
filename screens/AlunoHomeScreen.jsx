@@ -7,6 +7,8 @@ import WorkoutPlayerScreen from './WorkoutPlayerScreen';
 import WorkoutPreviewScreen from './WorkoutPreviewScreen';
 import MetricsMiniCards from './MetricsMiniCards';
 import WeightEvolutionChart from './WeightEvolutionChart';
+import WaterLogModal from './WaterLogModal';
+import VolumeSummaryScreen from './VolumeSummaryScreen';
 import AlunoProfileScreen from './AlunoProfileScreen';
 import FoodCatalogScreen from './FoodCatalogScreen';
 import AlunoAgendaScreen from './AlunoAgendaScreen';
@@ -100,6 +102,10 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [consumedTotals, setConsumedTotals] = useState({ kcal: 0, protein: 0, carbs: 0, fat: 0 });
   const [todaysEntries, setTodaysEntries] = useState([]);
   const [waterMl, setWaterMl] = useState(0);
+  const [waterGoalMl, setWaterGoalMl] = useState(2000);
+  const [showWaterModal, setShowWaterModal] = useState(false);
+  const [lastWorkoutName, setLastWorkoutName] = useState(null);
+  const [showVolumeSummary, setShowVolumeSummary] = useState(false);
   const [dailyNote, setDailyNote] = useState('');
   const [editingNote, setEditingNote] = useState(false);
   const [savingNote, setSavingNote] = useState(false);
@@ -155,7 +161,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const loadData = async () => {
     const { data: myRow } = await supabase
       .from('users')
-      .select('personal_id, avatar_url, student_type, access_level, anamnese_completed_at')
+      .select('personal_id, avatar_url, student_type, access_level, anamnese_completed_at, water_goal_ml')
       .eq('id', user.id)
       .single();
 
@@ -163,6 +169,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     setPersonalId(myRow?.personal_id || null);
     setStudentType(myRow?.student_type || 'consultoria');
     setShowAnamnesePrompt(!!myRow?.personal_id && !myRow?.anamnese_completed_at);
+    setWaterGoalMl(myRow?.water_goal_ml || 2000);
 
     if (myRow?.personal_id) {
       const { data: personalRow } = await supabase
@@ -241,6 +248,15 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
       .gte('completed_at', sevenDaysAgo.toISOString());
     const uniqueDays = new Set((weekCompletions || []).map((c) => c.completed_at.slice(0, 10)));
     setWeekDaysCount(uniqueDays.size);
+
+    const { data: lastSessionRows } = await supabase
+      .from('workout_sessions')
+      .select('workouts (name)')
+      .eq('student_id', user.id)
+      .not('finished_at', 'is', null)
+      .order('finished_at', { ascending: false })
+      .limit(1);
+    setLastWorkoutName(lastSessionRows?.[0]?.workouts?.name || null);
 
     const { data: pendingPayments } = await supabase
       .from('payments')
@@ -479,6 +495,16 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   };
 
   const isOverdue = nextDuePayment && todayStr >= nextDuePayment.due_date;
+
+  if (showVolumeSummary) {
+    return (
+      <VolumeSummaryScreen
+        studentId={user.id}
+        studentName={null}
+        onClose={() => setShowVolumeSummary(false)}
+      />
+    );
+  }
 
   if (previewWorkout) {
     return (
@@ -1135,10 +1161,26 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
           <MetricsMiniCards
             caloriesConsumed={consumedTotals.kcal}
             caloriesGoal={diets[0]?.goal_kcal}
+            onPressCalories={() => { setActiveTab('nutricao'); setDietSubTab('diario'); }}
             waterMl={waterMl}
+            waterGoalMl={waterGoalMl}
+            onPressWater={() => setShowWaterModal(true)}
             mealsCompleted={mealsForActiveDiet.filter((m) => todaysEntries.some((e) => e.meal_type === mapMealNameToType(m.name))).length}
             mealsTotal={mealsForActiveDiet.length}
+            onPressHabits={() => { setActiveTab('nutricao'); setDietSubTab('prescrita'); }}
             weeklyPercent={(weekDaysCount / 7) * 100}
+            lastWorkoutLabel={lastWorkoutName}
+            onPressFrequency={() => setShowVolumeSummary(true)}
+          />
+
+          <WaterLogModal
+            visible={showWaterModal}
+            studentId={user.id}
+            currentMl={waterMl}
+            goalMl={waterGoalMl}
+            onClose={() => setShowWaterModal(false)}
+            onAdd={handleAddWater}
+            onGoalChanged={setWaterGoalMl}
           />
 
           {myAccessLevel === 'consultoria_vip' && <WeightEvolutionChart studentId={user.id} />}

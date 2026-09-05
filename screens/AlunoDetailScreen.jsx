@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
@@ -16,6 +16,7 @@ import AnamneseViewScreen from './AnamneseViewScreen';
 import { HeaderBack } from './Header';
 import MetricsMiniCards from './MetricsMiniCards';
 import WeightEvolutionChart from './WeightEvolutionChart';
+import WaterLogModal from './WaterLogModal';
 
 function mapMealNameToType(name) {
   const n = (name || '').toLowerCase();
@@ -27,13 +28,6 @@ function mapMealNameToType(name) {
   return 'lanche';
 }
 
-function getRpeTag(pse) {
-  if (!pse) return null;
-  if (pse <= 2) return { label: 'Leve', color: '#22c55e' };
-  if (pse === 3) return { label: 'Moderado', color: '#eab308' };
-  return { label: 'Intenso', color: '#ef4444' };
-}
-
 const ACCESS_LEVELS = [
   { value: 'plataforma_base', label: 'Plataforma Base' },
   { value: 'consultoria_vip', label: 'Consultoria VIP' },
@@ -43,10 +37,11 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
   const [lastSession, setLastSession] = useState(null);
   const [diaryTotals, setDiaryTotals] = useState(null);
   const [waterMl, setWaterMl] = useState(0);
+  const [waterGoalMl, setWaterGoalMl] = useState(2000);
+  const [showWaterModal, setShowWaterModal] = useState(false);
   const [mealsCompleted, setMealsCompleted] = useState(0);
   const [mealsTotal, setMealsTotal] = useState(0);
   const [weekDaysCount, setWeekDaysCount] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [isOverdue, setIsOverdue] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showAnamnese, setShowAnamnese] = useState(false);
@@ -78,15 +73,15 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
-  const formatDate = (isoString) => {
-    const d = new Date(isoString);
-    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const handleAddWater = async (ml) => {
+    await supabase.from('water_entries').insert({ student_id: student.id, entry_date: todayStr, amount_ml: ml });
+    loadContent();
   };
 
   const loadContent = async () => {
     const { data: sessionRows } = await supabase
       .from('workout_sessions')
-      .select('id, started_at, finished_at, pse, total_tonnage_kg, workouts (name)')
+      .select('workouts (name)')
       .eq('student_id', student.id)
       .not('finished_at', 'is', null)
       .order('finished_at', { ascending: false })
@@ -128,6 +123,9 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
       .eq('entry_date', todayStr);
     setWaterMl((waterRows || []).reduce((sum, w) => sum + w.amount_ml, 0));
 
+    const { data: studentRow } = await supabase.from('users').select('water_goal_ml').eq('id', student.id).single();
+    setWaterGoalMl(studentRow?.water_goal_ml || 2000);
+
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const { data: weekCompletions } = await supabase
@@ -146,8 +144,6 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
       .lt('due_date', todayStr)
       .limit(1);
     setIsOverdue((overdueRows || []).length > 0);
-
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -248,11 +244,6 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
     return <AnamneseViewScreen studentId={student.id} onClose={() => setShowAnamnese(false)} />;
   }
 
-  const lastDurationMin = lastSession && lastSession.finished_at
-    ? Math.round((new Date(lastSession.finished_at) - new Date(lastSession.started_at)) / 60000)
-    : null;
-  const lastRpeTag = lastSession ? getRpeTag(lastSession.pse) : null;
-
   return (
     <View style={styles.container}>
       <HeaderBack onBack={onClose} />
@@ -288,10 +279,26 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
       <MetricsMiniCards
         caloriesConsumed={diaryTotals?.consumedKcal || 0}
         caloriesGoal={diaryTotals?.goalKcal}
+        onPressCalories={() => setDietDiaryFor(true)}
         waterMl={waterMl}
+        waterGoalMl={waterGoalMl}
+        onPressWater={() => setShowWaterModal(true)}
         mealsCompleted={mealsCompleted}
         mealsTotal={mealsTotal}
+        onPressHabits={() => setDietBuildingFor(true)}
         weeklyPercent={(weekDaysCount / 7) * 100}
+        lastWorkoutLabel={lastSession?.workouts?.name}
+        onPressFrequency={() => setWorkoutHistoryFor(true)}
+      />
+
+      <WaterLogModal
+        visible={showWaterModal}
+        studentId={student.id}
+        currentMl={waterMl}
+        goalMl={waterGoalMl}
+        onClose={() => setShowWaterModal(false)}
+        onAdd={handleAddWater}
+        onGoalChanged={setWaterGoalMl}
       />
 
       <WeightEvolutionChart studentId={student.id} />
@@ -340,56 +347,6 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
         <Text style={styles.financeButtonText}>Ver Financeiro</Text>
       </TouchableOpacity>
 
-      {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
-      ) : (
-        <>
-          <Text style={styles.blockLabel}>Último treino</Text>
-          {!lastSession ? (
-            <Text style={styles.emptyText}>Nenhum treino finalizado ainda.</Text>
-          ) : (
-            <View style={styles.sessionCard}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.sessionName}>{lastSession.workouts?.name}</Text>
-                <Text style={styles.sessionDate}>
-                  {formatDate(lastSession.finished_at)}
-                  {lastSession.total_tonnage_kg != null ? ` · ${Math.round(lastSession.total_tonnage_kg)}kg` : ''}
-                </Text>
-              </View>
-              <View style={styles.sessionStats}>
-                {lastDurationMin != null && <Text style={styles.sessionStat}>{lastDurationMin}min</Text>}
-                {lastRpeTag && (
-                  <View style={[styles.rpeTag, { borderColor: lastRpeTag.color }]}>
-                    <Text style={[styles.rpeTagText, { color: lastRpeTag.color }]}>{lastRpeTag.label}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          )}
-          <TouchableOpacity onPress={() => setWorkoutHistoryFor(true)}>
-            <Text style={styles.viewMoreLink}>Ver histórico completo →</Text>
-          </TouchableOpacity>
-
-          <View style={styles.sectionDivider} />
-
-          <Text style={styles.blockLabel}>Diário alimentar de hoje</Text>
-          {!diaryTotals ? (
-            <ActivityIndicator color="#f97316" size="small" style={{ marginTop: 6 }} />
-          ) : (
-            <TouchableOpacity onPress={() => setDietDiaryFor(true)} style={styles.diaryBarBox}>
-              <Text style={styles.diaryBarText}>
-                {Math.round(diaryTotals.consumedKcal)}{diaryTotals.goalKcal ? ` / ${diaryTotals.goalKcal}` : ''} kcal
-              </Text>
-              {diaryTotals.goalKcal && (
-                <View style={styles.diaryBarTrack}>
-                  <View style={[styles.diaryBarFill, { width: `${Math.min(100, (diaryTotals.consumedKcal / diaryTotals.goalKcal) * 100)}%` }]} />
-                </View>
-              )}
-              <Text style={styles.viewMoreLink}>Ver diário completo →</Text>
-            </TouchableOpacity>
-          )}
-        </>
-      )}
       </ScrollView>
     </View>
   );
@@ -426,19 +383,4 @@ const styles = StyleSheet.create({
   summaryButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
   financeButton: { flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: '#eab308', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   financeButtonText: { color: '#eab308', fontSize: 13, fontWeight: '700' },
-  blockLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, marginTop: 4 },
-  emptyText: { color: '#525252', fontSize: 12, marginBottom: 8 },
-  sessionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 12, marginBottom: 8 },
-  sessionName: { color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
-  sessionDate: { color: '#525252', fontSize: 10, marginTop: 2 },
-  sessionStats: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sessionStat: { color: '#a3a3a3', fontSize: 10 },
-  rpeTag: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
-  rpeTagText: { fontSize: 9, fontWeight: '700' },
-  viewMoreLink: { color: '#f97316', fontSize: 11, fontWeight: '600', marginTop: 4, marginBottom: 12 },
-  sectionDivider: { height: 1, backgroundColor: '#171717', marginBottom: 12 },
-  diaryBarBox: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 12, marginBottom: 30 },
-  diaryBarText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
-  diaryBarTrack: { height: 6, backgroundColor: '#0a0a0a', borderRadius: 3, overflow: 'hidden', marginTop: 6 },
-  diaryBarFill: { height: '100%', backgroundColor: '#22c55e', borderRadius: 3 },
 });
