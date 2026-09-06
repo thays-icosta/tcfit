@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Switch, Image, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
@@ -11,14 +10,7 @@ import AnamneseFormScreen from './AnamneseFormScreen';
 import UpgradeLockModal from './UpgradeLockModal';
 import { showAlert } from './alertUtils';
 import { HeaderBack } from './Header';
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+import { registerPushToken } from './pushNotifications';
 
 const TIME_PRESETS = ['06:00', '07:00', '12:00', '18:00', '19:00', '20:00'];
 const DELETE_CONFIRM_WORD = 'EXCLUIR';
@@ -147,7 +139,6 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
   const handleToggleReminder = async (value) => {
     setReminderEnabled(value);
     if (!value) {
-      await Notifications.cancelAllScheduledNotificationsAsync();
       setSavingReminder(true);
       await supabase.from('users').update({ reminder_enabled: false }).eq('id', user.id);
       setSavingReminder(false);
@@ -160,39 +151,31 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
       showAlert('Ops', 'Digita um horário válido no formato HH:MM (ex: 18:30).');
       return;
     }
-    const hour = Number(match[1]);
-    const minute = Number(match[2]);
 
     setSavingReminder(true);
 
-    const { status } = await Notifications.requestPermissionsAsync();
-    if (status !== 'granted') {
-      setSavingReminder(false);
-      showAlert('Permissão necessária', 'Pra receber lembretes, autorize notificações pro app nas configurações do celular.');
-      return;
-    }
-
     try {
-      await Notifications.cancelAllScheduledNotificationsAsync();
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Hora de treinar! 💪',
-          body: 'Não esquece do seu treino hoje.',
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour,
-          minute,
-        },
-      });
+      // Lembretes agora são enviados pelo servidor (push), não mais agendados
+      // localmente no aparelho — isso garante o funcionamento no PWA. Isso só
+      // exige que o navegador tenha uma inscrição de push salva.
+      await registerPushToken(user.id);
+      const { data: pushRow } = await supabase
+        .from('users')
+        .select('web_push_subscription, expo_push_token')
+        .eq('id', user.id)
+        .single();
 
-      await supabase.from('users').update({
-        reminder_enabled: true,
-        reminder_time: `${match[1].padStart(2, '0')}:${match[2]}`,
-      }).eq('id', user.id);
+      if (!pushRow?.web_push_subscription && !pushRow?.expo_push_token) {
+        setSavingReminder(false);
+        showAlert('Permissão necessária', 'Pra receber lembretes, autorize notificações quando o navegador pedir e tente salvar de novo.');
+        return;
+      }
+
+      const time = `${match[1].padStart(2, '0')}:${match[2]}`;
+      await supabase.from('users').update({ reminder_enabled: true, reminder_time: time }).eq('id', user.id);
 
       setSavingReminder(false);
-      showAlert('Lembrete ativado!', `Você vai receber um aviso todo dia às ${match[1].padStart(2, '0')}:${match[2]}.`);
+      showAlert('Lembrete ativado!', `Você vai receber um aviso todo dia às ${time}.`);
     } catch (e) {
       setSavingReminder(false);
       showAlert('Erro ao agendar', e.message);
@@ -243,7 +226,6 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
     if (deleteConfirmText.trim().toUpperCase() !== DELETE_CONFIRM_WORD) return;
     setShowDeleteConfirmModal(false);
     setDeletingAccount(true);
-    await Notifications.cancelAllScheduledNotificationsAsync();
     await supabase.storage.from('avatars').remove([`${user.id}.jpg`]);
     const { error } = await supabase.rpc('delete_own_account');
     setDeletingAccount(false);
