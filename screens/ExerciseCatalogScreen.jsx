@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator, Image, Modal } from 'react-native';
 import { supabase } from './supabaseClient';
 import CustomExerciseFormScreen from './CustomExerciseFormScreen';
@@ -52,6 +52,7 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
   const [gifPreviewExercise, setGifPreviewExercise] = useState(null);
   const [bulkLinking, setBulkLinking] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0, linked: 0 });
+  const copyInFlightRef = useRef(false);
 
   // These sub-views replace this whole screen's return, so the parent
   // (TemplateBuilderScreen) needs to know to hide its own header/tab
@@ -65,6 +66,7 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
     const { data } = await supabase.from('exercises').select('id, name, muscle_group, equipment, personal_id, thumbnail_url, video_url, instructions').order('name');
     setAllExercises(data || []);
     setLoading(false);
+    return data || [];
   };
 
   useEffect(() => {
@@ -119,12 +121,11 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
     return true;
   });
 
-  const activeFilterCount = [muscleFilter, equipmentFilter, originFilter].filter((f) => f !== 'todos').length;
+  const activeFilterCount = [muscleFilter, equipmentFilter].filter((f) => f !== 'todos').length;
 
   const handleClearFilters = () => {
     setMuscleFilter('todos');
     setEquipmentFilter('todos');
-    setOriginFilter('todos');
   };
 
   const handlePreview = (exercise) => {
@@ -142,6 +143,19 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
       return;
     }
 
+    // Already have a personal copy of this one (made earlier, maybe in a
+    // previous visit) — open that instead of making yet another duplicate.
+    const existingCopy = allExercises.find(
+      (ex) => ex.personal_id === personalId && ex.name.trim().toLowerCase() === item.name.trim().toLowerCase()
+    );
+    if (existingCopy) {
+      setEditingExercise(existingCopy);
+      return;
+    }
+
+    if (copyInFlightRef.current) return;
+    copyInFlightRef.current = true;
+
     // Not owned by this personal (Biblioteca do App or another personal's) —
     // make a personal copy first so editing it never affects other personals.
     const { data, error } = await supabase
@@ -157,7 +171,20 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
       })
       .select()
       .single();
+
+    copyInFlightRef.current = false;
+
     if (error) {
+      // Unique-violation race (e.g. a double-tap that slipped past the ref
+      // guard): someone already created the copy a moment ago — open it.
+      if (error.code === '23505') {
+        const refreshed = await loadExercises();
+        const nowExisting = refreshed.find(
+          (ex) => ex.personal_id === personalId && ex.name.trim().toLowerCase() === item.name.trim().toLowerCase()
+        );
+        if (nowExisting) setEditingExercise(nowExisting);
+        return;
+      }
       showAlert('Erro ao copiar exercício', error.message);
       return;
     }
@@ -219,6 +246,18 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
         )}
       </TouchableOpacity>
 
+      <View style={styles.originToggleRow}>
+        {ORIGIN_CHIPS.map((item) => (
+          <TouchableOpacity
+            key={item.value}
+            style={[styles.originToggleChip, originFilter === item.value && styles.originToggleChipActive]}
+            onPress={() => setOriginFilter(item.value)}
+          >
+            <Text style={[styles.originToggleText, originFilter === item.value && styles.originToggleTextActive]}>{item.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <View style={styles.searchRow}>
         <TextInput
           style={[styles.searchInput, { flex: 1, marginBottom: 0 }]}
@@ -241,19 +280,6 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
             <Text style={styles.modalTitle}>Filtrar Exercícios</Text>
-
-            <Text style={styles.filterLabel}>Origem</Text>
-            <View style={styles.chipWrapRow}>
-              {ORIGIN_CHIPS.map((item) => (
-                <TouchableOpacity
-                  key={item.value}
-                  style={[styles.chip, originFilter === item.value && styles.chipActive]}
-                  onPress={() => setOriginFilter(item.value)}
-                >
-                  <Text style={[styles.chipText, originFilter === item.value && styles.chipTextActive]}>{item.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
 
             <Text style={styles.filterLabel}>Grupo muscular</Text>
             <View style={styles.chipWrapRow}>
@@ -350,6 +376,11 @@ const styles = StyleSheet.create({
   bulkLinkButton: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(59,130,246,0.1)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   bulkLinkButtonText: { color: '#3b82f6', fontSize: 11, fontWeight: '700', textAlign: 'center' },
   searchInput: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: '#f5f5f5', fontSize: 13, marginBottom: 10 },
+  originToggleRow: { flexDirection: 'row', gap: 8, backgroundColor: '#0a0a0a', borderRadius: 10, padding: 4, marginBottom: 10 },
+  originToggleChip: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
+  originToggleChipActive: { backgroundColor: '#f97316' },
+  originToggleText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
+  originToggleTextActive: { color: '#0a0a0a' },
   searchRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   filterButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 14, justifyContent: 'center' },
   filterButtonText: { color: '#f5f5f5', fontSize: 12, fontWeight: '700' },
