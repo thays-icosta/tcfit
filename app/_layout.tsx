@@ -9,12 +9,15 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { logError, installGlobalErrorHandlers } from '@/screens/errorLogger';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
 let globalFontApplied = false;
+
+installGlobalErrorHandlers();
 
 // Catches render/lifecycle errors anywhere below the root so a bug in one
 // screen shows a recoverable message instead of crashing/blanking the whole app.
@@ -28,8 +31,13 @@ class RootErrorBoundary extends React.Component<{ children: React.ReactNode }, {
     return { hasError: true };
   }
 
-  componentDidCatch(error: unknown, info: unknown) {
+  componentDidCatch(error: unknown, info: { componentStack?: string }) {
     console.log('Root render error caught:', error, info);
+    logError(error instanceof Error ? error.message : String(error), {
+      source: 'render_boundary',
+      stack: error instanceof Error ? error.stack : undefined,
+      componentStack: info?.componentStack,
+    });
   }
 
   render() {

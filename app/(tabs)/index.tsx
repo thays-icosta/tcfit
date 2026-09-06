@@ -8,6 +8,7 @@ import AlunoHomeScreen from '../../screens/AlunoHomeScreen';
 import WelcomeScreen from '../../screens/WelcomeScreen';
 import { supabase } from '../../screens/supabaseClient';
 import { registerPushToken, extractChatTarget } from '../../screens/pushNotifications';
+import { setErrorLoggerUser } from '../../screens/errorLogger';
 
 export default function HomeTab() {
   const router = useRouter();
@@ -38,6 +39,7 @@ export default function HomeTab() {
 
     setUser({ id: sessionUser.id, email: sessionUser.email, name: data?.name || sessionUser.email });
     setRole(data?.role || 'aluno');
+    setErrorLoggerUser({ id: sessionUser.id, role: data?.role || 'aluno' });
   };
 
   useEffect(() => {
@@ -53,6 +55,7 @@ export default function HomeTab() {
         setUser(null);
         setRole(null);
         setAuthView('welcome');
+        setErrorLoggerUser(null);
       } else {
         setUser(null);
         setRole(null);
