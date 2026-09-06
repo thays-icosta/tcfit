@@ -49,17 +49,40 @@ function MaterialItemCard({ item }) {
   );
 }
 
+function CollectionCard({ collection }) {
+  return (
+    <View style={styles.itemCard}>
+      <View style={styles.bannerWrap}>
+        {collection.coverImage ? (
+          <Image source={{ uri: collection.coverImage }} style={styles.itemCoverImage} resizeMode="cover" />
+        ) : (
+          <View style={[styles.itemCover, styles.itemCoverPlaceholder]}>
+            <Ionicons name="folder-outline" size={26} color="#525252" />
+          </View>
+        )}
+      </View>
+      <View style={styles.itemBody}>
+        <Text style={styles.itemTitle} numberOfLines={2}>{toTitleCase(collection.name)}</Text>
+      </View>
+    </View>
+  );
+}
+
 export default function MaterialsSection({ isDesktop }) {
   const [materialsData, setMaterialsData] = useState([]);
+  const [collections, setCollections] = useState([]);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from('products')
-        .select('id, name, description, cover_image_url, delivery_value, pdf_url, material_type, nutrition_tags, active')
-        .eq('active', true)
-        .not('material_type', 'is', null)
-        .order('created_at', { ascending: false });
+      const [{ data }, { data: collectionRows }] = await Promise.all([
+        supabase
+          .from('products')
+          .select('id, name, description, cover_image_url, delivery_value, pdf_url, material_type, nutrition_tags, active, collection_id')
+          .eq('active', true)
+          .not('material_type', 'is', null)
+          .order('created_at', { ascending: false }),
+        supabase.from('product_collections').select('*').order('order_index'),
+      ]);
 
       const normalized = (data || []).map((p) => ({
         id: p.id,
@@ -70,12 +93,19 @@ export default function MaterialsSection({ isDesktop }) {
         coverImage: p.cover_image_url,
         fileUrl: p.pdf_url || p.delivery_value,
         active: p.active,
+        collectionId: p.collection_id,
       }));
       setMaterialsData(normalized);
+      setCollections(collectionRows || []);
     })();
   }, []);
 
   if (materialsData.length === 0) return null;
+
+  const groupedCollections = collections
+    .map((c) => ({ ...c, items: materialsData.filter((m) => m.collectionId === c.id) }))
+    .filter((c) => c.items.length > 0);
+  const ungroupedItems = materialsData.filter((m) => !m.collectionId);
 
   return (
     <View>
@@ -85,7 +115,13 @@ export default function MaterialsSection({ isDesktop }) {
       </Text>
 
       <View style={styles.itemGrid}>
-        {materialsData.map((item) => (
+        {groupedCollections.map((c) => (
+          <CollectionCard
+            key={c.id}
+            collection={{ name: c.name, coverImage: c.cover_image_url || c.items.find((m) => m.coverImage)?.coverImage }}
+          />
+        ))}
+        {ungroupedItems.map((item) => (
           <MaterialItemCard key={item.id} item={item} />
         ))}
       </View>
