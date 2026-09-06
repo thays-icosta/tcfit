@@ -473,7 +473,7 @@ function buildReportHtml(studentName, assessments, branding) {
   `;
 }
 
-export default function PhysicalAssessmentHistoryScreen({ studentId, studentName, personalId, onClose }) {
+export default function PhysicalAssessmentHistoryScreen({ studentId, studentName, personalId, onClose, embedded = false }) {
   const [assessments, setAssessments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [generatingPdf, setGeneratingPdf] = useState(false);
@@ -567,10 +567,10 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
   const previous = assessments[1];
 
   return (
-    <View style={styles.container}>
-      <HeaderBack title={studentName} onBack={onClose} />
+    <View style={[styles.container, embedded && styles.containerEmbedded]}>
+      {!embedded && <HeaderBack title={studentName} onBack={onClose} />}
 
-      <Text style={styles.title}>Evolução Física</Text>
+      {!embedded && <Text style={styles.title}>Evolução Física</Text>}
 
       {loading ? (
         <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
@@ -708,6 +708,7 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
+  containerEmbedded: { paddingTop: 12 },
   title: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginBottom: 14 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
   pdfButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 16 },

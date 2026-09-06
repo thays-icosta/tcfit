@@ -19,7 +19,7 @@ import AlunoTabBar from './AlunoTabBar';
 import ProgramDetailScreen from './ProgramDetailScreen';
 import AnamneseFormScreen from './AnamneseFormScreen';
 import UpgradeLockModal from './UpgradeLockModal';
-import PhysicalAssessmentHistoryScreen from './PhysicalAssessmentHistoryScreen';
+import AlunoEvolutionScreen from './AlunoEvolutionScreen';
 import FoodSubstituteScreen from './FoodSubstituteScreen';
 import { showAlert } from './alertUtils';
 import { hasAccessByLevel, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
@@ -698,7 +698,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
 
   if (showEvolution) {
     return (
-      <PhysicalAssessmentHistoryScreen
+      <AlunoEvolutionScreen
         studentId={user.id}
         studentName={user?.name || 'Você'}
         onClose={() => setShowEvolution(false)}
@@ -1269,7 +1269,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
           >
             <Ionicons name="trending-up-outline" size={20} color={ACCENT} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.evolutionRowTitle}>Evolução Física</Text>
+              <Text style={styles.evolutionRowTitle}>Evolução do Aluno</Text>
               <Text style={styles.evolutionRowSubtitle}>Fotos de progresso, peso e avaliações</Text>
             </View>
             {myAccessLevel === 'consultoria_vip' ? (

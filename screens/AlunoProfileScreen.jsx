@@ -5,7 +5,6 @@ import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
-import PhysicalAssessmentHistoryScreen from './PhysicalAssessmentHistoryScreen';
 import VolumeSummaryScreen from './VolumeSummaryScreen';
 import WeeklyPeriodizationScreen from './WeeklyPeriodizationScreen';
 import AnamneseFormScreen from './AnamneseFormScreen';
@@ -33,7 +32,6 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showEvolution, setShowEvolution] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
   const [showPeriodization, setShowPeriodization] = useState(false);
   const [showAnamnese, setShowAnamnese] = useState(false);
@@ -271,16 +269,6 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
     );
   }
 
-  if (showEvolution) {
-    return (
-      <PhysicalAssessmentHistoryScreen
-        studentId={user.id}
-        studentName={name || 'Você'}
-        onClose={() => setShowEvolution(false)}
-      />
-    );
-  }
-
   if (showVolume) {
     return (
       <VolumeSummaryScreen
@@ -334,25 +322,10 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
       </View>
 
       <View style={styles.shortcutsGrid}>
-        <View style={styles.shortcutsRow}>
-          <TouchableOpacity
-            style={[styles.shortcutCard, styles.shortcutCardPurple]}
-            onPress={() => (accessLevel === 'consultoria_vip' ? setShowEvolution(true) : setLockModalFeature('Evolução Física'))}
-          >
-            {accessLevel !== 'consultoria_vip' && (
-              <View style={styles.shortcutLockBadge}>
-                <Ionicons name="lock-closed" size={11} color="#f97316" />
-              </View>
-            )}
-            <Ionicons name="trending-up-outline" size={24} color="#a855f7" />
-            <Text style={styles.shortcutCardText}>Evolução Física</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.shortcutCard, styles.shortcutCardOrange]} onPress={() => setShowVolume(true)}>
-            <Ionicons name="barbell-outline" size={24} color="#f97316" />
-            <Text style={styles.shortcutCardText}>Meu Histórico de Treinos</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={[styles.shortcutCard, styles.shortcutCardOrange, styles.shortcutCardWide]} onPress={() => setShowVolume(true)}>
+          <Ionicons name="barbell-outline" size={24} color="#f97316" />
+          <Text style={styles.shortcutCardText}>Meu Histórico de Treinos</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={[styles.shortcutCard, styles.shortcutCardPurple, styles.shortcutCardWide]} onPress={() => setShowPeriodization(true)}>
           <Ionicons name="calendar-outline" size={24} color="#a855f7" />
@@ -533,11 +506,9 @@ const styles = StyleSheet.create({
   avatarEditIcon: { fontSize: 12 },
   avatarHint: { color: '#525252', fontSize: 10, marginTop: 8 },
   shortcutsGrid: { gap: 10, marginBottom: 16 },
-  shortcutsRow: { flexDirection: 'row', gap: 10 },
   upsellBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(249,115,22,0.08)', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 16 },
   upsellBannerText: { flex: 1, color: '#a3a3a3', fontSize: 11, fontWeight: '600', lineHeight: 16 },
   shortcutCard: { flex: 1, borderWidth: 1, borderRadius: 14, paddingVertical: 18, alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 90, position: 'relative' },
-  shortcutLockBadge: { position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
   shortcutCardWide: { flex: undefined, width: '100%' },
   shortcutCardPurple: { backgroundColor: 'rgba(168,85,247,0.12)', borderColor: '#a855f7' },
   shortcutCardOrange: { backgroundColor: 'rgba(249,115,22,0.12)', borderColor: '#f97316' },
