@@ -8,14 +8,23 @@ import { toTitleCase } from './textUtils';
 
 const WORKOUT_PRODUCT_TYPES = ['treino_template', 'planilha_treino'];
 
-function ProgramItemCard({ item }) {
-  const lvl = PROGRAM_LEVELS.find((l) => l.value === item.level)?.label;
-  const goal = PROGRAM_GOALS.find((g) => g.value === item.goal)?.label;
+function badgesFor(items) {
+  const set = new Set();
+  items.forEach((p) => {
+    const lvl = PROGRAM_LEVELS.find((l) => l.value === p.level)?.label;
+    const goal = PROGRAM_GOALS.find((g) => g.value === p.goal)?.label;
+    if (lvl) set.add(lvl);
+    if (goal) set.add(goal);
+  });
+  return Array.from(set);
+}
+
+function ProgramCard({ title, coverImage, badges }) {
   return (
     <View style={styles.itemCard}>
       <View style={styles.bannerWrap}>
-        {item.cover_image_url ? (
-          <Image source={{ uri: item.cover_image_url }} style={styles.itemCoverImage} resizeMode="cover" />
+        {coverImage ? (
+          <Image source={{ uri: coverImage }} style={styles.itemCoverImage} resizeMode="cover" />
         ) : (
           <View style={[styles.itemCover, styles.itemCoverPlaceholder]}>
             <Ionicons name="barbell-outline" size={26} color="#525252" />
@@ -23,11 +32,14 @@ function ProgramItemCard({ item }) {
         )}
       </View>
       <View style={styles.itemBody}>
-        <Text style={styles.itemTitle} numberOfLines={2}>{toTitleCase(item.name)}</Text>
-        {(lvl || goal) && (
+        <Text style={styles.itemTitle} numberOfLines={2}>{toTitleCase(title)}</Text>
+        {badges.length > 0 && (
           <View style={styles.tagRow}>
-            {lvl ? <View style={styles.tagChip}><Text style={styles.tagChipText}>{lvl}</Text></View> : null}
-            {goal ? <View style={styles.tagChip}><Text style={styles.tagChipText}>{goal}</Text></View> : null}
+            {badges.map((b) => (
+              <View key={b} style={styles.tagChip}>
+                <Text style={styles.tagChipText}>{b}</Text>
+              </View>
+            ))}
           </View>
         )}
       </View>
@@ -37,20 +49,30 @@ function ProgramItemCard({ item }) {
 
 export default function WorkoutProgramsSection({ isDesktop }) {
   const [products, setProducts] = useState([]);
+  const [collections, setCollections] = useState([]);
 
   useEffect(() => {
     (async () => {
-      const { data: productRows } = await supabase
-        .from('products')
-        .select('id, name, cover_image_url, level, goal, active, type')
-        .in('type', WORKOUT_PRODUCT_TYPES)
-        .eq('active', true)
-        .order('created_at', { ascending: false });
+      const [{ data: productRows }, { data: collectionRows }] = await Promise.all([
+        supabase
+          .from('products')
+          .select('id, name, cover_image_url, collection_id, level, goal, active, type')
+          .in('type', WORKOUT_PRODUCT_TYPES)
+          .eq('active', true)
+          .order('created_at', { ascending: false }),
+        supabase.from('product_collections').select('*').order('order_index'),
+      ]);
       setProducts(productRows || []);
+      setCollections(collectionRows || []);
     })();
   }, []);
 
   if (products.length === 0) return null;
+
+  const groupedCollections = collections
+    .map((c) => ({ ...c, items: products.filter((p) => p.collection_id === c.id) }))
+    .filter((c) => c.items.length > 0);
+  const ungroupedItems = products.filter((p) => !p.collection_id);
 
   return (
     <View>
@@ -60,8 +82,21 @@ export default function WorkoutProgramsSection({ isDesktop }) {
       </Text>
 
       <View style={styles.itemGrid}>
-        {products.map((item) => (
-          <ProgramItemCard key={item.id} item={item} />
+        {groupedCollections.map((c) => (
+          <ProgramCard
+            key={c.id}
+            title={c.name}
+            coverImage={c.cover_image_url || c.items.find((p) => p.cover_image_url)?.cover_image_url}
+            badges={badgesFor(c.items)}
+          />
+        ))}
+        {ungroupedItems.map((item) => (
+          <ProgramCard
+            key={item.id}
+            title={item.name}
+            coverImage={item.cover_image_url}
+            badges={badgesFor([item])}
+          />
         ))}
       </View>
     </View>
