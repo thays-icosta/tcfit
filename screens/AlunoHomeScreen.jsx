@@ -27,6 +27,8 @@ import { HeaderWelcome, HeaderBack } from './Header';
 import { toTitleCase } from './textUtils';
 import { COVER_TOP_IMAGE } from './vitrineStyles';
 import ProductDetailModal from './ProductDetailModal';
+import CollapsibleSection, { animateNextLayout } from './CollapsibleSection';
+import { getJsonPref, setJsonPref } from './localPrefs';
 
 const ACCENT = '#E05A17';
 
@@ -91,8 +93,16 @@ function mapMealNameToType(name) {
   return 'lanche';
 }
 
-function mealLabel(code) {
-  return MEAL_OPTIONS.find((m) => m.value === code)?.label || code;
+// Fixed, non-overlapping hour windows used to guess which meal the aluno is
+// "in" right now, so its accordion can auto-expand while the others (already
+// logged, or not due yet) stay collapsed.
+function currentMealWindowKey() {
+  const hour = new Date().getHours();
+  if (hour >= 4 && hour < 10) return 'cafe';
+  if (hour >= 10 && hour < 14) return 'almoco';
+  if (hour >= 14 && hour < 17) return 'lanche';
+  if (hour >= 17 && hour < 21) return 'jantar';
+  return 'ceia';
 }
 
 export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onConsumeInitialChat }) {
@@ -100,6 +110,10 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [myAccessLevel, setMyAccessLevel] = useState('plataforma_base');
   const [myGender, setMyGender] = useState(null);
   const [hubAudienceFilter, setHubAudienceFilter] = useState('todos');
+  const [hubCollapsedSections, setHubCollapsedSections] = useState({});
+  const [resumoDoDiaCollapsed, setResumoDoDiaCollapsed] = useState(false);
+  const [waterCardCollapsed, setWaterCardCollapsed] = useState(false);
+  const [diarioMealOverrides, setDiarioMealOverrides] = useState({});
   const [personalName, setPersonalName] = useState(null);
   const [personalAvatarUrl, setPersonalAvatarUrl] = useState(null);
   const [personalPhone, setPersonalPhone] = useState(null);
@@ -348,6 +362,19 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   useEffect(() => {
     if (myGender) setHubAudienceFilter(myGender);
   }, [myGender]);
+
+  useEffect(() => {
+    getJsonPref('hub_collapsed_sections_v1', {}).then(setHubCollapsedSections);
+  }, []);
+
+  const toggleHubSection = (key) => {
+    animateNextLayout();
+    setHubCollapsedSections((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      setJsonPref('hub_collapsed_sections_v1', next);
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (openChatOnMount && personalId) {
@@ -832,31 +859,37 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
 
         <View style={{ paddingHorizontal: 16 }}>
           <View style={styles.nutriTopCard}>
-            <View style={styles.nutriTopHeaderRow}>
-              <Text style={styles.hojeTitle}>Resumo do Dia</Text>
-              <Text style={styles.hojeSummary}>
-                {Math.round(consumedTotals.kcal)}{diets[0]?.goal_kcal ? ` / ${diets[0].goal_kcal}` : ''} kcal
-              </Text>
-            </View>
-            <View style={styles.hojeBody}>
-              {[
-                { label: 'Proteína', value: consumedTotals.protein, goal: diets[0]?.goal_protein_g, unit: 'g', color: '#a3a3a3' },
-                { label: 'Carboidrato', value: consumedTotals.carbs, goal: diets[0]?.goal_carbs_g, unit: 'g', color: '#eab308' },
-                { label: 'Gordura', value: consumedTotals.fat, goal: diets[0]?.goal_fat_g, unit: 'g', color: '#ef4444' },
-              ].map((macro) => (
-                <View key={macro.label} style={styles.macroRow}>
-                  <View style={styles.macroLabelRow}>
-                    <Text style={styles.macroLabel}>{macro.label}</Text>
-                    <Text style={styles.macroValue}>
-                      {Math.round(macro.value)}{macro.goal ? ` / ${macro.goal}` : ''}{macro.unit}
-                    </Text>
+            <CollapsibleSection
+              title="Resumo do Dia"
+              collapsed={resumoDoDiaCollapsed}
+              onToggle={() => { animateNextLayout(); setResumoDoDiaCollapsed((v) => !v); }}
+              style={{ padding: 14 }}
+              headerRight={
+                <Text style={styles.hojeSummary}>
+                  {Math.round(consumedTotals.kcal)}{diets[0]?.goal_kcal ? ` / ${diets[0].goal_kcal}` : ''} kcal
+                </Text>
+              }
+            >
+              <View style={styles.resumoDoDiaBody}>
+                {[
+                  { label: 'Proteína', value: consumedTotals.protein, goal: diets[0]?.goal_protein_g, unit: 'g', color: '#a3a3a3' },
+                  { label: 'Carboidrato', value: consumedTotals.carbs, goal: diets[0]?.goal_carbs_g, unit: 'g', color: '#eab308' },
+                  { label: 'Gordura', value: consumedTotals.fat, goal: diets[0]?.goal_fat_g, unit: 'g', color: '#ef4444' },
+                ].map((macro) => (
+                  <View key={macro.label} style={styles.macroRow}>
+                    <View style={styles.macroLabelRow}>
+                      <Text style={styles.macroLabel}>{macro.label}</Text>
+                      <Text style={styles.macroValue}>
+                        {Math.round(macro.value)}{macro.goal ? ` / ${macro.goal}` : ''}{macro.unit}
+                      </Text>
+                    </View>
+                    <View style={styles.macroBarTrack}>
+                      <View style={[styles.macroBarFill, { width: macro.goal ? `${Math.min(100, (macro.value / macro.goal) * 100)}%` : '0%', backgroundColor: macro.color }]} />
+                    </View>
                   </View>
-                  <View style={styles.macroBarTrack}>
-                    <View style={[styles.macroBarFill, { width: macro.goal ? `${Math.min(100, (macro.value / macro.goal) * 100)}%` : '0%', backgroundColor: macro.color }]} />
-                  </View>
-                </View>
-              ))}
-            </View>
+                ))}
+              </View>
+            </CollapsibleSection>
           </View>
 
           <TouchableOpacity style={styles.nutriLibraryShortcut} onPress={() => setShowRecipes(true)}>
@@ -912,14 +945,22 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 <Text style={styles.emptyText}>Nenhuma refeição prescrita ainda.</Text>
               ) : (
                 mealsForActiveDiet.map((meal) => {
-                  const isExpanded = expandedMealId === meal.id;
+                  // When the aluno hasn't touched any accordion yet, auto-open whichever
+                  // prescribed meal matches the current time window and isn't logged yet.
+                  const smartOpenId = expandedMealId === null
+                    ? mealsForActiveDiet.find((m) => {
+                        const key = mapMealNameToType(m.name);
+                        return key === currentMealWindowKey() && !todaysEntries.some((e) => e.meal_type === key);
+                      })?.id ?? null
+                    : null;
+                  const isExpanded = expandedMealId != null ? expandedMealId === meal.id : meal.id === smartOpenId;
                   const mealTotals = (meal.diet_meal_foods || []).reduce((sum, f) => sum + (f.calories_kcal || 0), 0);
                   const mealKey = `${meal.id}-meal`;
                   return (
                     <View key={meal.id} style={styles.mealAccordionCard}>
                       <TouchableOpacity
                         style={styles.mealAccordionHeader}
-                        onPress={() => setExpandedMealId(isExpanded ? null : meal.id)}
+                        onPress={() => { animateNextLayout(); setExpandedMealId(isExpanded ? null : meal.id); }}
                       >
                         <View style={{ flex: 1 }}>
                           <Text style={styles.mealAccordionName}>{meal.name}</Text>
@@ -1045,7 +1086,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             )}
 
             <View style={styles.hojeCard}>
-              <TouchableOpacity style={styles.hojeHeader} onPress={() => setHojeExpanded(!hojeExpanded)}>
+              <TouchableOpacity style={styles.hojeHeader} onPress={() => { animateNextLayout(); setHojeExpanded(!hojeExpanded); }}>
                 <Text style={styles.hojeTitle}>Hoje</Text>
                 <View style={styles.hojeHeaderRight}>
                   <Text style={styles.hojeSummary}>
@@ -1082,21 +1123,26 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             </View>
 
             <View style={styles.waterCard}>
-              <View style={styles.waterHeaderRow}>
-                <Text style={styles.waterTitle}>Água</Text>
-                <Text style={styles.waterValue}>{(waterMl / 1000).toFixed(1)}L / 2.0L</Text>
-              </View>
-              <View style={styles.macroBarTrack}>
-                <View style={[styles.macroBarFill, { width: `${Math.min(100, (waterMl / 2000) * 100)}%`, backgroundColor: '#5EC8D8' }]} />
-              </View>
-              <View style={styles.waterButtonsRow}>
-                <TouchableOpacity style={styles.waterButton} onPress={() => handleAddWater(250)}>
-                  <Text style={styles.waterButtonText}>+250ml</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.waterButton} onPress={() => handleAddWater(500)}>
-                  <Text style={styles.waterButtonText}>+500ml</Text>
-                </TouchableOpacity>
-              </View>
+              <CollapsibleSection
+                title="Água"
+                collapsed={waterCardCollapsed}
+                onToggle={() => { animateNextLayout(); setWaterCardCollapsed((v) => !v); }}
+                headerRight={<Text style={styles.waterValue}>{(waterMl / 1000).toFixed(1)}L / 2.0L</Text>}
+              >
+                <View style={{ marginTop: 10 }}>
+                  <View style={styles.macroBarTrack}>
+                    <View style={[styles.macroBarFill, { width: `${Math.min(100, (waterMl / 2000) * 100)}%`, backgroundColor: '#5EC8D8' }]} />
+                  </View>
+                  <View style={styles.waterButtonsRow}>
+                    <TouchableOpacity style={styles.waterButton} onPress={() => handleAddWater(250)}>
+                      <Text style={styles.waterButtonText}>+250ml</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.waterButton} onPress={() => handleAddWater(500)}>
+                      <Text style={styles.waterButtonText}>+500ml</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </CollapsibleSection>
             </View>
 
             <View style={styles.noteCard}>
@@ -1123,21 +1169,47 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             </View>
 
             <Text style={styles.sectionTitle}>Registros de hoje</Text>
-            {todaysEntries.length === 0 ? (
-              <Text style={styles.emptyText}>Nenhum alimento registrado ainda hoje.</Text>
-            ) : (
-              todaysEntries.map((entry) => (
-                <View key={entry.id} style={styles.entryRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.entryFoodName}>{entry.food_name}</Text>
-                    <Text style={styles.entryMeta}>{mealLabel(entry.meal_type)}{entry.quantity_g ? ` · ${entry.quantity_g}g` : ''} · {Math.round(entry.calories_kcal || 0)}kcal</Text>
-                  </View>
-                  <TouchableOpacity onPress={() => handleDeleteEntry(entry.id)}>
-                    <Text style={styles.entryDelete}>✕</Text>
-                  </TouchableOpacity>
+            {MEAL_OPTIONS.map((m) => {
+              const mealEntries = todaysEntries.filter((e) => e.meal_type === m.value);
+              const hasEntries = mealEntries.length > 0;
+              const mealKcal = mealEntries.reduce((sum, e) => sum + (e.calories_kcal || 0), 0);
+              // Current-time meal starts open (if not logged yet); already-logged
+              // and not-yet-due meals start collapsed — until the aluno overrides it.
+              const smartDefaultCollapsed = !(m.value === currentMealWindowKey() && !hasEntries);
+              const collapsed = diarioMealOverrides[m.value] !== undefined ? diarioMealOverrides[m.value] : smartDefaultCollapsed;
+              return (
+                <View key={m.value} style={styles.mealAccordionCard}>
+                  <CollapsibleSection
+                    title={m.label}
+                    collapsed={collapsed}
+                    onToggle={() => {
+                      animateNextLayout();
+                      setDiarioMealOverrides((prev) => ({ ...prev, [m.value]: !collapsed }));
+                    }}
+                    style={styles.diarioMealHeader}
+                    headerRight={hasEntries ? <Text style={styles.mealAccordionMeta}>{Math.round(mealKcal)} kcal</Text> : null}
+                  >
+                    <View style={styles.diarioMealBody}>
+                      {hasEntries ? (
+                        mealEntries.map((entry) => (
+                          <View key={entry.id} style={styles.entryRow}>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.entryFoodName}>{entry.food_name}</Text>
+                              <Text style={styles.entryMeta}>{entry.quantity_g ? `${entry.quantity_g}g · ` : ''}{Math.round(entry.calories_kcal || 0)}kcal</Text>
+                            </View>
+                            <TouchableOpacity onPress={() => handleDeleteEntry(entry.id)}>
+                              <Text style={styles.entryDelete}>✕</Text>
+                            </TouchableOpacity>
+                          </View>
+                        ))
+                      ) : (
+                        <Text style={styles.emptyText}>Nada registrado ainda.</Text>
+                      )}
+                    </View>
+                  </CollapsibleSection>
                 </View>
-              ))
-            )}
+              );
+            })}
           </ScrollView>
         )}
       </View>
@@ -1356,8 +1428,12 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
           </TouchableOpacity>
 
           {hasAnyHubProgram && (
-            <>
-              <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>HUB DE PROGRAMAS</Text>
+            <CollapsibleSection
+              title="HUB DE PROGRAMAS"
+              collapsed={!!hubCollapsedSections.hub}
+              onToggle={() => toggleHubSection('hub')}
+              style={styles.sectionTitleSpaced}
+            >
               {showHubAudienceToggle && (
                 <View style={styles.audienceFilterRow}>
                   {[{ value: 'todos', label: 'Todos' }, { value: 'feminino', label: 'Feminino' }, { value: 'masculino', label: 'Masculino' }].map((a) => (
@@ -1372,9 +1448,9 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 </View>
               )}
               {hubGroups.length === 0 && !hasAnyRunningProgram ? (
-                <Text style={[styles.emptyText, { marginBottom: 16 }]}>Nenhum programa para esse público ainda.</Text>
+                <Text style={[styles.emptyText, { marginBottom: 16, marginTop: 10 }]}>Nenhum programa para esse público ainda.</Text>
               ) : hubGroups.length > 0 && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginBottom: 24 }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginTop: 10, marginBottom: 24 }}>
                 {hubGroups.map((group) => (
                   <TouchableOpacity key={group.key} style={styles.nutritionCard} onPress={() => setOpenCategoryGroup(group)}>
                     <View style={styles.nutritionCoverWrap}>
@@ -1400,13 +1476,17 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 ))}
               </ScrollView>
               )}
-            </>
+            </CollapsibleSection>
           )}
 
           {hasAnyRunningProgram && (
-            <>
-              <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>MÓDULO CORRIDA</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginBottom: 24 }}>
+            <CollapsibleSection
+              title="MÓDULO CORRIDA"
+              collapsed={!!hubCollapsedSections.corrida}
+              onToggle={() => toggleHubSection('corrida')}
+              style={styles.sectionTitleSpaced}
+            >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginTop: 10, marginBottom: 24 }}>
                 {runningLevelCards.map((lvl) => {
                   const locked = !lvl.product;
                   return (
@@ -1436,19 +1516,23 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                   );
                 })}
               </ScrollView>
-            </>
+            </CollapsibleSection>
           )}
 
-          <View style={styles.nutritionHeaderRow}>
-            <Text style={styles.sectionTitle}>BIBLIOTECA DE NUTRIÇÃO</Text>
-            <TouchableOpacity onPress={() => setShowRecipes(true)}>
-              <Text style={styles.nutritionHeaderLink}>Ver Receitas</Text>
-            </TouchableOpacity>
-          </View>
+          <CollapsibleSection
+            title="BIBLIOTECA DE NUTRIÇÃO"
+            collapsed={!!hubCollapsedSections.nutricao}
+            onToggle={() => toggleHubSection('nutricao')}
+            headerRight={
+              <TouchableOpacity onPress={() => setShowRecipes(true)}>
+                <Text style={styles.nutritionHeaderLink}>Ver Receitas</Text>
+              </TouchableOpacity>
+            }
+          >
           {nutritionItems.length === 0 ? (
-            <Text style={styles.emptyText}>Nenhum e-book ou guia disponível ainda.</Text>
+            <Text style={[styles.emptyText, { marginTop: 10 }]}>Nenhum e-book ou guia disponível ainda.</Text>
           ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginTop: 10 }}>
               {nutritionCollections.map((c) => (
                 <TouchableOpacity key={c.id} style={styles.nutritionCard} onPress={() => setOpenCollection(c)}>
                   <View style={styles.nutritionCoverWrap}>
@@ -1491,6 +1575,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
               })}
             </ScrollView>
           )}
+          </CollapsibleSection>
 
           {showPartnersSection && partnerBrands.length > 0 && (
             <View style={styles.partnersFooterSection}>
@@ -1667,6 +1752,8 @@ const styles = StyleSheet.create({
   mealAccordionName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
   mealAccordionMeta: { color: '#737373', fontSize: 11, marginTop: 2 },
   mealAccordionBody: { paddingHorizontal: 12, paddingBottom: 12, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  diarioMealHeader: { padding: 12 },
+  diarioMealBody: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
   foodItemBox: { marginTop: 8, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: '#0a0a0a' },
   foodOptionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   foodText: { color: '#a3a3a3', fontSize: 12, flexShrink: 1 },
@@ -1688,6 +1775,7 @@ const styles = StyleSheet.create({
   hojeHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hojeSummary: { color: '#f97316', fontSize: 12, fontWeight: '700' },
   hojeBody: { paddingHorizontal: 14, paddingBottom: 14, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  resumoDoDiaBody: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
   macroRow: { marginTop: 12 },
   macroLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
   macroLabel: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
