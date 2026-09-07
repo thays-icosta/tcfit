@@ -344,6 +344,10 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       showAlert('Ops', 'Digita o título do produto.');
       return;
     }
+    if (WORKOUT_PRODUCT_TYPES.includes(type) && !coverImageUrl) {
+      showAlert('Foto de capa obrigatória', 'Adicione uma foto de capa antes de salvar esse programa — sem ela, ele não aparece direito na vitrine do aluno.');
+      return;
+    }
     setSaving(true);
     const payload = {
       personal_id: personalId,
@@ -724,13 +728,19 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
         <HeaderBack title={editingId ? 'Editar Produto' : 'Novo Produto'} onBack={() => setShowForm(false)} style={{ paddingHorizontal: 16 }} />
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
-          <TouchableOpacity style={styles.coverPicker} onPress={handlePickCoverImage} disabled={uploadingCover}>
+          <TouchableOpacity
+            style={[styles.coverPicker, WORKOUT_PRODUCT_TYPES.includes(type) && !coverImageUrl && styles.coverPickerRequired]}
+            onPress={handlePickCoverImage}
+            disabled={uploadingCover}
+          >
             {uploadingCover ? (
               <ActivityIndicator color="#f97316" />
             ) : coverImageUrl ? (
               <Image source={{ uri: coverImageUrl }} style={styles.coverPreview} resizeMode="cover" />
             ) : (
-              <Text style={styles.coverPickerText}>📷 Adicionar foto de capa</Text>
+              <Text style={styles.coverPickerText}>
+                {WORKOUT_PRODUCT_TYPES.includes(type) ? '📷 Adicionar foto de capa (obrigatória)' : '📷 Adicionar foto de capa'}
+              </Text>
             )}
           </TouchableOpacity>
 
@@ -1132,6 +1142,7 @@ const styles = StyleSheet.create({
   revokeLink: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 14 },
   coverPicker: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 6, overflow: 'hidden' },
+  coverPickerRequired: { borderColor: '#f97316', borderStyle: 'dashed' },
   coverPreview: { width: '100%', height: '100%' },
   coverPickerText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
   typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
