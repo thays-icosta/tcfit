@@ -35,6 +35,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [justCopied, setJustCopied] = useState(false);
   const [financeSummary, setFinanceSummary] = useState({ monthlyRevenue: 0, dueCount: 0 });
   const [studentFilter, setStudentFilter] = useState('todos');
+  const [attendanceFilter, setAttendanceFilter] = useState('todos');
   const [studentSearch, setStudentSearch] = useState('');
   const [recentDiets, setRecentDiets] = useState([]);
 
@@ -85,7 +86,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const loadStudents = async () => {
     const { data, error } = await supabase
       .from('users')
-      .select('id, name, email, avatar_url, access_level')
+      .select('id, name, email, avatar_url, access_level, attendance_mode')
       .eq('personal_id', user.id)
       .eq('role', 'aluno');
 
@@ -248,6 +249,11 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       return true;
     })
     .filter((s) => {
+      if (attendanceFilter === 'presencial') return s.attendance_mode === 'presencial';
+      if (attendanceFilter === 'online') return s.attendance_mode !== 'presencial';
+      return true;
+    })
+    .filter((s) => {
       const q = studentSearch.trim().toLowerCase();
       if (!q) return true;
       return s.name?.toLowerCase().includes(q) || s.email?.toLowerCase().includes(q);
@@ -271,6 +277,22 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
                 onPress={() => setStudentFilter(tab.value)}
               >
                 <Text style={[styles.studentFilterTabText, studentFilter === tab.value && styles.studentFilterTabTextActive]}>{tab.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.studentFilterTabs}>
+            {[
+              { value: 'todos', label: 'Todos' },
+              { value: 'presencial', label: 'Presencial' },
+              { value: 'online', label: 'Consultoria Online' },
+            ].map((tab) => (
+              <TouchableOpacity
+                key={tab.value}
+                style={[styles.studentFilterTab, attendanceFilter === tab.value && styles.studentFilterTabActive]}
+                onPress={() => setAttendanceFilter(tab.value)}
+              >
+                <Text style={[styles.studentFilterTabText, attendanceFilter === tab.value && styles.studentFilterTabTextActive]}>{tab.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -315,10 +337,17 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
                   <View style={{ flex: 1 }}>
                     <Text style={styles.studentName}>{item.name}</Text>
                     <Text style={styles.studentEmail}>{item.email}</Text>
-                    <View style={[styles.planBadge, isVip ? styles.planBadgeVip : styles.planBadgeApp]}>
-                      <Text style={[styles.planBadgeText, isVip ? styles.planBadgeTextVip : styles.planBadgeTextApp]}>
-                        {isVip ? 'Consultoria VIP' : 'Acesso App'}
-                      </Text>
+                    <View style={styles.badgeRow}>
+                      <View style={[styles.planBadge, isVip ? styles.planBadgeVip : styles.planBadgeApp]}>
+                        <Text style={[styles.planBadgeText, isVip ? styles.planBadgeTextVip : styles.planBadgeTextApp]}>
+                          {isVip ? 'Consultoria VIP' : 'Acesso App'}
+                        </Text>
+                      </View>
+                      <View style={[styles.planBadge, item.attendance_mode === 'presencial' ? styles.planBadgePresencial : styles.planBadgeOnline]}>
+                        <Text style={[styles.planBadgeText, item.attendance_mode === 'presencial' ? styles.planBadgeTextPresencial : styles.planBadgeTextOnline]}>
+                          {item.attendance_mode === 'presencial' ? 'Presencial' : 'Online'}
+                        </Text>
+                      </View>
                     </View>
                   </View>
                   <View style={styles.statusTag}>
@@ -610,12 +639,17 @@ const styles = StyleSheet.create({
   avatarLetter: { color: '#f97316', fontSize: 17, fontWeight: '800' },
   studentName: { color: '#f5f5f5', fontSize: 15, fontWeight: '600' },
   studentEmail: { color: '#737373', fontSize: 11, marginTop: 1 },
-  planBadge: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, marginTop: 5 },
+  badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 5 },
+  planBadge: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
   planBadgeVip: { backgroundColor: 'rgba(168,85,247,0.12)' },
   planBadgeApp: { backgroundColor: 'rgba(115,115,115,0.16)' },
+  planBadgePresencial: { backgroundColor: 'rgba(249,115,22,0.12)' },
+  planBadgeOnline: { backgroundColor: 'rgba(59,130,246,0.12)' },
   planBadgeText: { fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
   planBadgeTextVip: { color: '#a855f7' },
   planBadgeTextApp: { color: '#a3a3a3' },
+  planBadgeTextPresencial: { color: '#f97316' },
+  planBadgeTextOnline: { color: '#3b82f6' },
   statusTag: { alignItems: 'flex-end', marginRight: 8 },
   statusDot: { width: 8, height: 8, borderRadius: 4, marginBottom: 3 },
   statusDotDone: { backgroundColor: '#22c55e' },

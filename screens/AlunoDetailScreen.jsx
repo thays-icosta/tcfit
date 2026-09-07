@@ -33,6 +33,11 @@ const ACCESS_LEVELS = [
   { value: 'consultoria_vip', label: 'Consultoria VIP' },
 ];
 
+const ATTENDANCE_MODES = [
+  { value: 'presencial', label: 'Presencial' },
+  { value: 'online', label: 'Consultoria Online' },
+];
+
 export default function AlunoDetailScreen({ student, personalId, onClose }) {
   const [lastSession, setLastSession] = useState(null);
   const [diaryTotals, setDiaryTotals] = useState(null);
@@ -47,6 +52,8 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
   const [showAnamnese, setShowAnamnese] = useState(false);
   const [accessLevel, setAccessLevel] = useState(student.access_level || 'plataforma_base');
   const [savingAccessLevel, setSavingAccessLevel] = useState(false);
+  const [attendanceMode, setAttendanceMode] = useState(student.attendance_mode || 'online');
+  const [savingAttendanceMode, setSavingAttendanceMode] = useState(false);
 
   const handleChangeAccessLevel = async (level) => {
     if (level === accessLevel) return;
@@ -59,6 +66,20 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
       showAlert('Não foi possível atualizar', 'O nível de acesso não foi alterado. Tenta de novo em alguns instantes.');
     } else {
       setAccessLevel(level);
+    }
+  };
+
+  const handleChangeAttendanceMode = async (mode) => {
+    if (mode === attendanceMode) return;
+    setSavingAttendanceMode(true);
+    const { data, error } = await supabase.from('users').update({ attendance_mode: mode }).eq('id', student.id).select().maybeSingle();
+    setSavingAttendanceMode(false);
+    if (error) {
+      showAlert('Erro', error.message);
+    } else if (!data) {
+      showAlert('Não foi possível atualizar', 'O tipo de atendimento não foi alterado. Tenta de novo em alguns instantes.');
+    } else {
+      setAttendanceMode(mode);
     }
   };
 
@@ -318,6 +339,21 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
         </View>
       </View>
 
+      <View style={styles.accessLevelBox}>
+        <Text style={styles.accessLevelLabel}>Tipo de atendimento {savingAttendanceMode && '(salvando...)'}</Text>
+        <View style={styles.accessLevelRow}>
+          {ATTENDANCE_MODES.map((m) => (
+            <TouchableOpacity
+              key={m.value}
+              style={[styles.accessLevelChip, attendanceMode === m.value && styles.attendanceModeChipActive]}
+              onPress={() => handleChangeAttendanceMode(m.value)}
+            >
+              <Text style={[styles.accessLevelChipText, attendanceMode === m.value && styles.accessLevelChipTextActive]}>{m.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
       <View style={styles.actionsGrid}>
         <TouchableOpacity style={styles.actionButton} onPress={() => setBuildingFor(true)}>
           <Ionicons name="barbell-outline" size={22} color="#f97316" />
@@ -374,6 +410,7 @@ const styles = StyleSheet.create({
   accessLevelRow: { flexDirection: 'row', gap: 8 },
   accessLevelChip: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   accessLevelChipActive: { backgroundColor: '#a855f7', borderColor: '#a855f7' },
+  attendanceModeChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
   accessLevelChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
   accessLevelChipTextActive: { color: '#0a0a0a' },
   actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 12 },
