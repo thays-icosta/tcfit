@@ -22,7 +22,7 @@ import UpgradeLockModal from './UpgradeLockModal';
 import AlunoEvolutionScreen from './AlunoEvolutionScreen';
 import FoodSubstituteScreen from './FoodSubstituteScreen';
 import { showAlert } from './alertUtils';
-import { hasAccessByLevel, PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
+import { hasAccessByLevel, PROGRAM_LEVELS, PROGRAM_GOALS, RUNNING_LEVELS } from './accessLevel';
 import { HeaderWelcome, HeaderBack } from './Header';
 import { toTitleCase } from './textUtils';
 import { COVER_TOP_IMAGE } from './vitrineStyles';
@@ -56,6 +56,21 @@ function buildHubGroups(products, audienceFilter) {
     });
     return { ...group, items, cover, badges: Array.from(badgeSet) };
   }).filter(Boolean);
+}
+
+// The Módulo Corrida section is a fixed 4-step roadmap (not a generic
+// category list) — each RUNNING_LEVELS slot shows the matching published
+// product, or a locked placeholder if the personal hasn't created it yet.
+function buildRunningLevelCards(products, audienceFilter) {
+  const corridaProducts = products.filter((p) => {
+    if (p.category !== 'modulo_corrida') return false;
+    if (!audienceFilter || audienceFilter === 'todos') return true;
+    return !p.target_audience || p.target_audience === 'unissex' || p.target_audience === audienceFilter;
+  });
+  return RUNNING_LEVELS.map((lvl) => ({
+    ...lvl,
+    product: corridaProducts.find((p) => p.running_level === lvl.value) || null,
+  }));
 }
 
 const MEAL_OPTIONS = [
@@ -1160,8 +1175,11 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     );
   }
 
-  const hubGroups = buildHubGroups(categorizedProducts, hubAudienceFilter);
+  const hubGroups = buildHubGroups(categorizedProducts, hubAudienceFilter).filter((g) => g.key !== 'corrida_cardio');
   const hasAnyHubProgram = buildHubGroups(categorizedProducts, 'todos').length > 0;
+  const runningLevelCards = buildRunningLevelCards(categorizedProducts, hubAudienceFilter);
+  const hasAnyRunningProgram = buildRunningLevelCards(categorizedProducts, 'todos').some((c) => c.product);
+  const showHubAudienceToggle = !myGender;
   const nutritionItems = categorizedProducts.filter((p) => NUTRITION_LIBRARY_CATEGORIES.includes(p.category) || p.type === 'ebook_receitas');
   const nutritionCollections = collections
     .map((c) => ({ ...c, items: nutritionItems.filter((p) => p.collection_id === c.id) }))
@@ -1340,20 +1358,22 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
           {hasAnyHubProgram && (
             <>
               <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>HUB DE PROGRAMAS</Text>
-              <View style={styles.audienceFilterRow}>
-                {[{ value: 'todos', label: 'Todos' }, { value: 'feminino', label: 'Feminino' }, { value: 'masculino', label: 'Masculino' }].map((a) => (
-                  <TouchableOpacity
-                    key={a.value}
-                    style={[styles.audienceFilterChip, hubAudienceFilter === a.value && styles.audienceFilterChipActive]}
-                    onPress={() => setHubAudienceFilter(a.value)}
-                  >
-                    <Text style={[styles.audienceFilterChipText, hubAudienceFilter === a.value && styles.audienceFilterChipTextActive]}>{a.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              {hubGroups.length === 0 ? (
+              {showHubAudienceToggle && (
+                <View style={styles.audienceFilterRow}>
+                  {[{ value: 'todos', label: 'Todos' }, { value: 'feminino', label: 'Feminino' }, { value: 'masculino', label: 'Masculino' }].map((a) => (
+                    <TouchableOpacity
+                      key={a.value}
+                      style={[styles.audienceFilterChip, hubAudienceFilter === a.value && styles.audienceFilterChipActive]}
+                      onPress={() => setHubAudienceFilter(a.value)}
+                    >
+                      <Text style={[styles.audienceFilterChipText, hubAudienceFilter === a.value && styles.audienceFilterChipTextActive]}>{a.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+              {hubGroups.length === 0 && !hasAnyRunningProgram ? (
                 <Text style={[styles.emptyText, { marginBottom: 16 }]}>Nenhum programa para esse público ainda.</Text>
-              ) : (
+              ) : hubGroups.length > 0 && (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginBottom: 24 }}>
                 {hubGroups.map((group) => (
                   <TouchableOpacity key={group.key} style={styles.nutritionCard} onPress={() => setOpenCategoryGroup(group)}>
@@ -1380,6 +1400,42 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 ))}
               </ScrollView>
               )}
+            </>
+          )}
+
+          {hasAnyRunningProgram && (
+            <>
+              <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>MÓDULO CORRIDA</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginBottom: 24 }}>
+                {runningLevelCards.map((lvl) => {
+                  const locked = !lvl.product;
+                  return (
+                    <TouchableOpacity
+                      key={lvl.value}
+                      style={styles.nutritionCard}
+                      disabled={locked}
+                      onPress={() => (lvl.product.type === 'treino_template' ? setOpenProgram(lvl.product) : setSelectedProduct(lvl.product))}
+                    >
+                      <View style={styles.nutritionCoverWrap}>
+                        {lvl.product?.cover_image_url ? (
+                          <Image source={{ uri: lvl.product.cover_image_url }} style={styles.nutritionCoverImage} resizeMode="cover" />
+                        ) : (
+                          <View style={styles.nutritionCoverPlaceholder}>
+                            <Ionicons name={lvl.icon} size={22} color={locked ? '#525252' : ACCENT} />
+                          </View>
+                        )}
+                        {locked && (
+                          <View style={styles.categoryLockOverlay}>
+                            <Ionicons name="lock-closed" size={14} color="#f5f5f5" />
+                          </View>
+                        )}
+                      </View>
+                      <Text style={[styles.nutritionCardName, locked && { color: '#737373' }]} numberOfLines={2}>{lvl.label}</Text>
+                      {locked && <Text style={styles.runningLevelLockedText}>Em breve</Text>}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
             </>
           )}
 
@@ -1560,6 +1616,7 @@ const styles = StyleSheet.create({
   nutritionCoverImage: { ...COVER_TOP_IMAGE },
   nutritionCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   nutritionCardName: { color: '#f5f5f5', fontSize: 11, fontWeight: '600', lineHeight: 15 },
+  runningLevelLockedText: { color: '#525252', fontSize: 10, fontWeight: '600', marginTop: 2 },
   partnersFooterSection: { marginTop: 24 },
   categoryListCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 10, marginBottom: 10 },
   categoryListCoverWrap: { width: 72, aspectRatio: 16 / 9, borderRadius: 10, backgroundColor: '#0a0a0a', overflow: 'hidden', position: 'relative' },

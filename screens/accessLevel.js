@@ -102,6 +102,15 @@ export const TARGET_AUDIENCE_OPTIONS = [
   { value: 'masculino', label: 'Masculino' },
 ];
 
+// Fixed roadmap of sub-levels shown inside the Módulo Corrida carousel, in
+// this order, regardless of which ones the personal has already published.
+export const RUNNING_LEVELS = [
+  { value: 'guia_aluno', label: 'Guia do Aluno', icon: 'book-outline' },
+  { value: '0_a_5km', label: '0 aos 5km', icon: 'walk-outline' },
+  { value: '5_a_10km', label: '5km aos 10km', icon: 'speedometer-outline' },
+  { value: 'maratona', label: 'Maratona', icon: 'trophy-outline' },
+];
+
 export const NUTRITION_TAGS = [
   { value: 'celiaca', label: 'Celíaca', icon: 'leaf-outline' },
   { value: 'emagrecimento', label: 'Emagrecimento', icon: 'flame-outline' },

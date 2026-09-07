@@ -9,7 +9,7 @@ import ExerciseCatalogScreen from './ExerciseCatalogScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { showAlert, describeFunctionError } from './alertUtils';
 import { useSpeechToText } from './useSpeechToText';
-import { HOME_CATEGORIES, WORKOUT_TAGS, PROGRAM_LEVELS, TRAINING_LOCATIONS, MUSCLE_FOCUS_OPTIONS, TARGET_AUDIENCE_OPTIONS } from './accessLevel';
+import { HOME_CATEGORIES, WORKOUT_TAGS, PROGRAM_LEVELS, TRAINING_LOCATIONS, MUSCLE_FOCUS_OPTIONS, TARGET_AUDIENCE_OPTIONS, RUNNING_LEVELS } from './accessLevel';
 import { HeaderBack } from './Header';
 
 function uuidv4() {
@@ -65,6 +65,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [editEnvironment, setEditEnvironment] = useState(null);
   const [editFocusMuscleGroup, setEditFocusMuscleGroup] = useState(null);
   const [editTargetAudience, setEditTargetAudience] = useState('unissex');
+  const [editRunningLevel, setEditRunningLevel] = useState(null);
   const [savingMeta, setSavingMeta] = useState(false);
   const [templateSearch, setTemplateSearch] = useState('');
   const [templateLevelFilter, setTemplateLevelFilter] = useState('todos');
@@ -88,7 +89,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const loadTemplates = async () => {
     const { data } = await supabase
       .from('workout_templates')
-      .select('id, name, description, is_public, price, cover_image_url, category, environment, level, goal, focus_muscle_group, target_audience')
+      .select('id, name, description, is_public, price, cover_image_url, category, environment, level, goal, focus_muscle_group, target_audience, running_level')
       .eq('personal_id', personalId)
       .order('created_at', { ascending: true });
     setTemplates(data || []);
@@ -166,6 +167,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       setEditEnvironment(t?.environment || null);
       setEditFocusMuscleGroup(t?.focus_muscle_group || null);
       setEditTargetAudience(t?.target_audience || 'unissex');
+      setEditRunningLevel(t?.running_level || null);
     } else {
       setSessions([]);
       setActiveSessionId(null);
@@ -362,6 +364,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       category: template.category,
       level: template.level,
       target_audience: template.target_audience,
+      running_level: template.running_level,
       active: template.is_public,
       source_template_id: template.id,
     };
@@ -390,6 +393,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       environment: editEnvironment,
       focus_muscle_group: editFocusMuscleGroup,
       target_audience: editTargetAudience,
+      running_level: editCategory === 'modulo_corrida' ? editRunningLevel : null,
     };
     const { error } = await supabase.from('workout_templates').update(meta).eq('id', activeTemplateId);
     if (!error) {
@@ -692,6 +696,24 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                       </TouchableOpacity>
                     ))}
                   </View>
+
+                  {editCategory === 'modulo_corrida' && (
+                    <>
+                      <Text style={styles.metaLabel}>Nível da Corrida</Text>
+                      <Text style={styles.helperText}>Define em qual etapa do roteiro do Módulo Corrida esse programa aparece pro aluno.</Text>
+                      <View style={styles.categoryRow}>
+                        {RUNNING_LEVELS.map((l) => (
+                          <TouchableOpacity
+                            key={l.value}
+                            style={[styles.categoryChip, editRunningLevel === l.value && styles.categoryChipActive]}
+                            onPress={() => setEditRunningLevel(editRunningLevel === l.value ? null : l.value)}
+                          >
+                            <Text style={[styles.categoryChipText, editRunningLevel === l.value && styles.categoryChipTextActive]}>{l.label}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </>
+                  )}
 
                   <Text style={styles.metaLabel}>Tags (seção &quot;Metodologia e Programas de Treino&quot;)</Text>
                   <Text style={styles.helperText}>Usadas nos filtros em pílula da landing page. Pode marcar mais de uma.</Text>

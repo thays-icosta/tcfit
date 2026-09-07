@@ -6,7 +6,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
-import { HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS, NUTRITION_TAGS } from './accessLevel';
+import { HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS, NUTRITION_TAGS, TARGET_AUDIENCE_OPTIONS, RUNNING_LEVELS } from './accessLevel';
 import { HeaderBack } from './Header';
 import { toTitleCase } from './textUtils';
 
@@ -82,6 +82,8 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [linkedTemplates, setLinkedTemplates] = useState([]);
   const [level, setLevel] = useState(null);
   const [goal, setGoal] = useState(null);
+  const [targetAudience, setTargetAudience] = useState('unissex');
+  const [runningLevel, setRunningLevel] = useState(null);
   const [materialType, setMaterialType] = useState(null);
   const [nutritionTags, setNutritionTags] = useState([]);
   const [sectionEnabled, setSectionEnabled] = useState(true);
@@ -240,6 +242,8 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setCategory(null);
     setLevel(null);
     setGoal(null);
+    setTargetAudience('unissex');
+    setRunningLevel(null);
     setMaterialType('ebook_receita');
     setNutritionTags([]);
     setCollectionId(null);
@@ -322,6 +326,8 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setCategory(product.category || null);
     setLevel(product.level || null);
     setGoal(product.goal || null);
+    setTargetAudience(product.target_audience || 'unissex');
+    setRunningLevel(product.running_level || null);
     setMaterialType(product.material_type || (product.type === 'ebook_receitas' ? 'ebook_receita' : null));
     setNutritionTags(product.nutrition_tags || []);
     setCollectionId(product.collection_id || null);
@@ -368,6 +374,8 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       category,
       level: WORKOUT_PRODUCT_TYPES.includes(type) ? level : null,
       goal: WORKOUT_PRODUCT_TYPES.includes(type) ? goal : null,
+      target_audience: WORKOUT_PRODUCT_TYPES.includes(type) ? targetAudience : null,
+      running_level: WORKOUT_PRODUCT_TYPES.includes(type) && category === 'modulo_corrida' ? runningLevel : null,
       material_type: type === 'ebook_receitas' ? materialType : null,
       nutrition_tags: type === 'ebook_receitas' && materialType === 'plano_alimentar' ? nutritionTags : null,
       collection_id: collectionId,
@@ -975,6 +983,41 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
               </TouchableOpacity>
             ))}
           </View>
+
+          {WORKOUT_PRODUCT_TYPES.includes(type) && (
+            <>
+              <Text style={styles.label}>Público</Text>
+              <View style={styles.accessLevelFormRow}>
+                {TARGET_AUDIENCE_OPTIONS.map((a) => (
+                  <TouchableOpacity
+                    key={a.value}
+                    style={[styles.accessLevelFormChip, targetAudience === a.value && styles.accessLevelFormChipActive]}
+                    onPress={() => setTargetAudience(a.value)}
+                  >
+                    <Text style={[styles.accessLevelFormChipText, targetAudience === a.value && styles.accessLevelFormChipTextActive]}>{a.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {category === 'modulo_corrida' && (
+                <>
+                  <Text style={styles.label}>Nível da Corrida</Text>
+                  <Text style={styles.helperText}>Define em qual etapa do roteiro do Módulo Corrida esse programa aparece pro aluno.</Text>
+                  <View style={styles.accessLevelFormRow}>
+                    {RUNNING_LEVELS.map((l) => (
+                      <TouchableOpacity
+                        key={l.value}
+                        style={[styles.accessLevelFormChip, runningLevel === l.value && styles.accessLevelFormChipActive]}
+                        onPress={() => setRunningLevel(runningLevel === l.value ? null : l.value)}
+                      >
+                        <Text style={[styles.accessLevelFormChipText, runningLevel === l.value && styles.accessLevelFormChipTextActive]}>{l.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              )}
+            </>
+          )}
 
           <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>Exibir na Vitrine Pública (Landing Page) — aparece como oferta complementar no checkout</Text>
