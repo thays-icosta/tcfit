@@ -155,6 +155,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       <AlunoDetailScreen
         student={detailFor}
         personalId={user.id}
+        personalName={user.name}
         onClose={() => {
           setDetailFor(null);
           loadStudents();

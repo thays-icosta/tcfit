@@ -306,39 +306,56 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     setApplyingTemplateId(template.id);
     const currentPhase = getCurrentPhase(periodizationPlan, periodizationPhases);
 
-    const { data: newWorkout, error } = await supabase
-      .from('workouts')
-      .insert({
-        student_id: studentId,
-        personal_id: personalId,
-        name: template.name,
-        active: true,
-        phase_id: currentPhase ? currentPhase.phase.id : null,
-      })
-      .select()
-      .single();
+    // A template can have several sessions (Treino A, B, C...) — each one
+    // becomes its own workout for the student, instead of merging every
+    // session's exercises into a single flat ficha.
+    const { data: sessions } = await supabase
+      .from('template_sessions')
+      .select('id, name, order_index')
+      .eq('template_id', template.id)
+      .order('order_index', { ascending: true });
 
-    if (error || !newWorkout) {
+    if (!sessions || sessions.length === 0) {
       setApplyingTemplateId(null);
-      showAlert('Erro', error?.message || 'Não foi possível aplicar o template.');
+      showAlert('Erro', 'Esse template não tem nenhuma sessão configurada.');
       return;
     }
 
-    const { data: templateItems } = await supabase
-      .from('workout_template_exercises')
-      .select('exercise_id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes')
-      .eq('template_id', template.id);
+    let firstWorkoutId = null;
+    let totalExercises = 0;
 
-    if (templateItems && templateItems.length > 0) {
-      const copies = templateItems.map((it) => ({ ...it, workout_id: newWorkout.id }));
-      await supabase.from('workout_exercises').insert(copies);
+    for (const session of sessions) {
+      const { data: newWorkout, error } = await supabase
+        .from('workouts')
+        .insert({
+          student_id: studentId,
+          personal_id: personalId,
+          name: session.name,
+          active: true,
+          phase_id: currentPhase ? currentPhase.phase.id : null,
+        })
+        .select()
+        .single();
+      if (error || !newWorkout) continue;
+      if (!firstWorkoutId) firstWorkoutId = newWorkout.id;
+
+      const { data: templateItems } = await supabase
+        .from('workout_template_exercises')
+        .select('exercise_id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes')
+        .eq('session_id', session.id);
+
+      if (templateItems && templateItems.length > 0) {
+        const copies = templateItems.map((it) => ({ ...it, workout_id: newWorkout.id }));
+        await supabase.from('workout_exercises').insert(copies);
+        totalExercises += templateItems.length;
+      }
     }
 
     setApplyingTemplateId(null);
     setShowTemplatePicker(false);
     await loadWorkouts();
-    setActiveWorkoutId(newWorkout.id);
-    showAlert('Aplicado!', `Ficha "${template.name}" criada com ${templateItems?.length || 0} exercício(s) a partir do template.`);
+    if (firstWorkoutId) setActiveWorkoutId(firstWorkoutId);
+    showAlert('Aplicado!', `"${template.name}" criado com ${sessions.length} sessão(ões) e ${totalExercises} exercício(s) no total.`);
   };
 
   const handleOpenAiModal = () => {

@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, TextInput } from 'react-native';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
-import { PROGRAM_GOALS, TRAINING_LOCATIONS, PAIN_ZONES, SEX_OPTIONS } from './accessLevel';
+import {
+  PROGRAM_GOALS, PROGRAM_LEVELS, TRAINING_LOCATIONS, PAIN_ZONES, SEX_OPTIONS,
+  ACTIVITY_LEVELS, SLEEP_QUALITY_OPTIONS, MUSCLE_FOCUS_OPTIONS,
+} from './accessLevel';
 import { HeaderBack } from './Header';
 
 export default function AnamneseViewScreen({ studentId, onClose }) {
@@ -77,8 +80,30 @@ export default function AnamneseViewScreen({ studentId, onClose }) {
             <Text style={styles.fieldLabel}>Objetivo Principal</Text>
             <Text style={styles.fieldValue}>{PROGRAM_GOALS.find((g) => g.value === response.main_goal)?.label || '—'}</Text>
 
+            <Text style={styles.fieldLabel}>Nível de Experiência</Text>
+            <Text style={styles.fieldValue}>{PROGRAM_LEVELS.find((l) => l.value === response.experience_level)?.label || '—'}</Text>
+
+            {response.focus_muscle_group && (
+              <>
+                <Text style={styles.fieldLabel}>Foco Específico</Text>
+                <Text style={styles.fieldValue}>{MUSCLE_FOCUS_OPTIONS.find((m) => m.value === response.focus_muscle_group)?.label || response.focus_muscle_group}</Text>
+              </>
+            )}
+
             <Text style={styles.fieldLabel}>Local de Treino</Text>
             <Text style={styles.fieldValue}>{TRAINING_LOCATIONS.find((l) => l.value === response.training_location)?.label || '—'}</Text>
+
+            <Text style={styles.fieldLabel}>Disponibilidade</Text>
+            <Text style={styles.fieldValue}>
+              {response.days_per_week ? `${response.days_per_week}x por semana` : '—'}
+              {response.session_duration_min ? ` · ${response.session_duration_min} min/sessão` : ''}
+            </Text>
+
+            <Text style={styles.fieldLabel}>Rotina e Estilo de Vida</Text>
+            <Text style={styles.fieldValue}>
+              {ACTIVITY_LEVELS.find((a) => a.value === response.activity_level)?.label || '—'}
+              {response.sleep_quality ? ` · Sono: ${SLEEP_QUALITY_OPTIONS.find((s) => s.value === response.sleep_quality)?.label}` : ''}
+            </Text>
 
             <Text style={styles.fieldLabel}>Lesões / Problemas de Saúde</Text>
             <Text style={styles.fieldValue}>{response.health_issues || 'Nenhuma relatada'}</Text>

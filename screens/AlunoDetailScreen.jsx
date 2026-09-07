@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
@@ -18,6 +18,35 @@ import MetricsMiniCards from './MetricsMiniCards';
 import WeightEvolutionChart from './WeightEvolutionChart';
 import WaterLogModal from './WaterLogModal';
 import PresencialSessionScreen from './PresencialSessionScreen';
+import { PROGRAM_GOALS, PROGRAM_LEVELS, TRAINING_LOCATIONS, PAIN_ZONES, MUSCLE_FOCUS_OPTIONS } from './accessLevel';
+
+function uuidv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+// Scores how well a template fits the student's anamnese: session count vs
+// declared weekly availability, then level/environment/focus as tie-breakers.
+// Returns 0 (no real match) rather than guessing when there's nothing to go on.
+function scoreTemplateMatch(sessionCount, anamnese) {
+  return (template) => {
+    let score = 0;
+    const days = anamnese.days_per_week;
+    if (days != null && sessionCount[template.id]) {
+      const n = sessionCount[template.id];
+      if (days <= 3 && n <= 2) score += 3;
+      else if (days === 4 && n >= 2 && n <= 4) score += 3;
+      else if (days >= 5 && n >= 3) score += 3;
+    }
+    if (anamnese.experience_level && template.level === anamnese.experience_level) score += 2;
+    if (anamnese.training_location && template.environment === anamnese.training_location) score += 2;
+    if (anamnese.focus_muscle_group && template.focus_muscle_group === anamnese.focus_muscle_group) score += 4;
+    return score;
+  };
+}
 
 function mapMealNameToType(name) {
   const n = (name || '').toLowerCase();
@@ -39,7 +68,7 @@ const ATTENDANCE_MODES = [
   { value: 'online', label: 'Consultoria Online' },
 ];
 
-export default function AlunoDetailScreen({ student, personalId, onClose }) {
+export default function AlunoDetailScreen({ student, personalId, personalName, onClose }) {
   const [lastSession, setLastSession] = useState(null);
   const [diaryTotals, setDiaryTotals] = useState(null);
   const [waterMl, setWaterMl] = useState(0);
@@ -93,6 +122,10 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
   const [showPeriodization, setShowPeriodization] = useState(false);
   const [showFinance, setShowFinance] = useState(false);
   const [showPresencialSession, setShowPresencialSession] = useState(false);
+  const [anamnese, setAnamnese] = useState(null);
+  const [suggestedTemplate, setSuggestedTemplate] = useState(null);
+  const [applyingSuggestion, setApplyingSuggestion] = useState(false);
+  const [suggestionApplied, setSuggestionApplied] = useState(false);
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -167,11 +200,94 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
       .lt('due_date', todayStr)
       .limit(1);
     setIsOverdue((overdueRows || []).length > 0);
+
+    const { data: anamneseRow } = await supabase
+      .from('anamnese_responses')
+      .select('*')
+      .eq('student_id', student.id)
+      .maybeSingle();
+    setAnamnese(anamneseRow || null);
+
+    if (anamneseRow?.completed_at) {
+      const { data: templateRows } = await supabase
+        .from('workout_templates')
+        .select('id, name, level, environment, focus_muscle_group')
+        .eq('personal_id', personalId);
+      if (templateRows && templateRows.length > 0) {
+        const { data: sessionRows } = await supabase
+          .from('template_sessions')
+          .select('template_id')
+          .in('template_id', templateRows.map((t) => t.id));
+        const counts = {};
+        (sessionRows || []).forEach((r) => { counts[r.template_id] = (counts[r.template_id] || 0) + 1; });
+        const scorer = scoreTemplateMatch(counts, anamneseRow);
+        const ranked = templateRows
+          .map((t) => ({ ...t, sessionCount: counts[t.id] || 0, score: scorer(t) }))
+          .filter((t) => t.sessionCount > 0 && t.score > 0)
+          .sort((a, b) => b.score - a.score);
+        setSuggestedTemplate(ranked[0] || null);
+      } else {
+        setSuggestedTemplate(null);
+      }
+    } else {
+      setSuggestedTemplate(null);
+    }
   };
 
   useEffect(() => {
     loadContent();
   }, [student.id]);
+
+  // Creates one workouts row per session in the template (Treino A, B, C...)
+  // rather than merging every session's exercises into a single flat ficha.
+  const handleApplySuggestedTemplate = async () => {
+    if (!suggestedTemplate) return;
+    setApplyingSuggestion(true);
+
+    const { data: sessions } = await supabase
+      .from('template_sessions')
+      .select('id, name, order_index')
+      .eq('template_id', suggestedTemplate.id)
+      .order('order_index', { ascending: true });
+
+    if (!sessions || sessions.length === 0) {
+      setApplyingSuggestion(false);
+      showAlert('Erro', 'Esse template não tem nenhuma sessão configurada.');
+      return;
+    }
+
+    for (const session of sessions) {
+      const { data: newWorkout, error } = await supabase
+        .from('workouts')
+        .insert({ id: uuidv4(), student_id: student.id, personal_id: personalId, name: session.name, active: true })
+        .select()
+        .single();
+      if (error || !newWorkout) continue;
+
+      const { data: templateItems } = await supabase
+        .from('workout_template_exercises')
+        .select('exercise_id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes')
+        .eq('session_id', session.id);
+
+      if (templateItems && templateItems.length > 0) {
+        const copies = templateItems.map((it) => ({ ...it, workout_id: newWorkout.id }));
+        await supabase.from('workout_exercises').insert(copies);
+      }
+    }
+
+    await supabase.functions.invoke('send-user-push', {
+      body: {
+        userId: student.id,
+        title: 'Ficha atualizada!',
+        body: `${personalName || 'Seu personal'} atualizou seu treino! Abra o app para conferir sua nova ficha.`,
+        data: { type: 'workout_updated' },
+      },
+    }).catch(() => {});
+
+    setApplyingSuggestion(false);
+    setSuggestionApplied(true);
+    showAlert('Aplicado!', `"${suggestedTemplate.name}" criado com ${sessions.length} sessão(ões) pra ${student.name}.`);
+  };
 
   if (buildingFor) {
     return (
@@ -302,11 +418,68 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
           </TouchableOpacity>
         </View>
 
+        {((anamnese?.pain_zones && anamnese.pain_zones.length > 0) || anamnese?.health_issues) && (
+          <View style={styles.healthAlertRow}>
+            {(anamnese.pain_zones || []).map((z) => (
+              <View key={z} style={styles.healthAlertBadge}>
+                <Text style={styles.healthAlertBadgeText}>⚠️ Dor: {PAIN_ZONES.find((p) => p.value === z)?.label || z}</Text>
+              </View>
+            ))}
+            {anamnese.health_issues && (
+              <View style={styles.healthAlertBadge}>
+                <Text style={styles.healthAlertBadgeText} numberOfLines={1}>⚠️ {anamnese.health_issues}</Text>
+              </View>
+            )}
+          </View>
+        )}
+
         <TouchableOpacity style={styles.anamneseButton} onPress={() => setShowAnamnese(true)}>
           <Ionicons name="clipboard-outline" size={16} color="#0a0a0a" />
           <Text style={styles.anamneseButtonText}>Abrir Anamnese</Text>
         </TouchableOpacity>
       </View>
+
+      {anamnese?.completed_at && (
+        <View style={styles.anamneseSummaryCard}>
+          <View style={styles.anamneseSummaryHeader}>
+            <Text style={styles.anamneseSummaryTitle}>Resumo da Anamnese</Text>
+            <TouchableOpacity onPress={() => setShowAnamnese(true)}>
+              <Text style={styles.anamneseSummaryLink}>Ver completa</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.anamneseSummaryLine}>
+            🎯 {PROGRAM_GOALS.find((g) => g.value === anamnese.main_goal)?.label || '—'}
+            {anamnese.experience_level ? ` · ${PROGRAM_LEVELS.find((l) => l.value === anamnese.experience_level)?.label}` : ''}
+          </Text>
+          <Text style={styles.anamneseSummaryLine}>
+            📍 {TRAINING_LOCATIONS.find((l) => l.value === anamnese.training_location)?.label || '—'}
+            {anamnese.days_per_week ? ` · ${anamnese.days_per_week}x/semana` : ''}
+          </Text>
+          {anamnese.focus_muscle_group && (
+            <Text style={styles.anamneseSummaryLine}>
+              💪 Foco: {MUSCLE_FOCUS_OPTIONS.find((m) => m.value === anamnese.focus_muscle_group)?.label}
+            </Text>
+          )}
+        </View>
+      )}
+
+      {suggestedTemplate && !suggestionApplied && (
+        <View style={styles.suggestionCard}>
+          <Text style={styles.suggestionTitle}>💡 Recomendação TCFIT</Text>
+          <Text style={styles.suggestionText}>
+            {suggestedTemplate.name} (baseado em {anamnese.days_per_week ? `${anamnese.days_per_week}x/semana` : 'suas respostas'}
+            {anamnese.experience_level ? ` e nível ${PROGRAM_LEVELS.find((l) => l.value === anamnese.experience_level)?.label?.toLowerCase()}` : ''})
+          </Text>
+          <View style={styles.suggestionButtonRow}>
+            <TouchableOpacity style={styles.suggestionApplyButton} onPress={handleApplySuggestedTemplate} disabled={applyingSuggestion}>
+              {applyingSuggestion ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.suggestionApplyButtonText}>Aplicar esta ficha</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.suggestionCustomButton} onPress={() => setBuildingFor(true)}>
+              <Text style={styles.suggestionCustomButtonText}>Personalizar / Escolher outro</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <MetricsMiniCards
         caloriesConsumed={diaryTotals?.consumedKcal || 0}
@@ -423,6 +596,22 @@ const styles = StyleSheet.create({
   chatShortcutButton: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', alignItems: 'center', justifyContent: 'center' },
   anamneseButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
   anamneseButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '700' },
+  healthAlertRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
+  healthAlertBadge: { backgroundColor: 'rgba(239,68,68,0.12)', borderWidth: 1, borderColor: '#ef4444', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5, maxWidth: '100%' },
+  healthAlertBadgeText: { color: '#ef4444', fontSize: 10, fontWeight: '700' },
+  anamneseSummaryCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, marginBottom: 16 },
+  anamneseSummaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  anamneseSummaryTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  anamneseSummaryLink: { color: '#f97316', fontSize: 11, fontWeight: '700' },
+  anamneseSummaryLine: { color: '#a3a3a3', fontSize: 12, marginTop: 4 },
+  suggestionCard: { backgroundColor: 'rgba(249,115,22,0.08)', borderWidth: 1, borderColor: '#f97316', borderRadius: 14, padding: 14, marginBottom: 16 },
+  suggestionTitle: { color: '#f97316', fontSize: 13, fontWeight: '800' },
+  suggestionText: { color: '#f5f5f5', fontSize: 12, marginTop: 6, lineHeight: 17 },
+  suggestionButtonRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  suggestionApplyButton: { flex: 1, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 11, alignItems: 'center' },
+  suggestionApplyButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '800' },
+  suggestionCustomButton: { flex: 1, backgroundColor: 'transparent', borderWidth: 1, borderColor: '#f97316', borderRadius: 10, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
+  suggestionCustomButtonText: { color: '#f97316', fontSize: 11, fontWeight: '700', textAlign: 'center' },
   accessLevelBox: { marginBottom: 16 },
   accessLevelLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
   accessLevelRow: { flexDirection: 'row', gap: 8 },

@@ -3,7 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Activi
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
-import { PROGRAM_GOALS, TRAINING_LOCATIONS, PAIN_ZONES, SEX_OPTIONS, calculateMacroGoals } from './accessLevel';
+import {
+  PROGRAM_GOALS, PROGRAM_LEVELS, TRAINING_LOCATIONS, PAIN_ZONES, SEX_OPTIONS, calculateMacroGoals,
+  DAYS_PER_WEEK_OPTIONS, SESSION_DURATION_OPTIONS, ACTIVITY_LEVELS, SLEEP_QUALITY_OPTIONS, MUSCLE_FOCUS_OPTIONS,
+} from './accessLevel';
 
 const WHATSAPP_NUMBER = '5537998231382';
 
@@ -15,7 +18,13 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
   const [ebooks, setEbooks] = useState([]);
 
   const [mainGoal, setMainGoal] = useState(null);
+  const [experienceLevel, setExperienceLevel] = useState(null);
+  const [focusMuscleGroup, setFocusMuscleGroup] = useState(null);
   const [trainingLocation, setTrainingLocation] = useState(null);
+  const [daysPerWeek, setDaysPerWeek] = useState(null);
+  const [sessionDurationMin, setSessionDurationMin] = useState(null);
+  const [activityLevel, setActivityLevel] = useState(null);
+  const [sleepQuality, setSleepQuality] = useState(null);
   const [healthIssues, setHealthIssues] = useState('');
   const [painZones, setPainZones] = useState([]);
   const [customAnswers, setCustomAnswers] = useState({});
@@ -41,7 +50,13 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
 
       if (existing) {
         setMainGoal(existing.main_goal || null);
+        setExperienceLevel(existing.experience_level || null);
+        setFocusMuscleGroup(existing.focus_muscle_group || null);
         setTrainingLocation(existing.training_location || null);
+        setDaysPerWeek(existing.days_per_week || null);
+        setSessionDurationMin(existing.session_duration_min || null);
+        setActivityLevel(existing.activity_level || null);
+        setSleepQuality(existing.sleep_quality || null);
         setHealthIssues(existing.health_issues || '');
         setPainZones(existing.pain_zones || []);
         setSex(existing.sex || null);
@@ -111,7 +126,13 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
         student_id: studentId,
         personal_id: personalId,
         main_goal: mainGoal,
+        experience_level: experienceLevel,
+        focus_muscle_group: focusMuscleGroup,
         training_location: trainingLocation,
+        days_per_week: daysPerWeek,
+        session_duration_min: sessionDurationMin,
+        activity_level: activityLevel,
+        sleep_quality: sleepQuality,
         health_issues: healthIssues.trim() || null,
         pain_zones: painZones,
         sex: sex || null,
@@ -170,11 +191,31 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
         <Text style={styles.intro}>Antes de começar, conta um pouco sobre você — isso ajuda seu personal a montar o treino certo.</Text>
 
+        <Text style={styles.sectionHeader}>1. Objetivo e Experiência</Text>
+
         <Text style={styles.label}>Objetivo Principal</Text>
         <View style={styles.chipRow}>
           {PROGRAM_GOALS.map((g) => (
             <TouchableOpacity key={g.value} style={[styles.chip, mainGoal === g.value && styles.chipActive]} onPress={() => setMainGoal(g.value)}>
               <Text style={[styles.chipText, mainGoal === g.value && styles.chipTextActive]}>{g.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.label}>Nível de Experiência</Text>
+        <View style={styles.chipRow}>
+          {PROGRAM_LEVELS.map((l) => (
+            <TouchableOpacity key={l.value} style={[styles.chip, experienceLevel === l.value && styles.chipActive]} onPress={() => setExperienceLevel(l.value)}>
+              <Text style={[styles.chipText, experienceLevel === l.value && styles.chipTextActive]}>{l.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.label}>Foco Específico (opcional)</Text>
+        <View style={styles.chipRow}>
+          {MUSCLE_FOCUS_OPTIONS.map((m) => (
+            <TouchableOpacity key={m.value} style={[styles.chip, focusMuscleGroup === m.value && styles.chipActive]} onPress={() => setFocusMuscleGroup(focusMuscleGroup === m.value ? null : m.value)}>
+              <Text style={[styles.chipText, focusMuscleGroup === m.value && styles.chipTextActive]}>{m.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -253,14 +294,7 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
           </View>
         )}
 
-        <Text style={styles.label}>Local de Treino</Text>
-        <View style={styles.chipRow}>
-          {TRAINING_LOCATIONS.map((l) => (
-            <TouchableOpacity key={l.value} style={[styles.chip, trainingLocation === l.value && styles.chipActive]} onPress={() => setTrainingLocation(l.value)}>
-              <Text style={[styles.chipText, trainingLocation === l.value && styles.chipTextActive]}>{l.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Text style={styles.sectionHeader}>2. Saúde e Lesões</Text>
 
         <Text style={styles.label}>Lesões / Problemas de Saúde</Text>
         <TextInput
@@ -282,6 +316,55 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
               </TouchableOpacity>
             );
           })}
+        </View>
+
+        <Text style={styles.sectionHeader}>3. Disponibilidade e Local de Treino</Text>
+
+        <Text style={styles.label}>Local de Treino</Text>
+        <View style={styles.chipRow}>
+          {TRAINING_LOCATIONS.map((l) => (
+            <TouchableOpacity key={l.value} style={[styles.chip, trainingLocation === l.value && styles.chipActive]} onPress={() => setTrainingLocation(l.value)}>
+              <Text style={[styles.chipText, trainingLocation === l.value && styles.chipTextActive]}>{l.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.label}>Dias Disponíveis por Semana</Text>
+        <View style={styles.chipRow}>
+          {DAYS_PER_WEEK_OPTIONS.map((d) => (
+            <TouchableOpacity key={d} style={[styles.chip, daysPerWeek === d && styles.chipActive]} onPress={() => setDaysPerWeek(d)}>
+              <Text style={[styles.chipText, daysPerWeek === d && styles.chipTextActive]}>{d}x</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.label}>Tempo por Sessão</Text>
+        <View style={styles.chipRow}>
+          {SESSION_DURATION_OPTIONS.map((s) => (
+            <TouchableOpacity key={s.value} style={[styles.chip, sessionDurationMin === s.value && styles.chipActive]} onPress={() => setSessionDurationMin(s.value)}>
+              <Text style={[styles.chipText, sessionDurationMin === s.value && styles.chipTextActive]}>{s.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.sectionHeader}>4. Rotina e Estilo de Vida</Text>
+
+        <Text style={styles.label}>Nível de Atividade no Dia a Dia</Text>
+        <View style={styles.chipRow}>
+          {ACTIVITY_LEVELS.map((a) => (
+            <TouchableOpacity key={a.value} style={[styles.chip, activityLevel === a.value && styles.chipActive]} onPress={() => setActivityLevel(a.value)}>
+              <Text style={[styles.chipText, activityLevel === a.value && styles.chipTextActive]}>{a.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.label}>Qualidade do Sono</Text>
+        <View style={styles.chipRow}>
+          {SLEEP_QUALITY_OPTIONS.map((s) => (
+            <TouchableOpacity key={s.value} style={[styles.chip, sleepQuality === s.value && styles.chipActive]} onPress={() => setSleepQuality(s.value)}>
+              <Text style={[styles.chipText, sleepQuality === s.value && styles.chipTextActive]}>{s.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {isVip && questions.map((q) => (
@@ -338,6 +421,7 @@ const styles = StyleSheet.create({
   closeText: { color: '#f97316', fontSize: 13, fontWeight: '600' },
   title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700' },
   intro: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginBottom: 16 },
+  sectionHeader: { color: '#f97316', fontSize: 13, fontWeight: '800', textTransform: 'uppercase', marginTop: 22, marginBottom: 4, borderTopWidth: 1, borderTopColor: '#292524', paddingTop: 18 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, marginTop: 16 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },

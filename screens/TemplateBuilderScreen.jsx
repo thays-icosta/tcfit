@@ -9,7 +9,7 @@ import ExerciseCatalogScreen from './ExerciseCatalogScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { showAlert, describeFunctionError } from './alertUtils';
 import { useSpeechToText } from './useSpeechToText';
-import { HOME_CATEGORIES, WORKOUT_TAGS, PROGRAM_LEVELS, TRAINING_LOCATIONS } from './accessLevel';
+import { HOME_CATEGORIES, WORKOUT_TAGS, PROGRAM_LEVELS, TRAINING_LOCATIONS, MUSCLE_FOCUS_OPTIONS } from './accessLevel';
 import { HeaderBack } from './Header';
 
 function uuidv4() {
@@ -63,6 +63,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [editWorkoutTags, setEditWorkoutTags] = useState([]);
   const [editLevel, setEditLevel] = useState(null);
   const [editEnvironment, setEditEnvironment] = useState(null);
+  const [editFocusMuscleGroup, setEditFocusMuscleGroup] = useState(null);
   const [savingMeta, setSavingMeta] = useState(false);
   const [templateSearch, setTemplateSearch] = useState('');
   const [templateLevelFilter, setTemplateLevelFilter] = useState('todos');
@@ -85,7 +86,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const loadTemplates = async () => {
     const { data } = await supabase
       .from('workout_templates')
-      .select('id, name, description, is_public, price, cover_image_url, category, environment, level, goal')
+      .select('id, name, description, is_public, price, cover_image_url, category, environment, level, goal, focus_muscle_group')
       .eq('personal_id', personalId)
       .order('created_at', { ascending: true });
     setTemplates(data || []);
@@ -161,6 +162,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       setEditWorkoutTags(t?.workout_tags || []);
       setEditLevel(t?.level || null);
       setEditEnvironment(t?.environment || null);
+      setEditFocusMuscleGroup(t?.focus_muscle_group || null);
     } else {
       setSessions([]);
       setActiveSessionId(null);
@@ -378,6 +380,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       workout_tags: editWorkoutTags,
       level: editLevel,
       environment: editEnvironment,
+      focus_muscle_group: editFocusMuscleGroup,
     };
     const { error } = await supabase.from('workout_templates').update(meta).eq('id', activeTemplateId);
     if (!error) {
@@ -603,6 +606,20 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                     onPress={() => setEditEnvironment(editEnvironment === l.value ? null : l.value)}
                   >
                     <Text style={[styles.categoryChipText, editEnvironment === l.value && styles.categoryChipTextActive]}>{l.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.metaLabel}>Foco Específico (opcional)</Text>
+              <Text style={styles.helperText}>Usado para sugerir esse template automaticamente pra alunos com esse foco na anamnese.</Text>
+              <View style={styles.categoryRow}>
+                {MUSCLE_FOCUS_OPTIONS.map((m) => (
+                  <TouchableOpacity
+                    key={m.value}
+                    style={[styles.categoryChip, editFocusMuscleGroup === m.value && styles.categoryChipActive]}
+                    onPress={() => setEditFocusMuscleGroup(editFocusMuscleGroup === m.value ? null : m.value)}
+                  >
+                    <Text style={[styles.categoryChipText, editFocusMuscleGroup === m.value && styles.categoryChipTextActive]}>{m.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>

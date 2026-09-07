@@ -31,6 +31,40 @@ export const TRAINING_LOCATIONS = [
   { value: 'casa', label: 'Casa' },
 ];
 
+export const DAYS_PER_WEEK_OPTIONS = [2, 3, 4, 5, 6];
+
+export const SESSION_DURATION_OPTIONS = [
+  { value: 30, label: '30 min' },
+  { value: 45, label: '45 min' },
+  { value: 60, label: '60 min' },
+  { value: 90, label: '90+ min' },
+];
+
+export const ACTIVITY_LEVELS = [
+  { value: 'sedentario', label: 'Sedentário (trabalho parado)' },
+  { value: 'moderado', label: 'Moderado (fica de pé/anda bastante)' },
+  { value: 'ativo', label: 'Ativo (trabalho físico)' },
+];
+
+export const SLEEP_QUALITY_OPTIONS = [
+  { value: 'ruim', label: 'Ruim' },
+  { value: 'regular', label: 'Regular' },
+  { value: 'boa', label: 'Boa' },
+];
+
+// Same vocabulary as exercises.muscle_group, reused here so an anamnese's
+// "foco específico" and a template's own focus_muscle_group line up exactly
+// for the auto-suggestion matching.
+export const MUSCLE_FOCUS_OPTIONS = [
+  { value: 'gluteo', label: 'Glúteo' },
+  { value: 'quadriceps', label: 'Pernas' },
+  { value: 'abdomen', label: 'Abdômen' },
+  { value: 'costas', label: 'Costas' },
+  { value: 'peito', label: 'Peito' },
+  { value: 'ombro', label: 'Ombro' },
+  { value: 'biceps', label: 'Braços' },
+];
+
 export const WORKOUT_GOALS = [
   { value: 'hipertrofia', label: 'Hipertrofia' },
   { value: 'emagrecimento', label: 'Emagrecimento' },
