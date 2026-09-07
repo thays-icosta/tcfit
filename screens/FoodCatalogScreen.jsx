@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { supabase } from './supabaseClient';
 import BarcodeScannerScreen from './BarcodeScannerScreen';
 import { showAlert } from './alertUtils';
@@ -278,7 +278,10 @@ export default function FoodCatalogScreen({ onAddFood, onClose, recentForStudent
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <View style={styles.topBar}>
         <View style={styles.topBarLeft}>
           <TouchableOpacity onPress={onClose}>
@@ -385,7 +388,7 @@ export default function FoodCatalogScreen({ onAddFood, onClose, recentForStudent
           renderItem={({ item }) => renderFoodCard(item)}
         />
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

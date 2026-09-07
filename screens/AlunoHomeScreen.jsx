@@ -339,8 +339,19 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     loadWaterAndNote();
   }, [diaryRefreshKey, user.id]);
 
+  const applyEntriesDelta = (rows, sign) => {
+    if (!rows || rows.length === 0) return;
+    setTodaysEntries((prev) => (sign > 0 ? [...prev, ...rows] : prev.filter((e) => !rows.some((r) => r.id === e.id))));
+    setConsumedTotals((prev) => rows.reduce((acc, r) => ({
+      kcal: acc.kcal + sign * (r.calories_kcal || 0),
+      protein: acc.protein + sign * (r.protein_g || 0),
+      carbs: acc.carbs + sign * (r.carbs_g || 0),
+      fat: acc.fat + sign * (r.fat_g || 0),
+    }), prev));
+  };
+
   const handleAddFoodToDiary = async (foodData) => {
-    await supabase.from('food_diary_entries').insert({
+    const { data, error } = await supabase.from('food_diary_entries').insert({
       student_id: user.id,
       food_id: foodData.food_id,
       food_name: foodData.food_name,
@@ -351,9 +362,13 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
       fat_g: foodData.fat_g,
       meal_type: addingFoodForMeal,
       entry_date: todayStr,
-    });
+    }).select().single();
     setAddingFoodForMeal(null);
-    setDiaryRefreshKey((k) => k + 1);
+    if (!error && data) {
+      applyEntriesDelta([data], 1);
+    } else {
+      setDiaryRefreshKey((k) => k + 1);
+    }
   };
 
   const handleDeleteEntry = (entryId) => {
@@ -363,8 +378,10 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
         text: 'Remover',
         style: 'destructive',
         onPress: async () => {
-          await supabase.from('food_diary_entries').delete().eq('id', entryId);
-          setDiaryRefreshKey((k) => k + 1);
+          const removed = todaysEntries.find((e) => e.id === entryId);
+          if (removed) applyEntriesDelta([removed], -1);
+          const { error } = await supabase.from('food_diary_entries').delete().eq('id', entryId);
+          if (error) setDiaryRefreshKey((k) => k + 1);
         },
       },
     ]);
@@ -372,7 +389,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
 
   const handleRegisterOption = async (mealName, option, registerKey) => {
     setRegisteringKey(registerKey);
-    const { error } = await supabase.from('food_diary_entries').insert({
+    const { data, error } = await supabase.from('food_diary_entries').insert({
       student_id: user.id,
       food_name: option.food_name,
       quantity_g: option.quantity_g,
@@ -382,12 +399,12 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
       fat_g: option.fat_g,
       meal_type: mapMealNameToType(mealName),
       entry_date: todayStr,
-    });
+    }).select().single();
     setRegisteringKey(null);
     if (error) {
       showAlert('Erro', error.message);
     } else {
-      setDiaryRefreshKey((k) => k + 1);
+      applyEntriesDelta([data], 1);
       showAlert('Registrado!', `${option.food_name} adicionado ao seu diário de hoje.`);
     }
   };
@@ -397,7 +414,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     if (foods.length === 0) return;
     const mealKey = `${meal.id}-meal`;
     setRegisteringKey(mealKey);
-    const { error } = await supabase.from('food_diary_entries').insert(
+    const { data, error } = await supabase.from('food_diary_entries').insert(
       foods.map((food) => ({
         student_id: user.id,
         food_name: food.food_name,
@@ -409,12 +426,12 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
         meal_type: mapMealNameToType(meal.name),
         entry_date: todayStr,
       }))
-    );
+    ).select();
     setRegisteringKey(null);
     if (error) {
       showAlert('Erro', error.message);
     } else {
-      setDiaryRefreshKey((k) => k + 1);
+      applyEntriesDelta(data, 1);
       showAlert('Refeição concluída!', `${meal.name} registrada no seu diário de hoje.`);
     }
   };
@@ -978,7 +995,12 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
               </TouchableOpacity>
             ) : (
               <View style={styles.mealPickerBox}>
-                <Text style={styles.mealPickerLabel}>Em qual refeição?</Text>
+                <View style={styles.mealPickerHeaderRow}>
+                  <Text style={styles.mealPickerLabel}>Em qual refeição?</Text>
+                  <TouchableOpacity onPress={() => setShowMealPicker(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="close" size={20} color="#a3a3a3" />
+                  </TouchableOpacity>
+                </View>
                 <View style={styles.mealPickerRow}>
                   {MEAL_OPTIONS.map((m) => (
                     <TouchableOpacity
@@ -993,9 +1015,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                     </TouchableOpacity>
                   ))}
                 </View>
-                <TouchableOpacity onPress={() => setShowMealPicker(false)}>
-                  <Text style={styles.mealPickerCancel}>Cancelar</Text>
-                </TouchableOpacity>
               </View>
             )}
 
@@ -1571,11 +1590,11 @@ const styles = StyleSheet.create({
   addExtraButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginBottom: 16 },
   addExtraButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
   mealPickerBox: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 16 },
-  mealPickerLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 10 },
-  mealPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
+  mealPickerHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  mealPickerLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase' },
+  mealPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   mealPickerChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
   mealPickerChipText: { color: '#f5f5f5', fontSize: 12, fontWeight: '600' },
-  mealPickerCancel: { color: '#a3a3a3', fontSize: 12, fontWeight: '600', textAlign: 'center' },
   sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginBottom: 10 },
   entryRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 12, marginBottom: 8 },
   entryFoodName: { color: '#f5f5f5', fontSize: 12, fontWeight: '600' },

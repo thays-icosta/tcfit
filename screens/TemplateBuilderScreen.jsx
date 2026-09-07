@@ -370,6 +370,10 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   };
 
   const handleSaveMeta = async () => {
+    if (editIsPublic && !editCoverImageUrl) {
+      showAlert('Foto de capa obrigatória', 'Adicione uma foto de capa antes de publicar esse template na vitrine dos alunos.');
+      return;
+    }
     setSavingMeta(true);
     const meta = {
       description: editDescription.trim() || null,
@@ -631,8 +635,13 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
 
               {editIsPublic && (
                 <>
-                  <Text style={styles.metaLabel}>Foto de Capa (Poster)</Text>
-                  <TouchableOpacity style={styles.coverPicker} onPress={handlePickCoverImage} disabled={uploadingCover}>
+                  <Text style={styles.metaLabel}>Foto de Capa (Poster) *</Text>
+                  <Text style={styles.helperText}>Obrigatória: sem capa, o programa não pode ser publicado na vitrine do aluno.</Text>
+                  <TouchableOpacity
+                    style={[styles.coverPicker, !editCoverImageUrl && styles.coverPickerRequired]}
+                    onPress={handlePickCoverImage}
+                    disabled={uploadingCover}
+                  >
                     {uploadingCover ? (
                       <ActivityIndicator color="#f97316" />
                     ) : editCoverImageUrl ? (
@@ -1048,6 +1057,7 @@ const styles = StyleSheet.create({
   saveMetaButton: { backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginTop: 16 },
   saveMetaButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
   coverPicker: { width: '100%', aspectRatio: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  coverPickerRequired: { borderColor: '#f97316', borderStyle: 'dashed' },
   coverPreview: { width: '100%', height: '100%' },
   coverPickerText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
