@@ -1168,6 +1168,18 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     .filter((c) => c.items.length > 0);
   const ungroupedNutritionItems = nutritionItems.filter((p) => !p.collection_id);
 
+  const oldestWorkoutTime = workouts.length > 0
+    ? Math.min(...workouts.map((w) => new Date(w.created_at).getTime()))
+    : null;
+  const programWeeksActive = oldestWorkoutTime != null
+    ? Math.floor((Date.now() - oldestWorkoutTime) / (7 * 24 * 60 * 60 * 1000))
+    : null;
+  const showRotationOffer = myAccessLevel === 'plataforma_base' && programWeeksActive != null && programWeeksActive >= 6;
+
+  const handleRequestRotation = () => {
+    handleOpenChatFor(`Olá! Já estou há ${programWeeksActive} semanas no mesmo ciclo de treino e gostaria de renovar minha ficha. Pode me ajudar?`);
+  };
+
   return (
     <View style={{ flex: 1 }}>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -1261,6 +1273,20 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             </View>
           )}
 
+          {showRotationOffer && (
+            <View style={styles.rotationBanner}>
+              <View style={styles.financeBannerRow}>
+                <Ionicons name="refresh-outline" size={16} color="#3b82f6" />
+                <Text style={styles.rotationBannerText}>
+                  Você está há {programWeeksActive} semanas no mesmo ciclo de treino. Bora renovar sua ficha?
+                </Text>
+              </View>
+              <TouchableOpacity style={styles.rotationBannerButton} onPress={handleRequestRotation}>
+                <Text style={styles.rotationBannerButtonText}>Pedir Renovação</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {personalId && (
             <TouchableOpacity style={styles.whatsappStrip} onPress={handleOpenWhatsApp}>
               <Ionicons name="logo-whatsapp" size={16} color="#0a0a0a" />
@@ -1277,6 +1303,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
               <Text style={styles.quickAccessTitle}>Seu Treino de Hoje</Text>
               <Text style={styles.quickAccessSubtitle}>
                 {workouts.length} ficha{workouts.length !== 1 ? 's' : ''} · {weekDaysCount}/7 dias essa semana
+                {myAccessLevel === 'plataforma_base' && programWeeksActive != null ? ` · ${programWeeksActive}ª semana de ciclo` : ''}
               </Text>
               <View style={styles.quickAccessProgressTrack}>
                 <View style={[styles.quickAccessProgressFill, { width: `${Math.min(100, (weekDaysCount / 7) * 100)}%` }]} />
@@ -1491,6 +1518,10 @@ const styles = StyleSheet.create({
   payButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#22c55e', borderRadius: 10, paddingVertical: 10 },
   payButtonOverdue: { backgroundColor: '#ef4444' },
   payButtonText: { color: '#0a0a0a', fontSize: 11, fontWeight: '800' },
+  rotationBanner: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 12, padding: 12, marginBottom: 16 },
+  rotationBannerText: { color: '#3b82f6', fontSize: 11, fontWeight: '600', flexShrink: 1 },
+  rotationBannerButton: { backgroundColor: '#3b82f6', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
+  rotationBannerButtonText: { color: '#0a0a0a', fontSize: 11, fontWeight: '800' },
   topMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
   financePill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
   financePillOverdue: { backgroundColor: 'rgba(239,68,68,0.12)' },
