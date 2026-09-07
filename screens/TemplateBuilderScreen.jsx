@@ -9,7 +9,7 @@ import ExerciseCatalogScreen from './ExerciseCatalogScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { showAlert, describeFunctionError } from './alertUtils';
 import { useSpeechToText } from './useSpeechToText';
-import { HOME_CATEGORIES, WORKOUT_TAGS } from './accessLevel';
+import { HOME_CATEGORIES, WORKOUT_TAGS, PROGRAM_LEVELS, TRAINING_LOCATIONS } from './accessLevel';
 import { HeaderBack } from './Header';
 
 function uuidv4() {
@@ -35,6 +35,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [activeTemplateId, setActiveTemplateId] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
+  const [sessionCounts, setSessionCounts] = useState({});
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -60,7 +61,12 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [editCategory, setEditCategory] = useState(null);
   const [editWorkoutTags, setEditWorkoutTags] = useState([]);
+  const [editLevel, setEditLevel] = useState(null);
+  const [editEnvironment, setEditEnvironment] = useState(null);
   const [savingMeta, setSavingMeta] = useState(false);
+  const [templateSearch, setTemplateSearch] = useState('');
+  const [templateLevelFilter, setTemplateLevelFilter] = useState('todos');
+  const [templateEnvironmentFilter, setTemplateEnvironmentFilter] = useState('todos');
   const [sectionEnabled, setSectionEnabled] = useState(true);
   const [savingSectionToggle, setSavingSectionToggle] = useState(false);
 
@@ -90,15 +96,28 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
     }
   };
 
+  const loadSessionCounts = async (sessionIds) => {
+    if (!sessionIds || sessionIds.length === 0) { setSessionCounts({}); return; }
+    const { data } = await supabase
+      .from('workout_template_exercises')
+      .select('session_id')
+      .in('session_id', sessionIds);
+    const counts = {};
+    (data || []).forEach((row) => { counts[row.session_id] = (counts[row.session_id] || 0) + 1; });
+    setSessionCounts(counts);
+  };
+
   const loadSessions = async (templateId) => {
-    if (!templateId) { setSessions([]); setActiveSessionId(null); return; }
+    if (!templateId) { setSessions([]); setActiveSessionId(null); setSessionCounts({}); return; }
     const { data } = await supabase
       .from('template_sessions')
       .select('id, name, order_index')
       .eq('template_id', templateId)
       .order('order_index', { ascending: true });
     setSessions(data || []);
-    setActiveSessionId((prev) => (data && data.some((s) => s.id === prev)) ? prev : data?.[0]?.id || null);
+    // Accordion cards start collapsed by default when switching templates.
+    setActiveSessionId((prev) => (data && data.some((s) => s.id === prev)) ? prev : null);
+    loadSessionCounts((data || []).map((s) => s.id));
   };
 
   const loadItems = async (sessionId) => {
@@ -129,6 +148,8 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       setEditCoverImageUrl(t?.cover_image_url || null);
       setEditCategory(t?.category || null);
       setEditWorkoutTags(t?.workout_tags || []);
+      setEditLevel(t?.level || null);
+      setEditEnvironment(t?.environment || null);
     } else {
       setSessions([]);
       setActiveSessionId(null);
@@ -321,6 +342,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       price: template.price,
       cover_image_url: template.cover_image_url,
       category: template.category,
+      level: template.level,
       active: template.is_public,
       source_template_id: template.id,
     };
@@ -341,6 +363,8 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       cover_image_url: editCoverImageUrl,
       category: editCategory,
       workout_tags: editWorkoutTags,
+      level: editLevel,
+      environment: editEnvironment,
     };
     const { error } = await supabase.from('workout_templates').update(meta).eq('id', activeTemplateId);
     if (!error) {
@@ -381,6 +405,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
     } else {
       setShowAddModal(false);
       loadItems(activeSessionId);
+      setSessionCounts((prev) => ({ ...prev, [activeSessionId]: (prev[activeSessionId] || 0) + 1 }));
     }
   };
 
@@ -406,6 +431,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
         onPress: async () => {
           await supabase.from('workout_template_exercises').delete().eq('id', itemId);
           loadItems(activeSessionId);
+          setSessionCounts((prev) => ({ ...prev, [activeSessionId]: Math.max(0, (prev[activeSessionId] || 1) - 1) }));
         },
       },
     ]);
@@ -420,6 +446,17 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
     await supabase.from('workout_template_exercises').update({ order_index: a.order_index }).eq('id', b.id);
     loadItems(activeSessionId);
   };
+
+  const filteredTemplates = templates.filter((t) => {
+    if (templateLevelFilter !== 'todos' && t.level !== templateLevelFilter) return false;
+    if (templateEnvironmentFilter !== 'todos' && t.environment !== templateEnvironmentFilter) return false;
+    if (templateSearch.trim() && !t.name.toLowerCase().includes(templateSearch.trim().toLowerCase())) return false;
+    return true;
+  });
+  const templateGroups = HOME_CATEGORIES
+    .map((c) => ({ ...c, items: filteredTemplates.filter((t) => t.category === c.value) }))
+    .filter((g) => g.items.length > 0);
+  const ungroupedTemplates = filteredTemplates.filter((t) => !HOME_CATEGORIES.some((c) => c.value === t.category));
 
   if (loading) {
     return (
@@ -531,24 +568,89 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ maxHeight: 320 }}>
-              {templates.map((t) => (
-                <TouchableOpacity
-                  key={t.id}
-                  style={[styles.templateListRow, activeTemplateId === t.id && styles.templateListRowActive]}
-                  onPress={() => {
-                    setActiveTemplateId(t.id);
-                    setShowTemplatePicker(false);
-                  }}
-                >
-                  <Text style={styles.templateListRowText} numberOfLines={1}>{t.name}</Text>
-                  {t.is_public && <Text style={styles.publicDot}>●</Text>}
-                  <TouchableOpacity hitSlop={8} onPress={() => handleDeleteTemplate(t)}>
-                    <Ionicons name="trash-outline" size={16} color="#ef4444" />
+            <TextInput
+              style={[styles.newInput, { marginBottom: 10 }]}
+              placeholder="Buscar template..."
+              placeholderTextColor="#737373"
+              value={templateSearch}
+              onChangeText={setTemplateSearch}
+            />
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 6 }}>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                {[{ value: 'todos', label: 'Todos os níveis' }, ...PROGRAM_LEVELS].map((l) => (
+                  <TouchableOpacity
+                    key={l.value}
+                    style={[styles.pickerFilterChip, templateLevelFilter === l.value && styles.pickerFilterChipActive]}
+                    onPress={() => setTemplateLevelFilter(l.value)}
+                  >
+                    <Text style={[styles.pickerFilterChipText, templateLevelFilter === l.value && styles.pickerFilterChipTextActive]}>{l.label}</Text>
                   </TouchableOpacity>
-                </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                {[{ value: 'todos', label: 'Todos os locais' }, ...TRAINING_LOCATIONS].map((l) => (
+                  <TouchableOpacity
+                    key={l.value}
+                    style={[styles.pickerFilterChip, templateEnvironmentFilter === l.value && styles.pickerFilterChipActive]}
+                    onPress={() => setTemplateEnvironmentFilter(l.value)}
+                  >
+                    <Text style={[styles.pickerFilterChipText, templateEnvironmentFilter === l.value && styles.pickerFilterChipTextActive]}>{l.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+
+            <ScrollView style={{ maxHeight: 320 }}>
+              {templateGroups.map((group) => (
+                <View key={group.value} style={{ marginBottom: 12 }}>
+                  <Text style={styles.templateGroupLabel}>{group.label}</Text>
+                  {group.items.map((t) => (
+                    <TouchableOpacity
+                      key={t.id}
+                      style={[styles.templateListRow, activeTemplateId === t.id && styles.templateListRowActive]}
+                      onPress={() => {
+                        setActiveTemplateId(t.id);
+                        setShowTemplatePicker(false);
+                      }}
+                    >
+                      <Text style={styles.templateListRowText} numberOfLines={1}>{t.name}</Text>
+                      {t.is_public && <Text style={styles.publicDot}>●</Text>}
+                      <TouchableOpacity hitSlop={8} onPress={() => handleDeleteTemplate(t)}>
+                        <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               ))}
-              {templates.length === 0 && <Text style={styles.emptyText}>Nenhum template ainda.</Text>}
+
+              {ungroupedTemplates.length > 0 && (
+                <View style={{ marginBottom: 12 }}>
+                  {templateGroups.length > 0 && <Text style={styles.templateGroupLabel}>Sem categoria</Text>}
+                  {ungroupedTemplates.map((t) => (
+                    <TouchableOpacity
+                      key={t.id}
+                      style={[styles.templateListRow, activeTemplateId === t.id && styles.templateListRowActive]}
+                      onPress={() => {
+                        setActiveTemplateId(t.id);
+                        setShowTemplatePicker(false);
+                      }}
+                    >
+                      <Text style={styles.templateListRowText} numberOfLines={1}>{t.name}</Text>
+                      {t.is_public && <Text style={styles.publicDot}>●</Text>}
+                      <TouchableOpacity hitSlop={8} onPress={() => handleDeleteTemplate(t)}>
+                        <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {filteredTemplates.length === 0 && (
+                <Text style={styles.emptyText}>{templates.length === 0 ? 'Nenhum template ainda.' : 'Nenhum template encontrado com esses filtros.'}</Text>
+              )}
             </ScrollView>
 
             <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowTemplatePicker(false)}>
@@ -580,6 +682,32 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                 onChangeText={setEditDescription}
                 multiline
               />
+
+              <Text style={styles.metaLabel}>Nível</Text>
+              <View style={styles.categoryRow}>
+                {PROGRAM_LEVELS.map((l) => (
+                  <TouchableOpacity
+                    key={l.value}
+                    style={[styles.categoryChip, editLevel === l.value && styles.categoryChipActive]}
+                    onPress={() => setEditLevel(editLevel === l.value ? null : l.value)}
+                  >
+                    <Text style={[styles.categoryChipText, editLevel === l.value && styles.categoryChipTextActive]}>{l.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.metaLabel}>Local</Text>
+              <View style={styles.categoryRow}>
+                {TRAINING_LOCATIONS.map((l) => (
+                  <TouchableOpacity
+                    key={l.value}
+                    style={[styles.categoryChip, editEnvironment === l.value && styles.categoryChipActive]}
+                    onPress={() => setEditEnvironment(editEnvironment === l.value ? null : l.value)}
+                  >
+                    <Text style={[styles.categoryChipText, editEnvironment === l.value && styles.categoryChipTextActive]}>{l.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
               <View style={styles.publicRow}>
                 <Text style={styles.publicLabel}>Vender esse template na vitrine</Text>
@@ -738,101 +866,112 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
         </View>
       ) : (
         <>
-          <View style={styles.sessionChipsRow}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sessionChipsContent}>
-              {sessions.map((s) => (
-                <TouchableOpacity
-                  key={s.id}
-                  style={[styles.sessionChip, activeSessionId === s.id && styles.sessionChipActive]}
-                  onPress={() => setActiveSessionId(s.id)}
-                  onLongPress={() => handleDeleteSession(s)}
-                >
-                  <Text style={[styles.sessionChipText, activeSessionId === s.id && styles.sessionChipTextActive]}>{s.name}</Text>
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity style={styles.sessionChipAdd} onPress={handleAddSession}>
-                <Ionicons name="add" size={14} color="#f97316" />
-                <Text style={styles.sessionChipAddText}>Nova Sessão</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-          <Text style={styles.hintText}>Segure uma sessão pra excluir · agrupe Treino A, B, C sob o mesmo produto</Text>
+          <Text style={styles.hintText}>Toque num treino pra expandir · segure pra excluir</Text>
 
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 16 }}>
-            <Text style={styles.sectionTitle}>Exercícios de {sessions.find((s) => s.id === activeSessionId)?.name || 'Treino'} ({items.length})</Text>
-            {items.length === 0 ? (
-              <Text style={styles.emptyText}>Nenhum exercício ainda.</Text>
-            ) : (
-              items.map((item, index) => {
-                const hasVideo = !!item.exercises?.video_url;
-                return (
-                  <View key={item.id} style={styles.exerciseCard}>
-                    <View style={styles.exerciseCardTop}>
-                      <TouchableOpacity
-                        onPress={() => hasVideo && setWatchingVideo({ url: item.exercises.video_url, name: item.exercises.name })}
-                        disabled={!hasVideo}
-                        style={styles.exerciseThumbWrap}
-                      >
-                        {item.exercises?.thumbnail_url ? (
-                          <Image source={{ uri: item.exercises.thumbnail_url }} style={styles.exerciseThumbImage} />
-                        ) : (
-                          <View style={styles.exerciseThumbPlaceholder}>
-                            <Text style={styles.exerciseThumbMuscle}>{item.exercises?.muscle_group?.toUpperCase() || '?'}</Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
+            {sessions.map((session) => {
+              const isExpanded = activeSessionId === session.id;
+              return (
+                <View key={session.id} style={styles.sessionAccordionCard}>
+                  <TouchableOpacity
+                    style={styles.sessionAccordionHeader}
+                    onPress={() => setActiveSessionId(isExpanded ? null : session.id)}
+                    onLongPress={() => handleDeleteSession(session)}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.sessionAccordionTitle}>{session.name}</Text>
+                      <Text style={styles.sessionAccordionSubtitle}>
+                        {sessionCounts[session.id] || 0} exercício{(sessionCounts[session.id] || 0) !== 1 ? 's' : ''}
+                      </Text>
+                    </View>
+                    <Ionicons name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={18} color="#a3a3a3" />
+                  </TouchableOpacity>
 
-                      <View style={styles.exerciseInfo}>
-                        <Text style={styles.exerciseName}>{item.exercises?.name}</Text>
-                        <View style={styles.exercisePillsRow}>
-                          <View style={styles.exercisePill}>
-                            <Text style={styles.exercisePillText}>{item.sets || 3} séries</Text>
-                          </View>
-                          <View style={styles.exercisePill}>
-                            <Text style={styles.exercisePillText}>{item.reps || '-'} reps</Text>
-                          </View>
-                          <View style={styles.exercisePill}>
-                            <Text style={styles.exercisePillText}>{METHOD_LABELS[item.execution_method] || item.execution_method}</Text>
-                          </View>
-                          {item.rest_time_seconds != null && (
-                            <View style={styles.exercisePill}>
-                              <Text style={styles.exercisePillText}>{item.rest_time_seconds}s descanso</Text>
+                  {isExpanded && (
+                    <View style={styles.sessionAccordionBody}>
+                      {items.length === 0 ? (
+                        <Text style={styles.emptyText}>Nenhum exercício ainda.</Text>
+                      ) : (
+                        items.map((item, index) => {
+                          const hasVideo = !!item.exercises?.video_url;
+                          return (
+                            <View key={item.id} style={styles.exerciseCard}>
+                              <View style={styles.exerciseCardTop}>
+                                <TouchableOpacity
+                                  onPress={() => hasVideo && setWatchingVideo({ url: item.exercises.video_url, name: item.exercises.name })}
+                                  disabled={!hasVideo}
+                                  style={styles.exerciseThumbWrap}
+                                >
+                                  {item.exercises?.thumbnail_url ? (
+                                    <Image source={{ uri: item.exercises.thumbnail_url }} style={styles.exerciseThumbImage} />
+                                  ) : (
+                                    <View style={styles.exerciseThumbPlaceholder}>
+                                      <Text style={styles.exerciseThumbMuscle}>{item.exercises?.muscle_group?.toUpperCase() || '?'}</Text>
+                                    </View>
+                                  )}
+                                </TouchableOpacity>
+
+                                <View style={styles.exerciseInfo}>
+                                  <Text style={styles.exerciseName}>{item.exercises?.name}</Text>
+                                  <View style={styles.exercisePillsRow}>
+                                    <View style={styles.exercisePill}>
+                                      <Text style={styles.exercisePillText}>{item.sets || 3} séries</Text>
+                                    </View>
+                                    <View style={styles.exercisePill}>
+                                      <Text style={styles.exercisePillText}>{item.reps || '-'} reps</Text>
+                                    </View>
+                                    <View style={styles.exercisePill}>
+                                      <Text style={styles.exercisePillText}>{METHOD_LABELS[item.execution_method] || item.execution_method}</Text>
+                                    </View>
+                                    {item.rest_time_seconds != null && (
+                                      <View style={styles.exercisePill}>
+                                        <Text style={styles.exercisePillText}>{item.rest_time_seconds}s descanso</Text>
+                                      </View>
+                                    )}
+                                  </View>
+                                </View>
+
+                                <View style={styles.reorderHandle}>
+                                  <TouchableOpacity onPress={() => handleMove(index, -1)} disabled={index === 0} hitSlop={4}>
+                                    <Ionicons name="chevron-up" size={14} color={index === 0 ? '#292524' : '#a3a3a3'} />
+                                  </TouchableOpacity>
+                                  <Ionicons name="reorder-three-outline" size={16} color="#525252" />
+                                  <TouchableOpacity onPress={() => handleMove(index, 1)} disabled={index === items.length - 1} hitSlop={4}>
+                                    <Ionicons name="chevron-down" size={14} color={index === items.length - 1 ? '#292524' : '#a3a3a3'} />
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
+
+                              <View style={styles.exerciseQuickActions}>
+                                <TouchableOpacity style={styles.quickActionButton} onPress={() => setEditingItem(item)}>
+                                  <Ionicons name="pencil-outline" size={14} color="#a3a3a3" />
+                                  <Text style={styles.quickActionText}>Editar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.quickActionButton} onPress={() => handleRemoveItem(item.id)}>
+                                  <Ionicons name="trash-outline" size={14} color="#ef4444" />
+                                  <Text style={[styles.quickActionText, styles.quickActionTextDanger]}>Excluir</Text>
+                                </TouchableOpacity>
+                              </View>
                             </View>
-                          )}
-                        </View>
-                      </View>
+                          );
+                        })
+                      )}
 
-                      <View style={styles.reorderHandle}>
-                        <TouchableOpacity onPress={() => handleMove(index, -1)} disabled={index === 0} hitSlop={4}>
-                          <Ionicons name="chevron-up" size={14} color={index === 0 ? '#292524' : '#a3a3a3'} />
-                        </TouchableOpacity>
-                        <Ionicons name="reorder-three-outline" size={16} color="#525252" />
-                        <TouchableOpacity onPress={() => handleMove(index, 1)} disabled={index === items.length - 1} hitSlop={4}>
-                          <Ionicons name="chevron-down" size={14} color={index === items.length - 1 ? '#292524' : '#a3a3a3'} />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-
-                    <View style={styles.exerciseQuickActions}>
-                      <TouchableOpacity style={styles.quickActionButton} onPress={() => setEditingItem(item)}>
-                        <Ionicons name="pencil-outline" size={14} color="#a3a3a3" />
-                        <Text style={styles.quickActionText}>Editar</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.quickActionButton} onPress={() => handleRemoveItem(item.id)}>
-                        <Ionicons name="trash-outline" size={14} color="#ef4444" />
-                        <Text style={[styles.quickActionText, styles.quickActionTextDanger]}>Excluir</Text>
+                      <TouchableOpacity style={styles.addExerciseButtonInline} onPress={() => setShowAddModal(true)}>
+                        <Ionicons name="add-circle" size={16} color="#0a0a0a" />
+                        <Text style={styles.addExerciseButtonText}>Adicionar Exercício</Text>
                       </TouchableOpacity>
                     </View>
-                  </View>
-                );
-              })
-            )}
+                  )}
+                </View>
+              );
+            })}
+
+            <TouchableOpacity style={styles.addSessionButton} onPress={handleAddSession}>
+              <Ionicons name="add" size={16} color="#f97316" />
+              <Text style={styles.addSessionButtonText}>Nova Sessão</Text>
+            </TouchableOpacity>
           </ScrollView>
-
-          <TouchableOpacity style={styles.addExerciseButton} onPress={() => setShowAddModal(true)}>
-            <Ionicons name="add-circle" size={18} color="#0a0a0a" />
-            <Text style={styles.addExerciseButtonText}>Adicionar Exercício</Text>
-          </TouchableOpacity>
         </>
       )}
       </>
@@ -866,6 +1005,11 @@ const styles = StyleSheet.create({
   templateListRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, marginBottom: 8 },
   templateListRowActive: { borderColor: '#f97316' },
   templateListRowText: { flex: 1, color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
+  templateGroupLabel: { color: '#737373', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', marginBottom: 8 },
+  pickerFilterChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
+  pickerFilterChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  pickerFilterChipText: { color: '#a3a3a3', fontSize: 10, fontWeight: '700' },
+  pickerFilterChipTextActive: { color: '#0a0a0a' },
   modalCloseButton: { paddingVertical: 12, alignItems: 'center', marginTop: 8 },
   modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
   publicDot: { color: '#22c55e', fontSize: 8 },
@@ -897,18 +1041,16 @@ const styles = StyleSheet.create({
   categoryChipActive: { backgroundColor: '#a855f7', borderColor: '#a855f7' },
   categoryChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
   categoryChipTextActive: { color: '#0a0a0a' },
-  sessionChipsRow: { marginBottom: 4 },
-  sessionChipsContent: { paddingHorizontal: 16, gap: 8 },
-  sessionChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 9, marginRight: 8 },
-  sessionChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
-  sessionChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  sessionChipTextActive: { color: '#0a0a0a' },
-  sessionChipAdd: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1, borderColor: '#f97316', borderStyle: 'dashed', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
-  sessionChipAddText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
-  addExerciseButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 14, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginHorizontal: 16, marginTop: 8, marginBottom: 16, shadowColor: '#f97316', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 },
-  addExerciseButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
-  sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8, marginTop: 12 },
-  exerciseCard: { backgroundColor: '#1E1E1E', borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 16, marginHorizontal: 16, marginBottom: 10, padding: 12 },
+  sessionAccordionCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden' },
+  sessionAccordionHeader: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 8 },
+  sessionAccordionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
+  sessionAccordionSubtitle: { color: '#737373', fontSize: 11, marginTop: 2 },
+  sessionAccordionBody: { paddingHorizontal: 10, paddingBottom: 10, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  addExerciseButtonInline: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 12, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  addExerciseButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '800' },
+  addSessionButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1, borderColor: '#f97316', borderStyle: 'dashed', borderRadius: 14, paddingVertical: 14, marginHorizontal: 16, marginTop: 4 },
+  addSessionButtonText: { color: '#f97316', fontSize: 13, fontWeight: '700' },
+  exerciseCard: { backgroundColor: '#1E1E1E', borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 16, marginTop: 10, padding: 12 },
   exerciseCardTop: { flexDirection: 'row', alignItems: 'center' },
   exerciseThumbWrap: { marginRight: 10 },
   exerciseThumbImage: { width: 52, height: 52, borderRadius: 10 },
