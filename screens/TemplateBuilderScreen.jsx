@@ -784,7 +784,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
           <View style={{ flex: 1 }}>
             <View style={{ paddingHorizontal: 16 }}>
               <TextInput
-                style={[styles.newInput, { marginBottom: 10 }]}
+                style={[styles.newInput, { marginBottom: 8 }]}
                 placeholder="Buscar programa..."
                 placeholderTextColor="#737373"
                 value={templateSearch}
@@ -792,8 +792,8 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
               />
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 6, paddingLeft: 16 }}>
-              <View style={{ flexDirection: 'row', gap: 6 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10, paddingLeft: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 {[{ value: 'todos', label: 'Todos os níveis' }, ...PROGRAM_LEVELS].map((l) => (
                   <TouchableOpacity
                     key={l.value}
@@ -803,10 +803,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                     <Text style={[styles.pickerFilterChipText, templateLevelFilter === l.value && styles.pickerFilterChipTextActive]}>{l.label}</Text>
                   </TouchableOpacity>
                 ))}
-              </View>
-            </ScrollView>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12, paddingLeft: 16 }}>
-              <View style={{ flexDirection: 'row', gap: 6 }}>
+                <View style={styles.pickerFilterDivider} />
                 {[{ value: 'todos', label: 'Todos os locais' }, ...TRAINING_LOCATIONS].map((l) => (
                   <TouchableOpacity
                     key={l.value}
@@ -1024,10 +1021,11 @@ const styles = StyleSheet.create({
   aiMicButton: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center' },
   aiMicButtonActive: { backgroundColor: '#f97316' },
   templateGroupLabel: { color: '#737373', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', marginBottom: 8 },
-  pickerFilterChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
+  pickerFilterChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 18, paddingHorizontal: 12, height: 36, alignItems: 'center', justifyContent: 'center' },
   pickerFilterChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
-  pickerFilterChipText: { color: '#a3a3a3', fontSize: 10, fontWeight: '700' },
+  pickerFilterChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
   pickerFilterChipTextActive: { color: '#0a0a0a' },
+  pickerFilterDivider: { width: 1, height: 20, backgroundColor: '#292524', marginHorizontal: 2 },
   modalCloseButton: { paddingVertical: 12, alignItems: 'center', marginTop: 8 },
   modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
   publicDot: { color: '#22c55e', fontSize: 8 },
