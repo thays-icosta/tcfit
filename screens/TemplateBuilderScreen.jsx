@@ -38,10 +38,10 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [sessionCounts, setSessionCounts] = useState({});
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [templateSessionCounts, setTemplateSessionCounts] = useState({});
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [watchingVideo, setWatchingVideo] = useState(null);
-  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showSettingsSheet, setShowSettingsSheet] = useState(false);
   const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
   const [showAiTemplateModal, setShowAiTemplateModal] = useState(false);
@@ -89,10 +89,21 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       .eq('personal_id', personalId)
       .order('created_at', { ascending: true });
     setTemplates(data || []);
+    // Level 0 of the picker is the program-card grid, so only keep a
+    // template "open" (Level 1) across a reload if it's still valid —
+    // never auto-open the first one.
+    setActiveTemplateId((prev) => (data && data.some((t) => t.id === prev)) ? prev : null);
+
     if (data && data.length > 0) {
-      setActiveTemplateId((prev) => (prev && data.some((t) => t.id === prev)) ? prev : data[0].id);
+      const { data: sessionRows } = await supabase
+        .from('template_sessions')
+        .select('template_id')
+        .in('template_id', data.map((t) => t.id));
+      const counts = {};
+      (sessionRows || []).forEach((row) => { counts[row.template_id] = (counts[row.template_id] || 0) + 1; });
+      setTemplateSessionCounts(counts);
     } else {
-      setActiveTemplateId(null);
+      setTemplateSessionCounts({});
     }
   };
 
@@ -283,6 +294,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
     }
     await loadSessions(activeTemplateId);
     setActiveSessionId(data.id);
+    setTemplateSessionCounts((prev) => ({ ...prev, [activeTemplateId]: (prev[activeTemplateId] || 0) + 1 }));
   };
 
   const handleDeleteSession = (session) => {
@@ -299,6 +311,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
           await supabase.from('template_sessions').delete().eq('id', session.id);
           if (activeSessionId === session.id) setActiveSessionId(null);
           loadSessions(activeTemplateId);
+          setTemplateSessionCounts((prev) => ({ ...prev, [activeTemplateId]: Math.max(0, (prev[activeTemplateId] || 1) - 1) }));
         },
       },
     ]);
@@ -501,13 +514,19 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
             rightSlot={
               activeMainTab === 'templates' ? (
                 <View style={styles.headerActionsRow}>
-                  <TouchableOpacity onPress={() => setShowCreateTemplateModal(true)} hitSlop={8}>
-                    <Ionicons name="add-circle-outline" size={22} color="#f97316" />
-                  </TouchableOpacity>
-                  {activeTemplateId && (
+                  {activeTemplateId ? (
                     <TouchableOpacity onPress={() => setShowSettingsSheet(true)} hitSlop={8}>
                       <Ionicons name="settings-outline" size={22} color="#f97316" />
                     </TouchableOpacity>
+                  ) : (
+                    <>
+                      <TouchableOpacity onPress={() => setShowAiTemplateModal(true)} hitSlop={8}>
+                        <Ionicons name="sparkles-outline" size={22} color="#f97316" />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => setShowCreateTemplateModal(true)} hitSlop={8}>
+                        <Ionicons name="add-circle-outline" size={22} color="#f97316" />
+                      </TouchableOpacity>
+                    </>
                   )}
                 </View>
               ) : null
@@ -539,127 +558,6 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
 
       {activeMainTab === 'templates' && (
       <>
-      <TouchableOpacity style={styles.editingBar} onPress={() => setShowTemplatePicker(true)}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.editingBarLabel}>Editando</Text>
-          <Text style={styles.editingBarTitle} numberOfLines={1}>
-            {templates.find((t) => t.id === activeTemplateId)?.name || 'Nenhum template selecionado'}
-          </Text>
-        </View>
-        <Ionicons name="swap-horizontal-outline" size={16} color="#f97316" />
-        <Text style={styles.editingBarSwitchText}>Trocar</Text>
-      </TouchableOpacity>
-
-      <Modal visible={showTemplatePicker} transparent animationType="slide" onRequestClose={() => setShowTemplatePicker(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Meus Templates</Text>
-
-            <View style={styles.newRow}>
-              <TextInput
-                style={styles.newInput}
-                placeholder="Nome do novo template"
-                placeholderTextColor="#737373"
-                value={newTemplateName}
-                onChangeText={setNewTemplateName}
-              />
-              <TouchableOpacity style={styles.addButton} onPress={handleCreateTemplate}>
-                <Text style={styles.addButtonText}>+</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TextInput
-              style={[styles.newInput, { marginBottom: 10 }]}
-              placeholder="Buscar template..."
-              placeholderTextColor="#737373"
-              value={templateSearch}
-              onChangeText={setTemplateSearch}
-            />
-
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 6 }}>
-              <View style={{ flexDirection: 'row', gap: 6 }}>
-                {[{ value: 'todos', label: 'Todos os níveis' }, ...PROGRAM_LEVELS].map((l) => (
-                  <TouchableOpacity
-                    key={l.value}
-                    style={[styles.pickerFilterChip, templateLevelFilter === l.value && styles.pickerFilterChipActive]}
-                    onPress={() => setTemplateLevelFilter(l.value)}
-                  >
-                    <Text style={[styles.pickerFilterChipText, templateLevelFilter === l.value && styles.pickerFilterChipTextActive]}>{l.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-              <View style={{ flexDirection: 'row', gap: 6 }}>
-                {[{ value: 'todos', label: 'Todos os locais' }, ...TRAINING_LOCATIONS].map((l) => (
-                  <TouchableOpacity
-                    key={l.value}
-                    style={[styles.pickerFilterChip, templateEnvironmentFilter === l.value && styles.pickerFilterChipActive]}
-                    onPress={() => setTemplateEnvironmentFilter(l.value)}
-                  >
-                    <Text style={[styles.pickerFilterChipText, templateEnvironmentFilter === l.value && styles.pickerFilterChipTextActive]}>{l.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-
-            <ScrollView style={{ maxHeight: 320 }}>
-              {templateGroups.map((group) => (
-                <View key={group.value} style={{ marginBottom: 12 }}>
-                  <Text style={styles.templateGroupLabel}>{group.label}</Text>
-                  {group.items.map((t) => (
-                    <TouchableOpacity
-                      key={t.id}
-                      style={[styles.templateListRow, activeTemplateId === t.id && styles.templateListRowActive]}
-                      onPress={() => {
-                        setActiveTemplateId(t.id);
-                        setShowTemplatePicker(false);
-                      }}
-                    >
-                      <Text style={styles.templateListRowText} numberOfLines={1}>{t.name}</Text>
-                      {t.is_public && <Text style={styles.publicDot}>●</Text>}
-                      <TouchableOpacity hitSlop={8} onPress={() => handleDeleteTemplate(t)}>
-                        <Ionicons name="trash-outline" size={16} color="#ef4444" />
-                      </TouchableOpacity>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              ))}
-
-              {ungroupedTemplates.length > 0 && (
-                <View style={{ marginBottom: 12 }}>
-                  {templateGroups.length > 0 && <Text style={styles.templateGroupLabel}>Sem categoria</Text>}
-                  {ungroupedTemplates.map((t) => (
-                    <TouchableOpacity
-                      key={t.id}
-                      style={[styles.templateListRow, activeTemplateId === t.id && styles.templateListRowActive]}
-                      onPress={() => {
-                        setActiveTemplateId(t.id);
-                        setShowTemplatePicker(false);
-                      }}
-                    >
-                      <Text style={styles.templateListRowText} numberOfLines={1}>{t.name}</Text>
-                      {t.is_public && <Text style={styles.publicDot}>●</Text>}
-                      <TouchableOpacity hitSlop={8} onPress={() => handleDeleteTemplate(t)}>
-                        <Ionicons name="trash-outline" size={16} color="#ef4444" />
-                      </TouchableOpacity>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
-              {filteredTemplates.length === 0 && (
-                <Text style={styles.emptyText}>{templates.length === 0 ? 'Nenhum template ainda.' : 'Nenhum template encontrado com esses filtros.'}</Text>
-              )}
-            </ScrollView>
-
-            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowTemplatePicker(false)}>
-              <Text style={styles.modalCloseButtonText}>Fechar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
       <Modal visible={showSettingsSheet} transparent animationType="slide" onRequestClose={() => setShowSettingsSheet(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalSheet, { maxHeight: '88%' }]}>
@@ -849,24 +747,127 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       </Modal>
 
       {!activeTemplateId ? (
-        <View style={styles.emptyStateBox}>
-          <Ionicons name="albums-outline" size={36} color="#525252" />
-          <Text style={styles.emptyStateTitle}>Nenhum template ainda</Text>
-          <Text style={styles.emptyStateSubtitle}>Crie o primeiro modelo de treino da sua biblioteca pra reaproveitar com seus alunos.</Text>
+        templates.length === 0 ? (
+          <View style={styles.emptyStateBox}>
+            <Ionicons name="albums-outline" size={36} color="#525252" />
+            <Text style={styles.emptyStateTitle}>Nenhum template ainda</Text>
+            <Text style={styles.emptyStateSubtitle}>Crie o primeiro modelo de treino da sua biblioteca pra reaproveitar com seus alunos.</Text>
 
-          <TouchableOpacity style={styles.emptyStatePrimaryButton} onPress={() => setShowCreateTemplateModal(true)}>
-            <Ionicons name="add" size={18} color="#0a0a0a" />
-            <Text style={styles.emptyStatePrimaryButtonText}>Criar Template Manualmente</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.emptyStatePrimaryButton} onPress={() => setShowCreateTemplateModal(true)}>
+              <Ionicons name="add" size={18} color="#0a0a0a" />
+              <Text style={styles.emptyStatePrimaryButtonText}>Criar Template Manualmente</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.emptyStateAiButton} onPress={() => setShowAiTemplateModal(true)}>
-            <Ionicons name="sparkles" size={18} color="#f97316" />
-            <Text style={styles.emptyStateAiButtonText}>Gerar Template com IA</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity style={styles.emptyStateAiButton} onPress={() => setShowAiTemplateModal(true)}>
+              <Ionicons name="sparkles" size={18} color="#f97316" />
+              <Text style={styles.emptyStateAiButtonText}>Gerar Template com IA</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={{ flex: 1 }}>
+            <View style={{ paddingHorizontal: 16 }}>
+              <TextInput
+                style={[styles.newInput, { marginBottom: 10 }]}
+                placeholder="Buscar programa..."
+                placeholderTextColor="#737373"
+                value={templateSearch}
+                onChangeText={setTemplateSearch}
+              />
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 6, paddingLeft: 16 }}>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                {[{ value: 'todos', label: 'Todos os níveis' }, ...PROGRAM_LEVELS].map((l) => (
+                  <TouchableOpacity
+                    key={l.value}
+                    style={[styles.pickerFilterChip, templateLevelFilter === l.value && styles.pickerFilterChipActive]}
+                    onPress={() => setTemplateLevelFilter(l.value)}
+                  >
+                    <Text style={[styles.pickerFilterChipText, templateLevelFilter === l.value && styles.pickerFilterChipTextActive]}>{l.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12, paddingLeft: 16 }}>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                {[{ value: 'todos', label: 'Todos os locais' }, ...TRAINING_LOCATIONS].map((l) => (
+                  <TouchableOpacity
+                    key={l.value}
+                    style={[styles.pickerFilterChip, templateEnvironmentFilter === l.value && styles.pickerFilterChipActive]}
+                    onPress={() => setTemplateEnvironmentFilter(l.value)}
+                  >
+                    <Text style={[styles.pickerFilterChipText, templateEnvironmentFilter === l.value && styles.pickerFilterChipTextActive]}>{l.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}>
+              {templateGroups.map((group) => (
+                <View key={group.value} style={{ marginBottom: 16 }}>
+                  <Text style={styles.templateGroupLabel}>{group.label}</Text>
+                  {group.items.map((t) => (
+                    <TouchableOpacity key={t.id} style={styles.programCard} onPress={() => setActiveTemplateId(t.id)} onLongPress={() => handleDeleteTemplate(t)}>
+                      {t.cover_image_url ? (
+                        <Image source={{ uri: t.cover_image_url }} style={styles.programCardCover} />
+                      ) : (
+                        <View style={styles.programCardCoverPlaceholder}>
+                          <Ionicons name="albums-outline" size={20} color="#525252" />
+                        </View>
+                      )}
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.programCardTitle} numberOfLines={1}>{t.name}</Text>
+                        <Text style={styles.programCardSubtitle}>
+                          {templateSessionCounts[t.id] || 0} ficha{(templateSessionCounts[t.id] || 0) !== 1 ? 's' : ''}
+                        </Text>
+                      </View>
+                      {t.is_public && <Text style={styles.publicDot}>●</Text>}
+                      <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ))}
+
+              {ungroupedTemplates.length > 0 && (
+                <View style={{ marginBottom: 16 }}>
+                  {templateGroups.length > 0 && <Text style={styles.templateGroupLabel}>Sem categoria</Text>}
+                  {ungroupedTemplates.map((t) => (
+                    <TouchableOpacity key={t.id} style={styles.programCard} onPress={() => setActiveTemplateId(t.id)} onLongPress={() => handleDeleteTemplate(t)}>
+                      {t.cover_image_url ? (
+                        <Image source={{ uri: t.cover_image_url }} style={styles.programCardCover} />
+                      ) : (
+                        <View style={styles.programCardCoverPlaceholder}>
+                          <Ionicons name="albums-outline" size={20} color="#525252" />
+                        </View>
+                      )}
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.programCardTitle} numberOfLines={1}>{t.name}</Text>
+                        <Text style={styles.programCardSubtitle}>
+                          {templateSessionCounts[t.id] || 0} ficha{(templateSessionCounts[t.id] || 0) !== 1 ? 's' : ''}
+                        </Text>
+                      </View>
+                      {t.is_public && <Text style={styles.publicDot}>●</Text>}
+                      <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {filteredTemplates.length === 0 && (
+                <Text style={styles.emptyText}>Nenhum programa encontrado com esses filtros.</Text>
+              )}
+            </ScrollView>
+          </View>
+        )
       ) : (
         <>
-          <Text style={styles.hintText}>Toque num treino pra expandir · segure pra excluir</Text>
+          <TouchableOpacity style={styles.backToProgramsRow} onPress={() => setActiveTemplateId(null)}>
+            <Ionicons name="arrow-back" size={16} color="#f97316" />
+            <Text style={styles.backToProgramsText} numberOfLines={1}>
+              {templates.find((t) => t.id === activeTemplateId)?.name || 'Voltar aos Programas'}
+            </Text>
+          </TouchableOpacity>
+          <Text style={styles.hintText}>Toque numa ficha pra expandir · segure pra excluir</Text>
 
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 16 }}>
             {sessions.map((session) => {
@@ -990,10 +991,13 @@ const styles = StyleSheet.create({
   mainTabTextActive: { color: '#0a0a0a' },
   sectionToggleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 14 },
   sectionToggleLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', marginBottom: 4 },
-  editingBar: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginHorizontal: 16, marginBottom: 16 },
-  editingBarLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 2 },
-  editingBarTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
-  editingBarSwitchText: { color: '#f97316', fontSize: 11, fontWeight: '700' },
+  backToProgramsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, marginBottom: 10 },
+  backToProgramsText: { color: '#f97316', fontSize: 15, fontWeight: '700', flexShrink: 1 },
+  programCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 10, marginBottom: 8 },
+  programCardCover: { width: 44, height: 44, borderRadius: 10 },
+  programCardCoverPlaceholder: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
+  programCardTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
+  programCardSubtitle: { color: '#737373', fontSize: 11, marginTop: 2 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   modalSheet: { backgroundColor: '#171717', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '80%' },
   modalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 14 },
@@ -1002,9 +1006,6 @@ const styles = StyleSheet.create({
   aiInputRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', marginBottom: 16 },
   aiMicButton: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center' },
   aiMicButtonActive: { backgroundColor: '#f97316' },
-  templateListRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, marginBottom: 8 },
-  templateListRowActive: { borderColor: '#f97316' },
-  templateListRowText: { flex: 1, color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
   templateGroupLabel: { color: '#737373', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', marginBottom: 8 },
   pickerFilterChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
   pickerFilterChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
@@ -1016,8 +1017,6 @@ const styles = StyleSheet.create({
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 8 },
   newRow: { flexDirection: 'row', marginBottom: 16, gap: 8 },
   newInput: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#f5f5f5', fontSize: 12 },
-  addButton: { backgroundColor: '#f97316', width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  addButtonText: { color: '#0a0a0a', fontSize: 20, fontWeight: '700' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
   emptyStateBox: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 8 },
   emptyStateTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginTop: 8 },
