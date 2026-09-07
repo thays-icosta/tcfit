@@ -39,11 +39,23 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
 
+  const [referralDiscountPct, setReferralDiscountPct] = useState('10');
+  const [pendingRewards, setPendingRewards] = useState([]);
+
+  const loadRewards = async () => {
+    const { data } = await supabase
+      .from('referral_rewards')
+      .select('id, discount_pct, applied, created_at, referrer:referrer_id (name), referred:referred_id (name)')
+      .eq('applied', false)
+      .order('created_at', { ascending: false });
+    setPendingRewards(data || []);
+  };
+
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from('users')
-        .select('name, email, avatar_url, logo_url, professional_register, phone, contact_instagram, contact_email, pix_key')
+        .select('name, email, avatar_url, logo_url, professional_register, phone, contact_instagram, contact_email, pix_key, referral_discount_pct')
         .eq('id', user.id)
         .single();
       if (data) {
@@ -56,6 +68,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
         setContactInstagram(data.contact_instagram || '');
         setContactEmail(data.contact_email || '');
         setPixKey(data.pix_key || '');
+        setReferralDiscountPct(data.referral_discount_pct != null ? String(data.referral_discount_pct) : '10');
       }
       setLoading(false);
     })();
@@ -68,7 +81,14 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
         .eq('role', 'aluno');
       setStudentCount(count || 0);
     })();
+
+    loadRewards();
   }, [user.id]);
+
+  const handleMarkRewardApplied = async (rewardId) => {
+    await supabase.from('referral_rewards').update({ applied: true }).eq('id', rewardId);
+    loadRewards();
+  };
 
   const handlePickAvatar = async () => {
     try {
@@ -157,6 +177,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
         contact_instagram: contactInstagram.trim() || null,
         contact_email: contactEmail.trim() || null,
         pix_key: pixKey.trim() || null,
+        referral_discount_pct: referralDiscountPct ? Number(referralDiscountPct) : 10,
       })
       .eq('id', user.id);
     setSaving(false);
@@ -352,6 +373,33 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
       </View>
 
       <View style={styles.formCard}>
+        <Text style={styles.brandingTitle}>🎁 Indique e Ganhe</Text>
+        <Text style={styles.helperText}>Desconto que o aluno que indicou ganha quando o amigo indicado assina a Consultoria VIP. Aplicado manualmente por você — o app só avisa quando alguém tem desconto a receber.</Text>
+
+        <Text style={styles.label}>Desconto por indicação (%)</Text>
+        <TextInput style={styles.input} keyboardType="number-pad" placeholder="10" placeholderTextColor="#525252" value={referralDiscountPct} onChangeText={setReferralDiscountPct} />
+
+        {pendingRewards.length > 0 && (
+          <>
+            <Text style={[styles.label, { marginTop: 18 }]}>Descontos pendentes ({pendingRewards.length})</Text>
+            {pendingRewards.map((r) => (
+              <View key={r.id} style={styles.rewardRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rewardText}>
+                    {r.referrer?.name || 'Aluno'} indicou {r.referred?.name || 'um amigo'}
+                  </Text>
+                  <Text style={styles.rewardSubtext}>{r.discount_pct}% de desconto a aplicar pra {r.referrer?.name || 'quem indicou'}</Text>
+                </View>
+                <TouchableOpacity style={styles.rewardApplyButton} onPress={() => handleMarkRewardApplied(r.id)}>
+                  <Text style={styles.rewardApplyButtonText}>Marcar aplicado</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </>
+        )}
+      </View>
+
+      <View style={styles.formCard}>
         <Text style={styles.label}>Nome</Text>
         <TextInput style={styles.input} placeholder="Seu nome" placeholderTextColor="#525252" value={name} onChangeText={setName} />
 
@@ -438,6 +486,11 @@ const styles = StyleSheet.create({
   paymentHint: { color: '#525252', fontSize: 10, marginTop: 4, marginBottom: 4, lineHeight: 14 },
   brandingSavedHint: { color: '#525252', fontSize: 9, marginTop: 14, lineHeight: 13 },
   formCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 16 },
+  rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#0a0a0a', borderRadius: 10, padding: 12, marginTop: 8 },
+  rewardText: { color: '#f5f5f5', fontSize: 12, fontWeight: '600' },
+  rewardSubtext: { color: '#22c55e', fontSize: 11, marginTop: 2 },
+  rewardApplyButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
+  rewardApplyButtonText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
   saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
   securitySection: { marginTop: 24 },

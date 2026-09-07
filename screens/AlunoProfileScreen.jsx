@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Switch, Image, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Switch, Image, Modal, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
@@ -44,12 +45,14 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
+  const [referralCode, setReferralCode] = useState(null);
+  const [justCopiedReferral, setJustCopiedReferral] = useState(false);
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from('users')
-        .select('name, weight_kg, email, phone, reminder_enabled, reminder_time, avatar_url, personal_id, access_level')
+        .select('name, weight_kg, email, phone, reminder_enabled, reminder_time, avatar_url, personal_id, access_level, referral_code')
         .eq('id', user.id)
         .single();
       if (data) {
@@ -62,6 +65,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
         setAvatarUrl(data.avatar_url || null);
         setPersonalId(data.personal_id || null);
         setAccessLevel(data.access_level || 'plataforma_base');
+        setReferralCode(data.referral_code || null);
 
         if (data.personal_id) {
           const { data: personalRow } = await supabase.from('users').select('name, phone').eq('id', data.personal_id).single();
@@ -133,6 +137,24 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
       showAlert('Erro', error.message);
     } else {
       showAlert('Salvo!', 'Seu perfil foi atualizado.', [{ text: 'OK', onPress: onClose }]);
+    }
+  };
+
+  const handleCopyReferral = async () => {
+    if (!referralCode) return;
+    await Clipboard.setStringAsync(referralCode);
+    setJustCopiedReferral(true);
+    setTimeout(() => setJustCopiedReferral(false), 2000);
+  };
+
+  const handleShareReferral = async () => {
+    if (!referralCode) return;
+    try {
+      await Share.share({
+        message: `Vem treinar comigo no TcFit! Usa meu código de indicação ${referralCode} no cadastro — a gente ganha desconto quando você assinar a consultoria 💪`,
+      });
+    } catch {
+      showAlert('Erro', 'Não foi possível abrir o compartilhamento.');
     }
   };
 
@@ -320,6 +342,23 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
         </TouchableOpacity>
       </View>
 
+      {referralCode && (
+        <View style={styles.referralCard}>
+          <Text style={styles.referralTitle}>🎁 Indique e Ganhe</Text>
+          <Text style={styles.referralSubtitle}>Compartilhe seu código com um amigo. Quando ele assinar a consultoria, vocês dois saem ganhando.</Text>
+          <View style={styles.referralCodeRow}>
+            <Text style={styles.referralCodeText}>{referralCode}</Text>
+            <TouchableOpacity style={styles.referralCopyButton} onPress={handleCopyReferral}>
+              <Text style={styles.referralCopyButtonText}>{justCopiedReferral ? 'Copiado!' : 'Copiar'}</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.referralShareButton} onPress={handleShareReferral}>
+            <Ionicons name="share-social-outline" size={14} color="#f97316" />
+            <Text style={styles.referralShareButtonText}>Compartilhar código</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {accessLevel !== 'consultoria_vip' && (
         <TouchableOpacity style={styles.upsellBanner} onPress={() => setLockModalFeature('a Consultoria Individualizada')}>
           <Ionicons name="star-outline" size={16} color="#f97316" />
@@ -488,6 +527,15 @@ const styles = StyleSheet.create({
   avatarEditIcon: { fontSize: 12 },
   avatarHint: { color: '#525252', fontSize: 10, marginTop: 8 },
   shortcutsGrid: { gap: 10, marginBottom: 16 },
+  referralCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#f97316', borderRadius: 14, padding: 16, marginBottom: 16 },
+  referralTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '800' },
+  referralSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 6, marginBottom: 14, lineHeight: 16 },
+  referralCodeRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#0a0a0a', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12 },
+  referralCodeText: { flex: 1, color: '#f97316', fontSize: 18, fontWeight: '800', letterSpacing: 2 },
+  referralCopyButton: { backgroundColor: '#f97316', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
+  referralCopyButtonText: { color: '#0a0a0a', fontSize: 11, fontWeight: '700' },
+  referralShareButton: { flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', marginTop: 10, paddingVertical: 8 },
+  referralShareButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
   upsellBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(249,115,22,0.08)', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 16 },
   upsellBannerText: { flex: 1, color: '#a3a3a3', fontSize: 11, fontWeight: '600', lineHeight: 16 },
   shortcutCard: { flex: 1, borderWidth: 1, borderRadius: 14, paddingVertical: 18, alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 90, position: 'relative' },

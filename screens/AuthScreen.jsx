@@ -11,6 +11,7 @@ export default function AuthScreen({ onAuthenticated, onBack, initialMode, initi
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [inviteCode, setInviteCode] = useState(initialInviteCode || '');
+  const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
@@ -48,6 +49,7 @@ export default function AuthScreen({ onAuthenticated, onBack, initialMode, initi
       };
       if (role === 'aluno') {
         metadata.personal_id = inviteCode.trim();
+        if (referralCode.trim()) metadata.referral_code = referralCode.trim();
       }
 
       const { data: signUpData, error } = await supabase.auth.signUp({
@@ -147,14 +149,24 @@ export default function AuthScreen({ onAuthenticated, onBack, initialMode, initi
       />
 
       {mode === 'signup' && role === 'aluno' && (
-        <TextInput
-          style={styles.input}
-          placeholder="Código de convite do seu personal"
-          placeholderTextColor="#525252"
-          value={inviteCode}
-          onChangeText={setInviteCode}
-          autoCapitalize="none"
-        />
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Código de convite do seu personal"
+            placeholderTextColor="#525252"
+            value={inviteCode}
+            onChangeText={setInviteCode}
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Código de indicação de um amigo (opcional)"
+            placeholderTextColor="#525252"
+            value={referralCode}
+            onChangeText={setReferralCode}
+            autoCapitalize="characters"
+          />
+        </>
       )}
 
       {mode === 'login' && (
