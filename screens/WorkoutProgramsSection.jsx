@@ -61,8 +61,8 @@ function CategoryRow({ title, units }) {
   );
 }
 
-export default function WorkoutProgramsSection({ isDesktop }) {
-  const [products, setProducts] = useState([]);
+export default function WorkoutProgramsSection({ isDesktop, gender }) {
+  const [allProducts, setAllProducts] = useState([]);
   const [collections, setCollections] = useState([]);
 
   useEffect(() => {
@@ -70,16 +70,20 @@ export default function WorkoutProgramsSection({ isDesktop }) {
       const [{ data: productRows }, { data: collectionRows }] = await Promise.all([
         supabase
           .from('products')
-          .select('id, name, cover_image_url, collection_id, level, goal, category, active, type')
+          .select('id, name, cover_image_url, collection_id, level, goal, category, active, type, target_audience')
           .in('type', WORKOUT_PRODUCT_TYPES)
           .eq('active', true)
           .order('created_at', { ascending: false }),
         supabase.from('product_collections').select('*').order('order_index'),
       ]);
-      setProducts(productRows || []);
+      setAllProducts(productRows || []);
       setCollections(collectionRows || []);
     })();
   }, []);
+
+  const products = gender
+    ? allProducts.filter((p) => !p.target_audience || p.target_audience === 'unissex' || p.target_audience === gender)
+    : allProducts;
 
   if (products.length === 0) return null;
 

@@ -4,7 +4,9 @@ import { supabase } from './supabaseClient';
 import ForgotPasswordScreen from './ForgotPasswordScreen';
 import { showAlert } from './alertUtils';
 
-export default function AuthScreen({ onAuthenticated, onBack, initialMode, initialRole, initialInviteCode }) {
+const GENDER_ONBOARDING_MAP = { female: 'feminino', feminino: 'feminino', male: 'masculino', masculino: 'masculino' };
+
+export default function AuthScreen({ onAuthenticated, onBack, initialMode, initialRole, initialInviteCode, initialGender }) {
   const [mode, setMode] = useState(initialMode === 'signup' ? 'signup' : 'login');
   const [role, setRole] = useState(initialRole === 'aluno' ? 'aluno' : 'personal');
   const [name, setName] = useState('');
@@ -12,6 +14,7 @@ export default function AuthScreen({ onAuthenticated, onBack, initialMode, initi
   const [password, setPassword] = useState('');
   const [inviteCode, setInviteCode] = useState(initialInviteCode || '');
   const [referralCode, setReferralCode] = useState('');
+  const [gender, setGender] = useState(GENDER_ONBOARDING_MAP[initialGender] || null);
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
@@ -26,6 +29,10 @@ export default function AuthScreen({ onAuthenticated, onBack, initialMode, initi
     }
     if (mode === 'signup' && role === 'aluno' && !inviteCode.trim()) {
       showAlert('Ops', 'Preenche o código de convite do seu personal.');
+      return;
+    }
+    if (mode === 'signup' && role === 'aluno' && !gender) {
+      showAlert('Ops', 'Escolhe seu universo (Feminino ou Masculino) pra gente personalizar sua Home.');
       return;
     }
 
@@ -50,6 +57,7 @@ export default function AuthScreen({ onAuthenticated, onBack, initialMode, initi
       if (role === 'aluno') {
         metadata.personal_id = inviteCode.trim();
         if (referralCode.trim()) metadata.referral_code = referralCode.trim();
+        metadata.gender = gender;
       }
 
       const { data: signUpData, error } = await supabase.auth.signUp({
@@ -166,6 +174,22 @@ export default function AuthScreen({ onAuthenticated, onBack, initialMode, initi
             onChangeText={setReferralCode}
             autoCapitalize="characters"
           />
+
+          <Text style={styles.genderLabel}>Escolha seu universo</Text>
+          <View style={styles.genderRow}>
+            <TouchableOpacity
+              style={[styles.genderButton, gender === 'feminino' && styles.genderButtonActiveFeminino]}
+              onPress={() => setGender('feminino')}
+            >
+              <Text style={[styles.genderButtonText, gender === 'feminino' && styles.genderButtonTextActive]}>Universo Feminino</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.genderButton, gender === 'masculino' && styles.genderButtonActiveMasculino]}
+              onPress={() => setGender('masculino')}
+            >
+              <Text style={[styles.genderButtonText, gender === 'masculino' && styles.genderButtonTextActive]}>Universo Masculino</Text>
+            </TouchableOpacity>
+          </View>
         </>
       )}
 
@@ -209,6 +233,13 @@ const styles = StyleSheet.create({
   roleButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
   roleButtonTextActive: { color: '#0a0a0a' },
   input: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 14, color: '#f5f5f5', fontSize: 14, marginBottom: 12 },
+  genderLabel: { color: '#a3a3a3', fontSize: 12, fontWeight: '600', marginBottom: 8 },
+  genderRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
+  genderButton: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
+  genderButtonActiveFeminino: { borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,0.12)' },
+  genderButtonActiveMasculino: { borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.12)' },
+  genderButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
+  genderButtonTextActive: { color: '#f5f5f5' },
   forgotLink: { alignItems: 'flex-end', marginBottom: 16, marginTop: -4 },
   forgotLinkText: { color: '#f97316', fontSize: 12, fontWeight: '600' },
   submitButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 4 },

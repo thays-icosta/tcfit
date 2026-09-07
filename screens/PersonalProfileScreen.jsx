@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as Clipboard from 'expo-clipboard';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import PlanPricesScreen from './PlanPricesScreen';
@@ -41,6 +42,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
 
   const [referralDiscountPct, setReferralDiscountPct] = useState('10');
   const [pendingRewards, setPendingRewards] = useState([]);
+  const [copiedGenderLink, setCopiedGenderLink] = useState(null);
 
   const loadRewards = async () => {
     const { data } = await supabase
@@ -88,6 +90,13 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
   const handleMarkRewardApplied = async (rewardId) => {
     await supabase.from('referral_rewards').update({ applied: true }).eq('id', rewardId);
     loadRewards();
+  };
+
+  const handleCopyGenderLink = async (genderTag) => {
+    const link = `https://tcfit.vercel.app/?gender=${genderTag}`;
+    await Clipboard.setStringAsync(link);
+    setCopiedGenderLink(genderTag);
+    setTimeout(() => setCopiedGenderLink((prev) => (prev === genderTag ? null : prev)), 2500);
   };
 
   const handlePickAvatar = async () => {
@@ -400,6 +409,25 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
       </View>
 
       <View style={styles.formCard}>
+        <Text style={styles.brandingTitle}>🔗 Links de Divulgação Segmentados</Text>
+        <Text style={styles.helperText}>Use nos seus anúncios e posts: quem clicar já vê a página de vendas com o destaque certo, e o cadastro já vem com o universo pré-selecionado.</Text>
+
+        <TouchableOpacity style={styles.genderLinkButton} onPress={() => handleCopyGenderLink('female')}>
+          <Ionicons name={copiedGenderLink === 'female' ? 'checkmark-outline' : 'copy-outline'} size={16} color="#ec4899" />
+          <Text style={[styles.genderLinkButtonText, { color: '#ec4899' }]}>
+            {copiedGenderLink === 'female' ? 'Link copiado!' : 'Copiar Link — Público Feminino'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.genderLinkButton} onPress={() => handleCopyGenderLink('male')}>
+          <Ionicons name={copiedGenderLink === 'male' ? 'checkmark-outline' : 'copy-outline'} size={16} color="#3b82f6" />
+          <Text style={[styles.genderLinkButtonText, { color: '#3b82f6' }]}>
+            {copiedGenderLink === 'male' ? 'Link copiado!' : 'Copiar Link — Público Masculino'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.formCard}>
         <Text style={styles.label}>Nome</Text>
         <TextInput style={styles.input} placeholder="Seu nome" placeholderTextColor="#525252" value={name} onChangeText={setName} />
 
@@ -491,6 +519,8 @@ const styles = StyleSheet.create({
   rewardSubtext: { color: '#22c55e', fontSize: 11, marginTop: 2 },
   rewardApplyButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
   rewardApplyButtonText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
+  genderLinkButton: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, marginTop: 10 },
+  genderLinkButtonText: { fontSize: 13, fontWeight: '700' },
   saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
   securitySection: { marginTop: 24 },

@@ -12,7 +12,7 @@ import { setErrorLoggerUser } from '../../screens/errorLogger';
 
 export default function HomeTab() {
   const router = useRouter();
-  const params = useGlobalSearchParams<{ view?: string; mode?: string; role?: string; invite?: string; chatPersonalId?: string; chatStudentId?: string }>();
+  const params = useGlobalSearchParams<{ view?: string; mode?: string; role?: string; invite?: string; gender?: string; chatPersonalId?: string; chatStudentId?: string }>();
   const [user, setUser] = useState<{ id: string; email?: string; name?: string } | null>(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -115,14 +115,16 @@ export default function HomeTab() {
           initialMode={params.mode}
           initialRole={params.role}
           initialInviteCode={params.invite}
+          initialGender={params.gender}
         />
       );
     }
     return (
       <WelcomeScreen
         onLogin={() => setAuthView('auth')}
-        onSignup={(personalId) => router.push(`/?view=auth&mode=signup&role=aluno${personalId ? `&invite=${personalId}` : ''}`)}
+        onSignup={(personalId) => router.push(`/?view=auth&mode=signup&role=aluno${personalId ? `&invite=${personalId}` : ''}${params.gender ? `&gender=${params.gender}` : ''}`)}
         scrollToPlansOnMount={params.view === 'plans'}
+        gender={params.gender}
       />
     );
   }

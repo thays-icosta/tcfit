@@ -8,14 +8,14 @@ import { ACCENT, TRANSITION, FLAT_CARD, sectionTitleStyle, SUPPORT_TEXT } from '
 const TAG_LABELS = {};
 WORKOUT_TAGS.forEach((t) => { TAG_LABELS[t.value] = t.label; });
 
-export default function WorkoutsSection({ onSelectWorkout, isDesktop }) {
+export default function WorkoutsSection({ onSelectWorkout, isDesktop, gender }) {
   const [workoutsData, setWorkoutsData] = useState([]);
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from('workout_templates')
-        .select('id, name, description, cover_image_url, workout_tags, is_public')
+        .select('id, name, description, cover_image_url, workout_tags, is_public, target_audience')
         .eq('is_public', true)
         .not('workout_tags', 'is', null)
         .order('created_at', { ascending: false });
@@ -27,12 +27,17 @@ export default function WorkoutsSection({ onSelectWorkout, isDesktop }) {
         tags: t.workout_tags || [],
         bannerImage: t.cover_image_url,
         active: t.is_public,
+        targetAudience: t.target_audience,
       }));
       setWorkoutsData(normalized);
     })();
   }, []);
 
-  if (workoutsData.length === 0) return null;
+  const filteredWorkouts = gender
+    ? workoutsData.filter((w) => !w.targetAudience || w.targetAudience === 'unissex' || w.targetAudience === gender)
+    : workoutsData;
+
+  if (filteredWorkouts.length === 0) return null;
 
   return (
     <View>
@@ -42,7 +47,7 @@ export default function WorkoutsSection({ onSelectWorkout, isDesktop }) {
       </Text>
 
       <View style={styles.itemGrid}>
-        {workoutsData.map((item) => (
+        {filteredWorkouts.map((item) => (
           <View key={item.id} style={styles.itemCard}>
             <View style={styles.bannerWrap}>
               {item.bannerImage ? (

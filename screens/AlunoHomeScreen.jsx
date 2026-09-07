@@ -38,9 +38,13 @@ const PROGRAM_HUB_GROUPS = [
 
 const NUTRITION_LIBRARY_CATEGORIES = ['dieta_ebook'];
 
-function buildHubGroups(products) {
+function buildHubGroups(products, audienceFilter) {
   return PROGRAM_HUB_GROUPS.map((group) => {
-    const items = products.filter((p) => group.categories.includes(p.category));
+    const items = products.filter((p) => {
+      if (!group.categories.includes(p.category)) return false;
+      if (!audienceFilter || audienceFilter === 'todos') return true;
+      return !p.target_audience || p.target_audience === 'unissex' || p.target_audience === audienceFilter;
+    });
     if (items.length === 0) return null;
     const cover = items.find((p) => p.cover_image_url)?.cover_image_url || null;
     const badgeSet = new Set();
@@ -79,6 +83,8 @@ function mealLabel(code) {
 export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onConsumeInitialChat }) {
   const [personalId, setPersonalId] = useState(null);
   const [myAccessLevel, setMyAccessLevel] = useState('plataforma_base');
+  const [myGender, setMyGender] = useState(null);
+  const [hubAudienceFilter, setHubAudienceFilter] = useState('todos');
   const [personalName, setPersonalName] = useState(null);
   const [personalAvatarUrl, setPersonalAvatarUrl] = useState(null);
   const [personalPhone, setPersonalPhone] = useState(null);
@@ -161,7 +167,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const loadData = async () => {
     const { data: myRow } = await supabase
       .from('users')
-      .select('personal_id, avatar_url, student_type, access_level, anamnese_completed_at, water_goal_ml')
+      .select('personal_id, avatar_url, student_type, access_level, anamnese_completed_at, water_goal_ml, gender')
       .eq('id', user.id)
       .single();
 
@@ -170,6 +176,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     setStudentType(myRow?.student_type || 'consultoria');
     setShowAnamnesePrompt(!!myRow?.personal_id && !myRow?.anamnese_completed_at);
     setWaterGoalMl(myRow?.water_goal_ml || 2000);
+    setMyGender(myRow?.gender || null);
 
     if (myRow?.personal_id) {
       const { data: personalRow } = await supabase
@@ -322,6 +329,10 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   useEffect(() => {
     loadData();
   }, [user.id]);
+
+  useEffect(() => {
+    if (myGender) setHubAudienceFilter(myGender);
+  }, [myGender]);
 
   useEffect(() => {
     if (openChatOnMount && personalId) {
@@ -1149,7 +1160,8 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     );
   }
 
-  const hubGroups = buildHubGroups(categorizedProducts);
+  const hubGroups = buildHubGroups(categorizedProducts, hubAudienceFilter);
+  const hasAnyHubProgram = buildHubGroups(categorizedProducts, 'todos').length > 0;
   const nutritionItems = categorizedProducts.filter((p) => NUTRITION_LIBRARY_CATEGORIES.includes(p.category) || p.type === 'ebook_receitas');
   const nutritionCollections = collections
     .map((c) => ({ ...c, items: nutritionItems.filter((p) => p.collection_id === c.id) }))
@@ -1298,9 +1310,23 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             )}
           </TouchableOpacity>
 
-          {hubGroups.length > 0 && (
+          {hasAnyHubProgram && (
             <>
               <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>HUB DE PROGRAMAS</Text>
+              <View style={styles.audienceFilterRow}>
+                {[{ value: 'todos', label: 'Todos' }, { value: 'feminino', label: 'Feminino' }, { value: 'masculino', label: 'Masculino' }].map((a) => (
+                  <TouchableOpacity
+                    key={a.value}
+                    style={[styles.audienceFilterChip, hubAudienceFilter === a.value && styles.audienceFilterChipActive]}
+                    onPress={() => setHubAudienceFilter(a.value)}
+                  >
+                    <Text style={[styles.audienceFilterChipText, hubAudienceFilter === a.value && styles.audienceFilterChipTextActive]}>{a.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {hubGroups.length === 0 ? (
+                <Text style={[styles.emptyText, { marginBottom: 16 }]}>Nenhum programa para esse público ainda.</Text>
+              ) : (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginBottom: 24 }}>
                 {hubGroups.map((group) => (
                   <TouchableOpacity key={group.key} style={styles.nutritionCard} onPress={() => setOpenCategoryGroup(group)}>
@@ -1326,6 +1352,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                   </TouchableOpacity>
                 ))}
               </ScrollView>
+              )}
             </>
           )}
 
@@ -1490,6 +1517,11 @@ const styles = StyleSheet.create({
   hubBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   hubBadgeChip: { backgroundColor: '#27272A', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
   hubBadgeChipText: { color: '#D4D4D8', fontSize: 10, fontWeight: '600' },
+  audienceFilterRow: { flexDirection: 'row', gap: 6, marginBottom: 10 },
+  audienceFilterChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  audienceFilterChipActive: { backgroundColor: ACCENT, borderColor: ACCENT },
+  audienceFilterChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
+  audienceFilterChipTextActive: { color: '#0a0a0a' },
   nutritionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   nutritionHeaderLink: { color: '#E05A17', fontSize: 12, fontWeight: '700' },
   nutritionCard: { width: 176 },

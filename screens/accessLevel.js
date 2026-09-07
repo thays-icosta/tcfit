@@ -96,6 +96,12 @@ export const SEX_OPTIONS = [
   { value: 'feminino', label: 'Feminino' },
 ];
 
+export const TARGET_AUDIENCE_OPTIONS = [
+  { value: 'unissex', label: 'Unissex' },
+  { value: 'feminino', label: 'Feminino' },
+  { value: 'masculino', label: 'Masculino' },
+];
+
 export const NUTRITION_TAGS = [
   { value: 'celiaca', label: 'Celíaca', icon: 'leaf-outline' },
   { value: 'emagrecimento', label: 'Emagrecimento', icon: 'flame-outline' },

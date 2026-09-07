@@ -16,6 +16,31 @@ const TRUST_STRIP = [
   { icon: 'restaurant-outline', text: 'Dieta e macros sob medida pra você' },
 ];
 
+const GENDER_ONBOARDING_MAP = { female: 'feminino', feminino: 'feminino', male: 'masculino', masculino: 'masculino' };
+
+const GENDER_HIGHLIGHTS = {
+  feminino: {
+    title: 'FEITO PRA VOCÊ',
+    color: '#ec4899',
+    iconBg: 'rgba(236,72,153,0.12)',
+    items: [
+      { icon: 'body-outline', text: 'Glúteos & Pernas' },
+      { icon: 'flash-outline', text: 'Treinos Express' },
+      { icon: 'nutrition-outline', text: 'Nutrição & Estética' },
+    ],
+  },
+  masculino: {
+    title: 'FEITO PRA VOCÊ',
+    color: '#3b82f6',
+    iconBg: 'rgba(59,130,246,0.12)',
+    items: [
+      { icon: 'barbell-outline', text: 'Hipertrofia & Cargas (PPL/ABCDE)' },
+      { icon: 'trophy-outline', text: 'Módulo de Recorde Pessoal (PR)' },
+      { icon: 'calculator-outline', text: 'Calculadora de Bulking/Cutting' },
+    ],
+  },
+};
+
 const CATEGORIES = [
   { icon: 'barbell-outline', label: 'Treinos', subtitle: 'Fichas em vídeo', color: ACCENT },
   { icon: 'restaurant-outline', label: 'Dieta e Macros', subtitle: 'Plano nutricional', color: '#5EC8D8' },
@@ -73,11 +98,13 @@ function GhostButton({ onPress, text }) {
   );
 }
 
-export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount }) {
+export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount, gender }) {
   const scrollRef = useRef(null);
   const planosY = useRef(0);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
+  const genderProfile = GENDER_ONBOARDING_MAP[gender] || null;
+  const highlight = genderProfile ? GENDER_HIGHLIGHTS[genderProfile] : null;
 
   const scrollToPlanos = () => {
     scrollRef.current?.scrollTo({ y: Math.max(planosY.current - 20, 0), animated: true });
@@ -127,6 +154,20 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
           ))}
         </View>
 
+        {highlight && (
+          <View style={[styles.highlightStrip, { borderColor: highlight.color }]}>
+            <Text style={[styles.highlightTitle, { color: highlight.color }]}>{highlight.title}</Text>
+            {highlight.items.map((item, i) => (
+              <View key={i} style={styles.trustRow}>
+                <View style={[styles.trustIconCircle, { backgroundColor: highlight.iconBg }]}>
+                  <Ionicons name={item.icon} size={16} color={highlight.color} />
+                </View>
+                <Text style={styles.trustText}>{item.text}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         <PrimaryButton onPress={scrollToPlanos} icon="storefront-outline" text="Conhecer Nossos Planos" />
         <GhostButton onPress={onLogin} text="Já tenho conta (Entrar)" />
 
@@ -137,9 +178,9 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount 
           ))}
         </View>
 
-        <WorkoutsSection onSelectWorkout={scrollToPlanos} isDesktop={isDesktop} />
+        <WorkoutsSection onSelectWorkout={scrollToPlanos} isDesktop={isDesktop} gender={genderProfile} />
 
-        <WorkoutProgramsSection isDesktop={isDesktop} />
+        <WorkoutProgramsSection isDesktop={isDesktop} gender={genderProfile} />
 
         <MaterialsSection isDesktop={isDesktop} />
 
@@ -203,6 +244,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   trustStrip: { ...FLAT_CARD, marginBottom: 20, gap: 12 },
+  highlightStrip: { ...FLAT_CARD, borderWidth: 1, marginBottom: 20, gap: 12 },
+  highlightTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 0.6, marginBottom: 2 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(224,90,23,0.12)', alignItems: 'center', justifyContent: 'center' },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },

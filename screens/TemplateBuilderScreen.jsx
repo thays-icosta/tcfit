@@ -9,7 +9,7 @@ import ExerciseCatalogScreen from './ExerciseCatalogScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { showAlert, describeFunctionError } from './alertUtils';
 import { useSpeechToText } from './useSpeechToText';
-import { HOME_CATEGORIES, WORKOUT_TAGS, PROGRAM_LEVELS, TRAINING_LOCATIONS, MUSCLE_FOCUS_OPTIONS } from './accessLevel';
+import { HOME_CATEGORIES, WORKOUT_TAGS, PROGRAM_LEVELS, TRAINING_LOCATIONS, MUSCLE_FOCUS_OPTIONS, TARGET_AUDIENCE_OPTIONS } from './accessLevel';
 import { HeaderBack } from './Header';
 
 function uuidv4() {
@@ -64,10 +64,12 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [editLevel, setEditLevel] = useState(null);
   const [editEnvironment, setEditEnvironment] = useState(null);
   const [editFocusMuscleGroup, setEditFocusMuscleGroup] = useState(null);
+  const [editTargetAudience, setEditTargetAudience] = useState('unissex');
   const [savingMeta, setSavingMeta] = useState(false);
   const [templateSearch, setTemplateSearch] = useState('');
   const [templateLevelFilter, setTemplateLevelFilter] = useState('todos');
   const [templateEnvironmentFilter, setTemplateEnvironmentFilter] = useState('todos');
+  const [templateAudienceFilter, setTemplateAudienceFilter] = useState('todos');
   const [sectionEnabled, setSectionEnabled] = useState(true);
   const [savingSectionToggle, setSavingSectionToggle] = useState(false);
 
@@ -86,7 +88,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const loadTemplates = async () => {
     const { data } = await supabase
       .from('workout_templates')
-      .select('id, name, description, is_public, price, cover_image_url, category, environment, level, goal, focus_muscle_group')
+      .select('id, name, description, is_public, price, cover_image_url, category, environment, level, goal, focus_muscle_group, target_audience')
       .eq('personal_id', personalId)
       .order('created_at', { ascending: true });
     setTemplates(data || []);
@@ -163,6 +165,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       setEditLevel(t?.level || null);
       setEditEnvironment(t?.environment || null);
       setEditFocusMuscleGroup(t?.focus_muscle_group || null);
+      setEditTargetAudience(t?.target_audience || 'unissex');
     } else {
       setSessions([]);
       setActiveSessionId(null);
@@ -358,6 +361,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       cover_image_url: template.cover_image_url,
       category: template.category,
       level: template.level,
+      target_audience: template.target_audience,
       active: template.is_public,
       source_template_id: template.id,
     };
@@ -385,6 +389,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       level: editLevel,
       environment: editEnvironment,
       focus_muscle_group: editFocusMuscleGroup,
+      target_audience: editTargetAudience,
     };
     const { error } = await supabase.from('workout_templates').update(meta).eq('id', activeTemplateId);
     if (!error) {
@@ -470,6 +475,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const filteredTemplates = templates.filter((t) => {
     if (templateLevelFilter !== 'todos' && t.level !== templateLevelFilter) return false;
     if (templateEnvironmentFilter !== 'todos' && t.environment !== templateEnvironmentFilter) return false;
+    if (templateAudienceFilter !== 'todos' && t.target_audience !== templateAudienceFilter && t.target_audience !== 'unissex') return false;
     if (templateSearch.trim() && !t.name.toLowerCase().includes(templateSearch.trim().toLowerCase())) return false;
     return true;
   });
@@ -624,6 +630,19 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                     onPress={() => setEditFocusMuscleGroup(editFocusMuscleGroup === m.value ? null : m.value)}
                   >
                     <Text style={[styles.categoryChipText, editFocusMuscleGroup === m.value && styles.categoryChipTextActive]}>{m.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.metaLabel}>Público</Text>
+              <View style={styles.categoryRow}>
+                {TARGET_AUDIENCE_OPTIONS.map((a) => (
+                  <TouchableOpacity
+                    key={a.value}
+                    style={[styles.categoryChip, editTargetAudience === a.value && styles.categoryChipActive]}
+                    onPress={() => setEditTargetAudience(a.value)}
+                  >
+                    <Text style={[styles.categoryChipText, editTargetAudience === a.value && styles.categoryChipTextActive]}>{a.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -820,6 +839,16 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                     onPress={() => setTemplateEnvironmentFilter(l.value)}
                   >
                     <Text style={[styles.pickerFilterChipText, templateEnvironmentFilter === l.value && styles.pickerFilterChipTextActive]}>{l.label}</Text>
+                  </TouchableOpacity>
+                ))}
+                <View style={styles.pickerFilterDivider} />
+                {[{ value: 'todos', label: 'Todos os públicos' }, ...TARGET_AUDIENCE_OPTIONS.filter((a) => a.value !== 'unissex')].map((a) => (
+                  <TouchableOpacity
+                    key={a.value}
+                    style={[styles.pickerFilterChip, templateAudienceFilter === a.value && styles.pickerFilterChipActive]}
+                    onPress={() => setTemplateAudienceFilter(a.value)}
+                  >
+                    <Text style={[styles.pickerFilterChipText, templateAudienceFilter === a.value && styles.pickerFilterChipTextActive]}>{a.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>

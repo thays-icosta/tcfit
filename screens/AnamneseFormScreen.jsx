@@ -37,7 +37,7 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
 
   useEffect(() => {
     (async () => {
-      const [{ data: existing }, { data: questionRows }, { data: existingAnswers }, { data: ebookRows }] = await Promise.all([
+      const [{ data: existing }, { data: questionRows }, { data: existingAnswers }, { data: ebookRows }, { data: profileRow }] = await Promise.all([
         supabase.from('anamnese_responses').select('*').eq('student_id', studentId).maybeSingle(),
         personalId && isVip
           ? supabase.from('anamnese_questions').select('*').eq('personal_id', personalId).eq('active', true).order('order_index')
@@ -46,6 +46,7 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
         personalId && isVip
           ? supabase.from('products').select('id, name, cover_image_url, delivery_type, delivery_value').eq('personal_id', personalId).eq('type', 'ebook_receitas').eq('active', true)
           : Promise.resolve({ data: [] }),
+        supabase.from('users').select('gender').eq('id', studentId).maybeSingle(),
       ]);
 
       if (existing) {
@@ -59,7 +60,7 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
         setSleepQuality(existing.sleep_quality || null);
         setHealthIssues(existing.health_issues || '');
         setPainZones(existing.pain_zones || []);
-        setSex(existing.sex || null);
+        setSex(existing.sex || profileRow?.gender || null);
         setWeightKg(existing.weight_kg != null ? String(existing.weight_kg) : '');
         setHeightCm(existing.height_cm != null ? String(existing.height_cm) : '');
         setAge(existing.age != null ? String(existing.age) : '');
@@ -71,6 +72,8 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
             fat: existing.calc_goal_fat_g,
           });
         }
+      } else if (profileRow?.gender) {
+        setSex(profileRow.gender);
       }
 
       setQuestions(questionRows || []);
