@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { supabase } from './supabaseClient';
+import { showAlert } from './alertUtils';
 import { HeaderBack } from './Header';
 
 Notifications.setNotificationHandler({
@@ -32,6 +33,7 @@ export default function AlunoAgendaScreen({ studentId, onClose }) {
   const [loading, setLoading] = useState(true);
   const [dayFilter, setDayFilter] = useState(null);
   const [remindersReady, setRemindersReady] = useState(false);
+  const [confirmingId, setConfirmingId] = useState(null);
 
   const days = buildUpcomingDays();
 
@@ -74,25 +76,49 @@ export default function AlunoAgendaScreen({ studentId, onClose }) {
     }
   };
 
+  const loadAppointments = async () => {
+    const { data } = await supabase
+      .from('appointments')
+      .select('id, scheduled_at, duration_minutes, status, notes, student_confirmed_at')
+      .eq('student_id', studentId)
+      .order('scheduled_at', { ascending: true });
+    setAppointments(data || []);
+    setLoading(false);
+    return data || [];
+  };
+
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from('appointments')
-        .select('id, scheduled_at, duration_minutes, status, notes')
-        .eq('student_id', studentId)
-        .order('scheduled_at', { ascending: true });
-      setAppointments(data || []);
-      setLoading(false);
-
-      const upcomingOnly = (data || []).filter((a) => a.status === 'agendado' && new Date(a.scheduled_at) >= new Date());
+      const data = await loadAppointments();
+      const upcomingOnly = data.filter((a) => a.status === 'agendado' && new Date(a.scheduled_at) >= new Date());
       if (upcomingOnly.length > 0) {
         scheduleReminders(upcomingOnly);
       }
     })();
   }, [studentId]);
 
+  const handleConfirmAttendance = async (appointmentId) => {
+    setConfirmingId(appointmentId);
+    const { error } = await supabase.rpc('confirm_appointment_attendance', { appointment_id: appointmentId });
+    setConfirmingId(null);
+    if (error) {
+      showAlert('Erro', 'Não foi possível confirmar sua presença agora. Tenta de novo em instantes.');
+      return;
+    }
+    loadAppointments();
+  };
+
   const now = new Date();
   const daysWithAppointments = new Set(appointments.map((a) => new Date(a.scheduled_at).toDateString()));
+
+  const isAttended = (a) => a.status === 'concluido' || !!a.student_confirmed_at;
+  const pastAppointments = appointments.filter((a) => new Date(a.scheduled_at) <= now && a.status !== 'cancelado');
+  const startOfWeek = new Date(now);
+  startOfWeek.setHours(0, 0, 0, 0);
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const weekAppointments = pastAppointments.filter((a) => new Date(a.scheduled_at) >= startOfWeek);
+  const monthAppointments = pastAppointments.filter((a) => new Date(a.scheduled_at) >= startOfMonth);
 
   let displayList;
   let listTitle;
@@ -111,6 +137,19 @@ export default function AlunoAgendaScreen({ studentId, onClose }) {
   return (
     <View style={styles.container}>
       <HeaderBack title="Minha Agenda" onBack={onClose} />
+
+      {pastAppointments.length > 0 && (
+        <View style={styles.frequencyRow}>
+          <View style={styles.frequencyCard}>
+            <Text style={styles.frequencyValue}>{weekAppointments.filter(isAttended).length}/{weekAppointments.length}</Text>
+            <Text style={styles.frequencyLabel}>Essa semana</Text>
+          </View>
+          <View style={styles.frequencyCard}>
+            <Text style={styles.frequencyValue}>{monthAppointments.filter(isAttended).length}/{monthAppointments.length}</Text>
+            <Text style={styles.frequencyLabel}>Esse mês</Text>
+          </View>
+        </View>
+      )}
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayScroll}>
         <TouchableOpacity
@@ -165,6 +204,21 @@ export default function AlunoAgendaScreen({ studentId, onClose }) {
                 </View>
                 <Text style={styles.durationText}>{a.duration_minutes} minutos</Text>
                 {a.notes ? <Text style={styles.notesText}>📝 {a.notes}</Text> : null}
+                {a.student_confirmed_at ? (
+                  <Text style={styles.confirmedText}>✓ Presença confirmada</Text>
+                ) : a.status === 'agendado' && new Date(a.scheduled_at) <= now ? (
+                  <TouchableOpacity
+                    style={styles.confirmButton}
+                    onPress={() => handleConfirmAttendance(a.id)}
+                    disabled={confirmingId === a.id}
+                  >
+                    {confirmingId === a.id ? (
+                      <ActivityIndicator color="#0a0a0a" size="small" />
+                    ) : (
+                      <Text style={styles.confirmButtonText}>Confirmar Presença</Text>
+                    )}
+                  </TouchableOpacity>
+                ) : null}
               </View>
             ))
           )}
@@ -176,6 +230,13 @@ export default function AlunoAgendaScreen({ studentId, onClose }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
+  frequencyRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
+  frequencyCard: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  frequencyValue: { color: '#f97316', fontSize: 18, fontWeight: '800' },
+  frequencyLabel: { color: '#737373', fontSize: 10, marginTop: 2, textTransform: 'uppercase' },
+  confirmedText: { color: '#22c55e', fontSize: 11, fontWeight: '700', marginTop: 8 },
+  confirmButton: { backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
+  confirmButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '700' },
   dayScroll: { maxHeight: 62, marginBottom: 14 },
   dayChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8, alignItems: 'center', minWidth: 48, justifyContent: 'center' },
   dayChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },

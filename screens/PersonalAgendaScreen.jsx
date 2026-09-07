@@ -73,7 +73,7 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
   const loadAppointments = async () => {
     const { data } = await supabase
       .from('appointments')
-      .select('id, scheduled_at, duration_minutes, status, notes, session_focus, student_id, users!appointments_student_id_fkey (name, avatar_url)')
+      .select('id, scheduled_at, duration_minutes, status, notes, session_focus, student_id, student_confirmed_at, users!appointments_student_id_fkey (name, avatar_url)')
       .eq('personal_id', personalId)
       .order('scheduled_at', { ascending: true });
     setAppointments(data || []);
@@ -281,6 +281,7 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
                 <Text style={styles.dateTimeText}>{formatDateTime(a.scheduled_at)} · {a.duration_minutes}min</Text>
                 {a.session_focus ? <Text style={styles.focusText}>🏋️ {a.session_focus}</Text> : null}
                 {a.notes ? <Text style={styles.notesText}>📝 {a.notes}</Text> : null}
+                {a.student_confirmed_at ? <Text style={styles.confirmedText}>✓ Presença confirmada pelo aluno</Text> : null}
                 {a.status === 'agendado' && (
                   <View style={styles.actionRow}>
                     <TouchableOpacity style={styles.doneButton} onPress={() => handleUpdateStatus(a.id, 'concluido')}>
@@ -491,6 +492,7 @@ const styles = StyleSheet.create({
   dateTimeText: { color: '#a3a3a3', fontSize: 12, marginTop: 6 },
   focusText: { color: '#f97316', fontSize: 12, fontWeight: '700', marginTop: 6 },
   notesText: { color: '#a3a3a3', fontSize: 11, marginTop: 6, fontStyle: 'italic' },
+  confirmedText: { color: '#22c55e', fontSize: 10, fontWeight: '700', marginTop: 6 },
   actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
   doneButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
   doneButtonText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
