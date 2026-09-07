@@ -17,6 +17,7 @@ import { HeaderBack } from './Header';
 import MetricsMiniCards from './MetricsMiniCards';
 import WeightEvolutionChart from './WeightEvolutionChart';
 import WaterLogModal from './WaterLogModal';
+import PresencialSessionScreen from './PresencialSessionScreen';
 
 function mapMealNameToType(name) {
   const n = (name || '').toLowerCase();
@@ -91,6 +92,7 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
   const [showSummary, setShowSummary] = useState(false);
   const [showPeriodization, setShowPeriodization] = useState(false);
   const [showFinance, setShowFinance] = useState(false);
+  const [showPresencialSession, setShowPresencialSession] = useState(false);
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -249,6 +251,15 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
       />
     );
   }
+  if (showPresencialSession) {
+    return (
+      <PresencialSessionScreen
+        student={student}
+        personalId={personalId}
+        onClose={() => setShowPresencialSession(false)}
+      />
+    );
+  }
   if (showChat) {
     return (
       <ChatScreen
@@ -354,6 +365,13 @@ export default function AlunoDetailScreen({ student, personalId, onClose }) {
         </View>
       </View>
 
+      {attendanceMode === 'presencial' && (
+        <TouchableOpacity style={styles.presencialButton} onPress={() => setShowPresencialSession(true)}>
+          <Ionicons name="play-circle-outline" size={18} color="#0a0a0a" />
+          <Text style={styles.presencialButtonText}>Modo Aula Presencial</Text>
+        </TouchableOpacity>
+      )}
+
       <View style={styles.actionsGrid}>
         <TouchableOpacity style={styles.actionButton} onPress={() => setBuildingFor(true)}>
           <Ionicons name="barbell-outline" size={22} color="#f97316" />
@@ -418,6 +436,8 @@ const styles = StyleSheet.create({
   actionLabel: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', marginTop: 6 },
   summaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   summaryButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  presencialButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  presencialButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
   financeButton: { flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: '#eab308', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   financeButtonText: { color: '#eab308', fontSize: 13, fontWeight: '700' },
 });
