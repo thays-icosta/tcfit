@@ -516,6 +516,41 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         </View>
       )}
 
+      {(() => {
+        const alertStudents = students.filter((s) => {
+          const done = completedToday[s.id];
+          const daysSince = daysSinceLastTrained[s.id];
+          return !done && (daysSince === null || daysSince >= 3);
+        });
+        if (alertStudents.length === 0) return null;
+        return (
+          <>
+            <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Alertas de Alunos</Text>
+            {alertStudents.map((s) => {
+              const daysSince = daysSinceLastTrained[s.id];
+              return (
+                <TouchableOpacity key={s.id} style={styles.alertRow} onPress={() => setDetailFor(s)}>
+                  <View style={styles.checkinAvatarCircle}>
+                    {s.avatar_url ? (
+                      <Image source={{ uri: s.avatar_url }} style={styles.checkinAvatarImage} />
+                    ) : (
+                      <Text style={styles.checkinAvatarLetter}>{s.name?.charAt(0).toUpperCase() || '?'}</Text>
+                    )}
+                  </View>
+                  <Text style={styles.checkinName}>{s.name}</Text>
+                  <View style={[styles.alertTag, { marginTop: 0 }]}>
+                    <Ionicons name="alert-circle" size={14} color="#ef4444" />
+                    <Text style={styles.alertTagText}>
+                      {daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </>
+        );
+      })()}
+
       {students.length > 0 && (
         <>
           <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Check-ins de Hoje</Text>
@@ -655,8 +690,9 @@ const styles = StyleSheet.create({
   statusDotDone: { backgroundColor: '#22c55e' },
   statusDotPending: { backgroundColor: '#525252' },
   statusTagText: { color: '#525252', fontSize: 9 },
-  alertTag: { backgroundColor: 'rgba(239,68,68,0.12)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 3, marginTop: 4 },
+  alertTag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(239,68,68,0.12)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 3, marginTop: 4 },
   alertTagText: { color: '#ef4444', fontSize: 9, fontWeight: '700' },
+  alertRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', borderRadius: 12, padding: 12, marginBottom: 8 },
   chevron: { color: '#525252', fontSize: 22, fontWeight: '300' },
   button: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 20 },
   buttonText: { color: '#f97316', fontSize: 15, fontWeight: '700' },
