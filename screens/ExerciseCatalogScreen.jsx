@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ActivityIndicator, Image, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import CustomExerciseFormScreen from './CustomExerciseFormScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
@@ -33,6 +34,15 @@ const ORIGIN_CHIPS = [
   { value: 'biblioteca', label: 'Biblioteca do App' },
   { value: 'meus', label: 'Meus Exercícios' },
 ];
+
+// Ionicons has no true anatomy set, so this only distinguishes the groups
+// that actually have a meaningfully different icon — everything else falls
+// back to the generic barbell.
+const MUSCLE_ICONS = {
+  aerobico: 'heart-outline',
+  quadriceps: 'walk-outline',
+  isquiotibiais: 'walk-outline',
+};
 
 function isGifUrl(url) {
   return !!url && url.toLowerCase().split('?')[0].endsWith('.gif');
@@ -112,11 +122,19 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
     );
   };
 
+  const myExerciseNames = new Set(
+    allExercises.filter((ex) => ex.personal_id === personalId).map((ex) => ex.name.trim().toLowerCase())
+  );
+
   const filtered = allExercises.filter((ex) => {
     if (muscleFilter !== 'todos' && ex.muscle_group !== muscleFilter) return false;
     if (equipmentFilter !== 'todos' && ex.equipment !== equipmentFilter) return false;
     if (originFilter === 'biblioteca' && ex.personal_id !== null) return false;
     if (originFilter === 'meus' && ex.personal_id !== personalId) return false;
+    // On "Todos", a shared exercise you've already made your own copy of is
+    // redundant to show alongside that copy — only the copy is actually
+    // usable/editable by you, so hide the superseded original there.
+    if (originFilter === 'todos' && ex.personal_id === null && myExerciseNames.has(ex.name.trim().toLowerCase())) return false;
     if (search.trim() && !ex.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -231,20 +249,18 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.createButton} onPress={() => setShowCreateForm(true)}>
-        <Text style={styles.createButtonText}>+ Criar exercício personalizado</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.bulkLinkButton} onPress={handleBulkLinkVideos} disabled={bulkLinking}>
-        {bulkLinking ? (
-          <>
+      <View style={styles.topActionsRow}>
+        <TouchableOpacity style={styles.createButton} onPress={() => setShowCreateForm(true)}>
+          <Text style={styles.createButtonText}>+ Criar exercício personalizado</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.syncIconButton} onPress={handleBulkLinkVideos} disabled={bulkLinking}>
+          {bulkLinking ? (
             <ActivityIndicator color="#3b82f6" size="small" />
-            <Text style={styles.bulkLinkButtonText}>Vinculando {bulkProgress.done}/{bulkProgress.total} ({bulkProgress.linked} encontrados)...</Text>
-          </>
-        ) : (
-          <Text style={styles.bulkLinkButtonText}>🔗 Vincular vídeos automaticamente na Biblioteca</Text>
-        )}
-      </TouchableOpacity>
+          ) : (
+            <Ionicons name="sync-outline" size={18} color="#3b82f6" />
+          )}
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.originToggleRow}>
         {ORIGIN_CHIPS.map((item) => (
@@ -337,7 +353,7 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
                     <Image source={{ uri: item.thumbnail_url }} style={styles.thumb} />
                   ) : (
                     <View style={styles.thumbPlaceholder}>
-                      <Text style={styles.thumbPlaceholderText}>{item.name.charAt(0)}</Text>
+                      <Ionicons name={MUSCLE_ICONS[item.muscle_group] || 'barbell-outline'} size={24} color="#525252" />
                     </View>
                   )}
                   {hasVideo && (
@@ -364,6 +380,15 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
           }}
         />
       )}
+
+      {bulkLinking && (
+        <View style={styles.syncToast}>
+          <ActivityIndicator color="#3b82f6" size="small" />
+          <Text style={styles.syncToastText}>
+            Vinculando vídeos {bulkProgress.done}/{bulkProgress.total} ({bulkProgress.linked} encontrados)
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -371,10 +396,12 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0a0a0a', paddingHorizontal: 16, paddingTop: 12 },
   closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  createButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginBottom: 12 },
+  topActionsRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  createButton: { flex: 1, backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   createButtonText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
-  bulkLinkButton: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(59,130,246,0.1)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  bulkLinkButtonText: { color: '#3b82f6', fontSize: 11, fontWeight: '700', textAlign: 'center' },
+  syncIconButton: { width: 40, backgroundColor: 'rgba(59,130,246,0.1)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  syncToast: { position: 'absolute', bottom: 16, left: 16, right: 16, flexDirection: 'row', gap: 8, backgroundColor: '#171717', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
+  syncToastText: { color: '#3b82f6', fontSize: 11, fontWeight: '700', flexShrink: 1 },
   searchInput: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: '#f5f5f5', fontSize: 13, marginBottom: 10 },
   originToggleRow: { flexDirection: 'row', gap: 8, backgroundColor: '#0a0a0a', borderRadius: 10, padding: 4, marginBottom: 10 },
   originToggleChip: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
@@ -406,7 +433,6 @@ const styles = StyleSheet.create({
   thumbWrap: { position: 'relative' },
   thumb: { width: 56, height: 56, borderRadius: 10 },
   thumbPlaceholder: { width: 56, height: 56, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  thumbPlaceholderText: { color: '#f97316', fontSize: 20, fontWeight: '800' },
   playBadge: { position: 'absolute', bottom: -2, right: -2, width: 20, height: 20, borderRadius: 10, backgroundColor: '#f97316', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#171717' },
   playBadgeText: { color: '#0a0a0a', fontSize: 8, fontWeight: '800' },
   exerciseNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },

@@ -136,6 +136,20 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
       showAlert('Ops', 'Dá um nome pro exercício primeiro.');
       return;
     }
+
+    if (!isEditing) {
+      const { data: existing } = await supabase
+        .from('exercises')
+        .select('id')
+        .eq('personal_id', personalId)
+        .ilike('name', name.trim())
+        .maybeSingle();
+      if (existing) {
+        showAlert('Nome já usado', `Você já tem um exercício chamado "${name.trim()}". Edite o existente em vez de criar outro igual.`);
+        return;
+      }
+    }
+
     setSaving(true);
     const payload = {
       name: name.trim(),
@@ -150,6 +164,10 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
       : await supabase.from('exercises').insert({ personal_id: personalId, ...payload });
     setSaving(false);
     if (error) {
+      if (error.code === '23505') {
+        showAlert('Nome já usado', `Você já tem um exercício chamado "${name.trim()}".`);
+        return;
+      }
       showAlert('Erro', error.message);
     } else {
       showAlert(isEditing ? 'Exercício atualizado!' : 'Exercício criado!', `"${name}" foi ${isEditing ? 'atualizado' : 'adicionado aos seus exercícios'}.`, [
