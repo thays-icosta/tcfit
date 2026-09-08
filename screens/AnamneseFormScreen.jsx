@@ -9,11 +9,251 @@ import {
 } from './accessLevel';
 
 const WHATSAPP_NUMBER = '5537998231382';
+const TOTAL_STEPS = 3;
+
+const PAIN_ZONE_OPTIONS = [...PAIN_ZONES, { value: 'nenhuma', label: 'Nenhuma' }];
+
+// Reorders (never removes) the shared focus-muscle vocabulary so the picks
+// most relevant to the selected profile show first — same emphasis used on
+// the gendered sales pages ("Glúteos & Pernas" vs "Hipertrofia & Cargas").
+const FOCUS_PRIORITY = {
+  feminino: ['gluteo', 'quadriceps', 'abdomen', 'costas', 'peito', 'ombro', 'biceps'],
+  masculino: ['peito', 'costas', 'ombro', 'biceps', 'abdomen', 'quadriceps', 'gluteo'],
+};
+function focusOptionsFor(sex) {
+  const order = FOCUS_PRIORITY[sex];
+  if (!order) return MUSCLE_FOCUS_OPTIONS;
+  return [...MUSCLE_FOCUS_OPTIONS].sort((a, b) => order.indexOf(a.value) - order.indexOf(b.value));
+}
+
+function ChipRow({ children }) {
+  return <View style={styles.chipRow}>{children}</View>;
+}
+
+function Chip({ label, active, onPress }) {
+  return (
+    <TouchableOpacity style={[styles.chip, active && styles.chipActive]} onPress={onPress}>
+      <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function Step1PersonalData({ sex, setSex, age, setAge, weightKg, setWeightKg, heightCm, setHeightCm, activityLevel, setActivityLevel }) {
+  return (
+    <>
+      <Text style={styles.intro}>Antes de começar, conta um pouco sobre você — isso ajuda a gente a personalizar seu app e seu treino.</Text>
+
+      <Text style={styles.label}>Sexo Biológico</Text>
+      <ChipRow>
+        {SEX_OPTIONS.map((s) => (
+          <Chip key={s.value} label={s.label} active={sex === s.value} onPress={() => setSex(s.value)} />
+        ))}
+      </ChipRow>
+
+      <View style={styles.calcFieldRow}>
+        <View style={styles.calcFieldSmall}>
+          <Text style={styles.calcFieldLabel}>Idade</Text>
+          <TextInput style={styles.input} keyboardType="number-pad" placeholder="30" placeholderTextColor="#525252" value={age} onChangeText={setAge} />
+        </View>
+        <View style={styles.calcFieldSmall}>
+          <Text style={styles.calcFieldLabel}>Peso (kg)</Text>
+          <TextInput style={styles.input} keyboardType="decimal-pad" placeholder="70" placeholderTextColor="#525252" value={weightKg} onChangeText={setWeightKg} />
+        </View>
+        <View style={styles.calcFieldSmall}>
+          <Text style={styles.calcFieldLabel}>Altura (cm)</Text>
+          <TextInput style={styles.input} keyboardType="decimal-pad" placeholder="170" placeholderTextColor="#525252" value={heightCm} onChangeText={setHeightCm} />
+        </View>
+      </View>
+
+      <Text style={styles.label}>Nível de Atividade Diária</Text>
+      <ChipRow>
+        {ACTIVITY_LEVELS.map((a) => (
+          <Chip key={a.value} label={a.label} active={activityLevel === a.value} onPress={() => setActivityLevel(a.value)} />
+        ))}
+      </ChipRow>
+    </>
+  );
+}
+
+function Step2Objectives({
+  mainGoal, setMainGoal, experienceLevel, setExperienceLevel, focusMuscleGroup, setFocusMuscleGroup, sex,
+  isVip, sexReady, calcResult, onCalculate, ebooks, onUpgrade,
+}) {
+  return (
+    <>
+      <Text style={styles.label}>Objetivo Principal</Text>
+      <ChipRow>
+        {PROGRAM_GOALS.map((g) => (
+          <Chip key={g.value} label={g.label} active={mainGoal === g.value} onPress={() => setMainGoal(g.value)} />
+        ))}
+      </ChipRow>
+
+      <Text style={styles.label}>Nível de Experiência</Text>
+      <ChipRow>
+        {PROGRAM_LEVELS.map((l) => (
+          <Chip key={l.value} label={l.label} active={experienceLevel === l.value} onPress={() => setExperienceLevel(l.value)} />
+        ))}
+      </ChipRow>
+
+      <Text style={styles.label}>Foco Muscular (opcional)</Text>
+      <ChipRow>
+        {focusOptionsFor(sex).map((m) => (
+          <Chip
+            key={m.value}
+            label={m.label}
+            active={focusMuscleGroup === m.value}
+            onPress={() => setFocusMuscleGroup(focusMuscleGroup === m.value ? null : m.value)}
+          />
+        ))}
+      </ChipRow>
+
+      {isVip ? (
+        <>
+          <Text style={styles.label}>Calculadora de Calorias e Macros</Text>
+          <Text style={styles.helperText}>
+            {sexReady ? 'Usa seus dados do Passo 1 pra estimar sua meta diária. Seu personal pode ajustar depois.' : 'Preenche sexo, idade, peso e altura no Passo 1 pra liberar a calculadora.'}
+          </Text>
+          <TouchableOpacity style={[styles.calcButton, !sexReady && styles.calcButtonDisabled]} onPress={onCalculate} disabled={!sexReady}>
+            <Text style={styles.calcButtonText}>Calcular Estimativa</Text>
+          </TouchableOpacity>
+
+          {calcResult && (
+            <View style={styles.calcResultCard}>
+              <Text style={styles.calcResultKcal}>{calcResult.kcal} kcal/dia</Text>
+              <Text style={styles.calcResultNote}>Estimativa baseada nos seus dados — não substitui o ajuste do seu personal.</Text>
+              <View style={styles.calcMacroRow}>
+                <View style={styles.calcMacroItem}>
+                  <Text style={styles.calcMacroValue}>{calcResult.protein}g</Text>
+                  <Text style={styles.calcMacroLabel}>Proteína</Text>
+                </View>
+                <View style={styles.calcMacroItem}>
+                  <Text style={styles.calcMacroValue}>{calcResult.carbs}g</Text>
+                  <Text style={styles.calcMacroLabel}>Carbo</Text>
+                </View>
+                <View style={styles.calcMacroItem}>
+                  <Text style={styles.calcMacroValue}>{calcResult.fat}g</Text>
+                  <Text style={styles.calcMacroLabel}>Gordura</Text>
+                </View>
+              </View>
+
+              {ebooks.length > 0 && (
+                <>
+                  <Text style={styles.calcEbooksLabel}>Guias que podem te ajudar</Text>
+                  {ebooks.map((e) => (
+                    <View key={e.id} style={styles.calcEbookRow}>
+                      <Text style={styles.calcEbookName} numberOfLines={1}>📘 {e.name}</Text>
+                    </View>
+                  ))}
+                </>
+              )}
+            </View>
+          )}
+        </>
+      ) : (
+        <View style={styles.lockedCard}>
+          <Ionicons name="lock-closed" size={20} color="#f97316" />
+          <Text style={styles.lockedTitle}>Calculadora de Macros e perguntas personalizadas</Text>
+          <Text style={styles.lockedText}>Exclusivo da Consultoria VIP.</Text>
+          <TouchableOpacity style={styles.lockedButton} onPress={onUpgrade}>
+            <Ionicons name="logo-whatsapp" size={14} color="#0a0a0a" />
+            <Text style={styles.lockedButtonText}>Fazer Upgrade</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </>
+  );
+}
+
+function Step3Health({
+  trainingLocation, setTrainingLocation, painZones, togglePainZone, healthIssues, setHealthIssues,
+  daysPerWeek, setDaysPerWeek, sessionDurationMin, setSessionDurationMin, sleepQuality, setSleepQuality,
+  isVip, questions, customAnswers, setCustomAnswers,
+}) {
+  return (
+    <>
+      <Text style={styles.label}>Local de Treino</Text>
+      <ChipRow>
+        {TRAINING_LOCATIONS.map((l) => (
+          <Chip key={l.value} label={l.label} active={trainingLocation === l.value} onPress={() => setTrainingLocation(l.value)} />
+        ))}
+      </ChipRow>
+
+      <Text style={styles.label}>Zonas de Dor / Lesões</Text>
+      <ChipRow>
+        {PAIN_ZONE_OPTIONS.map((z) => (
+          <Chip key={z.value} label={z.label} active={painZones.includes(z.value)} onPress={() => togglePainZone(z.value)} />
+        ))}
+      </ChipRow>
+
+      <Text style={styles.label}>Restrições médicas (opcional)</Text>
+      <TextInput
+        style={styles.textArea}
+        multiline
+        placeholder="ex: hérnia de disco, cirurgia no joelho..."
+        placeholderTextColor="#525252"
+        value={healthIssues}
+        onChangeText={setHealthIssues}
+      />
+
+      <Text style={styles.sectionHeader}>Disponibilidade</Text>
+
+      <Text style={styles.label}>Dias Disponíveis por Semana</Text>
+      <ChipRow>
+        {DAYS_PER_WEEK_OPTIONS.map((d) => (
+          <Chip key={d} label={`${d}x`} active={daysPerWeek === d} onPress={() => setDaysPerWeek(d)} />
+        ))}
+      </ChipRow>
+
+      <Text style={styles.label}>Tempo por Sessão</Text>
+      <ChipRow>
+        {SESSION_DURATION_OPTIONS.map((s) => (
+          <Chip key={s.value} label={s.label} active={sessionDurationMin === s.value} onPress={() => setSessionDurationMin(s.value)} />
+        ))}
+      </ChipRow>
+
+      <Text style={styles.label}>Qualidade do Sono</Text>
+      <ChipRow>
+        {SLEEP_QUALITY_OPTIONS.map((s) => (
+          <Chip key={s.value} label={s.label} active={sleepQuality === s.value} onPress={() => setSleepQuality(s.value)} />
+        ))}
+      </ChipRow>
+
+      {isVip && questions.map((q) => (
+        <View key={q.id}>
+          <Text style={styles.label}>{q.question_text}{q.required ? ' *' : ''}</Text>
+          {q.question_type === 'sim_nao' ? (
+            <ChipRow>
+              {['Sim', 'Não'].map((opt) => (
+                <Chip key={opt} label={opt} active={customAnswers[q.id] === opt} onPress={() => setCustomAnswers((prev) => ({ ...prev, [q.id]: opt }))} />
+              ))}
+            </ChipRow>
+          ) : q.question_type === 'multipla_escolha' ? (
+            <ChipRow>
+              {(q.options || []).map((opt) => (
+                <Chip key={opt} label={opt} active={customAnswers[q.id] === opt} onPress={() => setCustomAnswers((prev) => ({ ...prev, [q.id]: opt }))} />
+              ))}
+            </ChipRow>
+          ) : (
+            <TextInput
+              style={q.question_type === 'texto_longo' ? styles.textArea : styles.input}
+              multiline={q.question_type === 'texto_longo'}
+              placeholderTextColor="#525252"
+              value={customAnswers[q.id] || ''}
+              onChangeText={(text) => setCustomAnswers((prev) => ({ ...prev, [q.id]: text }))}
+            />
+          )}
+        </View>
+      ))}
+    </>
+  );
+}
 
 export default function AnamneseFormScreen({ studentId, personalId, onClose, onComplete, allowSkip, accessLevel, personalName, personalPhone }) {
   const isVip = accessLevel === 'consultoria_vip';
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [personalizing, setPersonalizing] = useState(false);
+  const [step, setStep] = useState(1);
   const [questions, setQuestions] = useState([]);
   const [ebooks, setEbooks] = useState([]);
 
@@ -89,7 +329,7 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
   const handleCalculate = () => {
     const result = calculateMacroGoals({ sex, weightKg, heightCm, age, goal: mainGoal });
     if (!result) {
-      showAlert('Ops', 'Preenche sexo, peso, altura, idade e objetivo pra calcular.');
+      showAlert('Ops', 'Preenche sexo, peso, altura e idade no Passo 1 (e um objetivo aqui) pra calcular.');
       return;
     }
     setCalcResult(result);
@@ -102,14 +342,33 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
   };
 
   const togglePainZone = (value) => {
-    setPainZones((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
+    setPainZones((prev) => {
+      if (value === 'nenhuma') return prev.includes('nenhuma') ? [] : ['nenhuma'];
+      const withoutNone = prev.filter((v) => v !== 'nenhuma');
+      return withoutNone.includes(value) ? withoutNone.filter((v) => v !== value) : [...withoutNone, value];
+    });
   };
 
-  const handleSave = async () => {
-    if (!mainGoal) {
-      showAlert('Ops', 'Escolhe seu objetivo principal.');
-      return;
+  const sexReady = !!(sex && age.trim() && weightKg.trim() && heightCm.trim());
+
+  const handleNext = () => {
+    if (step === 1) {
+      if (!sex || !age.trim() || !weightKg.trim() || !heightCm.trim() || !activityLevel) {
+        showAlert('Ops', 'Preenche sexo, idade, peso, altura e nível de atividade pra continuar.');
+        return;
+      }
+    } else if (step === 2) {
+      if (!mainGoal || !experienceLevel) {
+        showAlert('Ops', 'Escolhe seu objetivo principal e nível de experiência.');
+        return;
+      }
     }
+    setStep((s) => Math.min(TOTAL_STEPS, s + 1));
+  };
+
+  const handleBack = () => setStep((s) => Math.max(1, s - 1));
+
+  const handleSave = async () => {
     if (!trainingLocation) {
       showAlert('Ops', 'Escolhe onde você vai treinar.');
       return;
@@ -162,16 +421,25 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
 
     if (!responseError) {
       await supabase.from('users').update({ anamnese_completed_at: new Date().toISOString() }).eq('id', studentId);
+      // The sex collected here is the same tag that drives the app's gendered
+      // content filtering, so it needs to land on the profile, not just the
+      // anamnese record.
+      if (sex === 'masculino' || sex === 'feminino') {
+        await supabase.from('users').update({ gender: sex }).eq('id', studentId);
+      }
     }
 
     setSaving(false);
     if (responseError) {
       showAlert('Erro', responseError.message);
-    } else {
-      showAlert('Anamnese enviada!', 'Seu personal já pode ver suas respostas.');
+      return;
+    }
+
+    setPersonalizing(true);
+    setTimeout(() => {
       if (onComplete) onComplete();
       else if (onClose) onClose();
-    }
+    }, 2000);
   };
 
   if (loading) {
@@ -182,236 +450,83 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
     );
   }
 
+  if (personalizing) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator color="#f97316" size="large" />
+        <Text style={styles.personalizingText}>Personalizando seu plano...</Text>
+      </View>
+    );
+  }
+
+  const progressPct = (step / TOTAL_STEPS) * 100;
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>{allowSkip ? 'Pular por agora' : '← Voltar'}</Text>
+        <TouchableOpacity onPress={step === 1 ? onClose : handleBack}>
+          <Text style={styles.closeText}>{step === 1 ? (allowSkip ? 'Pular por agora' : '← Voltar') : '← Voltar'}</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>{allowSkip ? 'Anamnese Inicial' : 'Anamnese'}</Text>
+        <Text style={styles.title}>Anamnese</Text>
+      </View>
+
+      <View style={styles.progressWrap}>
+        <Text style={styles.progressLabel}>Passo {step} de {TOTAL_STEPS}</Text>
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
+        </View>
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
-        <Text style={styles.intro}>Antes de começar, conta um pouco sobre você — isso ajuda seu personal a montar o treino certo.</Text>
-
-        <Text style={styles.sectionHeader}>1. Objetivo e Experiência</Text>
-
-        <Text style={styles.label}>Objetivo Principal</Text>
-        <View style={styles.chipRow}>
-          {PROGRAM_GOALS.map((g) => (
-            <TouchableOpacity key={g.value} style={[styles.chip, mainGoal === g.value && styles.chipActive]} onPress={() => setMainGoal(g.value)}>
-              <Text style={[styles.chipText, mainGoal === g.value && styles.chipTextActive]}>{g.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={styles.label}>Nível de Experiência</Text>
-        <View style={styles.chipRow}>
-          {PROGRAM_LEVELS.map((l) => (
-            <TouchableOpacity key={l.value} style={[styles.chip, experienceLevel === l.value && styles.chipActive]} onPress={() => setExperienceLevel(l.value)}>
-              <Text style={[styles.chipText, experienceLevel === l.value && styles.chipTextActive]}>{l.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={styles.label}>Foco Específico (opcional)</Text>
-        <View style={styles.chipRow}>
-          {MUSCLE_FOCUS_OPTIONS.map((m) => (
-            <TouchableOpacity key={m.value} style={[styles.chip, focusMuscleGroup === m.value && styles.chipActive]} onPress={() => setFocusMuscleGroup(focusMuscleGroup === m.value ? null : m.value)}>
-              <Text style={[styles.chipText, focusMuscleGroup === m.value && styles.chipTextActive]}>{m.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {isVip ? (
-          <>
-            <Text style={styles.label}>Calculadora de Calorias e Macros</Text>
-            <Text style={styles.helperText}>Preenche pra receber uma estimativa de meta diária. Seu personal pode ajustar depois.</Text>
-            <View style={styles.chipRow}>
-              {SEX_OPTIONS.map((s) => (
-                <TouchableOpacity key={s.value} style={[styles.chip, sex === s.value && styles.chipActive]} onPress={() => setSex(s.value)}>
-                  <Text style={[styles.chipText, sex === s.value && styles.chipTextActive]}>{s.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <View style={styles.calcFieldRow}>
-              <View style={styles.calcFieldSmall}>
-                <Text style={styles.calcFieldLabel}>Peso (kg)</Text>
-                <TextInput style={styles.input} keyboardType="decimal-pad" placeholder="70" placeholderTextColor="#525252" value={weightKg} onChangeText={setWeightKg} />
-              </View>
-              <View style={styles.calcFieldSmall}>
-                <Text style={styles.calcFieldLabel}>Altura (cm)</Text>
-                <TextInput style={styles.input} keyboardType="decimal-pad" placeholder="170" placeholderTextColor="#525252" value={heightCm} onChangeText={setHeightCm} />
-              </View>
-              <View style={styles.calcFieldSmall}>
-                <Text style={styles.calcFieldLabel}>Idade</Text>
-                <TextInput style={styles.input} keyboardType="number-pad" placeholder="30" placeholderTextColor="#525252" value={age} onChangeText={setAge} />
-              </View>
-            </View>
-
-            <TouchableOpacity style={styles.calcButton} onPress={handleCalculate}>
-              <Text style={styles.calcButtonText}>Calcular Estimativa</Text>
-            </TouchableOpacity>
-
-            {calcResult && (
-              <View style={styles.calcResultCard}>
-                <Text style={styles.calcResultKcal}>{calcResult.kcal} kcal/dia</Text>
-                <Text style={styles.calcResultNote}>Estimativa baseada nos seus dados — não substitui o ajuste do seu personal.</Text>
-                <View style={styles.calcMacroRow}>
-                  <View style={styles.calcMacroItem}>
-                    <Text style={styles.calcMacroValue}>{calcResult.protein}g</Text>
-                    <Text style={styles.calcMacroLabel}>Proteína</Text>
-                  </View>
-                  <View style={styles.calcMacroItem}>
-                    <Text style={styles.calcMacroValue}>{calcResult.carbs}g</Text>
-                    <Text style={styles.calcMacroLabel}>Carbo</Text>
-                  </View>
-                  <View style={styles.calcMacroItem}>
-                    <Text style={styles.calcMacroValue}>{calcResult.fat}g</Text>
-                    <Text style={styles.calcMacroLabel}>Gordura</Text>
-                  </View>
-                </View>
-
-                {ebooks.length > 0 && (
-                  <>
-                    <Text style={styles.calcEbooksLabel}>Guias que podem te ajudar</Text>
-                    {ebooks.map((e) => (
-                      <View key={e.id} style={styles.calcEbookRow}>
-                        <Text style={styles.calcEbookName} numberOfLines={1}>📘 {e.name}</Text>
-                      </View>
-                    ))}
-                  </>
-                )}
-              </View>
-            )}
-          </>
-        ) : (
-          <View style={styles.lockedCard}>
-            <Ionicons name="lock-closed" size={20} color="#f97316" />
-            <Text style={styles.lockedTitle}>Calculadora de Macros e perguntas personalizadas</Text>
-            <Text style={styles.lockedText}>Exclusivo da Consultoria VIP.</Text>
-            <TouchableOpacity style={styles.lockedButton} onPress={handleUpgrade}>
-              <Ionicons name="logo-whatsapp" size={14} color="#0a0a0a" />
-              <Text style={styles.lockedButtonText}>Fazer Upgrade</Text>
-            </TouchableOpacity>
-          </View>
+        {step === 1 && (
+          <Step1PersonalData
+            sex={sex} setSex={setSex}
+            age={age} setAge={setAge}
+            weightKg={weightKg} setWeightKg={setWeightKg}
+            heightCm={heightCm} setHeightCm={setHeightCm}
+            activityLevel={activityLevel} setActivityLevel={setActivityLevel}
+          />
         )}
 
-        <Text style={styles.sectionHeader}>2. Saúde e Lesões</Text>
+        {step === 2 && (
+          <Step2Objectives
+            mainGoal={mainGoal} setMainGoal={setMainGoal}
+            experienceLevel={experienceLevel} setExperienceLevel={setExperienceLevel}
+            focusMuscleGroup={focusMuscleGroup} setFocusMuscleGroup={setFocusMuscleGroup}
+            sex={sex}
+            isVip={isVip}
+            sexReady={sexReady}
+            calcResult={calcResult}
+            onCalculate={handleCalculate}
+            ebooks={ebooks}
+            onUpgrade={handleUpgrade}
+          />
+        )}
 
-        <Text style={styles.label}>Lesões / Problemas de Saúde</Text>
-        <TextInput
-          style={styles.textArea}
-          multiline
-          placeholder="ex: hérnia de disco, cirurgia no joelho, nenhuma..."
-          placeholderTextColor="#525252"
-          value={healthIssues}
-          onChangeText={setHealthIssues}
-        />
+        {step === 3 && (
+          <Step3Health
+            trainingLocation={trainingLocation} setTrainingLocation={setTrainingLocation}
+            painZones={painZones} togglePainZone={togglePainZone}
+            healthIssues={healthIssues} setHealthIssues={setHealthIssues}
+            daysPerWeek={daysPerWeek} setDaysPerWeek={setDaysPerWeek}
+            sessionDurationMin={sessionDurationMin} setSessionDurationMin={setSessionDurationMin}
+            sleepQuality={sleepQuality} setSleepQuality={setSleepQuality}
+            isVip={isVip}
+            questions={questions}
+            customAnswers={customAnswers}
+            setCustomAnswers={setCustomAnswers}
+          />
+        )}
 
-        <Text style={styles.label}>Zonas de Dor (se tiver alguma)</Text>
-        <View style={styles.chipRow}>
-          {PAIN_ZONES.map((z) => {
-            const checked = painZones.includes(z.value);
-            return (
-              <TouchableOpacity key={z.value} style={[styles.chip, checked && styles.chipActive]} onPress={() => togglePainZone(z.value)}>
-                <Text style={[styles.chipText, checked && styles.chipTextActive]}>{z.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        <Text style={styles.sectionHeader}>3. Disponibilidade e Local de Treino</Text>
-
-        <Text style={styles.label}>Local de Treino</Text>
-        <View style={styles.chipRow}>
-          {TRAINING_LOCATIONS.map((l) => (
-            <TouchableOpacity key={l.value} style={[styles.chip, trainingLocation === l.value && styles.chipActive]} onPress={() => setTrainingLocation(l.value)}>
-              <Text style={[styles.chipText, trainingLocation === l.value && styles.chipTextActive]}>{l.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={styles.label}>Dias Disponíveis por Semana</Text>
-        <View style={styles.chipRow}>
-          {DAYS_PER_WEEK_OPTIONS.map((d) => (
-            <TouchableOpacity key={d} style={[styles.chip, daysPerWeek === d && styles.chipActive]} onPress={() => setDaysPerWeek(d)}>
-              <Text style={[styles.chipText, daysPerWeek === d && styles.chipTextActive]}>{d}x</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={styles.label}>Tempo por Sessão</Text>
-        <View style={styles.chipRow}>
-          {SESSION_DURATION_OPTIONS.map((s) => (
-            <TouchableOpacity key={s.value} style={[styles.chip, sessionDurationMin === s.value && styles.chipActive]} onPress={() => setSessionDurationMin(s.value)}>
-              <Text style={[styles.chipText, sessionDurationMin === s.value && styles.chipTextActive]}>{s.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={styles.sectionHeader}>4. Rotina e Estilo de Vida</Text>
-
-        <Text style={styles.label}>Nível de Atividade no Dia a Dia</Text>
-        <View style={styles.chipRow}>
-          {ACTIVITY_LEVELS.map((a) => (
-            <TouchableOpacity key={a.value} style={[styles.chip, activityLevel === a.value && styles.chipActive]} onPress={() => setActivityLevel(a.value)}>
-              <Text style={[styles.chipText, activityLevel === a.value && styles.chipTextActive]}>{a.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={styles.label}>Qualidade do Sono</Text>
-        <View style={styles.chipRow}>
-          {SLEEP_QUALITY_OPTIONS.map((s) => (
-            <TouchableOpacity key={s.value} style={[styles.chip, sleepQuality === s.value && styles.chipActive]} onPress={() => setSleepQuality(s.value)}>
-              <Text style={[styles.chipText, sleepQuality === s.value && styles.chipTextActive]}>{s.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {isVip && questions.map((q) => (
-          <View key={q.id}>
-            <Text style={styles.label}>{q.question_text}{q.required ? ' *' : ''}</Text>
-            {q.question_type === 'sim_nao' ? (
-              <View style={styles.chipRow}>
-                {['Sim', 'Não'].map((opt) => (
-                  <TouchableOpacity
-                    key={opt}
-                    style={[styles.chip, customAnswers[q.id] === opt && styles.chipActive]}
-                    onPress={() => setCustomAnswers((prev) => ({ ...prev, [q.id]: opt }))}
-                  >
-                    <Text style={[styles.chipText, customAnswers[q.id] === opt && styles.chipTextActive]}>{opt}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ) : q.question_type === 'multipla_escolha' ? (
-              <View style={styles.chipRow}>
-                {(q.options || []).map((opt) => (
-                  <TouchableOpacity
-                    key={opt}
-                    style={[styles.chip, customAnswers[q.id] === opt && styles.chipActive]}
-                    onPress={() => setCustomAnswers((prev) => ({ ...prev, [q.id]: opt }))}
-                  >
-                    <Text style={[styles.chipText, customAnswers[q.id] === opt && styles.chipTextActive]}>{opt}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ) : (
-              <TextInput
-                style={q.question_type === 'texto_longo' ? styles.textArea : styles.input}
-                multiline={q.question_type === 'texto_longo'}
-                placeholderTextColor="#525252"
-                value={customAnswers[q.id] || ''}
-                onChangeText={(text) => setCustomAnswers((prev) => ({ ...prev, [q.id]: text }))}
-              />
-            )}
-          </View>
-        ))}
-
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Enviar Anamnese</Text>}
-        </TouchableOpacity>
+        {step < TOTAL_STEPS ? (
+          <TouchableOpacity style={styles.saveButton} onPress={handleNext}>
+            <Text style={styles.saveButtonText}>Continuar</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
+            {saving ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Enviar Anamnese</Text>}
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </View>
   );
@@ -423,6 +538,11 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 12 },
   closeText: { color: '#f97316', fontSize: 13, fontWeight: '600' },
   title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700' },
+  progressWrap: { paddingHorizontal: 16, marginBottom: 16 },
+  progressLabel: { color: '#737373', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', marginBottom: 6 },
+  progressTrack: { height: 6, borderRadius: 3, backgroundColor: '#171717', overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: '#f97316', borderRadius: 3 },
+  personalizingText: { color: '#f5f5f5', fontSize: 15, fontWeight: '700', marginTop: 16 },
   intro: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginBottom: 16 },
   sectionHeader: { color: '#f97316', fontSize: 13, fontWeight: '800', textTransform: 'uppercase', marginTop: 22, marginBottom: 4, borderTopWidth: 1, borderTopColor: '#292524', paddingTop: 18 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, marginTop: 16 },
@@ -437,6 +557,7 @@ const styles = StyleSheet.create({
   calcFieldSmall: { flex: 1 },
   calcFieldLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 4 },
   calcButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
+  calcButtonDisabled: { opacity: 0.4 },
   calcButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
   calcResultCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, padding: 16, marginTop: 12, alignItems: 'center' },
   calcResultKcal: { color: '#f97316', fontSize: 26, fontWeight: '800' },

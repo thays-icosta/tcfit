@@ -628,7 +628,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
         personalPhone={personalPhone}
         allowSkip
         onClose={() => setShowAnamnesePrompt(false)}
-        onComplete={() => setShowAnamnesePrompt(false)}
+        onComplete={() => { setShowAnamnesePrompt(false); loadData(); }}
       />
     );
   }

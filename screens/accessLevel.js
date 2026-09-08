@@ -29,6 +29,7 @@ export const PROGRAM_GOALS = [
 export const TRAINING_LOCATIONS = [
   { value: 'academia', label: 'Academia' },
   { value: 'casa', label: 'Casa' },
+  { value: 'rua', label: 'Rua' },
 ];
 
 export const DAYS_PER_WEEK_OPTIONS = [2, 3, 4, 5, 6];
