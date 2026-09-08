@@ -865,7 +865,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
               />
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10, paddingLeft: 16 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ height: 44, flexGrow: 0, marginBottom: 6, paddingLeft: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 {[{ value: 'todos', label: 'Todos os níveis' }, ...PROGRAM_LEVELS].map((l) => (
                   <TouchableOpacity

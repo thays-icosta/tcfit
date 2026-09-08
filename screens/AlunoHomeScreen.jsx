@@ -8,6 +8,7 @@ import WorkoutPreviewScreen from './WorkoutPreviewScreen';
 import MetricsMiniCards from './MetricsMiniCards';
 import WeightEvolutionChart from './WeightEvolutionChart';
 import WaterLogModal from './WaterLogModal';
+import WeightLogModal from './WeightLogModal';
 import VolumeSummaryScreen from './VolumeSummaryScreen';
 import AlunoProfileScreen from './AlunoProfileScreen';
 import FoodCatalogScreen from './FoodCatalogScreen';
@@ -139,6 +140,8 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [waterMl, setWaterMl] = useState(0);
   const [waterGoalMl, setWaterGoalMl] = useState(2000);
   const [showWaterModal, setShowWaterModal] = useState(false);
+  const [todaysWeightKg, setTodaysWeightKg] = useState(null);
+  const [showWeightModal, setShowWeightModal] = useState(false);
   const [lastWorkoutName, setLastWorkoutName] = useState(null);
   const [showVolumeSummary, setShowVolumeSummary] = useState(false);
   const [dailyNote, setDailyNote] = useState('');
@@ -353,6 +356,14 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
       .eq('entry_date', todayStr)
       .maybeSingle();
     setDailyNote(noteRow?.notes || '');
+
+    const { data: weightRow } = await supabase
+      .from('weight_entries')
+      .select('weight_kg')
+      .eq('student_id', user.id)
+      .eq('entry_date', todayStr)
+      .maybeSingle();
+    setTodaysWeightKg(weightRow?.weight_kg ?? null);
   };
 
   useEffect(() => {
@@ -1396,6 +1407,14 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             onGoalChanged={setWaterGoalMl}
           />
 
+          <WeightLogModal
+            visible={showWeightModal}
+            studentId={user.id}
+            currentWeightKg={todaysWeightKg}
+            onClose={() => setShowWeightModal(false)}
+            onSaved={setTodaysWeightKg}
+          />
+
           {todaysWorkout ? (
             <TouchableOpacity style={styles.heroWorkoutCard} onPress={() => setPreviewWorkout(todaysWorkout)} activeOpacity={0.85}>
               <Text style={styles.heroWorkoutEyebrow}>{todaysWorkoutDone ? 'TREINO DE HOJE · CONCLUÍDO' : 'SEU TREINO DE HOJE'}</Text>
@@ -1501,7 +1520,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
               { key: 'treino', label: 'Fazer o treino', done: todaysWorkoutDone, onPress: () => (todaysWorkout ? setPreviewWorkout(todaysWorkout) : setActiveTab('treinos')) },
               { key: 'refeicao', label: 'Completar refeição', done: mealsDoneToday, onPress: () => { setActiveTab('nutricao'); setDietSubTab('diario'); } },
               { key: 'agua', label: 'Beber água', done: waterDoneToday, onPress: () => setShowWaterModal(true) },
-              { key: 'peso', label: 'Registrar peso', done: false, onPress: () => (myAccessLevel === 'consultoria_vip' ? setShowEvolution(true) : setShowEvolutionLock(true)) },
+              { key: 'peso', label: 'Registrar peso', done: todaysWeightKg != null, onPress: () => setShowWeightModal(true) },
             ].map((task, i, arr) => (
               <TouchableOpacity key={task.key} style={[styles.todayTaskRow, i === arr.length - 1 && { borderBottomWidth: 0 }]} onPress={task.onPress}>
                 <Ionicons name={task.done ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={task.done ? '#22c55e' : '#525252'} />
@@ -1772,26 +1791,7 @@ const styles = StyleSheet.create({
   rotationBannerText: { color: '#3b82f6', fontSize: 11, fontWeight: '600', flexShrink: 1 },
   rotationBannerButton: { backgroundColor: '#3b82f6', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
   rotationBannerButtonText: { color: '#0F0F12', fontSize: 11, fontWeight: '800' },
-  topMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
-  financePill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
-  financePillOverdue: { backgroundColor: 'rgba(239,68,68,0.12)' },
-  financePillText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
-  financePillTextOverdue: { color: '#ef4444' },
-  personalPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5, flexShrink: 1 },
-  personalPillAvatar: { width: 22, height: 22, borderRadius: 11 },
-  personalPillAvatarPlaceholder: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
-  personalPillAvatarLetter: { color: '#FF6B00', fontSize: 10, fontWeight: '800' },
-  personalPillName: { color: '#D4D4D8', fontSize: 11, fontWeight: '700', flexShrink: 1 },
-  whatsappStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#FF6B00', borderRadius: 16, paddingVertical: 12, marginBottom: 20 },
-  whatsappStripText: { color: '#0F0F12', fontSize: 13, fontWeight: '800' },
   sectionTitleSpaced: { marginTop: 4 },
-  quickAccessRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
-  quickAccessCard: { flex: 1, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 16, minHeight: 120 },
-  quickAccessIconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  quickAccessTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
-  quickAccessSubtitle: { color: '#A1A1AA', fontSize: 10, marginTop: 4, lineHeight: 14 },
-  quickAccessProgressTrack: { height: 4, backgroundColor: '#27272A', borderRadius: 2, marginTop: 8, overflow: 'hidden' },
-  quickAccessProgressFill: { height: '100%', borderRadius: 2, backgroundColor: ACCENT },
   evolutionRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 16, marginBottom: 24 },
   evolutionRowTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   evolutionRowSubtitle: { color: '#A1A1AA', fontSize: 11, marginTop: 2 },
@@ -1803,12 +1803,6 @@ const styles = StyleSheet.create({
   heroWorkoutButton: { flexDirection: 'row', gap: 8, backgroundColor: ACCENT, borderRadius: 14, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', marginTop: 18 },
   heroWorkoutButtonDone: { backgroundColor: '#2B2B36' },
   heroWorkoutButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '800' },
-  sideBySideRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
-  sideBySideCard: { flex: 1, borderWidth: 1, borderRadius: 16, padding: 14, ...GLASS_CARD },
-  sideBySideValue: { color: '#F5F5F7', fontSize: 15, fontWeight: '800', marginTop: 8 },
-  sideBySideLabel: { color: '#737373', fontSize: 11, fontWeight: '600', marginTop: 2, marginBottom: 8 },
-  sideBySideButton: { borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 8, alignItems: 'center', marginTop: 10 },
-  sideBySideButtonText: { color: '#F5F5F7', fontSize: 12, fontWeight: '700' },
   contactCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 24, ...GLASS_CARD },
   contactCardIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
   contactCardTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
