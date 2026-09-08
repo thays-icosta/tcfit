@@ -1372,8 +1372,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const todayLabel = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   const todayLabelCapitalized = todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1);
   const mealsCompletedCount = mealsForActiveDiet.filter((m) => todaysEntries.some((e) => e.meal_type === mapMealNameToType(m.name))).length;
-  const waterDoneToday = waterMl >= waterGoalMl;
-  const mealsDoneToday = mealsForActiveDiet.length > 0 ? mealsCompletedCount >= mealsForActiveDiet.length : todaysEntries.length > 0;
 
   return (
     <View style={{ flex: 1 }}>
@@ -1514,20 +1512,16 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             </TouchableOpacity>
           )}
 
-          <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>PARA VOCÊ HOJE</Text>
-          <View style={styles.todayTasksCard}>
-            {[
-              { key: 'treino', label: 'Fazer o treino', done: todaysWorkoutDone, onPress: () => (todaysWorkout ? setPreviewWorkout(todaysWorkout) : setActiveTab('treinos')) },
-              { key: 'refeicao', label: 'Completar refeição', done: mealsDoneToday, onPress: () => { setActiveTab('nutricao'); setDietSubTab('diario'); } },
-              { key: 'agua', label: 'Beber água', done: waterDoneToday, onPress: () => setShowWaterModal(true) },
-              { key: 'peso', label: 'Registrar peso', done: todaysWeightKg != null, onPress: () => setShowWeightModal(true) },
-            ].map((task, i, arr) => (
-              <TouchableOpacity key={task.key} style={[styles.todayTaskRow, i === arr.length - 1 && { borderBottomWidth: 0 }]} onPress={task.onPress}>
-                <Ionicons name={task.done ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={task.done ? '#22c55e' : '#525252'} />
-                <Text style={[styles.todayTaskLabel, task.done && styles.todayTaskLabelDone]}>{task.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <TouchableOpacity style={styles.contactCard} onPress={() => setShowWeightModal(true)}>
+            <View style={styles.contactCardIconWrap}>
+              <Ionicons name={todaysWeightKg != null ? 'checkmark-circle' : 'scale-outline'} size={20} color={todaysWeightKg != null ? '#22c55e' : ACCENT} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.contactCardTitle}>{todaysWeightKg != null ? `Peso de hoje: ${todaysWeightKg} kg` : 'Registrar peso de hoje'}</Text>
+              <Text style={styles.contactCardSubtitle}>{todaysWeightKg != null ? 'Toque para atualizar' : 'Ajuda a acompanhar sua evolução ao longo do tempo'}</Text>
+            </View>
+            <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+          </TouchableOpacity>
 
           <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>MINHA EVOLUÇÃO</Text>
           {myAccessLevel === 'consultoria_vip' ? (
@@ -1807,10 +1801,6 @@ const styles = StyleSheet.create({
   contactCardIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
   contactCardTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   contactCardSubtitle: { color: '#737373', fontSize: 11, marginTop: 2 },
-  todayTasksCard: { borderWidth: 1, borderRadius: 16, marginBottom: 24, overflow: 'hidden', ...GLASS_CARD },
-  todayTaskRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#0F0F12' },
-  todayTaskLabel: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
-  todayTaskLabelDone: { color: '#737373', textDecorationLine: 'line-through' },
   evolutionShortcutRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   evolutionShortcutCard: { flex: 1, borderWidth: 1, borderRadius: 14, padding: 14, alignItems: 'center', gap: 8, ...GLASS_CARD },
   evolutionShortcutText: { color: '#F5F5F7', fontSize: 11, fontWeight: '700', textAlign: 'center' },

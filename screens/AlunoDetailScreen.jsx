@@ -422,12 +422,14 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
           <View style={styles.healthAlertRow}>
             {(anamnese.pain_zones || []).map((z) => (
               <View key={z} style={styles.healthAlertBadge}>
-                <Text style={styles.healthAlertBadgeText}>⚠️ Dor: {PAIN_ZONES.find((p) => p.value === z)?.label || z}</Text>
+                <Ionicons name="warning-outline" size={11} color="#ef4444" />
+                <Text style={styles.healthAlertBadgeText}>Dor: {PAIN_ZONES.find((p) => p.value === z)?.label || z}</Text>
               </View>
             ))}
             {anamnese.health_issues && (
               <View style={styles.healthAlertBadge}>
-                <Text style={styles.healthAlertBadgeText} numberOfLines={1}>⚠️ {anamnese.health_issues}</Text>
+                <Ionicons name="warning-outline" size={11} color="#ef4444" />
+                <Text style={styles.healthAlertBadgeText} numberOfLines={1}>{anamnese.health_issues}</Text>
               </View>
             )}
           </View>
@@ -447,25 +449,37 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
               <Text style={styles.anamneseSummaryLink}>Ver completa</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.anamneseSummaryLine}>
-            🎯 {PROGRAM_GOALS.find((g) => g.value === anamnese.main_goal)?.label || '—'}
-            {anamnese.experience_level ? ` · ${PROGRAM_LEVELS.find((l) => l.value === anamnese.experience_level)?.label}` : ''}
-          </Text>
-          <Text style={styles.anamneseSummaryLine}>
-            📍 {TRAINING_LOCATIONS.find((l) => l.value === anamnese.training_location)?.label || '—'}
-            {anamnese.days_per_week ? ` · ${anamnese.days_per_week}x/semana` : ''}
-          </Text>
-          {anamnese.focus_muscle_group && (
+          <View style={styles.anamneseSummaryRow}>
+            <Ionicons name="flag-outline" size={13} color="#a3a3a3" />
             <Text style={styles.anamneseSummaryLine}>
-              💪 Foco: {MUSCLE_FOCUS_OPTIONS.find((m) => m.value === anamnese.focus_muscle_group)?.label}
+              {PROGRAM_GOALS.find((g) => g.value === anamnese.main_goal)?.label || '—'}
+              {anamnese.experience_level ? ` · ${PROGRAM_LEVELS.find((l) => l.value === anamnese.experience_level)?.label}` : ''}
             </Text>
+          </View>
+          <View style={styles.anamneseSummaryRow}>
+            <Ionicons name="location-outline" size={13} color="#a3a3a3" />
+            <Text style={styles.anamneseSummaryLine}>
+              {TRAINING_LOCATIONS.find((l) => l.value === anamnese.training_location)?.label || '—'}
+              {anamnese.days_per_week ? ` · ${anamnese.days_per_week}x/semana` : ''}
+            </Text>
+          </View>
+          {anamnese.focus_muscle_group && (
+            <View style={styles.anamneseSummaryRow}>
+              <Ionicons name="barbell-outline" size={13} color="#a3a3a3" />
+              <Text style={styles.anamneseSummaryLine}>
+                Foco: {MUSCLE_FOCUS_OPTIONS.find((m) => m.value === anamnese.focus_muscle_group)?.label}
+              </Text>
+            </View>
           )}
         </View>
       )}
 
       {suggestedTemplate && !suggestionApplied && (
         <View style={styles.suggestionCard}>
-          <Text style={styles.suggestionTitle}>💡 Recomendação TCFIT</Text>
+          <View style={styles.suggestionTitleRow}>
+            <Ionicons name="bulb-outline" size={16} color="#FF6B00" />
+            <Text style={styles.suggestionTitle}>Recomendação TCFIT</Text>
+          </View>
           <Text style={styles.suggestionText}>
             {suggestedTemplate.name} (baseado em {anamnese.days_per_week ? `${anamnese.days_per_week}x/semana` : 'suas respostas'}
             {anamnese.experience_level ? ` e nível ${PROGRAM_LEVELS.find((l) => l.value === anamnese.experience_level)?.label?.toLowerCase()}` : ''})
@@ -593,18 +607,20 @@ const styles = StyleSheet.create({
   statusDotInactive: { backgroundColor: '#ef4444' },
   statusText: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
   statusTextInactive: { color: '#ef4444' },
-  chatShortcutButton: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', alignItems: 'center', justifyContent: 'center' },
+  chatShortcutButton: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(34,197,94,0.1)', alignItems: 'center', justifyContent: 'center' },
   anamneseButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
   anamneseButtonText: { color: '#0F0F12', fontSize: 12, fontWeight: '700' },
   healthAlertRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
-  healthAlertBadge: { backgroundColor: 'rgba(239,68,68,0.12)', borderWidth: 1, borderColor: '#ef4444', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5, maxWidth: '100%' },
+  healthAlertBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5, maxWidth: '100%' },
   healthAlertBadgeText: { color: '#ef4444', fontSize: 10, fontWeight: '700' },
   anamneseSummaryCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 16 },
   anamneseSummaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   anamneseSummaryTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   anamneseSummaryLink: { color: '#FF6B00', fontSize: 11, fontWeight: '700' },
-  anamneseSummaryLine: { color: '#a3a3a3', fontSize: 12, marginTop: 4 },
+  anamneseSummaryRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  anamneseSummaryLine: { color: '#a3a3a3', fontSize: 12, flexShrink: 1 },
   suggestionCard: { backgroundColor: 'rgba(255,107,0,0.08)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, padding: 14, marginBottom: 16 },
+  suggestionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   suggestionTitle: { color: '#FF6B00', fontSize: 13, fontWeight: '800' },
   suggestionText: { color: '#F5F5F7', fontSize: 12, marginTop: 6, lineHeight: 17 },
   suggestionButtonRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
