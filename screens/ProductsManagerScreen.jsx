@@ -7,6 +7,7 @@ import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { HOME_CATEGORIES, PROGRAM_LEVELS, PROGRAM_GOALS, NUTRITION_TAGS, TARGET_AUDIENCE_OPTIONS, RUNNING_LEVELS } from './accessLevel';
+import { coverFocalImageStyle } from './vitrineStyles';
 import { HeaderBack } from './Header';
 import { toTitleCase } from './textUtils';
 
@@ -70,6 +71,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [active, setActive] = useState(true);
   const [selectedRecipeIds, setSelectedRecipeIds] = useState([]);
   const [coverImageUrl, setCoverImageUrl] = useState(null);
+  const [coverFocalPosition, setCoverFocalPosition] = useState('topo');
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [requiredAccessLevel, setRequiredAccessLevel] = useState(null);
@@ -237,6 +239,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setActive(true);
     setSelectedRecipeIds([]);
     setCoverImageUrl(null);
+    setCoverFocalPosition('topo');
     setRequiredAccessLevel(null);
     setSelectedTemplateIds([]);
     setCategory(null);
@@ -322,6 +325,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setActive(product.active !== false);
     setSelectedRecipeIds(product.recipe_ids || []);
     setCoverImageUrl(product.cover_image_url || null);
+    setCoverFocalPosition(product.cover_focal_position || 'topo');
     setRequiredAccessLevel(product.required_access_level || null);
     setCategory(product.category || null);
     setLevel(product.level || null);
@@ -369,6 +373,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       product_key: type,
       recipe_ids: deliveryType === 'receitas' ? selectedRecipeIds : [],
       cover_image_url: coverImageUrl,
+      cover_focal_position: coverFocalPosition,
       required_access_level: requiredAccessLevel,
       template_id: type === 'treino_template' ? selectedTemplateIds[0] : null,
       category,
@@ -744,13 +749,27 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
             {uploadingCover ? (
               <ActivityIndicator color="#f97316" />
             ) : coverImageUrl ? (
-              <Image source={{ uri: coverImageUrl }} style={styles.coverPreview} resizeMode="cover" />
+              <Image source={{ uri: coverImageUrl }} style={coverFocalImageStyle(coverFocalPosition)} resizeMode="cover" />
             ) : (
               <Text style={styles.coverPickerText}>
                 {WORKOUT_PRODUCT_TYPES.includes(type) ? '📷 Adicionar foto de capa (obrigatória)' : '📷 Adicionar foto de capa'}
               </Text>
             )}
           </TouchableOpacity>
+
+          {coverImageUrl && (
+            <View style={styles.accessLevelFormRow}>
+              {[{ value: 'topo', label: 'Topo' }, { value: 'centro', label: 'Centro' }, { value: 'base', label: 'Base' }].map((f) => (
+                <TouchableOpacity
+                  key={f.value}
+                  style={[styles.accessLevelFormChip, coverFocalPosition === f.value && styles.accessLevelFormChipActive]}
+                  onPress={() => setCoverFocalPosition(f.value)}
+                >
+                  <Text style={[styles.accessLevelFormChipText, coverFocalPosition === f.value && styles.accessLevelFormChipTextActive]}>{f.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           <Text style={styles.label}>Tipo</Text>
           <View style={styles.typeRow}>

@@ -16,6 +16,15 @@ export const TRANSITION = Platform.OS === 'web'
 // has to be faked by oversizing the image and pinning it to the top of an overflow:hidden box.
 export const COVER_TOP_IMAGE = { position: 'absolute', top: 0, left: 0, width: '100%', height: '160%' };
 
+// Same oversize-and-pin technique as COVER_TOP_IMAGE, but with the anchor
+// configurable per cover (products.cover_focal_position / workout_templates.
+// cover_focal_position) so a personal can fix a photo that crops badly at
+// the default top anchor.
+const FOCAL_TOP_OFFSET = { topo: '0%', centro: '-30%', base: '-60%' };
+export function coverFocalImageStyle(focalPosition) {
+  return { position: 'absolute', left: 0, width: '100%', height: '160%', top: FOCAL_TOP_OFFSET[focalPosition] ?? FOCAL_TOP_OFFSET.topo };
+}
+
 // Flat, uniform card shell: #18181B background, 1px #27272A border, 16px radius, 20px padding.
 export const FLAT_CARD = {
   backgroundColor: '#18181B',

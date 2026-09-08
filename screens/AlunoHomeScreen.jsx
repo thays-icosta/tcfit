@@ -25,7 +25,7 @@ import { showAlert } from './alertUtils';
 import { hasAccessByLevel, PROGRAM_LEVELS, PROGRAM_GOALS, RUNNING_LEVELS } from './accessLevel';
 import { HeaderWelcome, HeaderBack } from './Header';
 import { toTitleCase } from './textUtils';
-import { COVER_TOP_IMAGE } from './vitrineStyles';
+import { COVER_TOP_IMAGE, coverFocalImageStyle } from './vitrineStyles';
 import ProductDetailModal from './ProductDetailModal';
 import CollapsibleSection, { animateNextLayout } from './CollapsibleSection';
 import { getJsonPref, setJsonPref } from './localPrefs';
@@ -1498,7 +1498,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                     >
                       <View style={styles.nutritionCoverWrap}>
                         {lvl.product?.cover_image_url ? (
-                          <Image source={{ uri: lvl.product.cover_image_url }} style={styles.nutritionCoverImage} resizeMode="cover" />
+                          <Image source={{ uri: lvl.product.cover_image_url }} style={coverFocalImageStyle(lvl.product.cover_focal_position)} resizeMode="cover" />
                         ) : (
                           <View style={styles.nutritionCoverPlaceholder}>
                             <Ionicons name={lvl.icon} size={22} color={locked ? '#525252' : ACCENT} />
