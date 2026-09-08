@@ -58,7 +58,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       await Share.share({
         message: `Olá! Baixe o app e use meu código de convite: ${user.id}`,
       });
-    } catch (e) {
+    } catch {
       showAlert('Erro', 'Não foi possível abrir o compartilhamento.');
     }
   };

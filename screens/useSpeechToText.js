@@ -26,8 +26,8 @@ export function useSpeechToText({ active, getBaseText, onTranscriptChange }) {
     const recognition = recognitionRef.current;
     recognitionRef.current = null;
     if (recognition) {
-      try { recognition.stop(); } catch (e) {}
-      try { recognition.abort(); } catch (e) {}
+      try { recognition.stop(); } catch {}
+      try { recognition.abort(); } catch {}
     }
   }, [clearRecordingTimeout]);
 
@@ -58,22 +58,22 @@ export function useSpeechToText({ active, getBaseText, onTranscriptChange }) {
           combined += event.results[i][0]?.transcript || '';
         }
         onTranscriptChange(baseText ? `${baseText} ${combined}` : combined);
-      } catch (e) {
+      } catch {
         // no-op: a malformed result event shouldn't kill the recording session
       }
     };
     recognition.onerror = () => {
-      try { stop(); } catch (e) { setRecording(false); }
+      try { stop(); } catch { setRecording(false); }
     };
     recognition.onend = () => {
-      try { stop(); } catch (e) { setRecording(false); }
+      try { stop(); } catch { setRecording(false); }
     };
 
     recognitionRef.current = recognition;
     setRecording(true);
     try {
       recognition.start();
-    } catch (e) {
+    } catch {
       stop();
       return;
     }

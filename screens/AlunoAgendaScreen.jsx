@@ -71,7 +71,7 @@ export default function AlunoAgendaScreen({ studentId, onClose }) {
         }
       }
       setRemindersReady(true);
-    } catch (e) {
+    } catch {
       // Se falhar, a tela continua funcionando normalmente
     }
   };

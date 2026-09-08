@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert, ActivityIndicator, Modal, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Modal, Switch } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { supabase } from './supabaseClient';
@@ -535,7 +535,6 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
   });
   const doneCount = checklistItems.filter((c) => c.done).length;
   const activeDiet = diets.find((d) => d.id === activeDietId);
-  const maxTrend = Math.max(...adherenceTrend, 1);
 
   if (loading) {
     return (

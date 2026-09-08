@@ -510,7 +510,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
           </View>
 
           <TouchableOpacity style={[styles.finishButtonWide, { marginBottom: 24 }]} onPress={handleSavePse} disabled={savingPse}>
-            {savingPse ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.finishButtonText}>Concluir</Text>}
+            {savingPse ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.finishButtonTextWide}>Concluir</Text>}
           </TouchableOpacity>
         </ScrollView>
 
@@ -842,5 +842,5 @@ const styles = StyleSheet.create({
   notesLabel: { color: '#a3a3a3', fontSize: 12, fontWeight: '600', marginBottom: 8 },
   notesInput: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, color: '#F5F5F7', fontSize: 13, minHeight: 90, textAlignVertical: 'top' },
   finishButtonWide: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: 24 },
-  finishButtonText: { color: '#0F0F12', fontSize: 16, fontWeight: '700' },
+  finishButtonTextWide: { color: '#0F0F12', fontSize: 16, fontWeight: '700' },
 });

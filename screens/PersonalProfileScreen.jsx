@@ -376,7 +376,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
             <Text style={styles.label}>Chave Pix</Text>
             <TextInput style={styles.input} placeholder="ex: seu@email.com, CPF ou telefone" placeholderTextColor="#525252" value={pixKey} onChangeText={setPixKey} autoCapitalize="none" />
 
-            <Text style={styles.brandingSavedHint}>A logo salva automaticamente. Os outros campos salvam junto com "Salvar Alterações" no final da página.</Text>
+            <Text style={styles.brandingSavedHint}>A logo salva automaticamente. Os outros campos salvam junto com &quot;Salvar Alterações&quot; no final da página.</Text>
           </View>
         )}
       </View>

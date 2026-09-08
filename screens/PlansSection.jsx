@@ -134,7 +134,7 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
     try {
       await Linking.openURL(url);
-    } catch (e) {
+    } catch {
       showAlert('Erro', 'Não foi possível abrir o WhatsApp.');
     }
   };

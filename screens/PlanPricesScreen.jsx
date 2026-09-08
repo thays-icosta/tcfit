@@ -217,7 +217,7 @@ export default function PlanPricesScreen({ onClose }) {
               onChangeText={(t) => handleChange(plan.plan_key, 'priceInput', t)}
             />
           </View>
-          <Text style={styles.smallHint}>Deixe em branco pra mostrar "Consulte".</Text>
+          <Text style={styles.smallHint}>Deixe em branco pra mostrar &quot;Consulte&quot;.</Text>
 
           <Text style={styles.fieldLabel}>Preço Mensal Equivalente (opcional)</Text>
           <View style={styles.priceRow}>

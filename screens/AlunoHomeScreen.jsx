@@ -559,7 +559,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
 
     try {
       await Linking.openURL(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`);
-    } catch (e) {
+    } catch {
       showAlert('Erro', 'Não foi possível abrir o WhatsApp.');
     }
   };

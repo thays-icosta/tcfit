@@ -1068,7 +1068,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
         <Switch value={sectionEnabled} onValueChange={handleToggleSection} trackColor={{ false: '#2B2B36', true: '#22c55e' }} thumbColor="#F5F5F7" />
       </View>
 
-      <Text style={styles.hint2}>E-books, desafios avulsos e guias — tudo que não é consultoria direta. Marque "oferta complementar" pra aparecer como upsell na vitrine.</Text>
+      <Text style={styles.hint2}>E-books, desafios avulsos e guias — tudo que não é consultoria direta. Marque &quot;oferta complementar&quot; pra aparecer como upsell na vitrine.</Text>
 
       <TouchableOpacity style={styles.newButton} onPress={() => handleOpenNew()}>
         <Text style={styles.newButtonText}>+ Novo Produto</Text>

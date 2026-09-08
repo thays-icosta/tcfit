@@ -173,6 +173,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   };
 
   const handleDuplicateFicha = async (workout) => {
+    if (saving) return;
     setSaving(true);
     const { data: newWorkout, error } = await supabase
       .from('workouts')

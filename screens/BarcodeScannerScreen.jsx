@@ -32,7 +32,7 @@ export default function BarcodeScannerScreen({ onFoodFound, onClose }) {
         alert('Produto não encontrado nessa base de dados. Tenta buscar manualmente.');
         setScanned(false);
       }
-    } catch (e) {
+    } catch {
       alert('Erro ao consultar o produto. Confere sua conexão.');
       setScanned(false);
     }
