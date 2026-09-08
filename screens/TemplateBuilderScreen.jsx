@@ -101,7 +101,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const loadTemplates = async () => {
     const { data } = await supabase
       .from('workout_templates')
-      .select('id, name, description, is_public, price, cover_image_url, category, environment, level, goal, focus_muscle_group, target_audience, running_level, cover_focal_position')
+      .select('id, name, description, is_public, price, cover_image_url, category, environment, level, goal, focus_muscle_group, target_audience, running_level, cover_focal_position, archived')
       .eq('personal_id', personalId)
       .order('created_at', { ascending: true });
     setTemplates(data || []);
@@ -285,7 +285,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   };
 
   const handleDeleteTemplate = (template) => {
-    showAlert('Excluir template', `Tem certeza que quer excluir "${template.name}"?`, [
+    showAlert('Excluir template', `Tem certeza que quer excluir "${template.name}"? Essa ação não pode ser desfeita.`, [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Excluir',
@@ -298,6 +298,88 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
         },
       },
     ]);
+  };
+
+  const handleDuplicateTemplate = async (template) => {
+    const { data: newTemplate, error } = await supabase
+      .from('workout_templates')
+      .insert({
+        personal_id: personalId,
+        name: `${template.name} (cópia)`,
+        description: template.description,
+        is_public: false,
+        price: template.price,
+        cover_image_url: template.cover_image_url,
+        category: template.category,
+        environment: template.environment,
+        level: template.level,
+        goal: template.goal,
+        focus_muscle_group: template.focus_muscle_group,
+        target_audience: template.target_audience,
+        running_level: template.running_level,
+        cover_focal_position: template.cover_focal_position,
+      })
+      .select()
+      .single();
+    if (error || !newTemplate) {
+      showAlert('Erro', error?.message || 'Não foi possível duplicar o template.');
+      return;
+    }
+
+    const { data: sourceSessions } = await supabase
+      .from('template_sessions')
+      .select('id, name, order_index')
+      .eq('template_id', template.id)
+      .order('order_index', { ascending: true });
+
+    for (const session of sourceSessions || []) {
+      const { data: newSession } = await supabase
+        .from('template_sessions')
+        .insert({ template_id: newTemplate.id, personal_id: personalId, name: session.name, order_index: session.order_index })
+        .select()
+        .single();
+      if (!newSession) continue;
+
+      const { data: sourceItems } = await supabase
+        .from('workout_template_exercises')
+        .select('exercise_id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes')
+        .eq('session_id', session.id);
+
+      if (sourceItems && sourceItems.length > 0) {
+        const copies = sourceItems.map((it) => ({ ...it, session_id: newSession.id }));
+        await supabase.from('workout_template_exercises').insert(copies);
+      }
+    }
+
+    setTemplateScope('modelos');
+    await loadTemplates();
+    showAlert('Duplicado!', `"${newTemplate.name}" foi criado em Modelos, pronto pra personalizar.`);
+  };
+
+  const handleToggleArchiveTemplate = async (template) => {
+    const archiving = !template.archived;
+    if (archiving && template.is_public) {
+      await supabase.from('products').update({ active: false }).eq('source_template_id', template.id);
+    }
+    await supabase.from('workout_templates').update({ archived: archiving }).eq('id', template.id);
+    if (activeTemplateId === template.id) setActiveTemplateId(null);
+    loadTemplates();
+  };
+
+  const handleTemplateLongPress = (template) => {
+    const buttons = template.archived
+      ? [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Restaurar', onPress: () => handleToggleArchiveTemplate(template) },
+          { text: 'Excluir', style: 'destructive', onPress: () => handleDeleteTemplate(template) },
+        ]
+      : [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Duplicar', onPress: () => handleDuplicateTemplate(template) },
+          { text: 'Arquivar', onPress: () => handleToggleArchiveTemplate(template) },
+          { text: 'Excluir', style: 'destructive', onPress: () => handleDeleteTemplate(template) },
+        ];
+    showAlert(template.name, 'O que você quer fazer com esse template?', buttons);
   };
 
   const handleAddSession = async () => {
@@ -492,8 +574,13 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   };
 
   const filteredTemplates = templates.filter((t) => {
-    if (templateScope === 'prontos' && !t.is_public) return false;
-    if (templateScope === 'modelos' && t.is_public) return false;
+    if (templateScope === 'arquivados') {
+      if (!t.archived) return false;
+    } else {
+      if (t.archived) return false;
+      if (templateScope === 'prontos' && !t.is_public) return false;
+      if (templateScope === 'modelos' && t.is_public) return false;
+    }
     if (templateLevelFilter !== 'todos' && t.level !== templateLevelFilter) return false;
     if (templateEnvironmentFilter !== 'todos' && t.environment !== templateEnvironmentFilter) return false;
     if (templateAudienceFilter !== 'todos' && t.target_audience !== templateAudienceFilter && t.target_audience !== 'unissex') return false;
@@ -882,11 +969,20 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                 <Ionicons name="storefront-outline" size={14} color={templateScope === 'prontos' ? '#0F0F12' : '#a3a3a3'} />
                 <Text style={[styles.scopeTabText, templateScope === 'prontos' && styles.scopeTabTextActive]}>Treinos Prontos</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.scopeTabButton, templateScope === 'arquivados' && styles.scopeTabButtonActive]}
+                onPress={() => setTemplateScope('arquivados')}
+              >
+                <Ionicons name="archive-outline" size={14} color={templateScope === 'arquivados' ? '#0F0F12' : '#a3a3a3'} />
+                <Text style={[styles.scopeTabText, templateScope === 'arquivados' && styles.scopeTabTextActive]}>Arquivados</Text>
+              </TouchableOpacity>
             </View>
             <Text style={styles.scopeHelperText}>
               {templateScope === 'modelos'
                 ? 'Biblioteca privada — reaproveite pra montar a ficha de um aluno sem alterar o original.'
-                : 'Vendidos na vitrine dos alunos. Publique pelo campo "Vender esse template na vitrine" ao criar ou editar.'}
+                : templateScope === 'prontos'
+                  ? 'Vendidos na vitrine dos alunos. Publique pelo campo "Vender esse template na vitrine" ao criar ou editar.'
+                  : 'Fora das listas ativas, sem aparecer na vitrine. Segure um card pra restaurar.'}
             </Text>
 
             <View style={{ paddingHorizontal: 16 }}>
@@ -933,12 +1029,14 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
               </View>
             </ScrollView>
 
+            <Text style={[styles.hintText, { paddingHorizontal: 16 }]}>Segure um card pra duplicar, arquivar ou excluir</Text>
+
             <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}>
               {templateGroups.map((group) => (
                 <View key={group.value} style={{ marginBottom: 16 }}>
                   <Text style={styles.templateGroupLabel}>{group.label}</Text>
                   {group.items.map((t) => (
-                    <TouchableOpacity key={t.id} style={styles.programCard} onPress={() => setActiveTemplateId(t.id)} onLongPress={() => handleDeleteTemplate(t)}>
+                    <TouchableOpacity key={t.id} style={styles.programCard} onPress={() => setActiveTemplateId(t.id)} onLongPress={() => handleTemplateLongPress(t)}>
                       {t.cover_image_url ? (
                         <Image source={{ uri: t.cover_image_url }} style={styles.programCardCover} />
                       ) : (
@@ -963,7 +1061,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                 <View style={{ marginBottom: 16 }}>
                   {templateGroups.length > 0 && <Text style={styles.templateGroupLabel}>Sem categoria</Text>}
                   {ungroupedTemplates.map((t) => (
-                    <TouchableOpacity key={t.id} style={styles.programCard} onPress={() => setActiveTemplateId(t.id)} onLongPress={() => handleDeleteTemplate(t)}>
+                    <TouchableOpacity key={t.id} style={styles.programCard} onPress={() => setActiveTemplateId(t.id)} onLongPress={() => handleTemplateLongPress(t)}>
                       {t.cover_image_url ? (
                         <Image source={{ uri: t.cover_image_url }} style={styles.programCardCover} />
                       ) : (
