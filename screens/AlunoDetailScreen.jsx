@@ -408,6 +408,8 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.studentName}>{student.name}</Text>
+            {student.email && <Text style={styles.studentEmail} numberOfLines={1}>{student.email}</Text>}
+            {student.phone && <Text style={styles.studentEmail} numberOfLines={1}>{student.phone}</Text>}
             <View style={styles.statusRow}>
               <View style={[styles.statusDot, isOverdue && styles.statusDotInactive]} />
               <Text style={[styles.statusText, isOverdue && styles.statusTextInactive]}>{isOverdue ? 'Inativo' : 'Ativo'}</Text>

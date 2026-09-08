@@ -38,6 +38,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [financeSummary, setFinanceSummary] = useState({ monthlyRevenue: 0, dueCount: 0 });
   const [studentFilter, setStudentFilter] = useState('todos');
   const [attendanceFilter, setAttendanceFilter] = useState('todos');
+  const [statusFilter, setStatusFilter] = useState('todos');
   const [studentSearch, setStudentSearch] = useState('');
   const [recentDiets, setRecentDiets] = useState([]);
 
@@ -88,7 +89,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const loadStudents = async () => {
     const { data, error } = await supabase
       .from('users')
-      .select('id, name, email, avatar_url, access_level, attendance_mode')
+      .select('id, name, email, phone, avatar_url, access_level, attendance_mode')
       .eq('personal_id', user.id)
       .eq('role', 'aluno');
 
@@ -264,6 +265,14 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     return <RecipeManagerScreen personalId={user.id} onClose={() => setShowRecipeManager(false)} />;
   }
 
+  const studentStatus = (s) => {
+    if (overduePaymentStudents[s.id]) return 'atrasado';
+    const done = completedToday[s.id];
+    const daysSince = daysSinceLastTrained[s.id];
+    if ((!done && (daysSince === null || daysSince >= 3)) || anamnesePendingStudents[s.id]) return 'atencao';
+    return 'em_dia';
+  };
+
   const filteredStudents = students
     .filter((s) => {
       if (studentFilter === 'vip') return s.access_level === 'consultoria_vip';
@@ -274,6 +283,10 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       if (attendanceFilter === 'presencial') return s.attendance_mode === 'presencial';
       if (attendanceFilter === 'online') return s.attendance_mode !== 'presencial';
       return true;
+    })
+    .filter((s) => {
+      if (statusFilter === 'todos') return true;
+      return studentStatus(s) === statusFilter;
     })
     .filter((s) => {
       const q = studentSearch.trim().toLowerCase();
@@ -319,6 +332,23 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
             ))}
           </View>
 
+          <View style={styles.studentFilterTabs}>
+            {[
+              { value: 'todos', label: 'Todos' },
+              { value: 'em_dia', label: 'Em Dia' },
+              { value: 'atencao', label: 'Atenção' },
+              { value: 'atrasado', label: 'Atrasados' },
+            ].map((tab) => (
+              <TouchableOpacity
+                key={tab.value}
+                style={[styles.studentFilterTab, statusFilter === tab.value && styles.studentFilterTabActive]}
+                onPress={() => setStatusFilter(tab.value)}
+              >
+                <Text style={[styles.studentFilterTabText, statusFilter === tab.value && styles.studentFilterTabTextActive]}>{tab.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
           <View style={styles.studentSearchBox}>
             <Ionicons name="search-outline" size={16} color="#737373" />
             <TextInput
@@ -345,7 +375,12 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
             filteredStudents.map((item) => {
               const done = completedToday[item.id];
               const daysSince = daysSinceLastTrained[item.id];
-              const showAlertTag = !done && (daysSince === null || daysSince >= 3);
+              const status = studentStatus(item);
+              const alertLabel = status === 'atrasado'
+                ? 'Pagamento atrasado'
+                : status === 'atencao'
+                  ? (!done && (daysSince === null || daysSince >= 3) ? (daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`) : 'Anamnese pendente')
+                  : null;
               const isVip = item.access_level === 'consultoria_vip';
               return (
                 <TouchableOpacity key={item.id} style={styles.studentCard} onPress={() => setDetailFor(item)}>
@@ -375,11 +410,9 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
                   <View style={styles.statusTag}>
                     <View style={[styles.statusDot, done ? styles.statusDotDone : styles.statusDotPending]} />
                     <Text style={styles.statusTagText}>{done ? 'Treinou hoje' : 'Ainda não treinou'}</Text>
-                    {showAlertTag && (
-                      <View style={styles.alertTag}>
-                        <Text style={styles.alertTagText}>
-                          {daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`}
-                        </Text>
+                    {alertLabel && (
+                      <View style={[styles.alertTag, status === 'atencao' && styles.attentionTagPending]}>
+                        <Text style={[styles.alertTagText, status === 'atencao' && styles.attentionTagPendingText]}>{alertLabel}</Text>
                       </View>
                     )}
                   </View>
