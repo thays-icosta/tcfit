@@ -1386,51 +1386,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
         <ActivityIndicator color={ACCENT} style={{ marginTop: 20 }} />
       ) : (
         <>
-          {nextDuePayment && (
-            <View style={[styles.financeBanner, isOverdue && styles.financeBannerOverdue]}>
-              <View style={styles.financeBannerRow}>
-                <Ionicons name={isOverdue ? 'alert-circle-outline' : 'cash-outline'} size={16} color={isOverdue ? '#ef4444' : '#eab308'} />
-                <Text style={[styles.financeBannerText, isOverdue && styles.financeBannerTextOverdue]}>
-                  {isOverdue ? 'Mensalidade vencida: ' : 'Próxima mensalidade: '}
-                  R$ {Number(nextDuePayment.amount).toFixed(2)} · vence {formatDate(nextDuePayment.due_date)}
-                </Text>
-              </View>
-              <View style={styles.payButtonsRow}>
-                {personalPixKey && (
-                  <TouchableOpacity style={styles.copyPixButton} onPress={handleCopyPix}>
-                    <Ionicons name={pixCopied ? 'checkmark-outline' : 'copy-outline'} size={14} color="#3b82f6" />
-                    <Text style={styles.copyPixButtonText}>{pixCopied ? 'Copiado!' : 'Copiar Pix'}</Text>
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity style={[styles.payButton, isOverdue && styles.payButtonOverdue]} onPress={handleRealizarPagamento}>
-                  <Ionicons name="logo-whatsapp" size={14} color="#0F0F12" />
-                  <Text style={styles.payButtonText}>Realizar Pagamento</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          <Text style={styles.progressSectionLabel}>SEU PROGRESSO DE HOJE</Text>
-          <MetricsMiniCards
-            workoutStatus={{
-              valueText: !todaysWorkout ? '—' : todaysWorkoutDone ? 'Feito' : 'Pendente',
-              percent: todaysWorkoutDone ? 100 : 0,
-            }}
-            onPressWorkout={() => (todaysWorkout ? setPreviewWorkout(todaysWorkout) : setActiveTab('treinos'))}
-            hideCalories
-            caloriesConsumed={consumedTotals.kcal}
-            caloriesGoal={diets[0]?.goal_kcal}
-            waterMl={waterMl}
-            waterGoalMl={waterGoalMl}
-            onPressWater={() => setShowWaterModal(true)}
-            mealsCompleted={mealsCompletedCount}
-            mealsTotal={mealsForActiveDiet.length}
-            onPressHabits={() => { setActiveTab('nutricao'); setDietSubTab('prescrita'); }}
-            weeklyPercent={(weekDaysCount / 7) * 100}
-            lastWorkoutLabel={lastWorkoutName}
-            onPressFrequency={() => setShowVolumeSummary(true)}
-          />
-
           <WaterLogModal
             visible={showWaterModal}
             studentId={user.id}
@@ -1482,31 +1437,50 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             </View>
           )}
 
-          <View style={styles.sideBySideRow}>
-            <View style={styles.sideBySideCard}>
-              <Ionicons name="water-outline" size={18} color="#5EC8D8" />
-              <Text style={styles.sideBySideValue}>{(waterMl / 1000).toFixed(1)} / {(waterGoalMl / 1000).toFixed(1)}L</Text>
-              <Text style={styles.sideBySideLabel}>Água</Text>
-              <View style={styles.macroBarTrack}>
-                <View style={[styles.macroBarFill, { width: `${Math.min(100, (waterMl / waterGoalMl) * 100)}%`, backgroundColor: '#5EC8D8' }]} />
-              </View>
-              <TouchableOpacity style={styles.sideBySideButton} onPress={() => setShowWaterModal(true)}>
-                <Text style={styles.sideBySideButtonText}>Registrar</Text>
-              </TouchableOpacity>
-            </View>
+          <Text style={styles.progressSectionLabel}>SEU PROGRESSO DE HOJE</Text>
+          <MetricsMiniCards
+            workoutStatus={{
+              valueText: !todaysWorkout ? '—' : todaysWorkoutDone ? 'Feito' : 'Pendente',
+              percent: todaysWorkoutDone ? 100 : 0,
+            }}
+            onPressWorkout={() => (todaysWorkout ? setPreviewWorkout(todaysWorkout) : setActiveTab('treinos'))}
+            hideCalories
+            caloriesConsumed={consumedTotals.kcal}
+            caloriesGoal={diets[0]?.goal_kcal}
+            waterMl={waterMl}
+            waterGoalMl={waterGoalMl}
+            onPressWater={() => setShowWaterModal(true)}
+            mealsCompleted={mealsCompletedCount}
+            mealsTotal={mealsForActiveDiet.length}
+            onPressHabits={() => { setActiveTab('nutricao'); setDietSubTab('prescrita'); }}
+            weeklyPercent={(weekDaysCount / 7) * 100}
+            lastWorkoutLabel={lastWorkoutName}
+            onPressFrequency={() => setShowVolumeSummary(true)}
+          />
 
-            <View style={styles.sideBySideCard}>
-              <Ionicons name="restaurant-outline" size={18} color={ACCENT} />
-              <Text style={styles.sideBySideValue}>{mealsCompletedCount} / {mealsForActiveDiet.length || 0}</Text>
-              <Text style={styles.sideBySideLabel}>Plano Alimentar</Text>
-              <View style={styles.macroBarTrack}>
-                <View style={[styles.macroBarFill, { width: `${mealsForActiveDiet.length ? Math.min(100, (mealsCompletedCount / mealsForActiveDiet.length) * 100) : 0}%`, backgroundColor: ACCENT }]} />
+          {nextDuePayment && (
+            <View style={[styles.financeBanner, isOverdue && styles.financeBannerOverdue]}>
+              <View style={styles.financeBannerRow}>
+                <Ionicons name={isOverdue ? 'alert-circle-outline' : 'cash-outline'} size={16} color={isOverdue ? '#ef4444' : '#eab308'} />
+                <Text style={[styles.financeBannerText, isOverdue && styles.financeBannerTextOverdue]}>
+                  {isOverdue ? 'Mensalidade vencida: ' : 'Próxima mensalidade: '}
+                  R$ {Number(nextDuePayment.amount).toFixed(2)} · vence {formatDate(nextDuePayment.due_date)}
+                </Text>
               </View>
-              <TouchableOpacity style={styles.sideBySideButton} onPress={() => { setActiveTab('nutricao'); setDietSubTab('prescrita'); }}>
-                <Text style={styles.sideBySideButtonText}>Ver Plano</Text>
-              </TouchableOpacity>
+              <View style={styles.payButtonsRow}>
+                {personalPixKey && (
+                  <TouchableOpacity style={styles.copyPixButton} onPress={handleCopyPix}>
+                    <Ionicons name={pixCopied ? 'checkmark-outline' : 'copy-outline'} size={14} color="#3b82f6" />
+                    <Text style={styles.copyPixButtonText}>{pixCopied ? 'Copiado!' : 'Copiar Pix'}</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity style={[styles.payButton, isOverdue && styles.payButtonOverdue]} onPress={handleRealizarPagamento}>
+                  <Ionicons name="logo-whatsapp" size={14} color="#0F0F12" />
+                  <Text style={styles.payButtonText}>Realizar Pagamento</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          )}
 
           {personalId && (
             <TouchableOpacity style={styles.contactCard} onPress={() => handleOpenChatFor('')}>
