@@ -152,6 +152,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [playingWorkout, setPlayingWorkout] = useState(null);
   const [previewWorkout, setPreviewWorkout] = useState(null);
   const [showRecipes, setShowRecipes] = useState(false);
+  const [showNutritionLibrary, setShowNutritionLibrary] = useState(false);
   const [addingFoodForMeal, setAddingFoodForMeal] = useState(null);
   const [showMealPicker, setShowMealPicker] = useState(false);
   const [diaryRefreshKey, setDiaryRefreshKey] = useState(0);
@@ -550,6 +551,12 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const hasAnyRunningProgram = buildRunningLevelCards(categorizedProducts, 'todos').some((c) => c.product);
   const showHubAudienceToggle = !myGender;
 
+  const nutritionItems = categorizedProducts.filter((p) => NUTRITION_LIBRARY_CATEGORIES.includes(p.category) || p.type === 'ebook_receitas');
+  const nutritionCollections = collections
+    .map((c) => ({ ...c, items: nutritionItems.filter((p) => p.collection_id === c.id) }))
+    .filter((c) => c.items.length > 0);
+  const ungroupedNutritionItems = nutritionItems.filter((p) => !p.collection_id);
+
   if (showVolumeSummary) {
     return (
       <VolumeSummaryScreen
@@ -731,6 +738,68 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 </TouchableOpacity>
               );
             })
+          )}
+        </ScrollView>
+        <ProductDetailModal
+          product={selectedProduct}
+          unlocked={selectedProduct ? unlockedProductIds.has(selectedProduct.id) : false}
+          recipes={[]}
+          onClose={() => setSelectedProduct(null)}
+          personalName={personalName}
+          personalPhone={personalPhone}
+        />
+      </View>
+    );
+  }
+
+  if (showNutritionLibrary) {
+    return (
+      <View style={styles.subContainer}>
+        <HeaderBack title="Dietas & Nutrição" onBack={() => setShowNutritionLibrary(false)} style={{ paddingHorizontal: 16 }} />
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+          {nutritionCollections.length === 0 && ungroupedNutritionItems.length === 0 ? (
+            <Text style={styles.emptyText}>Nenhum e-book ou guia disponível ainda.</Text>
+          ) : (
+            <>
+              {nutritionCollections.map((c) => (
+                <TouchableOpacity key={c.id} style={styles.categoryListCard} onPress={() => setOpenCollection(c)}>
+                  <View style={styles.categoryListCoverWrap}>
+                    {c.cover_image_url ? (
+                      <Image source={{ uri: c.cover_image_url }} style={styles.categoryListCoverImage} resizeMode="cover" />
+                    ) : (
+                      <View style={styles.categoryListCoverPlaceholder}>
+                        <Ionicons name="folder-outline" size={20} color={ACCENT} />
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.categoryListName} numberOfLines={2}>{toTitleCase(c.name)}</Text>
+                  <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+                </TouchableOpacity>
+              ))}
+              {ungroupedNutritionItems.map((p) => {
+                const unlocked = unlockedProductIds.has(p.id);
+                return (
+                  <TouchableOpacity key={p.id} style={styles.categoryListCard} onPress={() => setSelectedProduct(p)}>
+                    <View style={styles.categoryListCoverWrap}>
+                      {p.cover_image_url ? (
+                        <Image source={{ uri: p.cover_image_url }} style={styles.categoryListCoverImage} resizeMode="cover" />
+                      ) : (
+                        <View style={styles.categoryListCoverPlaceholder}>
+                          <Ionicons name="book-outline" size={20} color={ACCENT} />
+                        </View>
+                      )}
+                      {!unlocked && (
+                        <View style={styles.categoryLockOverlay}>
+                          <Ionicons name="lock-closed" size={14} color="#F5F5F7" />
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.categoryListName} numberOfLines={2}>{toTitleCase(p.name)}</Text>
+                    <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+                  </TouchableOpacity>
+                );
+              })}
+            </>
           )}
         </ScrollView>
         <ProductDetailModal
@@ -970,9 +1039,15 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             </CollapsibleSection>
           </View>
 
-          <TouchableOpacity style={styles.nutriLibraryShortcut} onPress={() => setShowRecipes(true)}>
+          <TouchableOpacity style={styles.nutriLibraryShortcut} onPress={() => setShowNutritionLibrary(true)}>
             <Ionicons name="book-outline" size={18} color={ACCENT} />
             <Text style={styles.nutriLibraryShortcutText}>Biblioteca de Receitas e E-books</Text>
+            <Ionicons name="chevron-forward-outline" size={16} color="#525252" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.nutriLibraryShortcut} onPress={() => setShowRecipes(true)}>
+            <Ionicons name="restaurant-outline" size={18} color={ACCENT} />
+            <Text style={styles.nutriLibraryShortcutText}>Ver Receitas</Text>
             <Ionicons name="chevron-forward-outline" size={16} color="#525252" />
           </TouchableOpacity>
         </View>
@@ -1325,12 +1400,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     );
   }
 
-  const nutritionItems = categorizedProducts.filter((p) => NUTRITION_LIBRARY_CATEGORIES.includes(p.category) || p.type === 'ebook_receitas');
-  const nutritionCollections = collections
-    .map((c) => ({ ...c, items: nutritionItems.filter((p) => p.collection_id === c.id) }))
-    .filter((c) => c.items.length > 0);
-  const ungroupedNutritionItems = nutritionItems.filter((p) => !p.collection_id);
-
   const oldestWorkoutTime = workouts.length > 0
     ? Math.min(...workouts.map((w) => new Date(w.created_at).getTime()))
     : null;
@@ -1618,63 +1687,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             </CollapsibleSection>
           )}
 
-          <CollapsibleSection
-            title="BIBLIOTECA DE NUTRIÇÃO"
-            collapsed={!!hubCollapsedSections.nutricao}
-            onToggle={() => toggleHubSection('nutricao')}
-            headerRight={
-              <TouchableOpacity onPress={() => setShowRecipes(true)}>
-                <Text style={styles.nutritionHeaderLink}>Ver Receitas</Text>
-              </TouchableOpacity>
-            }
-          >
-          {nutritionItems.length === 0 ? (
-            <Text style={[styles.emptyText, { marginTop: 10 }]}>Nenhum e-book ou guia disponível ainda.</Text>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginTop: 10 }}>
-              {nutritionCollections.map((c) => (
-                <TouchableOpacity key={c.id} style={styles.nutritionCard} onPress={() => setOpenCollection(c)}>
-                  <View style={styles.nutritionCoverWrap}>
-                    {c.cover_image_url ? (
-                      <Image source={{ uri: c.cover_image_url }} style={styles.nutritionCoverImage} resizeMode="cover" />
-                    ) : (
-                      <View style={styles.nutritionCoverPlaceholder}>
-                        <Ionicons name="folder-outline" size={22} color={ACCENT} />
-                      </View>
-                    )}
-                  </View>
-                  <Text style={styles.nutritionCardName} numberOfLines={3}>{toTitleCase(c.name)}</Text>
-                </TouchableOpacity>
-              ))}
-              {ungroupedNutritionItems.map((p) => {
-                const unlocked = unlockedProductIds.has(p.id);
-                return (
-                  <TouchableOpacity
-                    key={p.id}
-                    style={styles.nutritionCard}
-                    onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setSelectedProduct(p))}
-                  >
-                    <View style={styles.nutritionCoverWrap}>
-                      {p.cover_image_url ? (
-                        <Image source={{ uri: p.cover_image_url }} style={styles.nutritionCoverImage} resizeMode="cover" />
-                      ) : (
-                        <View style={styles.nutritionCoverPlaceholder}>
-                          <Ionicons name="book-outline" size={22} color={ACCENT} />
-                        </View>
-                      )}
-                      {!unlocked && (
-                        <View style={styles.categoryLockOverlay}>
-                          <Ionicons name="lock-closed" size={14} color="#F5F5F7" />
-                        </View>
-                      )}
-                    </View>
-                    <Text style={styles.nutritionCardName} numberOfLines={3}>{toTitleCase(p.name)}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          )}
-          </CollapsibleSection>
         </>
       )}
 
@@ -1749,7 +1761,6 @@ const styles = StyleSheet.create({
   audienceFilterChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
   audienceFilterChipTextActive: { color: '#0F0F12' },
   nutritionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  nutritionHeaderLink: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
   nutritionCard: { width: 176 },
   nutritionCoverWrap: { width: '100%', aspectRatio: 16 / 9, borderRadius: 16, borderWidth: 1, overflow: 'hidden', marginBottom: 6, position: 'relative', ...GLASS_CARD },
   nutritionCoverImage: { ...COVER_TOP_IMAGE },
