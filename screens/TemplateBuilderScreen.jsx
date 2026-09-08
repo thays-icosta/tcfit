@@ -12,6 +12,7 @@ import { useSpeechToText } from './useSpeechToText';
 import { HOME_CATEGORIES, WORKOUT_TAGS, PROGRAM_LEVELS, TRAINING_LOCATIONS, MUSCLE_FOCUS_OPTIONS, TARGET_AUDIENCE_OPTIONS, RUNNING_LEVELS } from './accessLevel';
 import { coverFocalImageStyle } from './vitrineStyles';
 import { HeaderBack } from './Header';
+import { getJsonPref, setJsonPref } from './localPrefs';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -73,6 +74,15 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [templateLevelFilter, setTemplateLevelFilter] = useState('todos');
   const [templateEnvironmentFilter, setTemplateEnvironmentFilter] = useState('todos');
   const [templateAudienceFilter, setTemplateAudienceFilter] = useState('todos');
+  const [templateScope, setTemplateScope] = useState('modelos');
+
+  useEffect(() => {
+    getJsonPref('template_scope_v1', 'modelos').then(setTemplateScope);
+  }, []);
+
+  useEffect(() => {
+    setJsonPref('template_scope_v1', templateScope);
+  }, [templateScope]);
   const [sectionEnabled, setSectionEnabled] = useState(true);
   const [savingSectionToggle, setSavingSectionToggle] = useState(false);
 
@@ -188,7 +198,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
     }
     const { data, error } = await supabase
       .from('workout_templates')
-      .insert({ personal_id: personalId, name: newTemplateName.trim() })
+      .insert({ personal_id: personalId, name: newTemplateName.trim(), is_public: templateScope === 'prontos' })
       .select()
       .single();
     if (error) {
@@ -482,6 +492,8 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   };
 
   const filteredTemplates = templates.filter((t) => {
+    if (templateScope === 'prontos' && !t.is_public) return false;
+    if (templateScope === 'modelos' && t.is_public) return false;
     if (templateLevelFilter !== 'todos' && t.level !== templateLevelFilter) return false;
     if (templateEnvironmentFilter !== 'todos' && t.environment !== templateEnvironmentFilter) return false;
     if (templateAudienceFilter !== 'todos' && t.target_audience !== templateAudienceFilter && t.target_audience !== 'unissex') return false;
@@ -855,6 +867,28 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
           </View>
         ) : (
           <View style={{ flex: 1 }}>
+            <View style={styles.scopeTabs}>
+              <TouchableOpacity
+                style={[styles.scopeTabButton, templateScope === 'modelos' && styles.scopeTabButtonActive]}
+                onPress={() => setTemplateScope('modelos')}
+              >
+                <Ionicons name="albums-outline" size={14} color={templateScope === 'modelos' ? '#0F0F12' : '#a3a3a3'} />
+                <Text style={[styles.scopeTabText, templateScope === 'modelos' && styles.scopeTabTextActive]}>Modelos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.scopeTabButton, templateScope === 'prontos' && styles.scopeTabButtonActive]}
+                onPress={() => setTemplateScope('prontos')}
+              >
+                <Ionicons name="storefront-outline" size={14} color={templateScope === 'prontos' ? '#0F0F12' : '#a3a3a3'} />
+                <Text style={[styles.scopeTabText, templateScope === 'prontos' && styles.scopeTabTextActive]}>Treinos Prontos</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.scopeHelperText}>
+              {templateScope === 'modelos'
+                ? 'Biblioteca privada — reaproveite pra montar a ficha de um aluno sem alterar o original.'
+                : 'Vendidos na vitrine dos alunos. Publique pelo campo "Vender esse template na vitrine" ao criar ou editar.'}
+            </Text>
+
             <View style={{ paddingHorizontal: 16 }}>
               <TextInput
                 style={[styles.newInput, { marginBottom: 8 }]}
@@ -1112,6 +1146,12 @@ const styles = StyleSheet.create({
   modalCloseButton: { paddingVertical: 12, alignItems: 'center', marginTop: 8 },
   modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
   publicDot: { color: '#22c55e', fontSize: 8 },
+  scopeTabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 8 },
+  scopeTabButton: { flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 10 },
+  scopeTabButtonActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
+  scopeTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
+  scopeTabTextActive: { color: '#0F0F12' },
+  scopeHelperText: { color: '#737373', fontSize: 11, lineHeight: 15, paddingHorizontal: 16, marginBottom: 12 },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 8 },
   newRow: { flexDirection: 'row', marginBottom: 16, gap: 8 },
   newInput: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#F5F5F7', fontSize: 12 },
