@@ -25,7 +25,7 @@ export function HeaderBack({ title, titleSlot, onBack, rightSlot, style, backLab
 
 // Shared "welcome" header: avatar + eyebrow badge + greeting, optional right-side action slot.
 // Used by the two home screens (PersonalHomeScreen, AlunoHomeScreen).
-export function HeaderWelcome({ avatarUrl, initial, badge, greeting, onAvatarPress, rightSlot }) {
+export function HeaderWelcome({ avatarUrl, initial, badge, greeting, subtitle, onAvatarPress, rightSlot }) {
   return (
     <View style={styles.welcomeBar}>
       <View style={styles.welcomeLeft}>
@@ -41,6 +41,7 @@ export function HeaderWelcome({ avatarUrl, initial, badge, greeting, onAvatarPre
         <View style={styles.welcomeTextCol}>
           {badge ? <Text style={styles.badge}>{badge}</Text> : null}
           <Text style={styles.greeting} numberOfLines={1}>{greeting}</Text>
+          {subtitle ? <Text style={styles.welcomeSubtitle} numberOfLines={1}>{subtitle}</Text> : null}
         </View>
       </View>
       {rightSlot ? <View>{rightSlot}</View> : null}
@@ -63,4 +64,5 @@ const styles = StyleSheet.create({
   avatarLetter: { color: ACCENT, fontSize: 16, fontWeight: '800' },
   badge: { color: ACCENT, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
   greeting: { color: '#F5F5F7', fontSize: 19, fontWeight: '700' },
+  welcomeSubtitle: { color: '#737373', fontSize: 12, fontWeight: '600', marginTop: 2 },
 });

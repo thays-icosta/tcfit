@@ -25,7 +25,7 @@ import { showAlert } from './alertUtils';
 import { hasAccessByLevel, PROGRAM_LEVELS, PROGRAM_GOALS, RUNNING_LEVELS } from './accessLevel';
 import { HeaderWelcome, HeaderBack } from './Header';
 import { toTitleCase } from './textUtils';
-import { COVER_TOP_IMAGE, coverFocalImageStyle } from './vitrineStyles';
+import { COVER_TOP_IMAGE, coverFocalImageStyle, GLASS_CARD } from './vitrineStyles';
 import ProductDetailModal from './ProductDetailModal';
 import CollapsibleSection, { animateNextLayout } from './CollapsibleSection';
 import { getJsonPref, setJsonPref } from './localPrefs';
@@ -522,16 +522,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     }
   };
 
-  const handleOpenWhatsApp = () => {
-    if (!personalPhone) {
-      handleOpenChatFor('');
-      return;
-    }
-    const cleanPhone = personalPhone.replace(/\D/g, '');
-    const message = `Olá${personalName ? `, ${personalName}` : ''}! Tudo bem?`;
-    Linking.openURL(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`).catch(() => {});
-  };
-
   const handleOpenChatFor = (message) => {
     setChatPrefill(message || '');
     setMode('chat');
@@ -565,6 +555,12 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   };
 
   const isOverdue = nextDuePayment && todayStr >= nextDuePayment.due_date;
+
+  const hubGroups = buildHubGroups(categorizedProducts, hubAudienceFilter).filter((g) => g.key !== 'corrida_cardio');
+  const hasAnyHubProgram = buildHubGroups(categorizedProducts, 'todos').length > 0;
+  const runningLevelCards = buildRunningLevelCards(categorizedProducts, hubAudienceFilter);
+  const hasAnyRunningProgram = buildRunningLevelCards(categorizedProducts, 'todos').some((c) => c.product);
+  const showHubAudienceToggle = !myGender;
 
   if (showVolumeSummary) {
     return (
@@ -641,6 +637,11 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
         personalId={personalId}
         unlocked={unlockedProductIds.has(openProgram.id)}
         onClose={() => setOpenProgram(null)}
+        onAdded={async (workout) => {
+          setOpenProgram(null);
+          await loadData();
+          if (workout) setPreviewWorkout(workout);
+        }}
       />
     );
   }
@@ -805,7 +806,96 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
           <Text style={styles.subTitle}>Treinos</Text>
         </View>
         {workouts.length === 0 ? (
-          <Text style={styles.emptyText}>Nenhum treino ainda.</Text>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+            <Text style={styles.libraryIntro}>Você ainda não tem um programa ativo. Escolha um abaixo pra começar a treinar hoje.</Text>
+
+            {showHubAudienceToggle && (
+              <View style={styles.audienceFilterRow}>
+                {[{ value: 'todos', label: 'Todos' }, { value: 'feminino', label: 'Feminino' }, { value: 'masculino', label: 'Masculino' }].map((a) => (
+                  <TouchableOpacity
+                    key={a.value}
+                    style={[styles.audienceFilterChip, hubAudienceFilter === a.value && styles.audienceFilterChipActive]}
+                    onPress={() => setHubAudienceFilter(a.value)}
+                  >
+                    <Text style={[styles.audienceFilterChipText, hubAudienceFilter === a.value && styles.audienceFilterChipTextActive]}>{a.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {!hasAnyHubProgram && !hasAnyRunningProgram ? (
+              <Text style={styles.emptyText}>Nenhum programa disponível ainda. Fale com seu personal.</Text>
+            ) : (
+              <>
+                {hubGroups.length > 0 && (
+                  <>
+                    <Text style={styles.sectionTitle}>PROGRAMAS</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginBottom: 24 }}>
+                      {hubGroups.map((group) => (
+                        <TouchableOpacity key={group.key} style={styles.nutritionCard} onPress={() => setOpenCategoryGroup(group)}>
+                          <View style={styles.nutritionCoverWrap}>
+                            {group.cover ? (
+                              <Image source={{ uri: group.cover }} style={styles.nutritionCoverImage} resizeMode="cover" />
+                            ) : (
+                              <View style={styles.nutritionCoverPlaceholder}>
+                                <Ionicons name={group.icon} size={22} color={ACCENT} />
+                              </View>
+                            )}
+                          </View>
+                          <Text style={styles.nutritionCardName} numberOfLines={2}>{group.title}</Text>
+                          {group.badges.length > 0 && (
+                            <View style={styles.hubBadgeRow}>
+                              {group.badges.map((b) => (
+                                <View key={b} style={styles.hubBadgeChip}>
+                                  <Text style={styles.hubBadgeChipText}>{b}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </>
+                )}
+
+                {hasAnyRunningProgram && (
+                  <>
+                    <Text style={styles.sectionTitle}>MÓDULO CORRIDA</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginBottom: 24 }}>
+                      {runningLevelCards.map((lvl) => {
+                        const locked = !lvl.product;
+                        return (
+                          <TouchableOpacity
+                            key={lvl.value}
+                            style={styles.nutritionCard}
+                            disabled={locked}
+                            onPress={() => (lvl.product.type === 'treino_template' ? setOpenProgram(lvl.product) : setSelectedProduct(lvl.product))}
+                          >
+                            <View style={styles.nutritionCoverWrap}>
+                              {lvl.product?.cover_image_url ? (
+                                <Image source={{ uri: lvl.product.cover_image_url }} style={coverFocalImageStyle(lvl.product.cover_focal_position)} resizeMode="cover" />
+                              ) : (
+                                <View style={styles.nutritionCoverPlaceholder}>
+                                  <Ionicons name={lvl.icon} size={22} color={locked ? '#525252' : ACCENT} />
+                                </View>
+                              )}
+                              {locked && (
+                                <View style={styles.categoryLockOverlay}>
+                                  <Ionicons name="lock-closed" size={14} color="#F5F5F7" />
+                                </View>
+                              )}
+                            </View>
+                            <Text style={[styles.nutritionCardName, locked && { color: '#737373' }]} numberOfLines={2}>{lvl.label}</Text>
+                            {locked && <Text style={styles.runningLevelLockedText}>Em breve</Text>}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </>
+                )}
+              </>
+            )}
+          </ScrollView>
         ) : (
           <FlatList
             data={workouts}
@@ -1247,11 +1337,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     );
   }
 
-  const hubGroups = buildHubGroups(categorizedProducts, hubAudienceFilter).filter((g) => g.key !== 'corrida_cardio');
-  const hasAnyHubProgram = buildHubGroups(categorizedProducts, 'todos').length > 0;
-  const runningLevelCards = buildRunningLevelCards(categorizedProducts, hubAudienceFilter);
-  const hasAnyRunningProgram = buildRunningLevelCards(categorizedProducts, 'todos').some((c) => c.product);
-  const showHubAudienceToggle = !myGender;
   const nutritionItems = categorizedProducts.filter((p) => NUTRITION_LIBRARY_CATEGORIES.includes(p.category) || p.type === 'ebook_receitas');
   const nutritionCollections = collections
     .map((c) => ({ ...c, items: nutritionItems.filter((p) => p.collection_id === c.id) }))
@@ -1270,6 +1355,15 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     handleOpenChatFor(`Olá! Já estou há ${programWeeksActive} semanas no mesmo ciclo de treino e gostaria de renovar minha ficha. Pode me ajudar?`);
   };
 
+  const todaysWorkout = workouts.find((w) => !completedToday[w.id]) || workouts[0] || null;
+  const todaysWorkoutDone = todaysWorkout ? !!completedToday[todaysWorkout.id] : false;
+  const todaysWorkoutExerciseCount = todaysWorkout ? (muscleSummaryByWorkout[todaysWorkout.id] || []).reduce((sum, [, count]) => sum + count, 0) : 0;
+  const todayLabel = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const todayLabelCapitalized = todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1);
+  const mealsCompletedCount = mealsForActiveDiet.filter((m) => todaysEntries.some((e) => e.meal_type === mapMealNameToType(m.name))).length;
+  const waterDoneToday = waterMl >= waterGoalMl;
+  const mealsDoneToday = mealsForActiveDiet.length > 0 ? mealsCompletedCount >= mealsForActiveDiet.length : todaysEntries.length > 0;
+
   return (
     <View style={{ flex: 1 }}>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -1277,6 +1371,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
         avatarUrl={ownAvatarUrl}
         initial={user?.name?.charAt(0).toUpperCase() || '?'}
         greeting={`Olá, ${user?.name}!`}
+        subtitle={todayLabelCapitalized}
         onAvatarPress={() => setActiveTab('perfil')}
         rightSlot={
           <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -1291,54 +1386,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
         <ActivityIndicator color={ACCENT} style={{ marginTop: 20 }} />
       ) : (
         <>
-          <MetricsMiniCards
-            caloriesConsumed={consumedTotals.kcal}
-            caloriesGoal={diets[0]?.goal_kcal}
-            onPressCalories={() => { setActiveTab('nutricao'); setDietSubTab('diario'); }}
-            waterMl={waterMl}
-            waterGoalMl={waterGoalMl}
-            onPressWater={() => setShowWaterModal(true)}
-            mealsCompleted={mealsForActiveDiet.filter((m) => todaysEntries.some((e) => e.meal_type === mapMealNameToType(m.name))).length}
-            mealsTotal={mealsForActiveDiet.length}
-            onPressHabits={() => { setActiveTab('nutricao'); setDietSubTab('prescrita'); }}
-            weeklyPercent={(weekDaysCount / 7) * 100}
-            lastWorkoutLabel={lastWorkoutName}
-            onPressFrequency={() => setShowVolumeSummary(true)}
-          />
-
-          <WaterLogModal
-            visible={showWaterModal}
-            studentId={user.id}
-            currentMl={waterMl}
-            goalMl={waterGoalMl}
-            onClose={() => setShowWaterModal(false)}
-            onAdd={handleAddWater}
-            onGoalChanged={setWaterGoalMl}
-          />
-
-          {myAccessLevel === 'consultoria_vip' && <WeightEvolutionChart studentId={user.id} />}
-
-          <View style={styles.topMetaRow}>
-            <View style={[styles.financePill, isOverdue && styles.financePillOverdue]}>
-              <Ionicons name={isOverdue ? 'alert-circle' : 'checkmark-circle'} size={13} color={isOverdue ? '#ef4444' : '#22c55e'} />
-              <Text style={[styles.financePillText, isOverdue && styles.financePillTextOverdue]} numberOfLines={1}>
-                {isOverdue ? 'Mensalidade vencida' : 'Financeiro em dia'}
-              </Text>
-            </View>
-            {personalId && (
-              <TouchableOpacity style={styles.personalPill} onPress={() => handleOpenChatFor('')}>
-                {personalAvatarUrl ? (
-                  <Image source={{ uri: personalAvatarUrl }} style={styles.personalPillAvatar} />
-                ) : (
-                  <View style={styles.personalPillAvatarPlaceholder}>
-                    <Text style={styles.personalPillAvatarLetter}>{personalName?.charAt(0).toUpperCase() || '?'}</Text>
-                  </View>
-                )}
-                <Text style={styles.personalPillName} numberOfLines={1}>{personalName || 'Seu Personal'}</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
           {nextDuePayment && (
             <View style={[styles.financeBanner, isOverdue && styles.financeBannerOverdue]}>
               <View style={styles.financeBannerRow}>
@@ -1363,6 +1410,64 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             </View>
           )}
 
+          <Text style={styles.progressSectionLabel}>SEU PROGRESSO DE HOJE</Text>
+          <MetricsMiniCards
+            workoutStatus={{
+              valueText: !todaysWorkout ? '—' : todaysWorkoutDone ? 'Feito' : 'Pendente',
+              percent: todaysWorkoutDone ? 100 : 0,
+            }}
+            onPressWorkout={() => (todaysWorkout ? setPreviewWorkout(todaysWorkout) : setActiveTab('treinos'))}
+            hideCalories
+            caloriesConsumed={consumedTotals.kcal}
+            caloriesGoal={diets[0]?.goal_kcal}
+            waterMl={waterMl}
+            waterGoalMl={waterGoalMl}
+            onPressWater={() => setShowWaterModal(true)}
+            mealsCompleted={mealsCompletedCount}
+            mealsTotal={mealsForActiveDiet.length}
+            onPressHabits={() => { setActiveTab('nutricao'); setDietSubTab('prescrita'); }}
+            weeklyPercent={(weekDaysCount / 7) * 100}
+            lastWorkoutLabel={lastWorkoutName}
+            onPressFrequency={() => setShowVolumeSummary(true)}
+          />
+
+          <WaterLogModal
+            visible={showWaterModal}
+            studentId={user.id}
+            currentMl={waterMl}
+            goalMl={waterGoalMl}
+            onClose={() => setShowWaterModal(false)}
+            onAdd={handleAddWater}
+            onGoalChanged={setWaterGoalMl}
+          />
+
+          {todaysWorkout ? (
+            <TouchableOpacity style={styles.heroWorkoutCard} onPress={() => setPreviewWorkout(todaysWorkout)} activeOpacity={0.85}>
+              <Text style={styles.heroWorkoutEyebrow}>{todaysWorkoutDone ? 'TREINO DE HOJE · CONCLUÍDO' : 'SEU TREINO DE HOJE'}</Text>
+              <Text style={styles.heroWorkoutName}>{todaysWorkout.name}</Text>
+              {todaysWorkoutExerciseCount > 0 && (
+                <Text style={styles.heroWorkoutMeta}>{todaysWorkoutExerciseCount} exercício{todaysWorkoutExerciseCount !== 1 ? 's' : ''}</Text>
+              )}
+              <TouchableOpacity
+                style={[styles.heroWorkoutButton, todaysWorkoutDone && styles.heroWorkoutButtonDone]}
+                onPress={() => setPlayingWorkout(todaysWorkout)}
+              >
+                <Ionicons name={todaysWorkoutDone ? 'checkmark-circle' : 'play'} size={18} color="#0F0F12" />
+                <Text style={styles.heroWorkoutButtonText}>{todaysWorkoutDone ? 'Treinar Novamente' : 'Começar Treino'}</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.heroWorkoutCard}>
+              <Text style={styles.heroWorkoutEyebrow}>NENHUM PROGRAMA ATIVO</Text>
+              <Text style={styles.heroWorkoutName}>Escolha seu primeiro treino</Text>
+              <Text style={styles.heroWorkoutMeta}>Veja a biblioteca de programas na aba Treinos e comece agora.</Text>
+              <TouchableOpacity style={styles.heroWorkoutButton} onPress={() => setActiveTab('treinos')}>
+                <Ionicons name="albums-outline" size={18} color="#0F0F12" />
+                <Text style={styles.heroWorkoutButtonText}>Ver Programas</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {showRotationOffer && (
             <View style={styles.rotationBanner}>
               <View style={styles.financeBannerRow}>
@@ -1377,55 +1482,85 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             </View>
           )}
 
+          <View style={styles.sideBySideRow}>
+            <View style={styles.sideBySideCard}>
+              <Ionicons name="water-outline" size={18} color="#5EC8D8" />
+              <Text style={styles.sideBySideValue}>{(waterMl / 1000).toFixed(1)} / {(waterGoalMl / 1000).toFixed(1)}L</Text>
+              <Text style={styles.sideBySideLabel}>Água</Text>
+              <View style={styles.macroBarTrack}>
+                <View style={[styles.macroBarFill, { width: `${Math.min(100, (waterMl / waterGoalMl) * 100)}%`, backgroundColor: '#5EC8D8' }]} />
+              </View>
+              <TouchableOpacity style={styles.sideBySideButton} onPress={() => setShowWaterModal(true)}>
+                <Text style={styles.sideBySideButtonText}>Registrar</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.sideBySideCard}>
+              <Ionicons name="restaurant-outline" size={18} color={ACCENT} />
+              <Text style={styles.sideBySideValue}>{mealsCompletedCount} / {mealsForActiveDiet.length || 0}</Text>
+              <Text style={styles.sideBySideLabel}>Plano Alimentar</Text>
+              <View style={styles.macroBarTrack}>
+                <View style={[styles.macroBarFill, { width: `${mealsForActiveDiet.length ? Math.min(100, (mealsCompletedCount / mealsForActiveDiet.length) * 100) : 0}%`, backgroundColor: ACCENT }]} />
+              </View>
+              <TouchableOpacity style={styles.sideBySideButton} onPress={() => { setActiveTab('nutricao'); setDietSubTab('prescrita'); }}>
+                <Text style={styles.sideBySideButtonText}>Ver Plano</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {personalId && (
-            <TouchableOpacity style={styles.whatsappStrip} onPress={handleOpenWhatsApp}>
-              <Ionicons name="logo-whatsapp" size={16} color="#0F0F12" />
-              <Text style={styles.whatsappStripText}>Falar com {personalName || 'seu Personal'} no WhatsApp</Text>
+            <TouchableOpacity style={styles.contactCard} onPress={() => handleOpenChatFor('')}>
+              <View style={styles.contactCardIconWrap}>
+                <Ionicons name="chatbubbles" size={20} color={ACCENT} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.contactCardTitle}>Falar com {personalName || 'meu treinador'}</Text>
+                <Text style={styles.contactCardSubtitle}>Tire dúvidas, receba orientações e feedbacks.</Text>
+              </View>
+              <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
             </TouchableOpacity>
           )}
 
-          <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>ACESSO RÁPIDO</Text>
-          <View style={styles.quickAccessRow}>
-            <TouchableOpacity style={styles.quickAccessCard} onPress={() => setActiveTab('treinos')}>
-              <View style={styles.quickAccessIconCircle}>
-                <Ionicons name="barbell-outline" size={22} color={ACCENT} />
-              </View>
-              <Text style={styles.quickAccessTitle}>Seu Treino de Hoje</Text>
-              <Text style={styles.quickAccessSubtitle}>
-                {workouts.length} ficha{workouts.length !== 1 ? 's' : ''} · {weekDaysCount}/7 dias essa semana
-                {myAccessLevel === 'plataforma_base' && programWeeksActive != null ? ` · ${programWeeksActive}ª semana de ciclo` : ''}
-              </Text>
-              <View style={styles.quickAccessProgressTrack}>
-                <View style={[styles.quickAccessProgressFill, { width: `${Math.min(100, (weekDaysCount / 7) * 100)}%` }]} />
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.quickAccessCard} onPress={() => setActiveTab('nutricao')}>
-              <View style={styles.quickAccessIconCircle}>
-                <Ionicons name="restaurant-outline" size={22} color={ACCENT} />
-              </View>
-              <Text style={styles.quickAccessTitle}>Seu Plano Alimentar</Text>
-              <Text style={styles.quickAccessSubtitle}>
-                {diets.length} plano{diets.length !== 1 ? 's' : ''} · {Math.round(consumedTotals.kcal)} kcal hoje
-              </Text>
-            </TouchableOpacity>
+          <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>PARA VOCÊ HOJE</Text>
+          <View style={styles.todayTasksCard}>
+            {[
+              { key: 'treino', label: 'Fazer o treino', done: todaysWorkoutDone, onPress: () => (todaysWorkout ? setPreviewWorkout(todaysWorkout) : setActiveTab('treinos')) },
+              { key: 'refeicao', label: 'Completar refeição', done: mealsDoneToday, onPress: () => { setActiveTab('nutricao'); setDietSubTab('diario'); } },
+              { key: 'agua', label: 'Beber água', done: waterDoneToday, onPress: () => setShowWaterModal(true) },
+              { key: 'peso', label: 'Registrar peso', done: false, onPress: () => (myAccessLevel === 'consultoria_vip' ? setShowEvolution(true) : setShowEvolutionLock(true)) },
+            ].map((task, i, arr) => (
+              <TouchableOpacity key={task.key} style={[styles.todayTaskRow, i === arr.length - 1 && { borderBottomWidth: 0 }]} onPress={task.onPress}>
+                <Ionicons name={task.done ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={task.done ? '#22c55e' : '#525252'} />
+                <Text style={[styles.todayTaskLabel, task.done && styles.todayTaskLabelDone]}>{task.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
-          <TouchableOpacity
-            style={styles.evolutionRow}
-            onPress={() => (myAccessLevel === 'consultoria_vip' ? setShowEvolution(true) : setShowEvolutionLock(true))}
-          >
-            <Ionicons name="trending-up-outline" size={20} color={ACCENT} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.evolutionRowTitle}>Evolução do Aluno</Text>
-              <Text style={styles.evolutionRowSubtitle}>Fotos de progresso, peso e avaliações</Text>
-            </View>
-            {myAccessLevel === 'consultoria_vip' ? (
-              <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
-            ) : (
+          <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>MINHA EVOLUÇÃO</Text>
+          {myAccessLevel === 'consultoria_vip' ? (
+            <>
+              <WeightEvolutionChart studentId={user.id} />
+              <View style={styles.evolutionShortcutRow}>
+                <TouchableOpacity style={styles.evolutionShortcutCard} onPress={() => setShowEvolution(true)}>
+                  <Ionicons name="images-outline" size={20} color={ACCENT} />
+                  <Text style={styles.evolutionShortcutText}>Fotos de Progresso</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.evolutionShortcutCard} onPress={() => setShowEvolution(true)}>
+                  <Ionicons name="clipboard-outline" size={20} color={ACCENT} />
+                  <Text style={styles.evolutionShortcutText}>Avaliações Físicas</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <TouchableOpacity style={styles.evolutionRow} onPress={() => setShowEvolutionLock(true)}>
+              <Ionicons name="trending-up-outline" size={20} color={ACCENT} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.evolutionRowTitle}>Evolução do Aluno</Text>
+                <Text style={styles.evolutionRowSubtitle}>Fotos de progresso, peso e avaliações</Text>
+              </View>
               <Ionicons name="lock-closed" size={16} color={ACCENT} />
-            )}
-          </TouchableOpacity>
+            </TouchableOpacity>
+          )}
 
           {hasAnyHubProgram && (
             <CollapsibleSection
@@ -1686,6 +1821,31 @@ const styles = StyleSheet.create({
   evolutionRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 16, marginBottom: 24 },
   evolutionRowTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   evolutionRowSubtitle: { color: '#A1A1AA', fontSize: 11, marginTop: 2 },
+  progressSectionLabel: { color: '#737373', fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4, marginBottom: 10 },
+  heroWorkoutCard: { borderWidth: 1, borderRadius: 20, padding: 20, marginBottom: 16, ...GLASS_CARD, borderColor: ACCENT },
+  heroWorkoutEyebrow: { color: ACCENT, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
+  heroWorkoutName: { color: '#F5F5F7', fontSize: 24, fontWeight: '800' },
+  heroWorkoutMeta: { color: '#a3a3a3', fontSize: 13, marginTop: 6, lineHeight: 18 },
+  heroWorkoutButton: { flexDirection: 'row', gap: 8, backgroundColor: ACCENT, borderRadius: 14, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', marginTop: 18 },
+  heroWorkoutButtonDone: { backgroundColor: '#2B2B36' },
+  heroWorkoutButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '800' },
+  sideBySideRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+  sideBySideCard: { flex: 1, borderWidth: 1, borderRadius: 16, padding: 14, ...GLASS_CARD },
+  sideBySideValue: { color: '#F5F5F7', fontSize: 15, fontWeight: '800', marginTop: 8 },
+  sideBySideLabel: { color: '#737373', fontSize: 11, fontWeight: '600', marginTop: 2, marginBottom: 8 },
+  sideBySideButton: { borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 8, alignItems: 'center', marginTop: 10 },
+  sideBySideButtonText: { color: '#F5F5F7', fontSize: 12, fontWeight: '700' },
+  contactCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 24, ...GLASS_CARD },
+  contactCardIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
+  contactCardTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  contactCardSubtitle: { color: '#737373', fontSize: 11, marginTop: 2 },
+  todayTasksCard: { borderWidth: 1, borderRadius: 16, marginBottom: 24, overflow: 'hidden', ...GLASS_CARD },
+  todayTaskRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#0F0F12' },
+  todayTaskLabel: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  todayTaskLabelDone: { color: '#737373', textDecorationLine: 'line-through' },
+  evolutionShortcutRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  evolutionShortcutCard: { flex: 1, borderWidth: 1, borderRadius: 14, padding: 14, alignItems: 'center', gap: 8, ...GLASS_CARD },
+  evolutionShortcutText: { color: '#F5F5F7', fontSize: 11, fontWeight: '700', textAlign: 'center' },
   hubBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   hubBadgeChip: { backgroundColor: '#27272A', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
   hubBadgeChipText: { color: '#D4D4D8', fontSize: 10, fontWeight: '600' },
@@ -1697,13 +1857,13 @@ const styles = StyleSheet.create({
   nutritionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   nutritionHeaderLink: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
   nutritionCard: { width: 176 },
-  nutritionCoverWrap: { width: '100%', aspectRatio: 16 / 9, borderRadius: 16, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', overflow: 'hidden', marginBottom: 6, position: 'relative' },
+  nutritionCoverWrap: { width: '100%', aspectRatio: 16 / 9, borderRadius: 16, borderWidth: 1, overflow: 'hidden', marginBottom: 6, position: 'relative', ...GLASS_CARD },
   nutritionCoverImage: { ...COVER_TOP_IMAGE },
   nutritionCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   nutritionCardName: { color: '#F5F5F7', fontSize: 11, fontWeight: '600', lineHeight: 15 },
   runningLevelLockedText: { color: '#525252', fontSize: 10, fontWeight: '600', marginTop: 2 },
   partnersFooterSection: { marginTop: 24 },
-  categoryListCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 10, marginBottom: 10 },
+  categoryListCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 16, padding: 10, marginBottom: 10, ...GLASS_CARD },
   categoryListCoverWrap: { width: 72, aspectRatio: 16 / 9, borderRadius: 10, backgroundColor: '#0F0F12', overflow: 'hidden', position: 'relative' },
   categoryListCoverImage: { width: '100%', height: '100%' },
   categoryListCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
@@ -1719,6 +1879,7 @@ const styles = StyleSheet.create({
   partnerBannerCouponButton: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: 'rgba(255,107,0,0.12)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5 },
   partnerBannerCouponText: { color: '#FF6B00', fontSize: 10, fontWeight: '800' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12 },
+  libraryIntro: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginTop: 4, marginBottom: 16 },
   button: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 24 },
   buttonText: { color: '#FF6B00', fontSize: 15, fontWeight: '700' },
   subContainer: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
@@ -1747,7 +1908,7 @@ const styles = StyleSheet.create({
   dietTabChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   dietTabChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   dietTabChipTextActive: { color: '#0F0F12' },
-  mealAccordionCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, marginBottom: 8, overflow: 'hidden' },
+  mealAccordionCard: { borderWidth: 1, borderRadius: 12, marginBottom: 8, overflow: 'hidden', ...GLASS_CARD },
   mealAccordionHeader: { flexDirection: 'row', alignItems: 'center', padding: 12 },
   mealAccordionName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   mealAccordionMeta: { color: '#737373', fontSize: 11, marginTop: 2 },
@@ -1763,13 +1924,13 @@ const styles = StyleSheet.create({
   orConnector: { color: '#525252', fontSize: 9, fontWeight: '700', marginVertical: 4, marginLeft: 8 },
   substitutesBox: { marginLeft: 8, marginTop: 2 },
   substituteText: { color: '#737373', fontSize: 11, flexShrink: 1 },
-  nutriTopCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, marginTop: 14, marginBottom: 14, overflow: 'hidden' },
+  nutriTopCard: { borderWidth: 1, borderRadius: 12, marginTop: 14, marginBottom: 14, overflow: 'hidden', ...GLASS_CARD },
   nutriTopHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
   nutriLibraryShortcut: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 14 },
   nutriLibraryShortcutText: { flex: 1, color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
   completeMealButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, marginRight: 8 },
   completeMealButtonText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
-  hojeCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, marginBottom: 14, overflow: 'hidden' },
+  hojeCard: { borderWidth: 1, borderRadius: 12, marginBottom: 14, overflow: 'hidden', ...GLASS_CARD },
   hojeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
   hojeTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   hojeHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -1782,14 +1943,14 @@ const styles = StyleSheet.create({
   macroValue: { color: '#F5F5F7', fontSize: 11, fontWeight: '700' },
   macroBarTrack: { height: 6, backgroundColor: '#0F0F12', borderRadius: 3, overflow: 'hidden' },
   macroBarFill: { height: '100%', borderRadius: 3 },
-  waterCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 14 },
+  waterCard: { borderWidth: 1, borderRadius: 12, padding: 14, marginBottom: 14, ...GLASS_CARD },
   waterHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   waterTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   waterValue: { color: '#5EC8D8', fontSize: 12, fontWeight: '700' },
   waterButtonsRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
   waterButton: { flex: 1, backgroundColor: 'rgba(94,200,216,0.12)', borderWidth: 1, borderColor: '#5EC8D8', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   waterButtonText: { color: '#5EC8D8', fontSize: 12, fontWeight: '700' },
-  noteCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 14 },
+  noteCard: { borderWidth: 1, borderRadius: 12, padding: 14, marginBottom: 14, ...GLASS_CARD },
   noteCardTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700', marginBottom: 8 },
   noteText: { color: '#737373', fontSize: 12, fontStyle: 'italic' },
   noteInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 12, minHeight: 60, textAlignVertical: 'top', marginBottom: 8 },

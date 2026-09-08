@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import RecipeDetailScreen from './RecipeDetailScreen';
-import ProgramDetailScreen from './ProgramDetailScreen';
 import ProductDetailModal from './ProductDetailModal';
 import { hasAccessByLevel } from './accessLevel';
 import { HeaderBack } from './Header';
@@ -12,15 +11,21 @@ const WHATSAPP_NUMBER = '5537998231382';
 
 const STORE_TABS = [
   { value: 'todos', label: 'Todos' },
-  { value: 'treino', label: 'Programas de Treino' },
   { value: 'nutricao', label: 'Nutrição & Receitas' },
   { value: 'guias', label: 'Guias & E-books' },
 ];
 
+// Training programs live in the Treinos tab now (browse + start immediately,
+// no separate "add to my workouts" purchase step) — Loja is reserved for VIP
+// upgrade and partner/affiliate content, so training-type products never
+// show up here at all.
 const TREINO_CATEGORIES = new Set(['planilha_academia', 'planilha_casa', 'treino_3d', 'treino_extra', 'modulo_corrida']);
 
+function isTreinoProduct(p) {
+  return p.type === 'treino_template' || TREINO_CATEGORIES.has(p.category);
+}
+
 function bucketForProduct(p) {
-  if (p.type === 'treino_template' || TREINO_CATEGORIES.has(p.category)) return 'treino';
   if (p.category === 'dieta_ebook') return 'nutricao';
   return 'guias';
 }
@@ -32,7 +37,6 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
-  const [openProgram, setOpenProgram] = useState(null);
   const [studentAccessLevel, setStudentAccessLevel] = useState('plataforma_base');
   const [activeStoreTab, setActiveStoreTab] = useState('todos');
   const [personalName, setPersonalName] = useState(null);
@@ -55,11 +59,12 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
       setStudentAccessLevel(level);
       setPersonalName(personalRow?.name || null);
       setPersonalPhone(personalRow?.phone || null);
-      setProducts(productRows || []);
+      const nonTreinoProducts = (productRows || []).filter((p) => !isTreinoProduct(p));
+      setProducts(nonTreinoProducts);
 
       const grantedIds = new Set((grantRows || []).map((g) => g.product_id));
       const unlocked = new Set();
-      (productRows || []).forEach((p) => {
+      nonTreinoProducts.forEach((p) => {
         if (grantedIds.has(p.id) || hasAccessByLevel(level, p.required_access_level)) unlocked.add(p.id);
       });
       setUnlockedProductIds(unlocked);
@@ -81,18 +86,6 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
 
   if (selectedRecipe) {
     return <RecipeDetailScreen recipe={selectedRecipe} studentId={studentId} onClose={() => setSelectedRecipe(null)} />;
-  }
-
-  if (openProgram) {
-    return (
-      <ProgramDetailScreen
-        product={openProgram}
-        studentId={studentId}
-        personalId={personalId}
-        unlocked={unlockedProductIds.has(openProgram.id)}
-        onClose={() => setOpenProgram(null)}
-      />
-    );
   }
 
   const selectedUnlocked = selectedProduct ? unlockedProductIds.has(selectedProduct.id) : false;
@@ -145,14 +138,14 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
                   <TouchableOpacity
                     key={p.id}
                     style={styles.card}
-                    onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setSelectedProduct(p))}
+                    onPress={() => setSelectedProduct(p)}
                   >
                     <View style={styles.coverWrap}>
                       {p.cover_image_url ? (
                         <Image source={{ uri: p.cover_image_url }} style={styles.coverImage} resizeMode="cover" />
                       ) : (
                         <View style={styles.coverPlaceholder}>
-                          <Ionicons name={p.type === 'treino_template' ? 'barbell-outline' : 'pricetag-outline'} size={26} color="#FF6B00" />
+                          <Ionicons name="pricetag-outline" size={26} color="#FF6B00" />
                         </View>
                       )}
                       {!unlocked && (

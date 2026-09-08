@@ -8,7 +8,7 @@ import { HeaderBack } from './Header';
 
 const WHATSAPP_NUMBER = '5537998231382';
 
-export default function ProgramDetailScreen({ product, studentId, personalId, unlocked, onClose }) {
+export default function ProgramDetailScreen({ product, studentId, personalId, unlocked, onClose, onAdded }) {
   const [divisions, setDivisions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
@@ -85,6 +85,7 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
     if (alreadyAdded || divisions.length === 0) return;
     setAdding(true);
     try {
+      let firstWorkout = null;
       for (const division of divisions) {
         const { data: templateItems } = await supabase
           .from('workout_template_exercises')
@@ -98,6 +99,7 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
           .single();
 
         if (error || !newWorkout) throw error || new Error('no workout');
+        if (!firstWorkout) firstWorkout = newWorkout;
 
         if (templateItems && templateItems.length > 0) {
           const copies = templateItems.map((it) => ({ ...it, workout_id: newWorkout.id }));
@@ -105,7 +107,11 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
         }
       }
       setAlreadyAdded(true);
-      showAlert('Programa adicionado!', 'Confira na aba de Treinos.');
+      if (onAdded) {
+        await onAdded(firstWorkout);
+      } else {
+        showAlert('Programa adicionado!', 'Confira na aba de Treinos.');
+      }
     } catch {
       showAlert('Ops', 'Não deu pra adicionar o programa agora. Tenta de novo.');
     }
@@ -163,7 +169,7 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
               </View>
             ) : (
               <TouchableOpacity style={styles.unlockButton} onPress={handleAddProgram} disabled={adding}>
-                {adding ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.unlockButtonText}>🏋️ Adicionar Programa aos Meus Treinos</Text>}
+                {adding ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.unlockButtonText}>{onAdded ? '▶️ Começar Este Programa' : '🏋️ Adicionar Programa aos Meus Treinos'}</Text>}
               </TouchableOpacity>
             )}
 

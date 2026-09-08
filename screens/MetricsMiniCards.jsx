@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { GLASS_CARD } from './vitrineStyles';
 
 const ACCENT = '#FF6B00';
 
@@ -26,9 +27,12 @@ function MetricCard({ icon, label, valueText, percent, subtitle, onPress }) {
 // so the personal sees exactly what the student sees for that day. Each
 // card is independently tappable when the caller wires up its onPress*.
 export default function MetricsMiniCards({
+  workoutStatus,
+  onPressWorkout,
   caloriesConsumed,
   caloriesGoal,
   onPressCalories,
+  hideCalories,
   waterMl,
   waterGoalMl = 2000,
   onPressWater,
@@ -45,13 +49,15 @@ export default function MetricsMiniCards({
 
   return (
     <View style={styles.grid}>
-      <MetricCard
-        icon="flame-outline"
-        label="Calorias"
-        valueText={caloriesGoal ? `${Math.round(caloriesConsumed)} / ${caloriesGoal} kcal` : `${Math.round(caloriesConsumed)} kcal`}
-        percent={caloriesPercent}
-        onPress={onPressCalories}
-      />
+      {workoutStatus && (
+        <MetricCard
+          icon="barbell-outline"
+          label="Treino"
+          valueText={workoutStatus.valueText}
+          percent={workoutStatus.percent}
+          onPress={onPressWorkout}
+        />
+      )}
       <MetricCard
         icon="water-outline"
         label="Água"
@@ -60,27 +66,36 @@ export default function MetricsMiniCards({
         onPress={onPressWater}
       />
       <MetricCard
-        icon="checkmark-circle-outline"
-        label="Hábitos"
+        icon="restaurant-outline"
+        label="Alimentação"
         valueText={`${mealsCompleted} / ${mealsTotal}`}
         percent={mealsPercent}
         onPress={onPressHabits}
       />
       <MetricCard
-        icon="heart-outline"
-        label="Frequência"
+        icon="checkmark-circle-outline"
+        label="Hábitos"
         valueText={`${Math.round(weeklyPercent || 0)}%`}
         percent={weeklyPercent}
         subtitle={lastWorkoutLabel ? `Último: ${lastWorkoutLabel}` : null}
         onPress={onPressFrequency}
       />
+      {!hideCalories && (
+        <MetricCard
+          icon="flame-outline"
+          label="Calorias"
+          valueText={caloriesGoal ? `${Math.round(caloriesConsumed)} / ${caloriesGoal} kcal` : `${Math.round(caloriesConsumed)} kcal`}
+          percent={caloriesPercent}
+          onPress={onPressCalories}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
-  card: { width: '47%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 12 },
+  card: { width: '47%', borderWidth: 1, borderRadius: 14, padding: 12, ...GLASS_CARD },
   cardTopRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   cardLabel: { color: '#a3a3a3', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
   cardValue: { color: '#F5F5F7', fontSize: 14, fontWeight: '800' },

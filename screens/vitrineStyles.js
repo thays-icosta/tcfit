@@ -25,6 +25,16 @@ export function coverFocalImageStyle(focalPosition) {
   return { position: 'absolute', left: 0, width: '100%', height: '160%', top: FOCAL_TOP_OFFSET[focalPosition] ?? FOCAL_TOP_OFFSET.topo };
 }
 
+// Frosted-glass card treatment: translucent surface + backdrop blur (web only —
+// React Native ignores backdropFilter on native and just keeps the semi-
+// transparent fill, which still reads fine over the dark background). Spread
+// this after a style's own backgroundColor/borderColor so it wins.
+export const GLASS_CARD = {
+  backgroundColor: 'rgba(28,28,34,0.65)',
+  borderColor: 'rgba(255,255,255,0.08)',
+  backdropFilter: 'blur(16px)',
+};
+
 // Flat, uniform card shell: #18181B background, 1px #27272A border, 16px radius, 20px padding.
 export const FLAT_CARD = {
   backgroundColor: '#18181B',
