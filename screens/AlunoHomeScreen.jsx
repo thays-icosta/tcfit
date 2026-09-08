@@ -157,9 +157,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [diaryRefreshKey, setDiaryRefreshKey] = useState(0);
   const [registeringKey, setRegisteringKey] = useState(null);
   const [pixCopied, setPixCopied] = useState(false);
-  const [partnerBrands, setPartnerBrands] = useState([]);
-  const [showPartnersSection, setShowPartnersSection] = useState(false);
-  const [copiedCouponId, setCopiedCouponId] = useState(null);
   const [activeTab, setActiveTab] = useState('inicio');
   const [categorizedProducts, setCategorizedProducts] = useState([]);
   const [unlockedProductIds, setUnlockedProductIds] = useState(new Set());
@@ -213,7 +210,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     if (myRow?.personal_id) {
       const { data: personalRow } = await supabase
         .from('users')
-        .select('name, avatar_url, phone, pix_key, payment_link, show_partners_section')
+        .select('name, avatar_url, phone, pix_key, payment_link')
         .eq('id', myRow.personal_id)
         .single();
       setPersonalName(personalRow?.name || null);
@@ -221,15 +218,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
       setPersonalPhone(personalRow?.phone || null);
       setPersonalPixKey(personalRow?.pix_key || null);
       setPersonalPaymentLink(personalRow?.payment_link || null);
-      setShowPartnersSection(personalRow?.show_partners_section !== false);
-
-      const { data: brandRows } = await supabase
-        .from('partner_brands')
-        .select('id, name, logo_url, coupon_code, affiliate_link')
-        .eq('personal_id', myRow.personal_id)
-        .eq('active', true)
-        .order('created_at', { ascending: false });
-      setPartnerBrands(brandRows || []);
 
       const [{ data: productRows }, { data: grantRows }, { data: collectionRows }] = await Promise.all([
         supabase.from('products').select('*').eq('personal_id', myRow.personal_id).eq('active', true),
@@ -520,17 +508,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     setPixCopied(true);
     showAlert('Copiado!', 'Chave Pix copiada com sucesso!');
     setTimeout(() => setPixCopied(false), 2500);
-  };
-
-  const handleCopyCoupon = async (brand) => {
-    if (brand.coupon_code) {
-      await Clipboard.setStringAsync(brand.coupon_code);
-      setCopiedCouponId(brand.id);
-      setTimeout(() => setCopiedCouponId((prev) => (prev === brand.id ? null : prev)), 2500);
-    }
-    if (brand.affiliate_link) {
-      Linking.openURL(brand.affiliate_link).catch(() => {});
-    }
   };
 
   const handleOpenChatFor = (message) => {
@@ -1698,47 +1675,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             </ScrollView>
           )}
           </CollapsibleSection>
-
-          {showPartnersSection && partnerBrands.length > 0 && (
-            <View style={styles.partnersFooterSection}>
-              <Text style={styles.sectionTitle}>Marcas Parceiras</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-                {partnerBrands.map((b) => (
-                  <View key={b.id} style={styles.partnerBanner}>
-                    <View style={styles.partnerBannerLogoWrap}>
-                      {b.logo_url ? (
-                        <Image source={{ uri: b.logo_url }} style={styles.partnerBannerLogoImage} resizeMode="contain" />
-                      ) : (
-                        <Ionicons name="pricetag-outline" size={20} color={ACCENT} />
-                      )}
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.partnerBannerName} numberOfLines={1}>{b.name}</Text>
-                      {(b.coupon_code || b.affiliate_link) && (
-                        <View style={styles.partnerBannerTagBadge}>
-                          <Text style={styles.partnerBannerTagBadgeText}>
-                            {b.coupon_code ? 'CUPOM DISPONÍVEL' : 'DESCONTO EXCLUSIVO'}
-                          </Text>
-                        </View>
-                      )}
-                      {b.coupon_code ? (
-                        <TouchableOpacity style={styles.partnerBannerCouponButton} onPress={() => handleCopyCoupon(b)}>
-                          <Ionicons name={copiedCouponId === b.id ? 'checkmark-outline' : 'copy-outline'} size={12} color={ACCENT} />
-                          <Text style={styles.partnerBannerCouponText}>
-                            {copiedCouponId === b.id ? 'Copiado!' : b.coupon_code}
-                          </Text>
-                        </TouchableOpacity>
-                      ) : b.affiliate_link ? (
-                        <TouchableOpacity style={styles.partnerBannerCouponButton} onPress={() => handleCopyCoupon(b)}>
-                          <Text style={styles.partnerBannerCouponText}>Ver oferta</Text>
-                        </TouchableOpacity>
-                      ) : null}
-                    </View>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-          )}
         </>
       )}
 
@@ -1820,7 +1756,6 @@ const styles = StyleSheet.create({
   nutritionCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   nutritionCardName: { color: '#F5F5F7', fontSize: 11, fontWeight: '600', lineHeight: 15 },
   runningLevelLockedText: { color: '#525252', fontSize: 10, fontWeight: '600', marginTop: 2 },
-  partnersFooterSection: { marginTop: 24 },
   categoryListCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 16, padding: 10, marginBottom: 10, ...GLASS_CARD },
   categoryListCoverWrap: { width: 72, aspectRatio: 16 / 9, borderRadius: 10, backgroundColor: '#0F0F12', overflow: 'hidden', position: 'relative' },
   categoryListCoverImage: { width: '100%', height: '100%' },
@@ -1828,14 +1763,6 @@ const styles = StyleSheet.create({
   categoryListName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700', flex: 1 },
   collectionDescription: { color: '#A1A1AA', fontSize: 12, lineHeight: 17, marginBottom: 14 },
   categoryLockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
-  partnerBanner: { width: 260, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 12 },
-  partnerBannerLogoWrap: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  partnerBannerLogoImage: { width: '100%', height: '100%' },
-  partnerBannerName: { color: '#F5F5F7', fontSize: 12, fontWeight: '700' },
-  partnerBannerTagBadge: { alignSelf: 'flex-start', backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2, marginTop: 3, marginBottom: 6 },
-  partnerBannerTagBadgeText: { color: '#22c55e', fontSize: 8, fontWeight: '800', letterSpacing: 0.3 },
-  partnerBannerCouponButton: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: 'rgba(255,107,0,0.12)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5 },
-  partnerBannerCouponText: { color: '#FF6B00', fontSize: 10, fontWeight: '800' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12 },
   libraryIntro: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginTop: 4, marginBottom: 16 },
   button: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 24 },

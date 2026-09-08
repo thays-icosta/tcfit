@@ -1,77 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Image, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { supabase } from './supabaseClient';
-import RecipeDetailScreen from './RecipeDetailScreen';
-import ProductDetailModal from './ProductDetailModal';
-import { hasAccessByLevel } from './accessLevel';
 import { HeaderBack } from './Header';
 
 const WHATSAPP_NUMBER = '5537998231382';
 
-const STORE_TABS = [
-  { value: 'todos', label: 'Todos' },
-  { value: 'nutricao', label: 'Nutrição & Receitas' },
-  { value: 'guias', label: 'Guias & E-books' },
-];
-
-// Training programs live in the Treinos tab now (browse + start immediately,
-// no separate "add to my workouts" purchase step) — Loja is reserved for VIP
-// upgrade and partner/affiliate content, so training-type products never
-// show up here at all.
-const TREINO_CATEGORIES = new Set(['planilha_academia', 'planilha_casa', 'treino_3d', 'treino_extra', 'modulo_corrida']);
-
-function isTreinoProduct(p) {
-  return p.type === 'treino_template' || TREINO_CATEGORIES.has(p.category);
-}
-
-function bucketForProduct(p) {
-  if (p.category === 'dieta_ebook') return 'nutricao';
-  return 'guias';
-}
-
+// Loja is reserved for the VIP consultancy upsell and partner/affiliate
+// discounts — training programs live in Treinos (browse + start immediately)
+// and nutrition guides/e-books live in the Home hub's Biblioteca de Nutrição,
+// so neither is duplicated here.
 export default function AlunoProductsScreen({ studentId, personalId, onClose }) {
-  const [products, setProducts] = useState([]);
-  const [recipes, setRecipes] = useState([]);
-  const [unlockedProductIds, setUnlockedProductIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [studentAccessLevel, setStudentAccessLevel] = useState('plataforma_base');
-  const [activeStoreTab, setActiveStoreTab] = useState('todos');
   const [personalName, setPersonalName] = useState(null);
   const [personalPhone, setPersonalPhone] = useState(null);
+  const [partnerBrands, setPartnerBrands] = useState([]);
+  const [showPartnersSection, setShowPartnersSection] = useState(false);
+  const [copiedCouponId, setCopiedCouponId] = useState(null);
 
   useEffect(() => {
     (async () => {
-      const [{ data: myRow }, { data: productRows }, { data: grantRows }, { data: personalRow }] = await Promise.all([
+      const [{ data: myRow }, { data: personalRow }] = await Promise.all([
         supabase.from('users').select('access_level').eq('id', studentId).single(),
         personalId
-          ? supabase.from('products').select('*').eq('personal_id', personalId).eq('active', true).order('created_at', { ascending: false })
-          : Promise.resolve({ data: [] }),
-        supabase.from('product_grants').select('product_id').eq('student_id', studentId),
-        personalId
-          ? supabase.from('users').select('name, phone').eq('id', personalId).single()
+          ? supabase.from('users').select('name, phone, show_partners_section').eq('id', personalId).single()
           : Promise.resolve({ data: null }),
       ]);
 
-      const level = myRow?.access_level || 'plataforma_base';
-      setStudentAccessLevel(level);
+      setStudentAccessLevel(myRow?.access_level || 'plataforma_base');
       setPersonalName(personalRow?.name || null);
       setPersonalPhone(personalRow?.phone || null);
-      const nonTreinoProducts = (productRows || []).filter((p) => !isTreinoProduct(p));
-      setProducts(nonTreinoProducts);
-
-      const grantedIds = new Set((grantRows || []).map((g) => g.product_id));
-      const unlocked = new Set();
-      nonTreinoProducts.forEach((p) => {
-        if (grantedIds.has(p.id) || hasAccessByLevel(level, p.required_access_level)) unlocked.add(p.id);
-      });
-      setUnlockedProductIds(unlocked);
+      setShowPartnersSection(personalRow?.show_partners_section !== false);
 
       if (personalId) {
-        const { data: recipeRows } = await supabase.from('recipes').select('id, title').eq('personal_id', personalId);
-        setRecipes(recipeRows || []);
+        const { data: brandRows } = await supabase
+          .from('partner_brands')
+          .select('id, name, logo_url, coupon_code, affiliate_link')
+          .eq('personal_id', personalId)
+          .eq('active', true)
+          .order('created_at', { ascending: false });
+        setPartnerBrands(brandRows || []);
       }
 
       setLoading(false);
@@ -84,97 +54,80 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
     Linking.openURL(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`).catch(() => {});
   };
 
-  if (selectedRecipe) {
-    return <RecipeDetailScreen recipe={selectedRecipe} studentId={studentId} onClose={() => setSelectedRecipe(null)} />;
-  }
-
-  const selectedUnlocked = selectedProduct ? unlockedProductIds.has(selectedProduct.id) : false;
-  const filteredProducts = products.filter((p) => activeStoreTab === 'todos' || bucketForProduct(p) === activeStoreTab);
+  const handleCopyCoupon = async (brand) => {
+    if (brand.coupon_code) {
+      await Clipboard.setStringAsync(brand.coupon_code);
+      setCopiedCouponId(brand.id);
+      setTimeout(() => setCopiedCouponId((prev) => (prev === brand.id ? null : prev)), 2500);
+    }
+    if (brand.affiliate_link) {
+      Linking.openURL(brand.affiliate_link).catch(() => {});
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <HeaderBack title="Conteúdos e Produtos" onBack={onClose} style={{ paddingHorizontal: 16 }} />
-
-      {!loading && studentAccessLevel !== 'consultoria_vip' && (
-        <View style={styles.upsellCard}>
-          <Text style={styles.upsellTitle}>Quer um acompanhamento 100% individual?</Text>
-          <Text style={styles.upsellText}>
-            {personalName ? `${personalName} pode montar` : 'Seu personal pode montar'} sua ficha de treino do zero, sob medida pras suas necessidades específicas.
-          </Text>
-          <TouchableOpacity style={styles.upsellButton} onPress={handleUpsellConsultoria}>
-            <Ionicons name="logo-whatsapp" size={16} color="#0F0F12" />
-            <Text style={styles.upsellButtonText}>Quero Consultoria Individual</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {!loading && products.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
-          {STORE_TABS.map((tab) => (
-            <TouchableOpacity
-              key={tab.value}
-              style={[styles.tabChip, activeStoreTab === tab.value && styles.tabChipActive]}
-              onPress={() => setActiveStoreTab(tab.value)}
-            >
-              <Text style={[styles.tabChipText, activeStoreTab === tab.value && styles.tabChipTextActive]}>{tab.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      )}
+      <HeaderBack title="Loja" onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       {loading ? (
         <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
-          {products.length === 0 ? (
-            <Text style={styles.emptyText}>Nenhum conteúdo disponível ainda.</Text>
-          ) : filteredProducts.length === 0 ? (
-            <Text style={styles.emptyText}>Nada nessa categoria ainda.</Text>
-          ) : (
-            <View style={styles.grid}>
-              {filteredProducts.map((p) => {
-                const unlocked = unlockedProductIds.has(p.id);
-                return (
-                  <TouchableOpacity
-                    key={p.id}
-                    style={styles.card}
-                    onPress={() => setSelectedProduct(p)}
-                  >
-                    <View style={styles.coverWrap}>
-                      {p.cover_image_url ? (
-                        <Image source={{ uri: p.cover_image_url }} style={styles.coverImage} resizeMode="cover" />
-                      ) : (
-                        <View style={styles.coverPlaceholder}>
-                          <Ionicons name="pricetag-outline" size={26} color="#FF6B00" />
-                        </View>
-                      )}
-                      {!unlocked && (
-                        <View style={styles.lockOverlay}>
-                          <Ionicons name="lock-closed" size={20} color="#F5F5F7" />
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.cardInfo}>
-                      <Text style={styles.cardName} numberOfLines={2}>{p.name}</Text>
-                      <Text style={styles.cardPrice}>{p.price != null ? `R$ ${Number(p.price).toFixed(2)}` : 'Consulte'}</Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
+          {studentAccessLevel !== 'consultoria_vip' && (
+            <View style={styles.upsellCard}>
+              <Text style={styles.upsellTitle}>Quer um acompanhamento 100% individual?</Text>
+              <Text style={styles.upsellText}>
+                {personalName ? `${personalName} pode montar` : 'Seu personal pode montar'} sua ficha de treino do zero, sob medida pras suas necessidades específicas.
+              </Text>
+              <TouchableOpacity style={styles.upsellButton} onPress={handleUpsellConsultoria}>
+                <Ionicons name="logo-whatsapp" size={16} color="#0F0F12" />
+                <Text style={styles.upsellButtonText}>Quero Consultoria Individual</Text>
+              </TouchableOpacity>
             </View>
+          )}
+
+          {showPartnersSection && partnerBrands.length > 0 ? (
+            <>
+              <Text style={styles.sectionTitle}>Marcas Parceiras</Text>
+              {partnerBrands.map((b) => (
+                <View key={b.id} style={styles.partnerBanner}>
+                  <View style={styles.partnerBannerLogoWrap}>
+                    {b.logo_url ? (
+                      <Image source={{ uri: b.logo_url }} style={styles.partnerBannerLogoImage} resizeMode="contain" />
+                    ) : (
+                      <Ionicons name="pricetag-outline" size={22} color="#FF6B00" />
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.partnerBannerName} numberOfLines={1}>{b.name}</Text>
+                    {(b.coupon_code || b.affiliate_link) && (
+                      <View style={styles.partnerBannerTagBadge}>
+                        <Text style={styles.partnerBannerTagBadgeText}>
+                          {b.coupon_code ? 'CUPOM DISPONÍVEL' : 'DESCONTO EXCLUSIVO'}
+                        </Text>
+                      </View>
+                    )}
+                    {b.coupon_code ? (
+                      <TouchableOpacity style={styles.partnerBannerCouponButton} onPress={() => handleCopyCoupon(b)}>
+                        <Ionicons name={copiedCouponId === b.id ? 'checkmark-outline' : 'copy-outline'} size={12} color="#FF6B00" />
+                        <Text style={styles.partnerBannerCouponText}>
+                          {copiedCouponId === b.id ? 'Copiado!' : b.coupon_code}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : b.affiliate_link ? (
+                      <TouchableOpacity style={styles.partnerBannerCouponButton} onPress={() => handleCopyCoupon(b)}>
+                        <Text style={styles.partnerBannerCouponText}>Ver oferta</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                </View>
+              ))}
+            </>
+          ) : (
+            <Text style={styles.emptyText}>Nenhuma marca parceira disponível ainda.</Text>
           )}
         </ScrollView>
       )}
-
-      <ProductDetailModal
-        product={selectedProduct}
-        unlocked={selectedUnlocked}
-        recipes={recipes}
-        onSelectRecipe={setSelectedRecipe}
-        onClose={() => setSelectedProduct(null)}
-        personalName={personalName}
-        personalPhone={personalPhone}
-      />
     </View>
   );
 }
@@ -182,23 +135,18 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  upsellCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 16 },
+  upsellCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, padding: 16, marginBottom: 20 },
   upsellTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '800', marginBottom: 6 },
   upsellText: { color: '#a3a3a3', fontSize: 12, lineHeight: 17, marginBottom: 14 },
   upsellButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
   upsellButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '800' },
-  tabScroll: { marginBottom: 14, flexGrow: 0 },
-  tabChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
-  tabChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  tabChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
-  tabChipTextActive: { color: '#0F0F12' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  card: { width: '47%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, overflow: 'hidden' },
-  coverWrap: { width: '100%', aspectRatio: 1, backgroundColor: '#0F0F12', position: 'relative' },
-  coverImage: { width: '100%', height: '100%' },
-  coverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  lockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
-  cardInfo: { padding: 10 },
-  cardName: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', minHeight: 32 },
-  cardPrice: { color: '#FF6B00', fontSize: 15, fontWeight: '800', marginTop: 6 },
+  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 12 },
+  partnerBanner: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, padding: 12, marginBottom: 10 },
+  partnerBannerLogoWrap: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  partnerBannerLogoImage: { width: '100%', height: '100%' },
+  partnerBannerName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  partnerBannerTagBadge: { alignSelf: 'flex-start', backgroundColor: 'rgba(34,197,94,0.1)', borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2, marginTop: 3, marginBottom: 6 },
+  partnerBannerTagBadgeText: { color: '#22c55e', fontSize: 9, fontWeight: '800', letterSpacing: 0.3 },
+  partnerBannerCouponButton: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: 'rgba(255,107,0,0.12)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5 },
+  partnerBannerCouponText: { color: '#FF6B00', fontSize: 11, fontWeight: '800' },
 });
