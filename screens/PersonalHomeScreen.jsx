@@ -22,6 +22,8 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [ownAvatarUrl, setOwnAvatarUrl] = useState(null);
   const [completedToday, setCompletedToday] = useState({});
   const [daysSinceLastTrained, setDaysSinceLastTrained] = useState({});
+  const [overduePaymentStudents, setOverduePaymentStudents] = useState({});
+  const [anamnesePendingStudents, setAnamnesePendingStudents] = useState({});
   const [detailFor, setDetailFor] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [activeTab, setActiveTab] = useState('inicio');
@@ -128,6 +130,25 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         }
       });
       setDaysSinceLastTrained(daysMap);
+
+      const { data: overdueRows } = await supabase
+        .from('payments')
+        .select('student_id')
+        .eq('personal_id', user.id)
+        .eq('paid', false)
+        .lt('due_date', todayStr);
+      const overdueMap = {};
+      (overdueRows || []).forEach((p) => { overdueMap[p.student_id] = true; });
+      setOverduePaymentStudents(overdueMap);
+
+      const { data: anamneseRows } = await supabase
+        .from('anamnese_responses')
+        .select('student_id, completed_at')
+        .in('student_id', studentIds);
+      const completedSet = new Set((anamneseRows || []).filter((a) => a.completed_at).map((a) => a.student_id));
+      const pendingMap = {};
+      studentIds.forEach((id) => { if (!completedSet.has(id)) pendingMap[id] = true; });
+      setAnamnesePendingStudents(pendingMap);
     }
 
     setLoading(false);
@@ -460,6 +481,25 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     );
   }
 
+  const attentionItems = students
+    .map((s) => {
+      const done = completedToday[s.id];
+      const daysSince = daysSinceLastTrained[s.id];
+      const flags = [];
+      if (!done && (daysSince === null || daysSince >= 3)) {
+        flags.push({ key: 'inatividade', tone: 'urgent', label: daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar` });
+      }
+      if (overduePaymentStudents[s.id]) {
+        flags.push({ key: 'pagamento', tone: 'pending', label: 'Pagamento vencido' });
+      }
+      if (anamnesePendingStudents[s.id]) {
+        flags.push({ key: 'anamnese', tone: 'pending', label: 'Anamnese pendente' });
+      }
+      return { student: s, flags };
+    })
+    .filter((item) => item.flags.length > 0)
+    .sort((a, b) => (b.flags.some((f) => f.tone === 'urgent') ? 1 : 0) - (a.flags.some((f) => f.tone === 'urgent') ? 1 : 0));
+
   return (
     <View style={{ flex: 1 }}>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -517,40 +557,37 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         </View>
       )}
 
-      {(() => {
-        const alertStudents = students.filter((s) => {
-          const done = completedToday[s.id];
-          const daysSince = daysSinceLastTrained[s.id];
-          return !done && (daysSince === null || daysSince >= 3);
-        });
-        if (alertStudents.length === 0) return null;
-        return (
-          <>
-            <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Alertas de Alunos</Text>
-            {alertStudents.map((s) => {
-              const daysSince = daysSinceLastTrained[s.id];
-              return (
-                <TouchableOpacity key={s.id} style={styles.alertRow} onPress={() => setDetailFor(s)}>
-                  <View style={styles.checkinAvatarCircle}>
-                    {s.avatar_url ? (
-                      <Image source={{ uri: s.avatar_url }} style={styles.checkinAvatarImage} />
-                    ) : (
-                      <Text style={styles.checkinAvatarLetter}>{s.name?.charAt(0).toUpperCase() || '?'}</Text>
-                    )}
-                  </View>
-                  <Text style={styles.checkinName}>{s.name}</Text>
-                  <View style={[styles.alertTag, { marginTop: 0 }]}>
-                    <Ionicons name="alert-circle" size={14} color="#ef4444" />
-                    <Text style={styles.alertTagText}>
-                      {daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </>
-        );
-      })()}
+      {attentionItems.length > 0 && (
+        <>
+          <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Quem Precisa da Sua Atenção</Text>
+          {attentionItems.map(({ student: s, flags }) => (
+            <TouchableOpacity
+              key={s.id}
+              style={[styles.alertRow, !flags.some((f) => f.tone === 'urgent') && styles.attentionRowMuted]}
+              onPress={() => setDetailFor(s)}
+            >
+              <View style={styles.checkinAvatarCircle}>
+                {s.avatar_url ? (
+                  <Image source={{ uri: s.avatar_url }} style={styles.checkinAvatarImage} />
+                ) : (
+                  <Text style={styles.checkinAvatarLetter}>{s.name?.charAt(0).toUpperCase() || '?'}</Text>
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.checkinName}>{s.name}</Text>
+                <View style={styles.attentionTagRow}>
+                  {flags.map((f) => (
+                    <View key={f.key} style={[styles.alertTag, { marginTop: 0 }, f.tone === 'pending' && styles.attentionTagPending]}>
+                      <Ionicons name={f.tone === 'urgent' ? 'alert-circle' : 'time-outline'} size={12} color={f.tone === 'urgent' ? '#ef4444' : '#f59e0b'} />
+                      <Text style={[styles.alertTagText, f.tone === 'pending' && styles.attentionTagPendingText]}>{f.label}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </>
+      )}
 
       {students.length > 0 && (
         <>
@@ -694,6 +731,10 @@ const styles = StyleSheet.create({
   alertTag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(239,68,68,0.12)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 3, marginTop: 4 },
   alertTagText: { color: '#ef4444', fontSize: 9, fontWeight: '700' },
   alertRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', borderRadius: 12, padding: 12, marginBottom: 8 },
+  attentionRowMuted: { borderColor: '#2B2B36' },
+  attentionTagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
+  attentionTagPending: { backgroundColor: 'rgba(245,158,11,0.12)' },
+  attentionTagPendingText: { color: '#f59e0b' },
   chevron: { color: '#525252', fontSize: 22, fontWeight: '300' },
   button: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 20 },
   buttonText: { color: '#FF6B00', fontSize: 15, fontWeight: '700' },
