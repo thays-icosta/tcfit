@@ -75,7 +75,7 @@ export default function StudentDietTrackerScreen({ studentId, onAddFood, refresh
   );
 
   if (loading) {
-    return <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />;
+    return <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />;
   }
 
   return (
@@ -83,7 +83,7 @@ export default function StudentDietTrackerScreen({ studentId, onAddFood, refresh
       {goals ? (
         <View style={styles.goalsCard}>
           <Text style={styles.goalsCardTitle}>Hoje</Text>
-          <GoalBar label="Calorias" consumed={totals.kcal} goal={goals.goal_kcal} unit="kcal" color="#f97316" />
+          <GoalBar label="Calorias" consumed={totals.kcal} goal={goals.goal_kcal} unit="kcal" color="#FF6B00" />
           <GoalBar label="Proteína" consumed={totals.protein} goal={goals.goal_protein_g} unit="g" color="#22c55e" />
           <GoalBar label="Carboidrato" consumed={totals.carbs} goal={goals.goal_carbs_g} unit="g" color="#3b82f6" />
           <GoalBar label="Gordura" consumed={totals.fat} goal={goals.goal_fat_g} unit="g" color="#a855f7" />
@@ -133,22 +133,22 @@ export default function StudentDietTrackerScreen({ studentId, onAddFood, refresh
 }
 
 const styles = StyleSheet.create({
-  goalsCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 16, width: '100%' },
-  goalsCardTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700', marginBottom: 10 },
+  goalsCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 16, width: '100%' },
+  goalsCardTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700', marginBottom: 10 },
   goalBarBlock: { marginBottom: 10 },
   goalBarLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   goalBarLabel: { color: '#a3a3a3', fontSize: 11 },
-  goalBarValue: { color: '#f5f5f5', fontSize: 11, fontWeight: '600' },
-  goalBarTrack: { height: 8, backgroundColor: '#0a0a0a', borderRadius: 4, overflow: 'hidden' },
+  goalBarValue: { color: '#F5F5F7', fontSize: 11, fontWeight: '600' },
+  goalBarTrack: { height: 8, backgroundColor: '#0F0F12', borderRadius: 4, overflow: 'hidden' },
   goalBarFill: { height: '100%', borderRadius: 4 },
-  noGoalsBox: { backgroundColor: '#171717', borderRadius: 10, padding: 12, marginBottom: 16, width: '100%' },
+  noGoalsBox: { backgroundColor: '#1C1C22', borderRadius: 10, padding: 12, marginBottom: 16, width: '100%' },
   noGoalsText: { color: '#525252', fontSize: 11, textAlign: 'center' },
-  mealSection: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 12, marginBottom: 10, width: '100%' },
+  mealSection: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 10, width: '100%' },
   mealSectionHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  mealSectionTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
-  mealSectionKcal: { color: '#f97316', fontSize: 11, fontWeight: '600' },
-  entryRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0a0a0a', borderRadius: 8, padding: 8, marginBottom: 6 },
-  entryName: { color: '#f5f5f5', fontSize: 12, fontWeight: '600' },
+  mealSectionTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  mealSectionKcal: { color: '#FF6B00', fontSize: 11, fontWeight: '600' },
+  entryRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0F0F12', borderRadius: 8, padding: 8, marginBottom: 6 },
+  entryName: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
   entryMacros: { color: '#525252', fontSize: 10, marginTop: 1 },
   entryRemove: { color: '#ef4444', fontSize: 12, marginLeft: 8 },
   addFoodButton: { borderWidth: 1, borderColor: '#22c55e', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 4 },

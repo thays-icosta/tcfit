@@ -109,7 +109,7 @@ export default function VolumeSummaryScreen({ studentId, studentName, onClose })
         </View>
 
         {loadingDetail ? (
-          <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+          <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
         ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
             <Text style={styles.sectionTitle}>Exercícios</Text>
@@ -147,7 +147,7 @@ export default function VolumeSummaryScreen({ studentId, studentName, onClose })
       </View>
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }}>
           <Text style={[styles.sectionTitle, { marginBottom: 10 }]}>Histórico de treinos do período</Text>
@@ -171,25 +171,25 @@ export default function VolumeSummaryScreen({ studentId, studentName, onClose })
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
   studentLabel: { color: '#737373', fontSize: 12, marginBottom: 14 },
-  periodRow: { flexDirection: 'row', backgroundColor: '#171717', borderRadius: 10, padding: 3, marginBottom: 18 },
+  periodRow: { flexDirection: 'row', backgroundColor: '#1C1C22', borderRadius: 10, padding: 3, marginBottom: 18 },
   periodRowSpacing: { marginTop: 16 },
   periodButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
-  periodButtonActive: { backgroundColor: '#f97316' },
+  periodButtonActive: { backgroundColor: '#FF6B00' },
   periodButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  periodButtonTextActive: { color: '#0a0a0a' },
+  periodButtonTextActive: { color: '#0F0F12' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 10, marginBottom: 10 },
-  sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
-  historyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, marginBottom: 6 },
-  historyRowText: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flex: 1, marginRight: 8 },
-  historyRowVolume: { color: '#f97316', fontSize: 13, fontWeight: '800' },
-  detailHeaderCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 18, marginHorizontal: 16, marginBottom: 16, alignItems: 'center' },
-  detailWorkoutName: { color: '#f5f5f5', fontSize: 15, fontWeight: '700' },
+  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
+  historyRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, marginBottom: 6 },
+  historyRowText: { color: '#F5F5F7', fontSize: 12, fontWeight: '600', flex: 1, marginRight: 8 },
+  historyRowVolume: { color: '#FF6B00', fontSize: 13, fontWeight: '800' },
+  detailHeaderCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 18, marginHorizontal: 16, marginBottom: 16, alignItems: 'center' },
+  detailWorkoutName: { color: '#F5F5F7', fontSize: 15, fontWeight: '700' },
   detailDate: { color: '#737373', fontSize: 11, marginTop: 4, marginBottom: 14 },
-  detailVolumeBig: { color: '#f97316', fontSize: 30, fontWeight: '800' },
+  detailVolumeBig: { color: '#FF6B00', fontSize: 30, fontWeight: '800' },
   detailVolumeLabel: { color: '#525252', fontSize: 10, marginTop: 2 },
-  detailExerciseRow: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 12, marginBottom: 8 },
-  detailExerciseName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  detailExerciseRow: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, padding: 12, marginBottom: 8 },
+  detailExerciseName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   detailExerciseStats: { color: '#a3a3a3', fontSize: 11, marginTop: 3 },
 });

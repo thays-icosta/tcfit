@@ -499,7 +499,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
             <Image source={{ uri: p.cover_image_url }} style={styles.productCoverImage} resizeMode="cover" />
           ) : (
             <View style={styles.productCoverPlaceholder}>
-              <Ionicons name={meta.icon} size={28} color="#f97316" />
+              <Ionicons name={meta.icon} size={28} color="#FF6B00" />
             </View>
           )}
           {p.show_as_addon && (
@@ -551,7 +551,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           <TouchableOpacity style={styles.coverPicker} onPress={handlePickCollectionCover} disabled={uploadingCollectionCover}>
             {uploadingCollectionCover ? (
-              <ActivityIndicator color="#f97316" />
+              <ActivityIndicator color="#FF6B00" />
             ) : collectionCoverUrl ? (
               <Image source={{ uri: collectionCoverUrl }} style={styles.coverPreview} resizeMode="cover" />
             ) : (
@@ -579,7 +579,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           />
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSaveCollection} disabled={savingCollection}>
-            {savingCollection ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Salvar Coleção</Text>}
+            {savingCollection ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar Coleção</Text>}
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -598,7 +598,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           <Text style={styles.previewSectionLabel}>Card de Venda Público (Visitante)</Text>
           <View style={styles.saleCard}>
             <View style={styles.saleIconCircle}>
-              <Ionicons name={meta.icon} size={28} color="#f97316" />
+              <Ionicons name={meta.icon} size={28} color="#FF6B00" />
             </View>
             <Text style={styles.saleName}>{previewProduct.name}</Text>
             {previewProduct.description ? <Text style={styles.saleDescription}>{previewProduct.description}</Text> : null}
@@ -622,7 +622,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                   linkedTemplates.map((t, i) => (
                     <View key={t.id} style={styles.previewRecipeRow}>
                       <View style={styles.previewRecipeThumb}>
-                        <Ionicons name="barbell-outline" size={18} color="#f97316" />
+                        <Ionicons name="barbell-outline" size={18} color="#FF6B00" />
                       </View>
                       <Text style={styles.previewRecipeTitle}>{String.fromCharCode(65 + i)} — {t.name}</Text>
                       <Ionicons name="lock-open-outline" size={16} color="#22c55e" />
@@ -673,7 +673,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                 <View style={styles.recipeChecklist}>
                   {linkedTemplates.map((t, i) => (
                     <View key={t.id} style={styles.recipeCheckRow}>
-                      <Ionicons name="barbell-outline" size={14} color="#f97316" />
+                      <Ionicons name="barbell-outline" size={14} color="#FF6B00" />
                       <Text style={styles.recipeCheckLabel}>{String.fromCharCode(65 + i)} — {t.name}</Text>
                     </View>
                   ))}
@@ -689,7 +689,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                 <View style={styles.recipeChecklist}>
                   {linkedRecipes.map((r) => (
                     <View key={r.id} style={styles.recipeCheckRow}>
-                      <Ionicons name="restaurant-outline" size={14} color="#f97316" />
+                      <Ionicons name="restaurant-outline" size={14} color="#FF6B00" />
                       <Text style={styles.recipeCheckLabel}>{r.title}</Text>
                     </View>
                   ))}
@@ -702,7 +702,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           <Text style={styles.helperText}>Depois que o aluno comprar (fora do app, via WhatsApp/Pix), libere o acesso aqui pra ele ver as receitas na aba de Receitas dele.</Text>
 
           {loadingGrants ? (
-            <ActivityIndicator color="#f97316" style={{ marginTop: 16 }} />
+            <ActivityIndicator color="#FF6B00" style={{ marginTop: 16 }} />
           ) : students.length === 0 ? (
             <Text style={styles.helperText}>Você ainda não tem alunos.</Text>
           ) : (
@@ -719,7 +719,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                     ) : (
                       <TouchableOpacity onPress={() => handleGrantAccess(s.id)} disabled={grantingStudentId === s.id}>
                         {grantingStudentId === s.id ? (
-                          <ActivityIndicator color="#f97316" size="small" />
+                          <ActivityIndicator color="#FF6B00" size="small" />
                         ) : (
                           <Text style={styles.grantLink}>Liberar acesso</Text>
                         )}
@@ -747,7 +747,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
             disabled={uploadingCover}
           >
             {uploadingCover ? (
-              <ActivityIndicator color="#f97316" />
+              <ActivityIndicator color="#FF6B00" />
             ) : coverImageUrl ? (
               <Image source={{ uri: coverImageUrl }} style={coverFocalImageStyle(coverFocalPosition)} resizeMode="cover" />
             ) : (
@@ -775,7 +775,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           <View style={styles.typeRow}>
             {TYPES.map((t) => (
               <TouchableOpacity key={t.value} style={[styles.typeChip, type === t.value && styles.typeChipActive]} onPress={() => handleSelectType(t.value)}>
-                <Ionicons name={t.icon} size={14} color={type === t.value ? '#0a0a0a' : '#a3a3a3'} />
+                <Ionicons name={t.icon} size={14} color={type === t.value ? '#0F0F12' : '#a3a3a3'} />
                 <Text style={[styles.typeChipText, type === t.value && styles.typeChipTextActive]}>{t.label}</Text>
               </TouchableOpacity>
             ))}
@@ -797,10 +797,10 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           <Text style={styles.helperText}>Disponível pra qualquer tipo de produto. Pode ser combinado com uma chave de liberação ou pacote de receitas abaixo.</Text>
           <TouchableOpacity style={styles.filePickerButton} onPress={handlePickFile} disabled={uploadingFile}>
             {uploadingFile ? (
-              <ActivityIndicator color="#f97316" size="small" />
+              <ActivityIndicator color="#FF6B00" size="small" />
             ) : (
               <>
-                <Ionicons name="cloud-upload-outline" size={16} color="#f97316" />
+                <Ionicons name="cloud-upload-outline" size={16} color="#FF6B00" />
                 <Text style={styles.filePickerButtonText}>{pdfUrl ? 'Trocar PDF enviado' : 'Enviar PDF'}</Text>
               </>
             )}
@@ -929,7 +929,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                     return (
                       <TouchableOpacity key={r.id} style={styles.recipeCheckRow} onPress={() => toggleSelectedRecipe(r.id)}>
                         <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
-                          {checked && <Ionicons name="checkmark" size={13} color="#0a0a0a" />}
+                          {checked && <Ionicons name="checkmark" size={13} color="#0F0F12" />}
                         </View>
                         <Text style={styles.recipeCheckLabel}>{r.title}</Text>
                       </TouchableOpacity>
@@ -1040,16 +1040,16 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 
           <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>Exibir na Vitrine Pública (Landing Page) — aparece como oferta complementar no checkout</Text>
-            <Switch value={showAsAddon} onValueChange={setShowAsAddon} trackColor={{ false: '#292524', true: '#22c55e' }} thumbColor="#f5f5f5" />
+            <Switch value={showAsAddon} onValueChange={setShowAsAddon} trackColor={{ false: '#2B2B36', true: '#22c55e' }} thumbColor="#F5F5F7" />
           </View>
 
           <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>Produto ativo</Text>
-            <Switch value={active} onValueChange={setActive} trackColor={{ false: '#292524', true: '#f97316' }} thumbColor="#f5f5f5" />
+            <Switch value={active} onValueChange={setActive} trackColor={{ false: '#2B2B36', true: '#FF6B00' }} thumbColor="#F5F5F7" />
           </View>
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-            {saving ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Salvar Produto</Text>}
+            {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar Produto</Text>}
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -1065,7 +1065,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
           <Text style={styles.sectionToggleLabel}>Exibir seção “Produtos Avulsos” na vitrine {savingSectionToggle && '(salvando...)'}</Text>
           <Text style={styles.helperText}>Desligue pra esconder a seção inteira da página pública sem apagar os produtos.</Text>
         </View>
-        <Switch value={sectionEnabled} onValueChange={handleToggleSection} trackColor={{ false: '#292524', true: '#22c55e' }} thumbColor="#f5f5f5" />
+        <Switch value={sectionEnabled} onValueChange={handleToggleSection} trackColor={{ false: '#2B2B36', true: '#22c55e' }} thumbColor="#F5F5F7" />
       </View>
 
       <Text style={styles.hint2}>E-books, desafios avulsos e guias — tudo que não é consultoria direta. Marque "oferta complementar" pra aparecer como upsell na vitrine.</Text>
@@ -1075,7 +1075,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       </TouchableOpacity>
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           <View style={styles.collectionsHeaderRow}>
@@ -1099,7 +1099,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                           <Image source={{ uri: c.cover_image_url }} style={styles.collectionGroupCoverImage} resizeMode="cover" />
                         ) : (
                           <View style={styles.collectionGroupCoverPlaceholder}>
-                            <Ionicons name="folder-outline" size={16} color="#f97316" />
+                            <Ionicons name="folder-outline" size={16} color="#FF6B00" />
                           </View>
                         )}
                       </View>
@@ -1115,7 +1115,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                     <View style={styles.productGrid}>
                       {items.map(renderProductCard)}
                       <TouchableOpacity style={styles.addToCollectionCard} onPress={() => handleOpenNew(c.id)}>
-                        <Ionicons name="add-circle-outline" size={22} color="#f97316" />
+                        <Ionicons name="add-circle-outline" size={22} color="#FF6B00" />
                         <Text style={styles.addToCollectionCardText}>Adicionar aqui</Text>
                       </TouchableOpacity>
                     </View>
@@ -1140,105 +1140,105 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
   hint2: { color: '#737373', fontSize: 11, paddingHorizontal: 16, marginBottom: 14, lineHeight: 16 },
-  sectionToggleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 14 },
-  sectionToggleLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', marginBottom: 4 },
-  newButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
-  newButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
+  sectionToggleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 14 },
+  sectionToggleLabel: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', marginBottom: 4 },
+  newButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
+  newButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  productCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, marginBottom: 12 },
+  productCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 12 },
   productCardTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  productIconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },
-  productName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  productIconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
+  productName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   productMeta: { color: '#737373', fontSize: 10, marginTop: 2 },
   addonTag: { alignSelf: 'flex-start', backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginTop: 10 },
-  addonTagText: { color: '#0a0a0a', fontSize: 9, fontWeight: '800' },
-  productActionsPrimaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
-  productActionChip: { backgroundColor: '#0a0a0a', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
+  addonTagText: { color: '#0F0F12', fontSize: 9, fontWeight: '800' },
+  productActionsPrimaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0F0F12' },
+  productActionChip: { backgroundColor: '#0F0F12', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   productActionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 10 },
   previewLink: { color: '#a855f7', fontSize: 12, fontWeight: '700' },
   manageLink: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
   collectionsHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  collectionsAddLink: { color: '#f97316', fontSize: 12, fontWeight: '700', marginTop: 14 },
+  collectionsAddLink: { color: '#FF6B00', fontSize: 12, fontWeight: '700', marginTop: 14 },
   collectionGroup: { marginBottom: 20 },
-  collectionGroupHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 10, marginTop: 8, marginBottom: 10 },
-  collectionGroupCoverWrap: { width: 44, height: 44, borderRadius: 8, backgroundColor: '#0a0a0a', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  collectionGroupHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 10, marginTop: 8, marginBottom: 10 },
+  collectionGroupCoverWrap: { width: 44, height: 44, borderRadius: 8, backgroundColor: '#0F0F12', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   collectionGroupCoverImage: { width: '100%', height: '100%' },
   collectionGroupCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  collectionGroupName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  collectionGroupName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   collectionGroupCount: { color: '#737373', fontSize: 10, marginTop: 2 },
-  addToCollectionCard: { width: '47%', minHeight: 140, borderWidth: 1, borderColor: '#292524', borderStyle: 'dashed', borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  addToCollectionCardText: { color: '#f97316', fontSize: 11, fontWeight: '700' },
+  addToCollectionCard: { width: '47%', minHeight: 140, borderWidth: 1, borderColor: '#2B2B36', borderStyle: 'dashed', borderRadius: 14, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  addToCollectionCardText: { color: '#FF6B00', fontSize: 11, fontWeight: '700' },
   productGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  productGridCard: { width: '47%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, overflow: 'hidden' },
-  productCoverWrap: { width: '100%', aspectRatio: 1, backgroundColor: '#0a0a0a', position: 'relative' },
+  productGridCard: { width: '47%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, overflow: 'hidden' },
+  productCoverWrap: { width: '100%', aspectRatio: 1, backgroundColor: '#0F0F12', position: 'relative' },
   metaBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 },
-  metaBadge: { color: '#a3a3a3', fontSize: 9, fontWeight: '700', backgroundColor: '#0a0a0a', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  metaBadge: { color: '#a3a3a3', fontSize: 9, fontWeight: '700', backgroundColor: '#0F0F12', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   productCoverImage: { width: '100%', height: '100%' },
   productCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   addonTagOverlay: { position: 'absolute', top: 8, left: 8, backgroundColor: 'rgba(34,197,94,0.9)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
   inactiveOverlay: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.75)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
   inactiveOverlayText: { color: '#a3a3a3', fontSize: 8, fontWeight: '800' },
   productGridInfo: { padding: 10 },
-  productGridName: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', minHeight: 32 },
-  productGridPrice: { color: '#f97316', fontSize: 15, fontWeight: '800', marginTop: 6 },
-  productGridActions: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  productGridName: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', minHeight: 32 },
+  productGridPrice: { color: '#FF6B00', fontSize: 15, fontWeight: '800', marginTop: 6 },
+  productGridActions: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0F0F12' },
   previewSectionLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 10 },
-  saleCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 20, alignItems: 'center' },
-  saleIconCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  saleName: { color: '#f5f5f5', fontSize: 17, fontWeight: '800', textAlign: 'center' },
+  saleCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, padding: 20, alignItems: 'center' },
+  saleIconCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  saleName: { color: '#F5F5F7', fontSize: 17, fontWeight: '800', textAlign: 'center' },
   saleDescription: { color: '#a3a3a3', fontSize: 12, textAlign: 'center', marginTop: 8, lineHeight: 18 },
-  salePrice: { color: '#f97316', fontSize: 20, fontWeight: '800', marginTop: 14 },
-  saleButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 32, marginTop: 16 },
-  saleButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
-  previewRecipeList: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 8 },
+  salePrice: { color: '#FF6B00', fontSize: 20, fontWeight: '800', marginTop: 14 },
+  saleButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 32, marginTop: 16 },
+  saleButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
+  previewRecipeList: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 8 },
   previewRecipeRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingHorizontal: 6 },
-  previewRecipeThumb: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  previewRecipeTitle: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flex: 1 },
+  previewRecipeThumb: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
+  previewRecipeTitle: { color: '#F5F5F7', fontSize: 12, fontWeight: '600', flex: 1 },
   editLink: { color: '#3b82f6', fontSize: 12, fontWeight: '700' },
   deleteLink: { fontSize: 12, color: '#ef4444', fontWeight: '700' },
-  studentGrantRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8 },
-  studentGrantName: { color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
-  grantLink: { color: '#f97316', fontSize: 12, fontWeight: '700' },
+  studentGrantRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8 },
+  studentGrantName: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  grantLink: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
   revokeLink: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 14 },
-  coverPicker: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 6, overflow: 'hidden' },
-  coverPickerRequired: { borderColor: '#f97316', borderStyle: 'dashed' },
+  coverPicker: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 6, overflow: 'hidden' },
+  coverPickerRequired: { borderColor: '#FF6B00', borderStyle: 'dashed' },
   coverPreview: { width: '100%', height: '100%' },
   coverPickerText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
   typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  typeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  typeChipActive: { backgroundColor: '#E05A17', borderColor: '#E05A17' },
+  typeChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  typeChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   typeChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  typeChipTextActive: { color: '#0a0a0a' },
-  input: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13 },
-  textArea: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13, minHeight: 70, textAlignVertical: 'top' },
+  typeChipTextActive: { color: '#0F0F12' },
+  input: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
+  textArea: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13, minHeight: 70, textAlignVertical: 'top' },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   currencyPrefix: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  priceInput: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13 },
+  priceInput: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
   deliveryTypeRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  deliveryTypeChip: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
-  deliveryTypeChipActive: { backgroundColor: '#E05A17', borderColor: '#E05A17' },
+  deliveryTypeChip: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
+  deliveryTypeChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   deliveryTypeChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', textAlign: 'center' },
-  deliveryTypeChipTextActive: { color: '#0a0a0a' },
-  filePickerButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1, borderColor: '#f97316', borderStyle: 'dashed', borderRadius: 8, paddingVertical: 12, marginBottom: 8 },
-  filePickerButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
+  deliveryTypeChipTextActive: { color: '#0F0F12' },
+  filePickerButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(255,107,0,0.1)', borderWidth: 1, borderColor: '#FF6B00', borderStyle: 'dashed', borderRadius: 8, paddingVertical: 12, marginBottom: 8 },
+  filePickerButtonText: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
   fileConfirmBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(34,197,94,0.1)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10 },
   fileConfirmText: { flex: 1, color: '#22c55e', fontSize: 12, fontWeight: '600' },
   helperText: { color: '#525252', fontSize: 11 },
   accessLevelFormRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
-  accessLevelFormChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  accessLevelFormChipActive: { backgroundColor: '#E05A17', borderColor: '#E05A17' },
+  accessLevelFormChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  accessLevelFormChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   accessLevelFormChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  accessLevelFormChipTextActive: { color: '#0a0a0a' },
-  recipeChecklist: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 8 },
+  accessLevelFormChipTextActive: { color: '#0F0F12' },
+  recipeChecklist: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, padding: 8 },
   recipeCheckRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingHorizontal: 6 },
-  checkbox: { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: '#292524', alignItems: 'center', justifyContent: 'center' },
-  checkboxChecked: { backgroundColor: '#f97316', borderColor: '#f97316' },
-  recipeCheckLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flexShrink: 1, flex: 1 },
+  checkbox: { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center' },
+  checkboxChecked: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
+  recipeCheckLabel: { color: '#F5F5F7', fontSize: 12, fontWeight: '600', flexShrink: 1, flex: 1 },
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 },
-  switchLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flexShrink: 1, marginRight: 8 },
-  saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
-  saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
+  switchLabel: { color: '#F5F5F7', fontSize: 12, fontWeight: '600', flexShrink: 1, marginRight: 8 },
+  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
+  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
 });

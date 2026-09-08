@@ -434,7 +434,7 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
         )}
 
         <TouchableOpacity style={styles.anamneseButton} onPress={() => setShowAnamnese(true)}>
-          <Ionicons name="clipboard-outline" size={16} color="#0a0a0a" />
+          <Ionicons name="clipboard-outline" size={16} color="#0F0F12" />
           <Text style={styles.anamneseButtonText}>Abrir Anamnese</Text>
         </TouchableOpacity>
       </View>
@@ -472,7 +472,7 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
           </Text>
           <View style={styles.suggestionButtonRow}>
             <TouchableOpacity style={styles.suggestionApplyButton} onPress={handleApplySuggestedTemplate} disabled={applyingSuggestion}>
-              {applyingSuggestion ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.suggestionApplyButtonText}>Aplicar esta ficha</Text>}
+              {applyingSuggestion ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.suggestionApplyButtonText}>Aplicar esta ficha</Text>}
             </TouchableOpacity>
             <TouchableOpacity style={styles.suggestionCustomButton} onPress={() => setBuildingFor(true)}>
               <Text style={styles.suggestionCustomButtonText}>Personalizar / Escolher outro</Text>
@@ -540,14 +540,14 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
 
       {attendanceMode === 'presencial' && (
         <TouchableOpacity style={styles.presencialButton} onPress={() => setShowPresencialSession(true)}>
-          <Ionicons name="play-circle-outline" size={18} color="#0a0a0a" />
+          <Ionicons name="play-circle-outline" size={18} color="#0F0F12" />
           <Text style={styles.presencialButtonText}>Modo Aula Presencial</Text>
         </TouchableOpacity>
       )}
 
       <View style={styles.actionsGrid}>
         <TouchableOpacity style={styles.actionButton} onPress={() => setBuildingFor(true)}>
-          <Ionicons name="barbell-outline" size={22} color="#f97316" />
+          <Ionicons name="barbell-outline" size={22} color="#FF6B00" />
           <Text style={styles.actionLabel}>Treino</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton} onPress={() => setDietBuildingFor(true)}>
@@ -565,7 +565,7 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
       </View>
 
       <TouchableOpacity style={styles.summaryButton} onPress={() => setShowSummary(true)}>
-        <Ionicons name="stats-chart-outline" size={18} color="#0a0a0a" />
+        <Ionicons name="stats-chart-outline" size={18} color="#0F0F12" />
         <Text style={styles.summaryButtonText}>Gerar Resumo Semanal</Text>
       </TouchableOpacity>
 
@@ -580,13 +580,13 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  summaryHeaderCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 14, marginBottom: 16 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
+  summaryHeaderCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, padding: 14, marginBottom: 16 },
   summaryHeaderTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  avatarCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#0a0a0a', borderWidth: 2, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#0F0F12', borderWidth: 2, borderColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImage: { width: 56, height: 56 },
-  avatarLetter: { color: '#f97316', fontSize: 20, fontWeight: '800' },
-  studentName: { color: '#f5f5f5', fontSize: 17, fontWeight: '800' },
+  avatarLetter: { color: '#FF6B00', fontSize: 20, fontWeight: '800' },
+  studentName: { color: '#F5F5F7', fontSize: 17, fontWeight: '800' },
   studentEmail: { color: '#737373', fontSize: 12, marginTop: 2 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' },
@@ -594,39 +594,39 @@ const styles = StyleSheet.create({
   statusText: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
   statusTextInactive: { color: '#ef4444' },
   chatShortcutButton: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', alignItems: 'center', justifyContent: 'center' },
-  anamneseButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
-  anamneseButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '700' },
+  anamneseButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
+  anamneseButtonText: { color: '#0F0F12', fontSize: 12, fontWeight: '700' },
   healthAlertRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
   healthAlertBadge: { backgroundColor: 'rgba(239,68,68,0.12)', borderWidth: 1, borderColor: '#ef4444', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5, maxWidth: '100%' },
   healthAlertBadgeText: { color: '#ef4444', fontSize: 10, fontWeight: '700' },
-  anamneseSummaryCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, marginBottom: 16 },
+  anamneseSummaryCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 16 },
   anamneseSummaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  anamneseSummaryTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
-  anamneseSummaryLink: { color: '#f97316', fontSize: 11, fontWeight: '700' },
+  anamneseSummaryTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  anamneseSummaryLink: { color: '#FF6B00', fontSize: 11, fontWeight: '700' },
   anamneseSummaryLine: { color: '#a3a3a3', fontSize: 12, marginTop: 4 },
-  suggestionCard: { backgroundColor: 'rgba(249,115,22,0.08)', borderWidth: 1, borderColor: '#f97316', borderRadius: 14, padding: 14, marginBottom: 16 },
-  suggestionTitle: { color: '#f97316', fontSize: 13, fontWeight: '800' },
-  suggestionText: { color: '#f5f5f5', fontSize: 12, marginTop: 6, lineHeight: 17 },
+  suggestionCard: { backgroundColor: 'rgba(255,107,0,0.08)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, padding: 14, marginBottom: 16 },
+  suggestionTitle: { color: '#FF6B00', fontSize: 13, fontWeight: '800' },
+  suggestionText: { color: '#F5F5F7', fontSize: 12, marginTop: 6, lineHeight: 17 },
   suggestionButtonRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  suggestionApplyButton: { flex: 1, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 11, alignItems: 'center' },
-  suggestionApplyButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '800' },
-  suggestionCustomButton: { flex: 1, backgroundColor: 'transparent', borderWidth: 1, borderColor: '#f97316', borderRadius: 10, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
-  suggestionCustomButtonText: { color: '#f97316', fontSize: 11, fontWeight: '700', textAlign: 'center' },
+  suggestionApplyButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 11, alignItems: 'center' },
+  suggestionApplyButtonText: { color: '#0F0F12', fontSize: 12, fontWeight: '800' },
+  suggestionCustomButton: { flex: 1, backgroundColor: 'transparent', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 10, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
+  suggestionCustomButtonText: { color: '#FF6B00', fontSize: 11, fontWeight: '700', textAlign: 'center' },
   accessLevelBox: { marginBottom: 16 },
   accessLevelLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
   accessLevelRow: { flexDirection: 'row', gap: 8 },
-  accessLevelChip: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  accessLevelChip: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   accessLevelChipActive: { backgroundColor: '#a855f7', borderColor: '#a855f7' },
-  attendanceModeChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  attendanceModeChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   accessLevelChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
-  accessLevelChipTextActive: { color: '#0a0a0a' },
+  accessLevelChipTextActive: { color: '#0F0F12' },
   actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 12 },
-  actionButton: { width: '48%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 8 },
+  actionButton: { width: '48%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 8 },
   actionLabel: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', marginTop: 6 },
-  summaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  summaryButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
-  presencialButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  presencialButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  summaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  summaryButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
+  presencialButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  presencialButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
   financeButton: { flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: '#eab308', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   financeButtonText: { color: '#eab308', fontSize: 13, fontWeight: '700' },
 });

@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   appNameTc: { color: '#FFFFFF' },
   appNameFit: {
     color: ACCENT,
-    textShadowColor: 'rgba(224,90,23,0.55)',
+    textShadowColor: 'rgba(255,107,0,0.55)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 14,
   },
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   highlightStrip: { ...FLAT_CARD, borderWidth: 1, marginBottom: 20, gap: 12 },
   highlightTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 0.6, marginBottom: 2 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(224,90,23,0.12)', alignItems: 'center', justifyContent: 'center' },
+  trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
   exploreButton: {
     flexDirection: 'row',

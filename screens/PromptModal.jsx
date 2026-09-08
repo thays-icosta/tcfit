@@ -41,13 +41,13 @@ export default function PromptModal({ visible, title, subtitle, initialValue, pl
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
-  card: { backgroundColor: '#171717', borderRadius: 16, padding: 20 },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 6 },
+  card: { backgroundColor: '#1C1C22', borderRadius: 16, padding: 20 },
+  title: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 6 },
   subtitle: { color: '#a3a3a3', fontSize: 12, marginBottom: 14 },
-  input: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#f5f5f5', fontSize: 14, marginTop: 6 },
+  input: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#F5F5F7', fontSize: 14, marginTop: 6 },
   buttonRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
-  cancelButton: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  cancelButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   cancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  confirmButton: { flex: 1, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  confirmButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  confirmButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  confirmButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
 });

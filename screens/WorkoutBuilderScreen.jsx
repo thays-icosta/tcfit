@@ -562,7 +562,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#f97316" />
+        <ActivityIndicator color="#FF6B00" />
       </View>
     );
   }
@@ -621,7 +621,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       )}
 
       <TouchableOpacity style={styles.aiButton} onPress={handleOpenAiModal}>
-        <Ionicons name="sparkles" size={16} color="#0a0a0a" />
+        <Ionicons name="sparkles" size={16} color="#0F0F12" />
         <Text style={styles.aiButtonText}>Gerar Treino com IA</Text>
       </TouchableOpacity>
 
@@ -799,7 +799,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
                 <Text style={styles.modalCancelButtonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalConfirmButton} onPress={handleGenerateWorkoutWithAi} disabled={aiProcessing}>
-                {aiProcessing ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.modalConfirmButtonText}>Processar e Preencher</Text>}
+                {aiProcessing ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>Processar e Preencher</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -871,7 +871,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
                 <Text style={styles.modalCancelButtonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalConfirmButton} onPress={handleConfirmReplicate} disabled={replicating}>
-                {replicating ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.modalConfirmButtonText}>Aplicar a todos</Text>}
+                {replicating ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>Aplicar a todos</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -885,7 +885,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
             <Text style={styles.modalSubtitle}>Escolhe pra quais alunos você quer copiar essa ficha. O aluno atual não aparece na lista.</Text>
 
             {loadingOtherStudents ? (
-              <ActivityIndicator color="#f97316" style={{ marginVertical: 20 }} />
+              <ActivityIndicator color="#FF6B00" style={{ marginVertical: 20 }} />
             ) : otherStudents.length === 0 ? (
               <Text style={styles.emptyText}>Você não tem outros alunos ainda.</Text>
             ) : (
@@ -907,7 +907,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
                 <Text style={styles.modalCancelButtonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalConfirmButton} onPress={handleConfirmSend} disabled={sendingCopy}>
-                {sendingCopy ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.modalConfirmButtonText}>Enviar</Text>}
+                {sendingCopy ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>Enviar</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -940,7 +940,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
             <Text style={styles.modalSubtitle}>Cria uma ficha nova pra {studentName} já com todos os exercícios do template escolhido.</Text>
 
             {loadingTemplates ? (
-              <ActivityIndicator color="#f97316" style={{ marginVertical: 20 }} />
+              <ActivityIndicator color="#FF6B00" style={{ marginVertical: 20 }} />
             ) : templates.length === 0 ? (
               <Text style={styles.emptyText}>Você ainda não criou nenhum template. Vá em Perfil → Templates de Treino.</Text>
             ) : (
@@ -951,7 +951,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
                       <Text style={styles.templateOptionName}>{t.name}</Text>
                       {t.description ? <Text style={styles.templateOptionDesc} numberOfLines={2}>{t.description}</Text> : null}
                     </View>
-                    {applyingTemplateId === t.id ? <ActivityIndicator color="#f97316" size="small" /> : <Text style={styles.templateOptionArrow}>›</Text>}
+                    {applyingTemplateId === t.id ? <ActivityIndicator color="#FF6B00" size="small" /> : <Text style={styles.templateOptionArrow}>›</Text>}
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -968,86 +968,86 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
   fichaRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 4 },
-  fichaTab: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
-  fichaTabActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  fichaTab: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
+  fichaTabActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   fichaTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  fichaTabTextActive: { color: '#0a0a0a' },
+  fichaTabTextActive: { color: '#0F0F12' },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 6 },
-  aiButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#E05A17', borderRadius: 12, paddingVertical: 13, marginHorizontal: 16, marginBottom: 10 },
-  aiButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
-  aiMicButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, marginTop: 12 },
+  aiButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 13, marginHorizontal: 16, marginBottom: 10 },
+  aiButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
+  aiMicButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, marginTop: 12 },
   aiMicButtonActive: { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
   aiMicButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   aiMicButtonTextActive: { color: '#ef4444' },
   actionsRow: { marginBottom: 8 },
   actionsRowContent: { paddingHorizontal: 16, gap: 8 },
-  actionChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
+  actionChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
   actionChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   suggestionsLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginTop: 14, marginBottom: 8 },
   suggestionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  suggestionChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  suggestionChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
   suggestionChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
   phaseSelectorRow: { marginHorizontal: 16, marginBottom: 8 },
-  phaseBadge: { alignSelf: 'flex-start', backgroundColor: '#171717', borderWidth: 1, borderColor: '#a855f7', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  phaseBadge: { alignSelf: 'flex-start', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#a855f7', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
   phaseBadgeCurrent: { backgroundColor: 'rgba(168,85,247,0.15)' },
   phaseBadgeText: { color: '#a855f7', fontSize: 11, fontWeight: '700' },
   phaseSelectorPlaceholder: { color: '#525252', fontSize: 11, textDecorationLine: 'underline' },
-  summaryCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, marginHorizontal: 16, marginBottom: 6 },
+  summaryCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, marginHorizontal: 16, marginBottom: 6 },
   summaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   summaryTitle: { color: '#737373', fontSize: 9, textTransform: 'uppercase' },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
-  summaryBadge: { backgroundColor: '#0a0a0a', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', minWidth: 50 },
-  summaryBadgeCount: { color: '#f97316', fontSize: 13, fontWeight: '700' },
+  summaryBadge: { backgroundColor: '#0F0F12', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', minWidth: 50 },
+  summaryBadgeCount: { color: '#FF6B00', fontSize: 13, fontWeight: '700' },
   summaryBadgeLabel: { color: '#a3a3a3', fontSize: 8, textTransform: 'capitalize', marginTop: 1 },
-  addExerciseButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 8 },
-  addExerciseButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
-  sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
-  exerciseCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden' },
+  addExerciseButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 8 },
+  addExerciseButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
+  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
+  exerciseCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden' },
   exerciseThumbWrap: { width: '100%', height: 100, position: 'relative' },
   exerciseThumbImage: { width: '100%', height: 100 },
-  exerciseThumbPlaceholder: { width: '100%', height: 100, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  exerciseThumbMuscle: { color: '#f97316', fontSize: 13, fontWeight: '800', letterSpacing: 1 },
+  exerciseThumbPlaceholder: { width: '100%', height: 100, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
+  exerciseThumbMuscle: { color: '#FF6B00', fontSize: 13, fontWeight: '800', letterSpacing: 1 },
   playOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' },
-  playOverlayText: { color: '#f5f5f5', fontSize: 32 },
+  playOverlayText: { color: '#F5F5F7', fontSize: 32 },
   exerciseInfo: { padding: 12 },
   exerciseHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, gap: 8 },
-  exerciseName: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', flex: 1 },
+  exerciseName: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', flex: 1 },
   exerciseHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   exerciseNotes: { color: '#737373', fontSize: 10, marginTop: 8, fontStyle: 'italic' },
   moveArrow: { color: '#525252', fontSize: 12 },
-  moveArrowDisabled: { color: '#292524' },
+  moveArrowDisabled: { color: '#2B2B36' },
   metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  metricPill: { backgroundColor: '#0a0a0a', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', minWidth: 56 },
-  metricValue: { color: '#f97316', fontSize: 15, fontWeight: '800' },
+  metricPill: { backgroundColor: '#0F0F12', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', minWidth: 56 },
+  metricValue: { color: '#FF6B00', fontSize: 15, fontWeight: '800' },
   metricLabel: { color: '#525252', fontSize: 8, textTransform: 'uppercase', marginTop: 1 },
-  saveButton: { backgroundColor: '#f97316', margin: 16, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
+  saveButton: { backgroundColor: '#FF6B00', margin: 16, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
-  modalCard: { backgroundColor: '#171717', borderRadius: 16, padding: 20 },
-  modalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 6 },
+  modalCard: { backgroundColor: '#1C1C22', borderRadius: 16, padding: 20 },
+  modalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 6 },
   modalSubtitle: { color: '#a3a3a3', fontSize: 11, marginBottom: 16, lineHeight: 16 },
   modalLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 4, marginTop: 8 },
-  modalInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 13 },
+  modalInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 13 },
   modalButtonRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
-  modalCancelButton: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalCancelButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   modalCancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  modalConfirmButton: { flex: 1, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  modalConfirmButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
-  sendModalSheet: { backgroundColor: '#171717', borderRadius: 16, padding: 20, marginHorizontal: 0 },
-  targetRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
+  modalConfirmButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalConfirmButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
+  sendModalSheet: { backgroundColor: '#1C1C22', borderRadius: 16, padding: 20, marginHorizontal: 0 },
+  targetRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
   targetRowSelected: { borderColor: '#3b82f6' },
-  targetRowText: { color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
+  targetRowText: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
   targetRowCheck: { color: '#3b82f6', fontSize: 15, fontWeight: '800' },
-  phaseOption: { borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginBottom: 8 },
-  phaseOptionText: { color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
+  phaseOption: { borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginBottom: 8 },
+  phaseOptionText: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
   phaseOptionNone: { paddingVertical: 10, alignItems: 'center', marginBottom: 4 },
   phaseOptionNoneText: { color: '#525252', fontSize: 12, fontWeight: '600' },
-  templateOption: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 14, marginBottom: 8 },
-  templateOptionName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  templateOption: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, padding: 14, marginBottom: 8 },
+  templateOptionName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   templateOptionDesc: { color: '#737373', fontSize: 11, marginTop: 3 },
   templateOptionArrow: { color: '#a855f7', fontSize: 20, fontWeight: '700' },
 });

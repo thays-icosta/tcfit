@@ -315,7 +315,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
           </View>
 
           {loading ? (
-            <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+            <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
           ) : students.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum aluno ainda. Toque em &quot;+ Aluno&quot; na Início pra começar.</Text>
           ) : filteredStudents.length === 0 ? (
@@ -380,7 +380,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
           <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Nutrição</Text>
 
           <TouchableOpacity style={styles.aiShortcutCard} onPress={() => setShowStudentPicker(true)}>
-            <Ionicons name="sparkles" size={20} color="#f97316" />
+            <Ionicons name="sparkles" size={20} color="#FF6B00" />
             <View style={{ flex: 1 }}>
               <Text style={styles.aiShortcutTitle}>Gerar Dieta com IA</Text>
               <Text style={styles.aiShortcutSubtitle}>Escolha um aluno e monte um plano alimentar automaticamente</Text>
@@ -392,13 +392,13 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
           <View style={styles.shortcutGrid}>
             <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowFoodCatalog(true)}>
               <View style={styles.shortcutIconCircle}>
-                <Ionicons name="nutrition-outline" size={20} color="#f97316" />
+                <Ionicons name="nutrition-outline" size={20} color="#FF6B00" />
               </View>
               <Text style={styles.shortcutText}>Catálogo de Alimentos</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowRecipeManager(true)}>
               <View style={styles.shortcutIconCircle}>
-                <Ionicons name="book-outline" size={20} color="#f97316" />
+                <Ionicons name="book-outline" size={20} color="#FF6B00" />
               </View>
               <Text style={styles.shortcutText}>Receitas e E-books</Text>
             </TouchableOpacity>
@@ -496,7 +496,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       <View style={styles.shortcutGrid}>
         <TouchableOpacity style={[styles.shortcutCard, { width: '100%' }]} onPress={() => setShowProductsManager(true)}>
           <View style={styles.shortcutIconCircle}>
-            <Ionicons name="bag-handle-outline" size={20} color="#f97316" />
+            <Ionicons name="bag-handle-outline" size={20} color="#FF6B00" />
           </View>
           <Text style={styles.shortcutText}>Produtos Adicionais</Text>
         </TouchableOpacity>
@@ -579,7 +579,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       )}
 
       <TouchableOpacity style={styles.viewStudentsRow} onPress={() => setActiveTab('alunos')}>
-        <Ionicons name="people-outline" size={18} color="#f97316" />
+        <Ionicons name="people-outline" size={18} color="#FF6B00" />
         <View style={{ flex: 1 }}>
           <Text style={styles.viewStudentsTitle}>Meus Alunos</Text>
           <Text style={styles.viewStudentsSubtitle}>
@@ -620,71 +620,71 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
-  inviteButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-  inviteButtonText: { color: '#f97316', fontSize: 12, fontWeight: '600' },
-  summaryCard: { flexDirection: 'row', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 14, marginBottom: 12 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
+  inviteButton: { backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  inviteButtonText: { color: '#FF6B00', fontSize: 12, fontWeight: '600' },
+  summaryCard: { flexDirection: 'row', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 14, marginBottom: 12 },
   summaryItem: { flex: 1, alignItems: 'center' },
-  summaryDivider: { width: 1, backgroundColor: '#292524' },
-  summaryValue: { color: '#f5f5f5', fontSize: 16, fontWeight: '800' },
+  summaryDivider: { width: 1, backgroundColor: '#2B2B36' },
+  summaryValue: { color: '#F5F5F7', fontSize: 16, fontWeight: '800' },
   summaryLabel: { color: '#737373', fontSize: 9, marginTop: 4, textAlign: 'center' },
   shortcutGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
-  shortcutCard: { width: '47%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, paddingVertical: 16, alignItems: 'center', gap: 8 },
-  shortcutIconCircle: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },
-  shortcutText: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', textAlign: 'center' },
+  shortcutCard: { width: '47%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, paddingVertical: 16, alignItems: 'center', gap: 8 },
+  shortcutIconCircle: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
+  shortcutText: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', textAlign: 'center' },
   bannerRow: { flexDirection: 'row', marginBottom: 10 },
-  agendaBanner: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#a855f7', borderRadius: 12, padding: 14 },
+  agendaBanner: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#a855f7', borderRadius: 12, padding: 14 },
   agendaBannerTitle: { color: '#a855f7', fontSize: 13, fontWeight: '700', marginTop: 4 },
   agendaBannerSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
-  chatBanner: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#22c55e', borderRadius: 12, padding: 14 },
+  chatBanner: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#22c55e', borderRadius: 12, padding: 14 },
   chatBannerTitle: { color: '#22c55e', fontSize: 13, fontWeight: '700', marginTop: 4 },
   chatBannerSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
-  sectionTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginBottom: 12 },
+  sectionTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '700', marginBottom: 12 },
   sectionTitleSpaced: { marginTop: 20 },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12 },
-  checkinRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 12, marginBottom: 8 },
-  checkinAvatarCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  checkinRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 8 },
+  checkinAvatarCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   checkinAvatarImage: { width: 36, height: 36 },
-  checkinAvatarLetter: { color: '#f97316', fontSize: 13, fontWeight: '800' },
-  checkinName: { flex: 1, color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
+  checkinAvatarLetter: { color: '#FF6B00', fontSize: 13, fontWeight: '800' },
+  checkinName: { flex: 1, color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
   checkinDoneTag: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   checkinDoneTagText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
-  viewStudentsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, marginTop: 4 },
-  viewStudentsTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
+  viewStudentsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginTop: 4 },
+  viewStudentsTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
   viewStudentsSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
-  aiShortcutCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1, borderColor: '#f97316', borderRadius: 14, padding: 16, marginBottom: 8 },
-  aiShortcutTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
+  aiShortcutCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,107,0,0.1)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, padding: 16, marginBottom: 8 },
+  aiShortcutTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
   aiShortcutSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
-  recentDietCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 10 },
-  recentDietName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  recentDietCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
+  recentDietName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   recentDietStudent: { color: '#737373', fontSize: 11, marginTop: 2 },
   recentDietActiveBadge: { backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
   recentDietActiveBadgeText: { color: '#22c55e', fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
-  studentPickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#292524' },
-  studentPickerName: { color: '#f5f5f5', fontSize: 14, fontWeight: '600' },
-  studentFilterTabs: { flexDirection: 'row', backgroundColor: '#171717', borderRadius: 10, padding: 3, marginBottom: 10, gap: 4 },
+  studentPickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2B2B36' },
+  studentPickerName: { color: '#F5F5F7', fontSize: 14, fontWeight: '600' },
+  studentFilterTabs: { flexDirection: 'row', backgroundColor: '#1C1C22', borderRadius: 10, padding: 3, marginBottom: 10, gap: 4 },
   studentFilterTab: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 8 },
-  studentFilterTabActive: { backgroundColor: '#f97316' },
+  studentFilterTabActive: { backgroundColor: '#FF6B00' },
   studentFilterTabText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', textAlign: 'center' },
-  studentFilterTabTextActive: { color: '#0a0a0a' },
-  studentSearchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 14 },
-  studentSearchInput: { flex: 1, color: '#f5f5f5', fontSize: 13 },
-  studentCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, marginBottom: 10 },
-  avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center', marginRight: 12, overflow: 'hidden' },
+  studentFilterTabTextActive: { color: '#0F0F12' },
+  studentSearchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 14 },
+  studentSearchInput: { flex: 1, color: '#F5F5F7', fontSize: 13 },
+  studentCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 10 },
+  avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center', marginRight: 12, overflow: 'hidden' },
   avatarImage: { width: 44, height: 44 },
-  avatarLetter: { color: '#f97316', fontSize: 17, fontWeight: '800' },
-  studentName: { color: '#f5f5f5', fontSize: 15, fontWeight: '600' },
+  avatarLetter: { color: '#FF6B00', fontSize: 17, fontWeight: '800' },
+  studentName: { color: '#F5F5F7', fontSize: 15, fontWeight: '600' },
   studentEmail: { color: '#737373', fontSize: 11, marginTop: 1 },
   badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 5 },
   planBadge: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
   planBadgeVip: { backgroundColor: 'rgba(168,85,247,0.12)' },
   planBadgeApp: { backgroundColor: 'rgba(115,115,115,0.16)' },
-  planBadgePresencial: { backgroundColor: 'rgba(249,115,22,0.12)' },
+  planBadgePresencial: { backgroundColor: 'rgba(255,107,0,0.12)' },
   planBadgeOnline: { backgroundColor: 'rgba(59,130,246,0.12)' },
   planBadgeText: { fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
   planBadgeTextVip: { color: '#a855f7' },
   planBadgeTextApp: { color: '#a3a3a3' },
-  planBadgeTextPresencial: { color: '#f97316' },
+  planBadgeTextPresencial: { color: '#FF6B00' },
   planBadgeTextOnline: { color: '#3b82f6' },
   statusTag: { alignItems: 'flex-end', marginRight: 8 },
   statusDot: { width: 8, height: 8, borderRadius: 4, marginBottom: 3 },
@@ -693,19 +693,19 @@ const styles = StyleSheet.create({
   statusTagText: { color: '#525252', fontSize: 9 },
   alertTag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(239,68,68,0.12)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 3, marginTop: 4 },
   alertTagText: { color: '#ef4444', fontSize: 9, fontWeight: '700' },
-  alertRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', borderRadius: 12, padding: 12, marginBottom: 8 },
+  alertRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', borderRadius: 12, padding: 12, marginBottom: 8 },
   chevron: { color: '#525252', fontSize: 22, fontWeight: '300' },
-  button: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 20 },
-  buttonText: { color: '#f97316', fontSize: 15, fontWeight: '700' },
+  button: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 20 },
+  buttonText: { color: '#FF6B00', fontSize: 15, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#171717', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
-  modalTitle: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginBottom: 6 },
+  modalSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
+  modalTitle: { color: '#F5F5F7', fontSize: 18, fontWeight: '800', marginBottom: 6 },
   modalSubtitle: { color: '#a3a3a3', fontSize: 12, marginBottom: 16 },
-  modalCodeBox: { backgroundColor: '#0a0a0a', borderRadius: 10, padding: 14, marginBottom: 16 },
-  modalCodeText: { color: '#f97316', fontSize: 11, fontFamily: 'Courier' },
-  modalButton: { backgroundColor: '#0a0a0a', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
+  modalCodeBox: { backgroundColor: '#0F0F12', borderRadius: 10, padding: 14, marginBottom: 16 },
+  modalCodeText: { color: '#FF6B00', fontSize: 11, fontFamily: 'Courier' },
+  modalButton: { backgroundColor: '#0F0F12', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
   modalButtonDone: { backgroundColor: 'rgba(34,197,94,0.15)' },
-  modalButtonText: { color: '#f97316', fontSize: 13, fontWeight: '700' },
+  modalButtonText: { color: '#FF6B00', fontSize: 13, fontWeight: '700' },
   modalCloseButton: { paddingVertical: 10, alignItems: 'center', marginTop: 4 },
   modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
 });

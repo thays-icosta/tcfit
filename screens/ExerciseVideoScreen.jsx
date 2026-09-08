@@ -19,7 +19,7 @@ function YoutubeVideo({ videoId }) {
     return (
       <iframe
         src={embedUrl}
-        style={{ width: '100%', height: 260, border: 0, backgroundColor: '#171717' }}
+        style={{ width: '100%', height: 260, border: 0, backgroundColor: '#1C1C22' }}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
       />
@@ -47,6 +47,6 @@ export default function ExerciseVideoScreen({ videoUrl, exerciseName, onClose })
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  video: { width: '100%', height: 260, backgroundColor: '#171717' },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  video: { width: '100%', height: 260, backgroundColor: '#1C1C22' },
 });

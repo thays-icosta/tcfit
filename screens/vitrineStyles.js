@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 // (WelcomeScreen, PlansSection, MaterialsSection, WorkoutsSection),
 // so every section/card uses the same typography scale and card shell.
 
-export const ACCENT = '#E05A17';
+export const ACCENT = '#FF6B00';
 
 export const TRANSITION = Platform.OS === 'web'
   ? { transitionProperty: 'all', transitionDuration: '200ms', transitionTimingFunction: 'ease' }
@@ -60,7 +60,7 @@ export const SUPPORT_TEXT = {
 export const CARD_DESCRIPTION = { fontSize: 12, fontWeight: '400', color: '#A1A1AA', lineHeight: 17 };
 
 export const CARD_BADGE = {
-  backgroundColor: 'rgba(224,90,23,0.12)',
+  backgroundColor: 'rgba(255,107,0,0.12)',
   borderRadius: 8,
   paddingHorizontal: 8,
   paddingVertical: 3,

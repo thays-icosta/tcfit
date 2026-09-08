@@ -109,7 +109,7 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
             {personalName ? `${personalName} pode montar` : 'Seu personal pode montar'} sua ficha de treino do zero, sob medida pras suas necessidades específicas.
           </Text>
           <TouchableOpacity style={styles.upsellButton} onPress={handleUpsellConsultoria}>
-            <Ionicons name="logo-whatsapp" size={16} color="#0a0a0a" />
+            <Ionicons name="logo-whatsapp" size={16} color="#0F0F12" />
             <Text style={styles.upsellButtonText}>Quero Consultoria Individual</Text>
           </TouchableOpacity>
         </View>
@@ -130,7 +130,7 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
       )}
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           {products.length === 0 ? (
@@ -152,12 +152,12 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
                         <Image source={{ uri: p.cover_image_url }} style={styles.coverImage} resizeMode="cover" />
                       ) : (
                         <View style={styles.coverPlaceholder}>
-                          <Ionicons name={p.type === 'treino_template' ? 'barbell-outline' : 'pricetag-outline'} size={26} color="#f97316" />
+                          <Ionicons name={p.type === 'treino_template' ? 'barbell-outline' : 'pricetag-outline'} size={26} color="#FF6B00" />
                         </View>
                       )}
                       {!unlocked && (
                         <View style={styles.lockOverlay}>
-                          <Ionicons name="lock-closed" size={20} color="#f5f5f5" />
+                          <Ionicons name="lock-closed" size={20} color="#F5F5F7" />
                         </View>
                       )}
                     </View>
@@ -187,25 +187,25 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  upsellCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#f97316', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 16 },
-  upsellTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '800', marginBottom: 6 },
+  upsellCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, padding: 16, marginHorizontal: 16, marginBottom: 16 },
+  upsellTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '800', marginBottom: 6 },
   upsellText: { color: '#a3a3a3', fontSize: 12, lineHeight: 17, marginBottom: 14 },
-  upsellButton: { flexDirection: 'row', gap: 8, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
-  upsellButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '800' },
+  upsellButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
+  upsellButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '800' },
   tabScroll: { marginBottom: 14, flexGrow: 0 },
-  tabChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
-  tabChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  tabChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
+  tabChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   tabChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
-  tabChipTextActive: { color: '#0a0a0a' },
+  tabChipTextActive: { color: '#0F0F12' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  card: { width: '47%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, overflow: 'hidden' },
-  coverWrap: { width: '100%', aspectRatio: 1, backgroundColor: '#0a0a0a', position: 'relative' },
+  card: { width: '47%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, overflow: 'hidden' },
+  coverWrap: { width: '100%', aspectRatio: 1, backgroundColor: '#0F0F12', position: 'relative' },
   coverImage: { width: '100%', height: '100%' },
   coverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   lockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
   cardInfo: { padding: 10 },
-  cardName: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', minHeight: 32 },
-  cardPrice: { color: '#f97316', fontSize: 15, fontWeight: '800', marginTop: 6 },
+  cardName: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', minHeight: 32 },
+  cardPrice: { color: '#FF6B00', fontSize: 15, fontWeight: '800', marginTop: 6 },
 });

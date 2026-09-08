@@ -52,9 +52,9 @@ export default function PhysicalAssessmentScreen({ studentId, studentName, perso
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
   studentLabel: { color: '#737373', fontSize: 12, marginBottom: 24 },
-  optionCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 20, alignItems: 'center', marginBottom: 14 },
-  optionTitle: { color: '#f5f5f5', fontSize: 15, fontWeight: '700', marginTop: 10 },
+  optionCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 20, alignItems: 'center', marginBottom: 14 },
+  optionTitle: { color: '#F5F5F7', fontSize: 15, fontWeight: '700', marginTop: 10 },
   optionSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 4, textAlign: 'center' },
 });

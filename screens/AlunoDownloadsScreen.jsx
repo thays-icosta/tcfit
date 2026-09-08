@@ -36,7 +36,7 @@ export default function AlunoDownloadsScreen({ studentId, personalId }) {
       <Text style={styles.subtitle}>Arquivos e e-books que você já desbloqueou.</Text>
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : files.length === 0 ? (
         <Text style={styles.emptyText}>Nenhum arquivo desbloqueado ainda. Veja em “Conteúdos e Produtos” na Home o que tem disponível.</Text>
       ) : (
@@ -45,7 +45,7 @@ export default function AlunoDownloadsScreen({ studentId, personalId }) {
             const fileUrl = f.pdf_url || f.delivery_value;
             return (
               <TouchableOpacity key={f.id} style={styles.fileRow} onPress={() => Linking.openURL(fileUrl).catch(() => {})}>
-                <Ionicons name={fileUrl.toLowerCase().includes('.pdf') ? 'document-text-outline' : 'link-outline'} size={20} color="#f97316" />
+                <Ionicons name={fileUrl.toLowerCase().includes('.pdf') ? 'document-text-outline' : 'link-outline'} size={20} color="#FF6B00" />
                 <Text style={styles.fileName} numberOfLines={1}>{f.name}</Text>
                 <Ionicons name="download-outline" size={18} color="#737373" />
               </TouchableOpacity>
@@ -58,10 +58,10 @@ export default function AlunoDownloadsScreen({ studentId, personalId }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', padding: 24, paddingTop: 60 },
-  title: { color: '#f5f5f5', fontSize: 20, fontWeight: '700', marginBottom: 6 },
+  container: { flex: 1, backgroundColor: '#0F0F12', padding: 24, paddingTop: 60 },
+  title: { color: '#F5F5F7', fontSize: 20, fontWeight: '700', marginBottom: 6 },
   subtitle: { color: '#737373', fontSize: 12, marginBottom: 20 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30, lineHeight: 19 },
-  fileRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 10 },
-  fileName: { flex: 1, color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
+  fileRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
+  fileName: { flex: 1, color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
 });

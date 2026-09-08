@@ -155,7 +155,7 @@ export default function PartnerBrandsManagerScreen({ personalId, onClose }) {
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           <TouchableOpacity style={styles.logoPicker} onPress={handlePickLogo} disabled={uploadingLogo}>
             {uploadingLogo ? (
-              <ActivityIndicator color="#f97316" />
+              <ActivityIndicator color="#FF6B00" />
             ) : logoUrl ? (
               <Image source={{ uri: logoUrl }} style={styles.logoPreview} resizeMode="contain" />
             ) : (
@@ -175,11 +175,11 @@ export default function PartnerBrandsManagerScreen({ personalId, onClose }) {
 
           <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>Marca ativa (visível para os alunos)</Text>
-            <Switch value={active} onValueChange={setActive} trackColor={{ false: '#292524', true: '#f97316' }} thumbColor="#f5f5f5" />
+            <Switch value={active} onValueChange={setActive} trackColor={{ false: '#2B2B36', true: '#FF6B00' }} thumbColor="#F5F5F7" />
           </View>
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-            {saving ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Salvar Marca</Text>}
+            {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar Marca</Text>}
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -195,7 +195,7 @@ export default function PartnerBrandsManagerScreen({ personalId, onClose }) {
           <Text style={styles.sectionToggleLabel}>Exibir seção “Marcas Parceiras” pros alunos {savingSectionToggle && '(salvando...)'}</Text>
           <Text style={styles.helperText}>Desligue pra esconder a seção inteira sem precisar apagar as marcas cadastradas.</Text>
         </View>
-        <Switch value={sectionEnabled} onValueChange={handleToggleSection} trackColor={{ false: '#292524', true: '#22c55e' }} thumbColor="#f5f5f5" />
+        <Switch value={sectionEnabled} onValueChange={handleToggleSection} trackColor={{ false: '#2B2B36', true: '#22c55e' }} thumbColor="#F5F5F7" />
       </View>
 
       <TouchableOpacity style={styles.newButton} onPress={handleOpenNew}>
@@ -203,7 +203,7 @@ export default function PartnerBrandsManagerScreen({ personalId, onClose }) {
       </TouchableOpacity>
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           {brands.length === 0 ? (
@@ -215,7 +215,7 @@ export default function PartnerBrandsManagerScreen({ personalId, onClose }) {
                   {b.logo_url ? (
                     <Image source={{ uri: b.logo_url }} style={styles.brandLogoImage} resizeMode="contain" />
                   ) : (
-                    <Ionicons name="pricetag-outline" size={20} color="#f97316" />
+                    <Ionicons name="pricetag-outline" size={20} color="#FF6B00" />
                   )}
                 </View>
                 <View style={{ flex: 1 }}>
@@ -241,27 +241,27 @@ export default function PartnerBrandsManagerScreen({ personalId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  sectionToggleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 14 },
-  sectionToggleLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', marginBottom: 4 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  sectionToggleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 14 },
+  sectionToggleLabel: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', marginBottom: 4 },
   helperText: { color: '#525252', fontSize: 11, lineHeight: 15 },
-  newButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
-  newButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
+  newButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
+  newButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  brandCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 12, marginBottom: 10 },
-  brandLogoWrap: { width: 48, height: 48, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  brandCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 12, marginBottom: 10 },
+  brandLogoWrap: { width: 48, height: 48, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   brandLogoImage: { width: '100%', height: '100%' },
-  brandName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  brandName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   brandCoupon: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
   brandInactive: { color: '#ef4444', fontSize: 10, fontWeight: '700', marginTop: 2 },
   brandActions: { flexDirection: 'row', gap: 14 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 14 },
-  logoPicker: { height: 120, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 6, overflow: 'hidden', padding: 16 },
+  logoPicker: { height: 120, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 6, overflow: 'hidden', padding: 16 },
   logoPreview: { width: '100%', height: '100%' },
   logoPickerText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  input: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13 },
+  input: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 },
-  switchLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flexShrink: 1, marginRight: 8 },
-  saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
-  saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
+  switchLabel: { color: '#F5F5F7', fontSize: 12, fontWeight: '600', flexShrink: 1, marginRight: 8 },
+  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
+  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
 });

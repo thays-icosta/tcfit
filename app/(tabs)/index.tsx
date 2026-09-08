@@ -100,8 +100,8 @@ export default function HomeTab() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color="#f97316" />
+      <View style={{ flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color="#FF6B00" />
       </View>
     );
   }

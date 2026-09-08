@@ -94,7 +94,7 @@ export default function FoodSubstituteScreen() {
         </View>
 
         <TouchableOpacity style={styles.searchButton} onPress={handleSearch} disabled={loading}>
-          {loading ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.searchButtonText}>Buscar Equivalentes</Text>}
+          {loading ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.searchButtonText}>Buscar Equivalentes</Text>}
         </TouchableOpacity>
 
         {searched && matched && (
@@ -112,7 +112,7 @@ export default function FoodSubstituteScreen() {
             {results.map((f) => (
               <View key={f.id} style={styles.resultCard}>
                 <View style={styles.resultIconCircle}>
-                  <Ionicons name="swap-horizontal-outline" size={16} color="#f97316" />
+                  <Ionicons name="swap-horizontal-outline" size={16} color="#FF6B00" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.resultName}>{f.name}</Text>
@@ -133,13 +133,13 @@ export default function FoodSubstituteScreen() {
 const styles = StyleSheet.create({
   intro: { color: '#a3a3a3', fontSize: 12, lineHeight: 18, marginTop: 4, marginBottom: 14 },
   searchRow: { flexDirection: 'row', gap: 8 },
-  input: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#f5f5f5', fontSize: 13 },
-  searchButton: { backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 13, alignItems: 'center', marginTop: 10 },
-  searchButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
-  matchedText: { color: '#f97316', fontSize: 12, fontWeight: '700', marginTop: 16, textAlign: 'center' },
+  input: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
+  searchButton: { backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 13, alignItems: 'center', marginTop: 10 },
+  searchButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
+  matchedText: { color: '#FF6B00', fontSize: 12, fontWeight: '700', marginTop: 16, textAlign: 'center' },
   emptyText: { color: '#525252', fontSize: 12, textAlign: 'center', marginTop: 16 },
-  resultCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 12, marginBottom: 8 },
-  resultIconCircle: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },
-  resultName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  resultCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 8 },
+  resultIconCircle: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
+  resultName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   resultMeta: { color: '#737373', fontSize: 11, marginTop: 2 },
 });

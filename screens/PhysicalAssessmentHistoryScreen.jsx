@@ -17,7 +17,7 @@ const SEGMENT_META = {
 const CLASS_META = {
   abaixo: { label: 'Abaixo', color: '#3b82f6' },
   padrao: { label: 'Padrão', color: '#22c55e' },
-  acima: { label: 'Acima', color: '#f97316' },
+  acima: { label: 'Acima', color: '#FF6B00' },
 };
 
 // Renders `html` (a full <html>...</html> document string) into a hidden
@@ -149,7 +149,7 @@ function buildPerimeterChartHtml(rawPoints) {
   const metrics = [
     { key: 'cintura', label: 'Cintura', color: '#3b82f6' },
     { key: 'quadril', label: 'Quadril', color: '#a855f7' },
-    { key: 'peitoral', label: 'Peitoral', color: '#f97316' },
+    { key: 'peitoral', label: 'Peitoral', color: '#FF6B00' },
     { key: 'bracos', label: 'Braços', color: '#22c55e' },
     { key: 'coxas', label: 'Coxas', color: '#ef4444' },
   ];
@@ -279,7 +279,7 @@ function buildSegmentalMapHtml(segmental) {
 function buildReportHtml(studentName, assessments, branding) {
   const latest = assessments[0];
   const previous = assessments[1];
-  const brandColor = '#E05A17';
+  const brandColor = '#FF6B00';
 
   const formatDate = (iso) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
@@ -573,14 +573,14 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
       {!embedded && <Text style={styles.title}>Evolução Física</Text>}
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 30 }} />
       ) : assessments.length === 0 ? (
         <Text style={styles.emptyText}>Nenhuma avaliação registrada ainda.</Text>
       ) : (
         <>
           <TouchableOpacity style={styles.pdfButton} onPress={() => setShowExportModal(true)} disabled={generatingPdf}>
             {generatingPdf ? (
-              <ActivityIndicator color="#0a0a0a" size="small" />
+              <ActivityIndicator color="#0F0F12" size="small" />
             ) : (
               <Text style={styles.pdfButtonText}>📄 Gerar PDF e Compartilhar</Text>
             )}
@@ -635,7 +635,7 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
               </TouchableOpacity>
             )}
 
-            <SimpleBarChart data={assessments} valueKey="weight_kg" label="Evolução de Peso" color="#f97316" unit="kg" />
+            <SimpleBarChart data={assessments} valueKey="weight_kg" label="Evolução de Peso" color="#FF6B00" unit="kg" />
             <SimpleBarChart data={assessments} valueKey="body_fat_pct" label="Evolução de % Gordura" color="#ef4444" unit="%" />
             <SimpleBarChart data={assessments} valueKey="skeletal_muscle_kg" label="Evolução de Massa Magra" color="#22c55e" unit="kg" />
 
@@ -669,8 +669,8 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
               <Switch
                 value={exportWithBranding}
                 onValueChange={setExportWithBranding}
-                trackColor={{ false: '#292524', true: '#22c55e' }}
-                thumbColor="#f5f5f5"
+                trackColor={{ false: '#2B2B36', true: '#22c55e' }}
+                thumbColor="#F5F5F7"
                 disabled={!branding?.logoUrl}
               />
             </View>
@@ -684,8 +684,8 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
                 <Switch
                   value={exportWithAttachment}
                   onValueChange={setExportWithAttachment}
-                  trackColor={{ false: '#292524', true: '#22c55e' }}
-                  thumbColor="#f5f5f5"
+                  trackColor={{ false: '#2B2B36', true: '#22c55e' }}
+                  thumbColor="#F5F5F7"
                 />
               </View>
             )}
@@ -707,49 +707,49 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
   containerEmbedded: { paddingTop: 12 },
-  title: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginBottom: 14 },
+  title: { color: '#F5F5F7', fontSize: 18, fontWeight: '800', marginBottom: 14 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  pdfButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 16 },
-  pdfButtonText: { color: '#f97316', fontSize: 14, fontWeight: '700' },
+  pdfButton: { backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 16 },
+  pdfButtonText: { color: '#FF6B00', fontSize: 14, fontWeight: '700' },
   attachmentLink: { alignItems: 'center', marginBottom: 16 },
   attachmentLinkText: { color: '#3b82f6', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
-  comparisonCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, padding: 14, marginBottom: 16 },
-  comparisonTitle: { color: '#f97316', fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+  comparisonCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, padding: 14, marginBottom: 16 },
+  comparisonTitle: { color: '#FF6B00', fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
   comparisonDates: { color: '#525252', fontSize: 10, marginBottom: 10, marginTop: 2 },
-  comparisonRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  comparisonRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#0F0F12' },
   comparisonLabel: { color: '#a3a3a3', fontSize: 12, flex: 1 },
-  comparisonValue: { color: '#f5f5f5', fontSize: 13, fontWeight: '700', marginRight: 10 },
+  comparisonValue: { color: '#F5F5F7', fontSize: 13, fontWeight: '700', marginRight: 10 },
   delta: { fontSize: 12, fontWeight: '700', width: 70, textAlign: 'right' },
   deltaGood: { color: '#22c55e' },
   deltaBad: { color: '#ef4444' },
   deltaNeutral: { color: '#525252', fontSize: 11, width: 90, textAlign: 'right' },
-  chartCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 12 },
-  chartTitle: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', marginBottom: 12 },
+  chartCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 12 },
+  chartTitle: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', marginBottom: 12 },
   chartBarsRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end', height: 140 },
   chartBarColumn: { alignItems: 'center', flex: 1 },
   chartBarValue: { color: '#a3a3a3', fontSize: 9, marginBottom: 4 },
-  chartBarTrack: { width: 18, height: 90, backgroundColor: '#0a0a0a', borderRadius: 4, justifyContent: 'flex-end', overflow: 'hidden' },
+  chartBarTrack: { width: 18, height: 90, backgroundColor: '#0F0F12', borderRadius: 4, justifyContent: 'flex-end', overflow: 'hidden' },
   chartBarFill: { width: '100%', borderRadius: 4 },
   chartBarDate: { color: '#525252', fontSize: 8, marginTop: 4 },
-  sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginBottom: 10, marginTop: 6 },
-  assessmentCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 12, marginBottom: 8 },
+  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 10, marginTop: 6 },
+  assessmentCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, padding: 12, marginBottom: 8 },
   assessmentHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  assessmentDate: { color: '#f5f5f5', fontSize: 12, fontWeight: '700' },
-  assessmentMode: { color: '#f97316', fontSize: 10 },
+  assessmentDate: { color: '#F5F5F7', fontSize: 12, fontWeight: '700' },
+  assessmentMode: { color: '#FF6B00', fontSize: 10 },
   assessmentStatsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   assessmentStat: { color: '#a3a3a3', fontSize: 11 },
   assessmentNotes: { color: '#525252', fontSize: 10, marginTop: 6, fontStyle: 'italic' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
-  modalCard: { backgroundColor: '#171717', borderRadius: 16, padding: 20 },
-  modalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 12 },
+  modalCard: { backgroundColor: '#1C1C22', borderRadius: 16, padding: 20 },
+  modalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 12 },
   brandingToggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  brandingToggleLabel: { color: '#f5f5f5', fontSize: 13, fontWeight: '600', flexShrink: 1, marginRight: 8 },
+  brandingToggleLabel: { color: '#F5F5F7', fontSize: 13, fontWeight: '600', flexShrink: 1, marginRight: 8 },
   brandingToggleHint: { color: '#525252', fontSize: 10, marginTop: 8, lineHeight: 14 },
   modalButtonRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
-  modalCancelButton: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalCancelButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   modalCancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  modalConfirmButton: { flex: 1, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  modalConfirmButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  modalConfirmButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalConfirmButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
 });

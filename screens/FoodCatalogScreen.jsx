@@ -269,7 +269,7 @@ export default function FoodCatalogScreen({ onAddFood, onClose, recentForStudent
               </View>
             )}
             <TouchableOpacity style={styles.confirmButton} onPress={() => handleConfirmAdd(item)} disabled={adding}>
-              {adding ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.confirmButtonText}>Adicionar à refeição</Text>}
+              {adding ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.confirmButtonText}>Adicionar à refeição</Text>}
             </TouchableOpacity>
           </View>
         )}
@@ -357,12 +357,12 @@ export default function FoodCatalogScreen({ onAddFood, onClose, recentForStudent
               <Text style={styles.createCancelButtonText}>Cancelar</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.createSaveButton} onPress={handleSaveNewFood} disabled={savingNewFood}>
-              {savingNewFood ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.createSaveButtonText}>Salvar</Text>}
+              {savingNewFood ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.createSaveButtonText}>Salvar</Text>}
             </TouchableOpacity>
           </View>
         </View>
       ) : loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <FlatList
           data={filtered}
@@ -393,51 +393,51 @@ export default function FoodCatalogScreen({ onAddFood, onClose, recentForStudent
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   topBarLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flexShrink: 1 },
-  backText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 17, fontWeight: '700', flexShrink: 1 },
-  closeButton: { backgroundColor: '#f97316', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
-  closeButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  backText: { color: '#FF6B00', fontSize: 14, fontWeight: '600' },
+  title: { color: '#F5F5F7', fontSize: 17, fontWeight: '700', flexShrink: 1 },
+  closeButton: { backgroundColor: '#FF6B00', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
+  closeButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
   disclaimer: { color: '#525252', fontSize: 10, marginBottom: 10 },
   scanButton: { backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginBottom: 10 },
   scanButtonText: { color: '#3b82f6', fontSize: 12, fontWeight: '700' },
-  searchInput: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: '#f5f5f5', fontSize: 13, marginBottom: 8 },
+  searchInput: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: '#F5F5F7', fontSize: 13, marginBottom: 8 },
   chipScrollWrap: { height: 28, marginBottom: 6 },
-  chip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, paddingHorizontal: 9, paddingVertical: 4, marginRight: 5, height: 24, justifyContent: 'center' },
+  chip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, paddingHorizontal: 9, paddingVertical: 4, marginRight: 5, height: 24, justifyContent: 'center' },
   chipActive: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
   chipText: { color: '#a3a3a3', fontSize: 10, fontWeight: '600' },
-  chipTextActive: { color: '#0a0a0a' },
+  chipTextActive: { color: '#0F0F12' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center' },
   createEmptyButton: { borderWidth: 1, borderColor: '#22c55e', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 20, marginTop: 12 },
   createEmptyButtonText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
-  createFormCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#22c55e', borderRadius: 12, padding: 14, marginTop: 8 },
+  createFormCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#22c55e', borderRadius: 12, padding: 14, marginTop: 8 },
   createFormTitle: { color: '#22c55e', fontSize: 13, fontWeight: '700', marginBottom: 10 },
   createLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 4, marginTop: 8 },
-  createInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 13 },
+  createInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 13 },
   createRow: { flexDirection: 'row', gap: 8 },
   createButtonRow: { flexDirection: 'row', gap: 8, marginTop: 16 },
-  createCancelButton: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  createCancelButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   createCancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
   createSaveButton: { flex: 1, backgroundColor: '#22c55e', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  createSaveButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  createSaveButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
   recentSection: { marginBottom: 4 },
-  recentTitle: { color: '#f97316', fontSize: 11, fontWeight: '800', textTransform: 'uppercase', marginBottom: 8 },
+  recentTitle: { color: '#FF6B00', fontSize: 11, fontWeight: '800', textTransform: 'uppercase', marginBottom: 8 },
   recentDivider: { color: '#525252', fontSize: 10, fontWeight: '700', textTransform: 'uppercase', marginTop: 8, marginBottom: 8 },
-  foodCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, marginBottom: 8, overflow: 'hidden' },
+  foodCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, marginBottom: 8, overflow: 'hidden' },
   foodRow: { flexDirection: 'row', alignItems: 'center', padding: 12 },
   foodNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  foodName: { color: '#f5f5f5', fontSize: 13, fontWeight: '600', flexShrink: 1 },
+  foodName: { color: '#F5F5F7', fontSize: 13, fontWeight: '600', flexShrink: 1 },
   barcodeTag: { fontSize: 11 },
   foodMeta: { color: '#737373', fontSize: 10, marginTop: 2 },
   expandIcon: { color: '#22c55e', fontSize: 14, fontWeight: '700', marginLeft: 8 },
-  expandBox: { backgroundColor: '#0a0a0a', padding: 12, borderTopWidth: 1, borderTopColor: '#171717' },
+  expandBox: { backgroundColor: '#0F0F12', padding: 12, borderTopWidth: 1, borderTopColor: '#1C1C22' },
   quantityRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   quantityLabel: { color: '#a3a3a3', fontSize: 12 },
-  quantityInput: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 13 },
+  quantityInput: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 13 },
   previewRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 },
-  previewBadge: { backgroundColor: '#171717', color: '#22c55e', fontSize: 11, fontWeight: '700', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  previewBadge: { backgroundColor: '#1C1C22', color: '#22c55e', fontSize: 11, fontWeight: '700', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   confirmButton: { backgroundColor: '#22c55e', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
-  confirmButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  confirmButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
 });

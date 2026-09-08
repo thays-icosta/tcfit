@@ -83,7 +83,7 @@ export default function RecipesScreen({ studentId, hasFullAccess, onClose }) {
       </ScrollView>
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           {filtered.length === 0 ? (
@@ -126,19 +126,19 @@ export default function RecipesScreen({ studentId, hasFullAccess, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
   premiumBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(234,179,8,0.1)', borderWidth: 1, borderColor: '#eab308', borderRadius: 10, padding: 12, marginHorizontal: 16, marginBottom: 12 },
   premiumBannerText: { color: '#eab308', fontSize: 11, fontWeight: '600', flexShrink: 1 },
   categoryScroll: { maxHeight: 40, marginBottom: 12, paddingHorizontal: 16 },
-  categoryChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginRight: 8 },
-  categoryChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  categoryChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginRight: 8 },
+  categoryChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   categoryChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  categoryChipTextActive: { color: '#0a0a0a' },
+  categoryChipTextActive: { color: '#0F0F12' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  recipeCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 10, marginBottom: 10 },
+  recipeCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 10, marginBottom: 10 },
   recipeThumb: { width: 56, height: 56, borderRadius: 10 },
-  recipeThumbPlaceholder: { width: 56, height: 56, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  recipeTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
+  recipeThumbPlaceholder: { width: 56, height: 56, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
+  recipeTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
   recipeMeta: { color: '#737373', fontSize: 11, marginTop: 3 },
   lockBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(234,179,8,0.12)', alignItems: 'center', justifyContent: 'center' },
 });

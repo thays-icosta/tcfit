@@ -143,11 +143,11 @@ export default function ConsultationPlansManagerScreen({ personalId, onClose }) 
 
           <View style={styles.activeRow}>
             <Text style={styles.activeLabel}>Plano ativo (aparece na vitrine)</Text>
-            <Switch value={active} onValueChange={setActive} trackColor={{ false: '#292524', true: '#f97316' }} thumbColor="#f5f5f5" />
+            <Switch value={active} onValueChange={setActive} trackColor={{ false: '#2B2B36', true: '#FF6B00' }} thumbColor="#F5F5F7" />
           </View>
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-            {saving ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Salvar Plano</Text>}
+            {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar Plano</Text>}
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -163,7 +163,7 @@ export default function ConsultationPlansManagerScreen({ personalId, onClose }) 
       </TouchableOpacity>
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           {plans.length === 0 ? (
@@ -193,21 +193,21 @@ export default function ConsultationPlansManagerScreen({ personalId, onClose }) 
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  newButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
-  newButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  newButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
+  newButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  planRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 12, marginBottom: 10 },
-  planName: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  planRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 10 },
+  planName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   planMeta: { color: '#737373', fontSize: 10, marginTop: 2 },
   editLink: { color: '#3b82f6', fontSize: 11, fontWeight: '700', marginRight: 12 },
   deleteLink: { fontSize: 14 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 14 },
-  input: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13 },
-  textArea: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13, minHeight: 70, textAlignVertical: 'top' },
+  input: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
+  textArea: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13, minHeight: 70, textAlignVertical: 'top' },
   hint: { color: '#525252', fontSize: 9, marginTop: 4, lineHeight: 13 },
   activeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 },
-  activeLabel: { color: '#f5f5f5', fontSize: 13, fontWeight: '600', flexShrink: 1, marginRight: 8 },
-  saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
-  saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
+  activeLabel: { color: '#F5F5F7', fontSize: 13, fontWeight: '600', flexShrink: 1, marginRight: 8 },
+  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
+  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
 });

@@ -43,8 +43,8 @@ class RootErrorBoundary extends React.Component<{ children: React.ReactNode }, {
   render() {
     if (this.state.hasError) {
       return (
-        <View style={{ flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <Text style={{ color: '#f5f5f5', fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 8 }}>
+        <View style={{ flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Text style={{ color: '#F5F5F7', fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 8 }}>
             Ops, algo deu errado.
           </Text>
           <Text style={{ color: '#a3a3a3', fontSize: 13, textAlign: 'center' }}>
@@ -85,8 +85,8 @@ function RootLayoutInner() {
 
   if (!fontsLoaded) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color="#f97316" />
+      <View style={{ flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color="#FF6B00" />
       </View>
     );
   }

@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   itemGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   itemCard: { width: '48%', ...FLAT_CARD, borderRadius: 12, padding: 0, overflow: 'hidden' },
   bannerWrap: { width: '100%', aspectRatio: 16 / 9, position: 'relative' },
-  itemCover: { width: '100%', height: '100%', backgroundColor: '#171717' },
+  itemCover: { width: '100%', height: '100%', backgroundColor: '#1C1C22' },
   itemCoverPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   itemBody: { padding: 10 },
   itemTitle: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },

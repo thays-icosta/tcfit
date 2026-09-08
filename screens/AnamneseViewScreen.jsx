@@ -63,7 +63,7 @@ export default function AnamneseViewScreen({ studentId, onClose }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#f97316" />
+        <ActivityIndicator color="#FF6B00" />
       </View>
     );
   }
@@ -168,7 +168,7 @@ export default function AnamneseViewScreen({ studentId, onClose }) {
                     </View>
                   </View>
                   <TouchableOpacity style={styles.saveGoalsButton} onPress={handleSaveGoals} disabled={saving}>
-                    {saving ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.saveGoalsButtonText}>Salvar Ajuste</Text>}
+                    {saving ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.saveGoalsButtonText}>Salvar Ajuste</Text>}
                   </TouchableOpacity>
                 </>
               ) : (
@@ -211,27 +211,27 @@ export default function AnamneseViewScreen({ studentId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30, paddingHorizontal: 16 },
-  card: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 12 },
+  card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 12 },
   fieldLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginTop: 10, marginBottom: 4 },
-  fieldValue: { color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
+  fieldValue: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
   zoneRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   zoneBadge: { backgroundColor: 'rgba(239,68,68,0.12)', borderWidth: 1, borderColor: '#ef4444', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4 },
   zoneBadgeText: { color: '#ef4444', fontSize: 11, fontWeight: '700' },
-  sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginBottom: 10, marginTop: 4 },
+  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 10, marginTop: 4 },
   goalsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  editLink: { color: '#f97316', fontSize: 12, fontWeight: '700' },
-  calcResultKcal: { color: '#f97316', fontSize: 24, fontWeight: '800', marginTop: 6 },
+  editLink: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
+  calcResultKcal: { color: '#FF6B00', fontSize: 24, fontWeight: '800', marginTop: 6 },
   calcMacroRow: { flexDirection: 'row', gap: 24, marginTop: 12 },
   calcMacroItem: { alignItems: 'center' },
-  calcMacroValue: { color: '#f5f5f5', fontSize: 15, fontWeight: '700' },
+  calcMacroValue: { color: '#F5F5F7', fontSize: 15, fontWeight: '700' },
   calcMacroLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginTop: 2 },
   goalsFieldRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   goalsFieldSmall: { flex: 1 },
   calcFieldLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 4 },
-  input: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 13 },
-  saveGoalsButton: { backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 14 },
-  saveGoalsButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  input: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 13 },
+  saveGoalsButton: { backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 14 },
+  saveGoalsButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
 });

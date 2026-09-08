@@ -45,7 +45,7 @@ const PSE_OPTIONS = [
   { value: 1, label: 'Leve', color: '#22c55e' },
   { value: 2, label: 'Moderado', color: '#84cc16' },
   { value: 3, label: 'Intenso', color: '#eab308' },
-  { value: 4, label: 'Muito Intenso', color: '#f97316' },
+  { value: 4, label: 'Muito Intenso', color: '#FF6B00' },
   { value: 5, label: 'Extremo', color: '#ef4444' },
 ];
 
@@ -437,14 +437,14 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#f97316" />
+        <ActivityIndicator color="#FF6B00" />
       </View>
     );
   }
 
   if (showCelebration && summary) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
+      <View style={{ flex: 1, backgroundColor: '#0F0F12' }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           style={[styles.celebrationContainer, { paddingTop: insets.top + 40 }]}
@@ -452,7 +452,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.trophyCircle}>
-            <Ionicons name="trophy-outline" size={40} color="#f97316" />
+            <Ionicons name="trophy-outline" size={40} color="#FF6B00" />
           </View>
           <Text style={styles.celebrationTitle}>Treino concluído</Text>
           <Text style={styles.celebrationSubtitle}>{workout.name}</Text>
@@ -510,7 +510,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
           </View>
 
           <TouchableOpacity style={[styles.finishButtonWide, { marginBottom: 24 }]} onPress={handleSavePse} disabled={savingPse}>
-            {savingPse ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.finishButtonText}>Concluir</Text>}
+            {savingPse ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.finishButtonText}>Concluir</Text>}
           </TouchableOpacity>
         </ScrollView>
 
@@ -587,7 +587,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                             onPress={() => setVideoModalFor(ex)}
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                           >
-                            <Ionicons name="play-circle" size={20} color="#f97316" />
+                            <Ionicons name="play-circle" size={20} color="#FF6B00" />
                           </TouchableOpacity>
                         )}
                       </View>
@@ -614,7 +614,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                   {isSubOpen && (
                     <View style={styles.subDropdown}>
                       {loadingAlternatives === ex.id ? (
-                        <ActivityIndicator color="#f97316" size="small" style={{ marginVertical: 8 }} />
+                        <ActivityIndicator color="#FF6B00" size="small" style={{ marginVertical: 8 }} />
                       ) : alternatives.length === 0 ? (
                         <Text style={styles.subEmpty}>Nenhuma alternativa cadastrada pra esse grupo muscular.</Text>
                       ) : (
@@ -674,7 +674,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                             disabled={done || savingKey === key}
                           >
                             {savingKey === key ? (
-                              <ActivityIndicator color="#0a0a0a" size="small" />
+                              <ActivityIndicator color="#0F0F12" size="small" />
                             ) : (
                               <Text style={styles.checkText}>{done ? '✓' : ''}</Text>
                             )}
@@ -739,14 +739,14 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                 ) : getYoutubeVideoId(videoModalFor.exercises.video_url) ? (
                   <iframe
                     src={`https://www.youtube.com/embed/${getYoutubeVideoId(videoModalFor.exercises.video_url)}?autoplay=1&playsinline=1`}
-                    style={{ width: '100%', height: 220, border: 0, backgroundColor: '#0a0a0a', borderRadius: 10 }}
+                    style={{ width: '100%', height: 220, border: 0, backgroundColor: '#0F0F12', borderRadius: 10 }}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
                 ) : (
                   <video
                     src={videoModalFor.exercises.video_url}
-                    style={{ width: '100%', height: 220, borderRadius: 10, backgroundColor: '#0a0a0a' }}
+                    style={{ width: '100%', height: 220, borderRadius: 10, backgroundColor: '#0F0F12' }}
                     controls
                     autoPlay
                     loop
@@ -765,32 +765,32 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
   phaseTopBadge: { alignSelf: 'center', backgroundColor: 'rgba(168,85,247,0.12)', borderWidth: 1, borderColor: '#a855f7', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6, marginBottom: 10 },
   phaseTopBadgeText: { color: '#a855f7', fontSize: 11, fontWeight: '700' },
   offlineBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(239,68,68,0.12)', marginHorizontal: 16, borderRadius: 8, padding: 10, marginBottom: 10 },
   offlineBannerText: { color: '#ef4444', fontSize: 11, fontWeight: '600', flexShrink: 1 },
   syncBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(59,130,246,0.12)', marginHorizontal: 16, borderRadius: 8, padding: 10, marginBottom: 10 },
   syncBannerText: { color: '#3b82f6', fontSize: 11, fontWeight: '600' },
-  exerciseCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 10 },
+  exerciseCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 10 },
   exerciseHeader: { flexDirection: 'row', alignItems: 'center' },
   thumb: { width: 44, height: 44, borderRadius: 10, marginRight: 10 },
-  thumbPlaceholder: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  thumbPlaceholderText: { color: '#f97316', fontSize: 16, fontWeight: '800' },
+  thumbPlaceholder: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  thumbPlaceholderText: { color: '#FF6B00', fontSize: 16, fontWeight: '800' },
   exerciseNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  exerciseName: { color: '#f5f5f5', fontSize: 15, fontWeight: '700' },
+  exerciseName: { color: '#F5F5F7', fontSize: 15, fontWeight: '700' },
   videoIconButton: { padding: 2 },
-  exerciseSubtitle: { color: '#f97316', fontSize: 10, marginTop: 2 },
+  exerciseSubtitle: { color: '#FF6B00', fontSize: 10, marginTop: 2 },
   subTagRow: { flexDirection: 'row', alignItems: 'center', marginTop: 3, gap: 8 },
   subTag: { color: '#22c55e', fontSize: 9 },
   subCancelText: { color: '#ef4444', fontSize: 9, textDecorationLine: 'underline' },
-  subDropdown: { backgroundColor: '#0a0a0a', borderRadius: 8, marginTop: 8, padding: 6 },
+  subDropdown: { backgroundColor: '#0F0F12', borderRadius: 8, marginTop: 8, padding: 6 },
   subEmpty: { color: '#525252', fontSize: 11, padding: 6 },
-  subOption: { paddingVertical: 8, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#171717' },
-  subOptionText: { color: '#f5f5f5', fontSize: 12 },
+  subOption: { paddingVertical: 8, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#1C1C22' },
+  subOptionText: { color: '#F5F5F7', fontSize: 12 },
   exerciseNotes: { color: '#737373', fontSize: 10, marginTop: 8, fontStyle: 'italic' },
-  tableHeader: { flexDirection: 'row', marginTop: 14, marginBottom: 6, borderBottomWidth: 1, borderBottomColor: '#0a0a0a', paddingBottom: 6 },
+  tableHeader: { flexDirection: 'row', marginTop: 14, marginBottom: 6, borderBottomWidth: 1, borderBottomColor: '#0F0F12', paddingBottom: 6 },
   tableHeaderText: { color: '#525252', fontSize: 9, textTransform: 'uppercase', fontWeight: '700', textAlign: 'center' },
   tableRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   colSet: { width: 28 },
@@ -800,47 +800,47 @@ const styles = StyleSheet.create({
   colCheck: { width: 36, alignItems: 'center' },
   setNumberText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700', textAlign: 'center' },
   prevText: { color: '#525252', fontSize: 9, textAlign: 'center' },
-  cellInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 2, minWidth: 0, color: '#f5f5f5', fontSize: 13, textAlign: 'center' },
+  cellInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 2, minWidth: 0, color: '#F5F5F7', fontSize: 13, textAlign: 'center' },
   cellInputDone: { opacity: 0.5 },
-  checkCircle: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: '#292524', alignItems: 'center', justifyContent: 'center' },
+  checkCircle: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center' },
   checkCircleDone: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
-  checkText: { color: '#0a0a0a', fontSize: 15, fontWeight: '800' },
-  restFloating: { position: 'absolute', bottom: 70, left: 16, right: 16, backgroundColor: '#171717', borderWidth: 1, borderColor: '#f97316', borderRadius: 14, paddingHorizontal: 18, paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  restLabel: { color: '#f97316', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
-  restCountdown: { color: '#f5f5f5', fontSize: 22, fontWeight: '800' },
-  restAddButton: { backgroundColor: '#0a0a0a', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: '#f97316' },
-  restAdd: { color: '#f97316', fontSize: 12, fontWeight: '700' },
-  restSkipButton: { backgroundColor: '#0a0a0a', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
+  checkText: { color: '#0F0F12', fontSize: 15, fontWeight: '800' },
+  restFloating: { position: 'absolute', bottom: 70, left: 16, right: 16, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, paddingHorizontal: 18, paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  restLabel: { color: '#FF6B00', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
+  restCountdown: { color: '#F5F5F7', fontSize: 22, fontWeight: '800' },
+  restAddButton: { backgroundColor: '#0F0F12', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: '#FF6B00' },
+  restAdd: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
+  restSkipButton: { backgroundColor: '#0F0F12', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
   restSkip: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  finishButton: { backgroundColor: '#f97316', margin: 16, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  finishButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
-  keyboardToolbar: { backgroundColor: '#171717', borderTopWidth: 1, borderTopColor: '#292524', paddingVertical: 8, paddingHorizontal: 16, alignItems: 'flex-end' },
-  keyboardToolbarText: { color: '#f97316', fontSize: 14, fontWeight: '700' },
+  finishButton: { backgroundColor: '#FF6B00', margin: 16, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  finishButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
+  keyboardToolbar: { backgroundColor: '#1C1C22', borderTopWidth: 1, borderTopColor: '#2B2B36', paddingVertical: 8, paddingHorizontal: 16, alignItems: 'flex-end' },
+  keyboardToolbarText: { color: '#FF6B00', fontSize: 14, fontWeight: '700' },
   videoModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  videoModalCard: { backgroundColor: '#171717', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%', paddingBottom: 24 },
-  videoModalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#292524' },
-  videoModalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', flex: 1, marginRight: 12 },
+  videoModalCard: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%', paddingBottom: 24 },
+  videoModalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#2B2B36' },
+  videoModalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '700', flex: 1, marginRight: 12 },
   videoModalBody: { paddingHorizontal: 18, paddingTop: 14 },
-  videoModalMedia: { width: '100%', height: 220, borderRadius: 10, backgroundColor: '#0a0a0a' },
+  videoModalMedia: { width: '100%', height: 220, borderRadius: 10, backgroundColor: '#0F0F12' },
   videoModalInstructions: { color: '#d4d4d4', fontSize: 13, lineHeight: 20, marginTop: 14, marginBottom: 4 },
-  celebrationContainer: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 60, paddingHorizontal: 24 },
-  trophyCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#171717', borderWidth: 2, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  celebrationTitle: { color: '#f5f5f5', fontSize: 22, fontWeight: '800', textAlign: 'center' },
+  celebrationContainer: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 60, paddingHorizontal: 24 },
+  trophyCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#1C1C22', borderWidth: 2, borderColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  celebrationTitle: { color: '#F5F5F7', fontSize: 22, fontWeight: '800', textAlign: 'center' },
   celebrationSubtitle: { color: '#a3a3a3', fontSize: 13, marginTop: 4, marginBottom: 24, textAlign: 'center' },
   statsRow: { flexDirection: 'row', gap: 10, width: '100%' },
-  statBox: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  statValue: { color: '#f97316', fontSize: 22, fontWeight: '800' },
+  statBox: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  statValue: { color: '#FF6B00', fontSize: 22, fontWeight: '800' },
   statLabel: { color: '#a3a3a3', fontSize: 10, marginTop: 2 },
-  caloriesText: { color: '#f5f5f5', fontSize: 14, marginTop: 20, textAlign: 'center' },
+  caloriesText: { color: '#F5F5F7', fontSize: 14, marginTop: 20, textAlign: 'center' },
   caloriesNote: { color: '#525252', fontSize: 10, marginTop: 4, textAlign: 'center', paddingHorizontal: 8, lineHeight: 14 },
   syncNote: { color: '#3b82f6', fontSize: 11, marginTop: 12, textAlign: 'center' },
-  pseQuestion: { color: '#f5f5f5', fontSize: 15, fontWeight: '700', marginTop: 28, marginBottom: 14, textAlign: 'center' },
+  pseQuestion: { color: '#F5F5F7', fontSize: 15, fontWeight: '700', marginTop: 28, marginBottom: 14, textAlign: 'center' },
   pseRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', width: '100%' },
   psePill: { borderWidth: 1, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },
   psePillText: { fontSize: 12, fontWeight: '700' },
   notesBox: { width: '100%', marginTop: 24 },
   notesLabel: { color: '#a3a3a3', fontSize: 12, fontWeight: '600', marginBottom: 8 },
-  notesInput: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, color: '#f5f5f5', fontSize: 13, minHeight: 90, textAlignVertical: 'top' },
-  finishButtonWide: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: 24 },
-  finishButtonText: { color: '#0a0a0a', fontSize: 16, fontWeight: '700' },
+  notesInput: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, color: '#F5F5F7', fontSize: 13, minHeight: 90, textAlignVertical: 'top' },
+  finishButtonWide: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: 24 },
+  finishButtonText: { color: '#0F0F12', fontSize: 16, fontWeight: '700' },
 });

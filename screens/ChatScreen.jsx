@@ -104,7 +104,7 @@ export default function ChatScreen({ personalId, studentId, currentUserId, other
       />
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 30 }} />
       ) : (
         <FlatList
           ref={listRef}
@@ -138,7 +138,7 @@ export default function ChatScreen({ personalId, studentId, currentUserId, other
           multiline
         />
         <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={sending || !newMessage.trim()}>
-          {sending ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.sendButtonText}>➤</Text>}
+          {sending ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.sendButtonText}>➤</Text>}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -146,24 +146,24 @@ export default function ChatScreen({ personalId, studentId, currentUserId, other
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  avatarCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  avatarCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImage: { width: 32, height: 32 },
-  avatarLetter: { color: '#f97316', fontSize: 13, fontWeight: '800' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', flexShrink: 1 },
+  avatarLetter: { color: '#FF6B00', fontSize: 13, fontWeight: '800' },
+  title: { color: '#F5F5F7', fontSize: 16, fontWeight: '700', flexShrink: 1 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 40 },
   bubbleRow: { flexDirection: 'row', marginBottom: 10 },
   bubbleRowOwn: { justifyContent: 'flex-end' },
   bubbleRowOther: { justifyContent: 'flex-start' },
   bubble: { maxWidth: '78%', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10 },
-  bubbleOwn: { backgroundColor: '#f97316', borderBottomRightRadius: 4 },
-  bubbleOther: { backgroundColor: '#171717', borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#292524' },
-  bubbleText: { color: '#f5f5f5', fontSize: 14 },
-  bubbleTextOwn: { color: '#0a0a0a' },
+  bubbleOwn: { backgroundColor: '#FF6B00', borderBottomRightRadius: 4 },
+  bubbleOther: { backgroundColor: '#1C1C22', borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#2B2B36' },
+  bubbleText: { color: '#F5F5F7', fontSize: 14 },
+  bubbleTextOwn: { color: '#0F0F12' },
   bubbleTime: { color: '#525252', fontSize: 9, marginTop: 4, textAlign: 'right' },
   bubbleTimeOwn: { color: 'rgba(10,10,10,0.6)' },
-  inputRow: { flexDirection: 'row', alignItems: 'flex-end', padding: 12, gap: 8, borderTopWidth: 1, borderTopColor: '#171717' },
-  input: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, color: '#f5f5f5', fontSize: 14, maxHeight: 100 },
-  sendButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f97316', alignItems: 'center', justifyContent: 'center' },
-  sendButtonText: { color: '#0a0a0a', fontSize: 18, fontWeight: '800' },
+  inputRow: { flexDirection: 'row', alignItems: 'flex-end', padding: 12, gap: 8, borderTopWidth: 1, borderTopColor: '#1C1C22' },
+  input: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, color: '#F5F5F7', fontSize: 14, maxHeight: 100 },
+  sendButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#FF6B00', alignItems: 'center', justifyContent: 'center' },
+  sendButtonText: { color: '#0F0F12', fontSize: 18, fontWeight: '800' },
 });

@@ -166,11 +166,11 @@ export default function AnamneseConfigScreen({ personalId, onClose }) {
 
           <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>Pergunta obrigatória</Text>
-            <Switch value={required} onValueChange={setRequired} trackColor={{ false: '#292524', true: '#f97316' }} thumbColor="#f5f5f5" />
+            <Switch value={required} onValueChange={setRequired} trackColor={{ false: '#2B2B36', true: '#FF6B00' }} thumbColor="#F5F5F7" />
           </View>
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-            {saving ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Salvar Pergunta</Text>}
+            {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar Pergunta</Text>}
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -188,7 +188,7 @@ export default function AnamneseConfigScreen({ personalId, onClose }) {
       </TouchableOpacity>
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           {questions.length === 0 ? (
@@ -225,32 +225,32 @@ export default function AnamneseConfigScreen({ personalId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
   hint: { color: '#737373', fontSize: 11, paddingHorizontal: 16, marginBottom: 14, lineHeight: 16 },
-  newButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
-  newButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
+  newButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
+  newButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  questionCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 10 },
+  questionCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
   questionCardInactive: { opacity: 0.5 },
-  questionText: { color: '#f5f5f5', fontSize: 13, fontWeight: '600' },
+  questionText: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
-  metaBadge: { color: '#a3a3a3', fontSize: 9, fontWeight: '700', backgroundColor: '#0a0a0a', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  metaBadge: { color: '#a3a3a3', fontSize: 9, fontWeight: '700', backgroundColor: '#0F0F12', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   metaBadgeInactive: { color: '#ef4444' },
   questionActions: { flexDirection: 'row', gap: 12 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 14 },
-  input: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13 },
+  input: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  chipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  chip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  chipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   chipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  chipTextActive: { color: '#0a0a0a' },
-  optionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0a0a0a', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 6 },
-  optionText: { color: '#f5f5f5', fontSize: 12, fontWeight: '600' },
+  chipTextActive: { color: '#0F0F12' },
+  optionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0F0F12', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 6 },
+  optionText: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
   newOptionRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
-  addOptionButton: { backgroundColor: '#f97316', width: 40, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  addOptionButtonText: { color: '#0a0a0a', fontSize: 18, fontWeight: '800' },
+  addOptionButton: { backgroundColor: '#FF6B00', width: 40, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  addOptionButtonText: { color: '#0F0F12', fontSize: 18, fontWeight: '800' },
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 },
-  switchLabel: { color: '#f5f5f5', fontSize: 12, fontWeight: '600' },
-  saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
-  saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
+  switchLabel: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
+  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
+  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
 });

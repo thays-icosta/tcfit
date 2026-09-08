@@ -264,7 +264,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#f97316" />
+        <ActivityIndicator color="#FF6B00" />
       </View>
     );
   }
@@ -277,7 +277,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
         <TouchableOpacity onPress={handlePickAvatar} disabled={uploadingAvatar}>
           <View style={styles.avatarCircle}>
             {uploadingAvatar ? (
-              <ActivityIndicator color="#f97316" />
+              <ActivityIndicator color="#FF6B00" />
             ) : avatarUrl ? (
               <Image key={avatarUrl} source={{ uri: avatarUrl }} style={styles.avatarImage} resizeMode="cover" />
             ) : (
@@ -309,28 +309,28 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
       <View style={styles.shortcutGrid}>
         <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowTemplateBuilder(true)}>
           <View style={styles.shortcutIconCircle}>
-            <Ionicons name="barbell-outline" size={22} color="#f97316" />
+            <Ionicons name="barbell-outline" size={22} color="#FF6B00" />
           </View>
           <Text style={styles.shortcutText}>Templates de Treino</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowPlanPrices(true)}>
           <View style={styles.shortcutIconCircle}>
-            <Ionicons name="cash-outline" size={22} color="#f97316" />
+            <Ionicons name="cash-outline" size={22} color="#FF6B00" />
           </View>
           <Text style={styles.shortcutText}>Venda de Consultoria</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowPartnerBrands(true)}>
           <View style={styles.shortcutIconCircle}>
-            <Ionicons name="pricetags-outline" size={22} color="#f97316" />
+            <Ionicons name="pricetags-outline" size={22} color="#FF6B00" />
           </View>
           <Text style={styles.shortcutText}>Marcas Parceiras</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowAnamneseConfig(true)}>
           <View style={styles.shortcutIconCircle}>
-            <Ionicons name="clipboard-outline" size={22} color="#f97316" />
+            <Ionicons name="clipboard-outline" size={22} color="#FF6B00" />
           </View>
           <Text style={styles.shortcutText}>Configurar Anamnese</Text>
         </TouchableOpacity>
@@ -347,7 +347,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
             <View style={styles.logoRow}>
               <TouchableOpacity onPress={handlePickLogo} disabled={uploadingLogo} style={styles.logoBox}>
                 {uploadingLogo ? (
-                  <ActivityIndicator color="#f97316" />
+                  <ActivityIndicator color="#FF6B00" />
                 ) : logoUrl ? (
                   <Image source={{ uri: logoUrl }} style={styles.logoImage} resizeMode="contain" />
                 ) : (
@@ -437,7 +437,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
       </View>
 
       <TouchableOpacity style={styles.saveButton} onPress={handleSaveAll} disabled={saving}>
-        {saving ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Salvar Alterações</Text>}
+        {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar Alterações</Text>}
       </TouchableOpacity>
 
       <View style={styles.securitySection}>
@@ -464,7 +464,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
                 <Text style={styles.modalCancelButtonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalConfirmButton} onPress={handleChangePassword} disabled={savingPassword}>
-                {savingPassword ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.modalConfirmButtonText}>Salvar</Text>}
+                {savingPassword ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>Salvar</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -475,68 +475,68 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
+  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
   avatarBox: { alignItems: 'center', marginBottom: 20 },
-  avatarCircle: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#171717', borderWidth: 2, borderColor: '#f97316', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarCircle: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#1C1C22', borderWidth: 2, borderColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImage: { width: 88, height: 88 },
-  avatarLetter: { color: '#f97316', fontSize: 32, fontWeight: '800' },
-  avatarEditBadge: { position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: '#f97316', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#0a0a0a' },
+  avatarLetter: { color: '#FF6B00', fontSize: 32, fontWeight: '800' },
+  avatarEditBadge: { position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#0F0F12' },
   avatarEditIcon: { fontSize: 12 },
   avatarHint: { color: '#525252', fontSize: 10, marginTop: 8 },
-  summaryCard: { flexDirection: 'row', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 14, marginBottom: 16 },
+  summaryCard: { flexDirection: 'row', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 14, marginBottom: 16 },
   summaryItem: { flex: 1, alignItems: 'center' },
-  summaryDivider: { width: 1, backgroundColor: '#292524' },
-  summaryValue: { color: '#f5f5f5', fontSize: 18, fontWeight: '800' },
+  summaryDivider: { width: 1, backgroundColor: '#2B2B36' },
+  summaryValue: { color: '#F5F5F7', fontSize: 18, fontWeight: '800' },
   summaryLabel: { color: '#737373', fontSize: 10, marginTop: 4, textAlign: 'center' },
   summaryStatusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   summaryStatusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' },
   shortcutGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 16 },
-  shortcutCard: { width: '47%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, paddingVertical: 18, alignItems: 'center', gap: 10 },
-  shortcutIconCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(249,115,22,0.12)', alignItems: 'center', justifyContent: 'center' },
-  shortcutText: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', textAlign: 'center' },
-  brandingCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, marginBottom: 16, overflow: 'hidden' },
-  brandingCardHighlight: { borderColor: '#f97316' },
+  shortcutCard: { width: '47%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, paddingVertical: 18, alignItems: 'center', gap: 10 },
+  shortcutIconCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
+  shortcutText: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', textAlign: 'center' },
+  brandingCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, marginBottom: 16, overflow: 'hidden' },
+  brandingCardHighlight: { borderColor: '#FF6B00' },
   brandingHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
-  brandingTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '800', flexShrink: 1, marginRight: 8 },
-  brandingBody: { paddingHorizontal: 14, paddingBottom: 14, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  brandingTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '800', flexShrink: 1, marginRight: 8 },
+  brandingBody: { paddingHorizontal: 14, paddingBottom: 14, borderTopWidth: 1, borderTopColor: '#0F0F12' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, marginTop: 4 },
-  logoBox: { width: 70, height: 70, borderRadius: 12, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  logoBox: { width: 70, height: 70, borderRadius: 12, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   logoImage: { width: '100%', height: '100%' },
   logoPlaceholderText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
   logoHint: { flex: 1, color: '#525252', fontSize: 10, lineHeight: 14 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 12 },
-  input: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 14 },
+  input: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 14 },
   inputDisabled: { color: '#525252' },
   helperText: { color: '#525252', fontSize: 10, marginTop: 4, lineHeight: 14 },
-  paymentDivider: { height: 1, backgroundColor: '#0a0a0a', marginTop: 16, marginBottom: 4 },
+  paymentDivider: { height: 1, backgroundColor: '#0F0F12', marginTop: 16, marginBottom: 4 },
   paymentSectionTitle: { color: '#22c55e', fontSize: 12, fontWeight: '800', marginTop: 12, textTransform: 'uppercase' },
   paymentHint: { color: '#525252', fontSize: 10, marginTop: 4, marginBottom: 4, lineHeight: 14 },
   brandingSavedHint: { color: '#525252', fontSize: 9, marginTop: 14, lineHeight: 13 },
-  formCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 16 },
-  rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#0a0a0a', borderRadius: 10, padding: 12, marginTop: 8 },
-  rewardText: { color: '#f5f5f5', fontSize: 12, fontWeight: '600' },
+  formCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 16 },
+  rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#0F0F12', borderRadius: 10, padding: 12, marginTop: 8 },
+  rewardText: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
   rewardSubtext: { color: '#22c55e', fontSize: 11, marginTop: 2 },
   rewardApplyButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
   rewardApplyButtonText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
-  genderLinkButton: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, marginTop: 10 },
+  genderLinkButton: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, marginTop: 10 },
   genderLinkButtonText: { fontSize: 13, fontWeight: '700' },
-  saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
+  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
   securitySection: { marginTop: 24 },
   securityTitle: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 10 },
-  changePasswordButton: { borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
+  changePasswordButton: { borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
   changePasswordButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700' },
   deleteAccountButton: { borderWidth: 1, borderColor: '#ef4444', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   deleteAccountButtonText: { color: '#ef4444', fontSize: 13, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
-  modalCard: { backgroundColor: '#171717', borderRadius: 16, padding: 20 },
-  modalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 12 },
+  modalCard: { backgroundColor: '#1C1C22', borderRadius: 16, padding: 20 },
+  modalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 12 },
   modalLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 4, marginTop: 8 },
-  modalInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 14 },
+  modalInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 14 },
   modalButtonRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
-  modalCancelButton: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalCancelButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   modalCancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  modalConfirmButton: { flex: 1, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  modalConfirmButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  modalConfirmButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalConfirmButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
 });

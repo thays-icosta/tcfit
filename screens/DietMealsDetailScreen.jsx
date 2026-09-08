@@ -383,7 +383,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, per
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#f97316" />
+        <ActivityIndicator color="#FF6B00" />
       </View>
     );
   }
@@ -422,12 +422,12 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, per
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
             <View style={styles.aiButtonRow}>
               <TouchableOpacity style={[styles.aiButton, { flex: 1 }]} onPress={handleOpenAiModal}>
-                <Ionicons name="sparkles" size={16} color="#0a0a0a" />
+                <Ionicons name="sparkles" size={16} color="#0F0F12" />
                 <Text style={styles.aiButtonText}>Gerar Dieta com IA</Text>
               </TouchableOpacity>
               {personalId && (
                 <TouchableOpacity style={styles.importButton} onPress={handleOpenImportModal}>
-                  <Ionicons name="download-outline" size={16} color="#f97316" />
+                  <Ionicons name="download-outline" size={16} color="#FF6B00" />
                   <Text style={styles.importButtonText}>Importar de outro Aluno</Text>
                 </TouchableOpacity>
               )}
@@ -462,7 +462,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, per
                     <Text style={styles.addMealCancelButtonText}>Cancelar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.addMealConfirmButton} onPress={handleAddMeal} disabled={savingMeal}>
-                    {savingMeal ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.addMealConfirmButtonText}>Adicionar</Text>}
+                    {savingMeal ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.addMealConfirmButtonText}>Adicionar</Text>}
                   </TouchableOpacity>
                 </View>
               </View>
@@ -548,7 +548,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, per
                                   disabled={savingSubstituteFor === food.id}
                                 >
                                   {savingSubstituteFor === food.id ? (
-                                    <ActivityIndicator color="#0a0a0a" size="small" />
+                                    <ActivityIndicator color="#0F0F12" size="small" />
                                   ) : (
                                     <Text style={styles.substituteAddButtonText}>+</Text>
                                   )}
@@ -584,7 +584,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, per
                           disabled={savingFoodFor === meal.id}
                         >
                           {savingFoodFor === meal.id ? (
-                            <ActivityIndicator color="#0a0a0a" size="small" />
+                            <ActivityIndicator color="#0F0F12" size="small" />
                           ) : (
                             <Text style={styles.foodAddButtonText}>+</Text>
                           )}
@@ -643,7 +643,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, per
                 <Text style={styles.addMealCancelButtonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.addMealConfirmButton} onPress={handleGenerateDietWithAi} disabled={aiProcessing}>
-                {aiProcessing ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.addMealConfirmButtonText}>Processar e Preencher</Text>}
+                {aiProcessing ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.addMealConfirmButtonText}>Processar e Preencher</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -704,7 +704,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, per
                         <Text style={styles.importStudentName}>{d.name}</Text>
                         {d.active && <Text style={styles.importDietActiveTag}>Ativo</Text>}
                       </View>
-                      {importing ? <ActivityIndicator color="#f97316" size="small" /> : <Ionicons name="download-outline" size={18} color="#f97316" />}
+                      {importing ? <ActivityIndicator color="#FF6B00" size="small" /> : <Ionicons name="download-outline" size={18} color="#FF6B00" />}
                     </TouchableOpacity>
                   ))}
                   {importStudentDiets.length === 0 && (
@@ -725,47 +725,47 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, per
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
   topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 16 },
-  closeText: { color: '#f97316', fontSize: 14, fontWeight: '600' },
-  title: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16 },
+  closeText: { color: '#FF6B00', fontSize: 14, fontWeight: '600' },
+  title: { color: '#F5F5F7', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 20 },
   aiButtonRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  aiButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#E05A17', borderRadius: 12, paddingVertical: 13 },
-  aiButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
-  importButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1, borderColor: '#f97316', borderRadius: 12, paddingVertical: 13, paddingHorizontal: 12 },
-  importButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
-  importStudentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 8 },
-  importStudentName: { color: '#f5f5f5', fontSize: 14, fontWeight: '600' },
+  aiButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 13 },
+  aiButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
+  importButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(255,107,0,0.1)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, paddingVertical: 13, paddingHorizontal: 12 },
+  importButtonText: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
+  importStudentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 14, marginBottom: 8 },
+  importStudentName: { color: '#F5F5F7', fontSize: 14, fontWeight: '600' },
   importDietActiveTag: { color: '#22c55e', fontSize: 10, fontWeight: '700', marginTop: 2 },
-  aiMicButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, marginTop: 12 },
+  aiMicButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, marginTop: 12 },
   aiMicButtonActive: { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
   aiMicButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   aiMicButtonTextActive: { color: '#ef4444' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
-  modalCard: { backgroundColor: '#171717', borderRadius: 16, padding: 20 },
-  modalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 6 },
+  modalCard: { backgroundColor: '#1C1C22', borderRadius: 16, padding: 20 },
+  modalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 6 },
   modalSubtitle: { color: '#a3a3a3', fontSize: 11, marginBottom: 16, lineHeight: 16 },
-  addMealButton: { borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginBottom: 14 },
+  addMealButton: { borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginBottom: 14 },
   addMealButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
-  addMealFormCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 14 },
+  addMealFormCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 14 },
   mealFormRow: { flexDirection: 'row', gap: 8 },
-  input: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 13 },
+  input: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 13 },
   addMealFormButtonRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  addMealCancelButton: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
+  addMealCancelButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
   addMealCancelButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   addMealConfirmButton: { flex: 1, backgroundColor: '#22c55e', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
-  addMealConfirmButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '700' },
-  mealCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 14, marginBottom: 10 },
+  addMealConfirmButtonText: { color: '#0F0F12', fontSize: 12, fontWeight: '700' },
+  mealCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 10 },
   mealHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  mealName: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', flexShrink: 1 },
+  mealName: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', flexShrink: 1 },
   mealHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   mealKcal: { color: '#737373', fontSize: 11 },
   removeX: { color: '#ef4444', fontSize: 14 },
-  foodLineWrap: { paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  foodLineWrap: { paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#0F0F12' },
   foodLine: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  foodLineName: { color: '#f5f5f5', fontSize: 12, fontWeight: '600', flexShrink: 1 },
+  foodLineName: { color: '#F5F5F7', fontSize: 12, fontWeight: '600', flexShrink: 1 },
   foodLineTag: { color: '#525252', fontSize: 10, marginLeft: 'auto' },
   foodRemove: { color: '#ef4444', fontSize: 11, marginLeft: 8 },
   substituteLine: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 10, marginTop: 4 },
@@ -776,16 +776,16 @@ const styles = StyleSheet.create({
   substituteCatalogButton: { backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginBottom: 6 },
   substituteCatalogButtonText: { color: '#3b82f6', fontSize: 11, fontWeight: '700' },
   substituteInputRow: { flexDirection: 'row', gap: 6 },
-  substituteInput: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7, color: '#f5f5f5', fontSize: 11 },
-  substituteAddButton: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', width: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  substituteInput: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7, color: '#F5F5F7', fontSize: 11 },
+  substituteAddButton: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', width: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   substituteAddButtonText: { color: '#a3a3a3', fontSize: 16, fontWeight: '700' },
-  addFoodButton: { borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
+  addFoodButton: { borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
   addFoodButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
   manualLink: { color: '#525252', fontSize: 10, textAlign: 'center', marginTop: 8, textDecorationLine: 'underline' },
   foodInputRow: { flexDirection: 'row', gap: 6, marginTop: 10 },
-  foodInput: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 12 },
-  foodAddButton: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', width: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  foodInput: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 12 },
+  foodAddButton: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', width: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   foodAddButtonText: { color: '#a3a3a3', fontSize: 18, fontWeight: '700' },
-  keyboardToolbar: { backgroundColor: '#171717', borderTopWidth: 1, borderTopColor: '#292524', paddingVertical: 8, paddingHorizontal: 16, alignItems: 'flex-end' },
-  keyboardToolbarText: { color: '#f97316', fontSize: 14, fontWeight: '700' },
+  keyboardToolbar: { backgroundColor: '#1C1C22', borderTopWidth: 1, borderTopColor: '#2B2B36', paddingVertical: 8, paddingHorizontal: 16, alignItems: 'flex-end' },
+  keyboardToolbarText: { color: '#FF6B00', fontSize: 14, fontWeight: '700' },
 });

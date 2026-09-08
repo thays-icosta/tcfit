@@ -35,7 +35,7 @@ export default function PublicExercisePreview() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#f97316" />
+        <ActivityIndicator color="#FF6B00" />
       </View>
     );
   }
@@ -110,27 +110,27 @@ export default function PublicExercisePreview() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a' },
-  center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', padding: 24 },
-  brand: { color: '#f97316', fontSize: 20, fontWeight: '800', textAlign: 'center', paddingTop: 20, paddingBottom: 12 },
-  logoText: { color: '#f97316', fontSize: 28, fontWeight: '800', marginBottom: 20 },
-  video: { width: '100%', height: 260, backgroundColor: '#171717' },
+  container: { flex: 1, backgroundColor: '#0F0F12' },
+  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  brand: { color: '#FF6B00', fontSize: 20, fontWeight: '800', textAlign: 'center', paddingTop: 20, paddingBottom: 12 },
+  logoText: { color: '#FF6B00', fontSize: 28, fontWeight: '800', marginBottom: 20 },
+  video: { width: '100%', height: 260, backgroundColor: '#1C1C22' },
   videoPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  videoPlaceholderText: { color: '#f97316', fontSize: 18, fontWeight: '800', letterSpacing: 1 },
+  videoPlaceholderText: { color: '#FF6B00', fontSize: 18, fontWeight: '800', letterSpacing: 1 },
   content: { paddingHorizontal: 20, paddingTop: 20 },
-  exerciseName: { color: '#f5f5f5', fontSize: 22, fontWeight: '800', marginBottom: 10 },
+  exerciseName: { color: '#F5F5F7', fontSize: 22, fontWeight: '800', marginBottom: 10 },
   badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  badge: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
-  badgeText: { color: '#f97316', fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
+  badge: { backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+  badgeText: { color: '#FF6B00', fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
   sectionTitle: { color: '#737373', fontSize: 11, textTransform: 'uppercase', marginBottom: 8, fontWeight: '700' },
   instructions: { color: '#d4d4d4', fontSize: 14, lineHeight: 21, marginBottom: 24 },
-  ctaCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 20, alignItems: 'center', marginTop: 8 },
-  ctaTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 6, textAlign: 'center' },
+  ctaCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, padding: 20, alignItems: 'center', marginTop: 8 },
+  ctaTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 6, textAlign: 'center' },
   ctaSubtitle: { color: '#a3a3a3', fontSize: 12, textAlign: 'center', lineHeight: 18, marginBottom: 18 },
-  ctaButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 24, alignItems: 'center', width: '100%', textAlign: 'center' },
-  ctaButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
+  ctaButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 24, alignItems: 'center', width: '100%', textAlign: 'center' },
+  ctaButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
   secondaryLink: { marginTop: 14, textAlign: 'center' },
   secondaryLinkText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600', textDecorationLine: 'underline' },
-  notFoundTitle: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginBottom: 8, textAlign: 'center' },
+  notFoundTitle: { color: '#F5F5F7', fontSize: 18, fontWeight: '800', marginBottom: 8, textAlign: 'center' },
   notFoundSubtitle: { color: '#a3a3a3', fontSize: 13, textAlign: 'center', lineHeight: 19, marginBottom: 24 },
 });

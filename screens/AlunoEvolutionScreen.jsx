@@ -45,13 +45,13 @@ export default function AlunoEvolutionScreen({ studentId, studentName, onClose }
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
   tabRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginTop: 12, marginBottom: 4 },
-  tabChip: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524' },
-  tabChipActive: { backgroundColor: 'rgba(249,115,22,0.12)', borderColor: '#f97316' },
+  tabChip: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36' },
+  tabChipActive: { backgroundColor: 'rgba(255,107,0,0.12)', borderColor: '#FF6B00' },
   tabChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
-  tabChipTextActive: { color: '#f97316' },
+  tabChipTextActive: { color: '#FF6B00' },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 8 },
-  emptyTitle: { color: '#f5f5f5', fontSize: 15, fontWeight: '700', marginTop: 4 },
+  emptyTitle: { color: '#F5F5F7', fontSize: 15, fontWeight: '700', marginTop: 4 },
   emptyText: { color: '#737373', fontSize: 12, textAlign: 'center', lineHeight: 18 },
 });

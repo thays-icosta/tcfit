@@ -23,11 +23,11 @@ function toTimeInputValue(d) {
 
 const webInputStyle = {
   flex: 1,
-  backgroundColor: '#0a0a0a',
-  border: '1px solid #292524',
+  backgroundColor: '#0F0F12',
+  border: '1px solid #2B2B36',
   borderRadius: 10,
   padding: 12,
-  color: '#f5f5f5',
+  color: '#F5F5F7',
   fontSize: 14,
   fontFamily: 'inherit',
 };
@@ -244,7 +244,7 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
       </TouchableOpacity>
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }}>
           <Text style={styles.sectionTitle}>{listTitle}</Text>
@@ -410,7 +410,7 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
               {selectedStudent && (
                 <View style={styles.focusChipsWrap}>
                   {loadingFichas ? (
-                    <ActivityIndicator color="#f97316" size="small" style={{ marginTop: 8 }} />
+                    <ActivityIndicator color="#FF6B00" size="small" style={{ marginTop: 8 }} />
                   ) : (
                     <>
                       {studentFichas.length > 0 && (
@@ -446,7 +446,7 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
                   <Text style={styles.modalCancelButtonText}>Cancelar</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalConfirmButton} onPress={handleConfirmAppointment} disabled={saving}>
-                  {saving ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.modalConfirmButtonText}>{editingAppointmentId ? 'Salvar' : 'Agendar'}</Text>}
+                  {saving ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>{editingAppointmentId ? 'Salvar' : 'Agendar'}</Text>}
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -458,70 +458,70 @@ export default function PersonalAgendaScreen({ personalId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
   dayScroll: { maxHeight: 62, marginBottom: 14 },
-  dayChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8, alignItems: 'center', minWidth: 48, justifyContent: 'center' },
-  dayChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  dayChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8, alignItems: 'center', minWidth: 48, justifyContent: 'center' },
+  dayChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   dayChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
   dayChipWeekday: { color: '#737373', fontSize: 9, fontWeight: '700', textTransform: 'uppercase' },
-  dayChipNumber: { color: '#f5f5f5', fontSize: 15, fontWeight: '800', marginTop: 2 },
-  dayChipTextActive: { color: '#0a0a0a' },
-  dayChipDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#f97316', marginTop: 4 },
+  dayChipNumber: { color: '#F5F5F7', fontSize: 15, fontWeight: '800', marginTop: 2 },
+  dayChipTextActive: { color: '#0F0F12' },
+  dayChipDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#FF6B00', marginTop: 4 },
   dayChipDotHidden: { opacity: 0 },
-  dayChipDotActive: { backgroundColor: '#0a0a0a' },
-  addButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 20 },
-  addButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
-  sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginBottom: 10, marginTop: 8 },
-  emptyBox: { alignItems: 'center', marginTop: 20, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 24 },
+  dayChipDotActive: { backgroundColor: '#0F0F12' },
+  addButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 20 },
+  addButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
+  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 10, marginTop: 8 },
+  emptyBox: { alignItems: 'center', marginTop: 20, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 24 },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginBottom: 16 },
-  emptyAddButton: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10 },
-  emptyAddButtonText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
-  card: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 10 },
+  emptyAddButton: { backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10 },
+  emptyAddButtonText: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
+  card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardHeaderLeft: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 },
-  avatarCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center', marginRight: 8, overflow: 'hidden' },
+  avatarCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center', marginRight: 8, overflow: 'hidden' },
   avatarImage: { width: 32, height: 32 },
-  avatarLetter: { color: '#f97316', fontSize: 13, fontWeight: '800' },
-  studentName: { color: '#f5f5f5', fontSize: 15, fontWeight: '700', flexShrink: 1 },
-  statusPill: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  avatarLetter: { color: '#FF6B00', fontSize: 13, fontWeight: '800' },
+  studentName: { color: '#F5F5F7', fontSize: 15, fontWeight: '700', flexShrink: 1 },
+  statusPill: { backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   statusPillDone: { backgroundColor: 'rgba(34,197,94,0.12)', borderColor: '#22c55e' },
   statusPillCancel: { backgroundColor: 'rgba(239,68,68,0.12)', borderColor: '#ef4444' },
-  statusPillText: { color: '#f97316', fontSize: 10, fontWeight: '700' },
+  statusPillText: { color: '#FF6B00', fontSize: 10, fontWeight: '700' },
   statusPillTextDone: { color: '#22c55e' },
   statusPillTextCancel: { color: '#ef4444' },
   dateTimeText: { color: '#a3a3a3', fontSize: 12, marginTop: 6 },
-  focusText: { color: '#f97316', fontSize: 12, fontWeight: '700', marginTop: 6 },
+  focusText: { color: '#FF6B00', fontSize: 12, fontWeight: '700', marginTop: 6 },
   notesText: { color: '#a3a3a3', fontSize: 11, marginTop: 6, fontStyle: 'italic' },
   confirmedText: { color: '#22c55e', fontSize: 10, fontWeight: '700', marginTop: 6 },
-  actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#0F0F12' },
   doneButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
   doneButtonText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
   editButton: { backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
   editButtonText: { color: '#3b82f6', fontSize: 10, fontWeight: '700' },
-  cancelButton: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 20, width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
+  cancelButton: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   cancelButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
   deleteButton: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   deleteText: { fontSize: 14 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#171717', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '88%' },
-  modalTitle: { color: '#f5f5f5', fontSize: 17, fontWeight: '800', marginBottom: 16 },
+  modalSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '88%' },
+  modalTitle: { color: '#F5F5F7', fontSize: 17, fontWeight: '800', marginBottom: 16 },
   modalLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 4 },
-  studentChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
-  studentChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  studentChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
+  studentChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   studentChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  studentChipTextActive: { color: '#0a0a0a' },
+  studentChipTextActive: { color: '#0F0F12' },
   dateTimeRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  dateTimeButton: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  dateTimeButtonText: { color: '#f5f5f5', fontSize: 14, fontWeight: '600' },
-  modalInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13 },
+  dateTimeButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  dateTimeButtonText: { color: '#F5F5F7', fontSize: 14, fontWeight: '600' },
+  modalInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
   focusChipsWrap: { marginTop: 4 },
   focusChipsLabel: { color: '#525252', fontSize: 9, textTransform: 'uppercase', marginTop: 8, marginBottom: 4 },
   focusChipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  focusChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
+  focusChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
   focusChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
   modalButtonRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
-  modalCancelButton: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalCancelButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   modalCancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  modalConfirmButton: { flex: 1, backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  modalConfirmButtonText: { color: '#0a0a0a', fontSize: 13, fontWeight: '700' },
+  modalConfirmButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalConfirmButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
 });

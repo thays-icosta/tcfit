@@ -171,7 +171,7 @@ export default function RecipeManagerScreen({ personalId, onClose }) {
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           <TouchableOpacity style={styles.photoPicker} onPress={handlePickPhoto} disabled={uploadingPhoto}>
             {uploadingPhoto ? (
-              <ActivityIndicator color="#f97316" />
+              <ActivityIndicator color="#FF6B00" />
             ) : photoUrl ? (
               <Image source={{ uri: photoUrl }} style={styles.photoPreview} />
             ) : (
@@ -209,7 +209,7 @@ export default function RecipeManagerScreen({ personalId, onClose }) {
           </View>
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-            {saving ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Salvar Receita</Text>}
+            {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar Receita</Text>}
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -225,7 +225,7 @@ export default function RecipeManagerScreen({ personalId, onClose }) {
       </TouchableOpacity>
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           {recipes.length === 0 ? (
@@ -254,30 +254,30 @@ export default function RecipeManagerScreen({ personalId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
-  newButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
-  newButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  newButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 16 },
+  newButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  recipeRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 10, marginBottom: 10 },
+  recipeRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 10, marginBottom: 10 },
   recipeThumb: { width: 48, height: 48, borderRadius: 10 },
-  recipeThumbPlaceholder: { width: 48, height: 48, borderRadius: 10, backgroundColor: '#0a0a0a' },
-  recipeTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700' },
+  recipeThumbPlaceholder: { width: 48, height: 48, borderRadius: 10, backgroundColor: '#0F0F12' },
+  recipeTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   recipeMeta: { color: '#737373', fontSize: 10, marginTop: 2 },
   editLink: { color: '#3b82f6', fontSize: 11, fontWeight: '700', marginRight: 12 },
   deleteLink: { fontSize: 14 },
-  photoPicker: { height: 140, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 16, overflow: 'hidden' },
+  photoPicker: { height: 140, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 16, overflow: 'hidden' },
   photoPreview: { width: '100%', height: '100%' },
   photoPickerText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 12 },
-  input: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13 },
-  textArea: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#f5f5f5', fontSize: 13, minHeight: 90, textAlignVertical: 'top' },
+  input: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
+  textArea: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13, minHeight: 90, textAlignVertical: 'top' },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  categoryChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  categoryChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  categoryChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  categoryChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   categoryChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  categoryChipTextActive: { color: '#0a0a0a' },
+  categoryChipTextActive: { color: '#0F0F12' },
   macroFormRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   macroFormInput: { width: '46%', flexGrow: 1 },
-  saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
-  saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
+  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
+  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
 });

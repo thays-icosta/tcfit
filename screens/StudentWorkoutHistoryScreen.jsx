@@ -39,7 +39,7 @@ export default function StudentWorkoutHistoryScreen({ studentId, studentName, on
       <Text style={styles.title}>Histórico de Treinos</Text>
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 30 }} />
       ) : sessions.length === 0 ? (
         <Text style={styles.emptyText}>Nenhum treino finalizado ainda.</Text>
       ) : (
@@ -90,20 +90,20 @@ export default function StudentWorkoutHistoryScreen({ studentId, studentName, on
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  title: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginBottom: 14 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
+  title: { color: '#F5F5F7', fontSize: 18, fontWeight: '800', marginBottom: 14 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  card: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 10 },
+  card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  workoutName: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
+  workoutName: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
   rpeTag: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
   rpeTagText: { fontSize: 10, fontWeight: '700' },
   date: { color: '#525252', fontSize: 10, marginTop: 2, marginBottom: 10 },
-  statsRow: { flexDirection: 'row', gap: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0a0a0a' },
+  statsRow: { flexDirection: 'row', gap: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0F0F12' },
   statBox: { flex: 1, alignItems: 'center' },
-  statValue: { color: '#f97316', fontSize: 15, fontWeight: '800' },
+  statValue: { color: '#FF6B00', fontSize: 15, fontWeight: '800' },
   statLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 2 },
-  notesBox: { backgroundColor: '#0a0a0a', borderRadius: 8, padding: 10, marginTop: 10 },
+  notesBox: { backgroundColor: '#0F0F12', borderRadius: 8, padding: 10, marginTop: 10 },
   notesLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 4 },
   notesText: { color: '#a3a3a3', fontSize: 12, lineHeight: 17 },
 });

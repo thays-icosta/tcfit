@@ -6,7 +6,7 @@ import { getPhaseForWeekIndex, loadPeriodizationPlan } from './periodizationUtil
 import { showAlert } from './alertUtils';
 import { HeaderBack } from './Header';
 
-const PHASE_COLORS = ['#f97316', '#a855f7', '#3b82f6', '#22c55e', '#eab308', '#ef4444', '#ec4899', '#14b8a6'];
+const PHASE_COLORS = ['#FF6B00', '#a855f7', '#3b82f6', '#22c55e', '#eab308', '#ef4444', '#ec4899', '#14b8a6'];
 const PX_PER_WEEK = 40;
 const DEFAULT_WEEK_COUNT = 8;
 
@@ -249,7 +249,7 @@ export default function WeeklyPeriodizationScreen({ studentId, studentName, pers
       )}
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }}>
           <View style={styles.chartCard}>
@@ -337,7 +337,7 @@ export default function WeeklyPeriodizationScreen({ studentId, studentName, pers
                       <Text style={styles.noteCancelText}>Cancelar</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleSaveNote} disabled={savingNote}>
-                      {savingNote ? <ActivityIndicator color="#f97316" size="small" /> : <Text style={styles.noteSaveText}>Salvar</Text>}
+                      {savingNote ? <ActivityIndicator color="#FF6B00" size="small" /> : <Text style={styles.noteSaveText}>Salvar</Text>}
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -361,43 +361,43 @@ export default function WeeklyPeriodizationScreen({ studentId, studentName, pers
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
   studentSelectorScroll: { maxHeight: 40, marginBottom: 14 },
-  studentChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginRight: 8 },
-  studentChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  studentChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginRight: 8 },
+  studentChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   studentChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  studentChipTextActive: { color: '#0a0a0a' },
+  studentChipTextActive: { color: '#0F0F12' },
   studentLabel: { color: '#737373', fontSize: 12, marginBottom: 14 },
   configureButton: { borderWidth: 1, borderColor: '#a855f7', borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginBottom: 16 },
   configureButtonText: { color: '#a855f7', fontSize: 12, fontWeight: '700' },
-  chartCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 16 },
-  chartTitle: { color: '#f5f5f5', fontSize: 12, fontWeight: '700', marginBottom: 12 },
+  chartCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 16 },
+  chartTitle: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', marginBottom: 12 },
   phaseRow: { flexDirection: 'row', gap: 2, marginBottom: 6 },
   phaseBlock: { height: 26, borderRadius: 6, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 },
-  phaseBlockText: { color: '#0a0a0a', fontSize: 9, fontWeight: '800' },
+  phaseBlockText: { color: '#0F0F12', fontSize: 9, fontWeight: '800' },
   barsRow: { flexDirection: 'row', alignItems: 'flex-end', height: 120, marginTop: 4 },
   barColumn: { alignItems: 'center' },
-  barTrack: { width: 16, height: 96, backgroundColor: '#0a0a0a', borderRadius: 4, justifyContent: 'flex-end', overflow: 'hidden' },
+  barTrack: { width: 16, height: 96, backgroundColor: '#0F0F12', borderRadius: 4, justifyContent: 'flex-end', overflow: 'hidden' },
   barFill: { width: '100%', borderRadius: 4 },
   barFillSelected: { opacity: 1 },
   barLabel: { color: '#525252', fontSize: 9, marginTop: 4 },
-  barLabelSelected: { color: '#f5f5f5', fontWeight: '800' },
+  barLabelSelected: { color: '#F5F5F7', fontWeight: '800' },
   hintText: { color: '#525252', fontSize: 12, textAlign: 'center', marginTop: 10 },
-  weekDetailCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 20 },
+  weekDetailCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 20 },
   weekDetailHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  weekDetailTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700' },
+  weekDetailTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
   weekDetailDates: { color: '#525252', fontSize: 10 },
   phaseChip: { alignSelf: 'flex-start', borderWidth: 1, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 12 },
   phaseChipText: { fontSize: 11, fontWeight: '700' },
   noPhaseText: { color: '#525252', fontSize: 11, marginBottom: 12 },
   weekStatsRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  weekStat: { flex: 1, backgroundColor: '#0a0a0a', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
-  weekStatValue: { color: '#f5f5f5', fontSize: 13, fontWeight: '800' },
+  weekStat: { flex: 1, backgroundColor: '#0F0F12', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
+  weekStatValue: { color: '#F5F5F7', fontSize: 13, fontWeight: '800' },
   weekStatLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 3 },
   noteLinkText: { color: '#3b82f6', fontSize: 11, fontWeight: '600' },
   noteEditBox: { marginTop: 4 },
-  noteInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 12, marginBottom: 8 },
+  noteInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 12, marginBottom: 8 },
   noteButtonRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16 },
   noteCancelText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  noteSaveText: { color: '#f97316', fontSize: 12, fontWeight: '700' },
+  noteSaveText: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
 });

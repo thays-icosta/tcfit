@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   itemGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   itemCard: { width: '48%', ...FLAT_CARD, borderRadius: 12, padding: 0, overflow: 'hidden' },
   bannerWrap: { width: '100%', aspectRatio: 16 / 9, position: 'relative', overflow: 'hidden' },
-  itemCover: { width: '100%', height: '100%', backgroundColor: '#171717' },
+  itemCover: { width: '100%', height: '100%', backgroundColor: '#1C1C22' },
   itemCoverImage: { ...COVER_TOP_IMAGE },
   itemCoverPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   itemBody: { padding: 10 },

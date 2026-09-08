@@ -26,7 +26,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="twitter:image" content="https://tcfit.vercel.app/og-image.png" />
 
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#f97316" />
+        <meta name="theme-color" content="#FF6B00" />
         <link rel="icon" href="/favicon.png" />
 
         {/* iOS "Add to Home Screen" */}
@@ -39,7 +39,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="mobile-web-app-capable" content="yes" />
 
         <ScrollViewStyleReset />
-        <style dangerouslySetInnerHTML={{ __html: 'html, body { background-color: #0a0a0a; }' }} />
+        <style dangerouslySetInnerHTML={{ __html: 'html, body { background-color: #0F0F12; }' }} />
         <script
           dangerouslySetInnerHTML={{
             __html: `

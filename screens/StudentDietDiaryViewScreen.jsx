@@ -80,12 +80,12 @@ export default function StudentDietDiaryViewScreen({ studentId, studentName, onC
       <Text style={styles.title}>Diário Alimentar de Hoje</Text>
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 30 }} />
       ) : (
         <ScrollView style={{ flex: 1 }}>
           {goals ? (
             <View style={styles.goalsCard}>
-              <GoalBar label="Calorias" consumed={totals.kcal} goal={goals.goal_kcal} unit="kcal" color="#f97316" />
+              <GoalBar label="Calorias" consumed={totals.kcal} goal={goals.goal_kcal} unit="kcal" color="#FF6B00" />
               <GoalBar label="Proteína" consumed={totals.protein} goal={goals.goal_protein_g} unit="g" color="#22c55e" />
               <GoalBar label="Carboidrato" consumed={totals.carbs} goal={goals.goal_carbs_g} unit="g" color="#3b82f6" />
               <GoalBar label="Gordura" consumed={totals.fat} goal={goals.goal_fat_g} unit="g" color="#a855f7" />
@@ -122,19 +122,19 @@ export default function StudentDietDiaryViewScreen({ studentId, studentName, onC
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  title: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginBottom: 14 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
+  title: { color: '#F5F5F7', fontSize: 18, fontWeight: '800', marginBottom: 14 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 20 },
   noGoalsText: { color: '#525252', fontSize: 12, textAlign: 'center', marginBottom: 16 },
-  goalsCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 16 },
+  goalsCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 16 },
   goalBarBlock: { marginBottom: 10 },
   goalBarLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   goalBarLabel: { color: '#a3a3a3', fontSize: 11 },
-  goalBarValue: { color: '#f5f5f5', fontSize: 11, fontWeight: '600' },
-  goalBarTrack: { height: 8, backgroundColor: '#0a0a0a', borderRadius: 4, overflow: 'hidden' },
+  goalBarValue: { color: '#F5F5F7', fontSize: 11, fontWeight: '600' },
+  goalBarTrack: { height: 8, backgroundColor: '#0F0F12', borderRadius: 4, overflow: 'hidden' },
   goalBarFill: { height: '100%', borderRadius: 4 },
-  mealCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 12, marginBottom: 8 },
-  mealTitle: { color: '#f97316', fontSize: 12, fontWeight: '700' },
-  foodText: { color: '#f5f5f5', fontSize: 12, fontWeight: '600' },
+  mealCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 8 },
+  mealTitle: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
+  foodText: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
   foodMacros: { color: '#737373', fontSize: 10, marginTop: 1 },
 });

@@ -86,7 +86,7 @@ export default function RecipeDetailScreen({ recipe, studentId, onClose }) {
                 <View style={styles.mealPickerRow}>
                   {MEAL_OPTIONS.map((m) => (
                     <TouchableOpacity key={m.value} style={styles.mealChip} onPress={() => handleAddToDiary(m.value)} disabled={adding === m.value}>
-                      {adding === m.value ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.mealChipText}>{m.label}</Text>}
+                      {adding === m.value ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.mealChipText}>{m.label}</Text>}
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -109,24 +109,24 @@ export default function RecipeDetailScreen({ recipe, studentId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
   photo: { width: '100%', height: 220 },
-  photoPlaceholder: { width: '100%', height: 180, backgroundColor: '#171717', alignItems: 'center', justifyContent: 'center' },
+  photoPlaceholder: { width: '100%', height: 180, backgroundColor: '#1C1C22', alignItems: 'center', justifyContent: 'center' },
   photoPlaceholderText: { fontSize: 40 },
-  title: { color: '#f5f5f5', fontSize: 20, fontWeight: '800', marginTop: 16 },
+  title: { color: '#F5F5F7', fontSize: 20, fontWeight: '800', marginTop: 16 },
   prepTime: { color: '#737373', fontSize: 12, marginTop: 4 },
-  macroCard: { flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginTop: 16, gap: 12 },
+  macroCard: { flexDirection: 'row', flexWrap: 'wrap', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginTop: 16, gap: 12 },
   macroItem: { width: '44%', flexGrow: 1, alignItems: 'center' },
   macroValue: { color: '#22c55e', fontSize: 15, fontWeight: '800' },
   macroLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 3 },
   addButton: { backgroundColor: '#22c55e', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
-  addButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
-  mealPickerBox: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginTop: 16 },
+  addButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
+  mealPickerBox: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginTop: 16 },
   mealPickerLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 10 },
   mealPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
-  mealChip: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  mealChipText: { color: '#f5f5f5', fontSize: 12, fontWeight: '600' },
+  mealChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  mealChipText: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
   mealPickerCancel: { color: '#a3a3a3', fontSize: 12, fontWeight: '600', textAlign: 'center' },
-  sectionTitle: { color: '#f5f5f5', fontSize: 15, fontWeight: '700', marginTop: 24, marginBottom: 8 },
+  sectionTitle: { color: '#F5F5F7', fontSize: 15, fontWeight: '700', marginTop: 24, marginBottom: 8 },
   bodyText: { color: '#a3a3a3', fontSize: 13, lineHeight: 20 },
 });

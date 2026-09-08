@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 
-const ACCENT = '#f97316';
+const ACCENT = '#FF6B00';
 
 // Shared "back nav" header: ← Voltar + title, optional right-side action slot.
 // Used by every secondary/admin/detail screen reached via an onClose prop.
@@ -51,16 +51,16 @@ export function HeaderWelcome({ avatarUrl, initial, badge, greeting, onAvatarPre
 const styles = StyleSheet.create({
   backBar: { flexDirection: 'row', alignItems: 'center', minHeight: 64, marginBottom: 12 },
   backText: { color: ACCENT, fontSize: 14, fontWeight: '600' },
-  backTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '700', marginLeft: 16, flex: 1 },
+  backTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '700', marginLeft: 16, flex: 1 },
   backTitleSlot: { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 16, flex: 1 },
   backRight: { flexDirection: 'row', alignItems: 'center', marginLeft: 12 },
 
   welcomeBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 64, marginBottom: 8 },
   welcomeLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
   welcomeTextCol: { flexShrink: 1 },
-  avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#171717', borderWidth: 1, borderColor: ACCENT, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: ACCENT, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImage: { width: 44, height: 44 },
   avatarLetter: { color: ACCENT, fontSize: 16, fontWeight: '800' },
   badge: { color: ACCENT, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
-  greeting: { color: '#f5f5f5', fontSize: 19, fontWeight: '700' },
+  greeting: { color: '#F5F5F7', fontSize: 19, fontWeight: '700' },
 });

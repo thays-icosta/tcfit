@@ -42,7 +42,7 @@ export default function BarcodeScannerScreen({ onFoodFound, onClose }) {
   if (!permission) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#f97316" />
+        <ActivityIndicator color="#FF6B00" />
       </View>
     );
   }
@@ -73,7 +73,7 @@ export default function BarcodeScannerScreen({ onFoodFound, onClose }) {
         <Text style={styles.hintText}>Aponte a câmera pro código de barras</Text>
         {fetching && (
           <View style={styles.loadingBox}>
-            <ActivityIndicator color="#f97316" />
+            <ActivityIndicator color="#FF6B00" />
             <Text style={styles.loadingText}>Buscando produto...</Text>
           </View>
         )}
@@ -86,17 +86,17 @@ export default function BarcodeScannerScreen({ onFoodFound, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a' },
-  center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', padding: 24 },
-  permissionText: { color: '#f5f5f5', fontSize: 14, textAlign: 'center', marginBottom: 16 },
-  permissionButton: { backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 24 },
-  permissionButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '700' },
+  container: { flex: 1, backgroundColor: '#0F0F12' },
+  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  permissionText: { color: '#F5F5F7', fontSize: 14, textAlign: 'center', marginBottom: 16 },
+  permissionButton: { backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 24 },
+  permissionButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
   cancelText: { color: '#a3a3a3', fontSize: 13 },
   overlay: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scanFrame: { width: 250, height: 150, borderWidth: 2, borderColor: '#f97316', borderRadius: 12, backgroundColor: 'transparent' },
-  hintText: { color: '#f5f5f5', fontSize: 13, marginTop: 20, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  scanFrame: { width: 250, height: 150, borderWidth: 2, borderColor: '#FF6B00', borderRadius: 12, backgroundColor: 'transparent' },
+  hintText: { color: '#F5F5F7', fontSize: 13, marginTop: 20, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
   loadingBox: { marginTop: 20, alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 16, borderRadius: 12 },
-  loadingText: { color: '#f5f5f5', fontSize: 12, marginTop: 8 },
+  loadingText: { color: '#F5F5F7', fontSize: 12, marginTop: 8 },
   closeButton: { position: 'absolute', top: 50, left: 16, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8 },
-  closeButtonText: { color: '#f97316', fontSize: 14, fontWeight: '700' },
+  closeButtonText: { color: '#FF6B00', fontSize: 14, fontWeight: '700' },
 });

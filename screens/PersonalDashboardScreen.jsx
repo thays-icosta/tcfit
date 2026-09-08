@@ -93,7 +93,7 @@ export default function PersonalDashboardScreen({ personalId, onClose, onSelectS
       <HeaderBack title="Painel Geral" onBack={onClose} />
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 30 }} />
       ) : totalStudents === 0 ? (
         <Text style={styles.emptyText}>Convide alunos pra começar a ver estatísticas aqui.</Text>
       ) : (
@@ -163,18 +163,18 @@ export default function PersonalDashboardScreen({ personalId, onClose, onSelectS
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 24 },
-  statBox: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 16, alignItems: 'center' },
-  statValue: { color: '#f97316', fontSize: 20, fontWeight: '800' },
+  statBox: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 16, alignItems: 'center' },
+  statValue: { color: '#FF6B00', fontSize: 20, fontWeight: '800' },
   statLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 4, textAlign: 'center' },
-  sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginBottom: 10, marginTop: 8 },
-  studentRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 12, marginBottom: 8 },
-  avatarCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', alignItems: 'center', justifyContent: 'center', marginRight: 10, overflow: 'hidden' },
+  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 10, marginTop: 8 },
+  studentRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 8 },
+  avatarCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center', marginRight: 10, overflow: 'hidden' },
   avatarImage: { width: 40, height: 40 },
-  avatarLetter: { color: '#f97316', fontSize: 16, fontWeight: '800' },
-  studentName: { color: '#f5f5f5', fontSize: 14, fontWeight: '600' },
+  avatarLetter: { color: '#FF6B00', fontSize: 16, fontWeight: '800' },
+  studentName: { color: '#F5F5F7', fontSize: 14, fontWeight: '600' },
   attentionText: { color: '#ef4444', fontSize: 11, marginTop: 2 },
   activeText: { color: '#22c55e', fontSize: 11, marginTop: 2 },
 });

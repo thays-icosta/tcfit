@@ -16,7 +16,7 @@ export default function PdfViewerScreen({ fileUrl, title, onClose }) {
       </View>
       <View style={{ flex: 1 }}>
         {Platform.OS === 'web' ? (
-          <iframe src={fileUrl} style={{ width: '100%', height: '100%', border: 'none', background: '#0a0a0a' }} title={title || 'PDF'} />
+          <iframe src={fileUrl} style={{ width: '100%', height: '100%', border: 'none', background: '#0F0F12' }} title={title || 'PDF'} />
         ) : (
           <TouchableOpacity style={styles.fallbackButton} onPress={() => Linking.openURL(fileUrl).catch(() => {})}>
             <Text style={styles.fallbackButtonText}>Abrir arquivo</Text>
@@ -28,10 +28,10 @@ export default function PdfViewerScreen({ fileUrl, title, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a' },
+  container: { flex: 1, backgroundColor: '#0F0F12' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingTop: 50, paddingHorizontal: 16, paddingBottom: 14 },
-  backText: { color: '#f97316', fontSize: 15, fontWeight: '700' },
-  title: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', flex: 1 },
-  fallbackButton: { margin: 20, backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  fallbackButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
+  backText: { color: '#FF6B00', fontSize: 15, fontWeight: '700' },
+  title: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', flex: 1 },
+  fallbackButton: { margin: 20, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  fallbackButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
 });

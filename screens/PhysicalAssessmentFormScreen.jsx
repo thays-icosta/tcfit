@@ -457,7 +457,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
           <TouchableOpacity style={styles.scanButton} onPress={handleScanReport} disabled={scanning}>
             {scanning ? (
               <View style={styles.scanButtonRow}>
-                <ActivityIndicator color="#0a0a0a" />
+                <ActivityIndicator color="#0F0F12" />
                 <Text style={styles.scanButtonText}>Analisando relatório com IA...</Text>
               </View>
             ) : (
@@ -566,7 +566,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
           <TextInput style={[styles.input, styles.textArea]} placeholder="anamnese, histórico, recomendações..." placeholderTextColor="#525252" multiline value={notes} onChangeText={setNotes} />
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSaveBioimpedancia} disabled={saving}>
-            {saving ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Salvar Avaliação</Text>}
+            {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar Avaliação</Text>}
           </TouchableOpacity>
         </View>
       ) : (
@@ -681,7 +681,7 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
           )}
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSaveDobras} disabled={saving || !computed}>
-            {saving ? <ActivityIndicator color="#0a0a0a" /> : <Text style={styles.saveButtonText}>Salvar Avaliação</Text>}
+            {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar Avaliação</Text>}
           </TouchableOpacity>
         </View>
       )}
@@ -705,63 +705,63 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
-  title: { color: '#f5f5f5', fontSize: 18, fontWeight: '800', marginBottom: 14 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
+  title: { color: '#F5F5F7', fontSize: 18, fontWeight: '800', marginBottom: 14 },
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  modeButton: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
-  modeButtonActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  modeButton: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  modeButtonActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   modeButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  modeButtonTextActive: { color: '#0a0a0a' },
-  protocolButton: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, paddingVertical: 9, alignItems: 'center' },
-  protocolButtonActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  modeButtonTextActive: { color: '#0F0F12' },
+  protocolButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 9, alignItems: 'center' },
+  protocolButtonActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   protocolButtonText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  protocolButtonTextActive: { color: '#0a0a0a' },
-  formCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14 },
+  protocolButtonTextActive: { color: '#0F0F12' },
+  formCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14 },
   protocolNote: { color: '#737373', fontSize: 11, lineHeight: 16, marginBottom: 6 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 4, marginTop: 10 },
-  input: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#f5f5f5', fontSize: 13 },
+  input: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 13 },
   textArea: { height: 90, textAlignVertical: 'top' },
   sexRow: { flexDirection: 'row', gap: 8 },
-  sexButton: { flex: 1, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
-  sexButtonActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  sexButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
+  sexButtonActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   sexButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  sexButtonTextActive: { color: '#0a0a0a' },
+  sexButtonTextActive: { color: '#0F0F12' },
   perimetersToggle: { paddingVertical: 10, marginTop: 8 },
-  perimetersToggleText: { color: '#f97316', fontSize: 12, fontWeight: '600' },
-  perimetersBox: { backgroundColor: '#0a0a0a', borderRadius: 10, padding: 10 },
-  segmentBlock: { borderBottomWidth: 1, borderBottomColor: '#171717', paddingBottom: 10, marginBottom: 10 },
-  segmentTitle: { color: '#f5f5f5', fontSize: 13, fontWeight: '700', marginBottom: 2 },
+  perimetersToggleText: { color: '#FF6B00', fontSize: 12, fontWeight: '600' },
+  perimetersBox: { backgroundColor: '#0F0F12', borderRadius: 10, padding: 10 },
+  segmentBlock: { borderBottomWidth: 1, borderBottomColor: '#1C1C22', paddingBottom: 10, marginBottom: 10 },
+  segmentTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700', marginBottom: 2 },
   segmentRow: { flexDirection: 'row', gap: 8 },
   classRow: { flexDirection: 'row', gap: 6 },
-  classChip: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
-  classChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  classChip: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  classChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   classChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  classChipTextActive: { color: '#0a0a0a' },
-  scanButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 6 },
+  classChipTextActive: { color: '#0F0F12' },
+  scanButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 6 },
   scanButtonRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  scanButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
+  scanButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
   scanHint: { color: '#737373', fontSize: 11, lineHeight: 16, marginBottom: 4 },
   uploadButton: { backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   uploadButtonText: { color: '#3b82f6', fontSize: 12, fontWeight: '700' },
   reportPreviewBox: { position: 'relative', borderRadius: 10, overflow: 'hidden' },
   reportPreviewImage: { width: '100%', height: 140 },
-  pdfPreviewBox: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 10, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  pdfPreviewBox: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
   pdfPreviewIcon: { fontSize: 24 },
-  pdfPreviewName: { color: '#f5f5f5', fontSize: 12, flexShrink: 1 },
+  pdfPreviewName: { color: '#F5F5F7', fontSize: 12, flexShrink: 1 },
   reportRemoveButton: { position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   reportRemoveButtonText: { color: '#ef4444', fontSize: 11, fontWeight: '700' },
-  resultBox: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#f97316', borderRadius: 10, padding: 12, marginTop: 16 },
-  resultTitle: { color: '#f97316', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
+  resultBox: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 10, padding: 12, marginTop: 16 },
+  resultTitle: { color: '#FF6B00', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', marginBottom: 8, textAlign: 'center' },
   resultRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', rowGap: 12 },
   resultItem: { alignItems: 'center', width: '33%' },
-  resultValue: { color: '#f5f5f5', fontSize: 18, fontWeight: '800' },
+  resultValue: { color: '#F5F5F7', fontSize: 18, fontWeight: '800' },
   resultLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 2 },
-  saveButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 20 },
-  saveButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
+  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 20 },
+  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
   scanErrorOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
-  scanErrorCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 16, padding: 22 },
-  scanErrorTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 10 },
+  scanErrorCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, padding: 22 },
+  scanErrorTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 10 },
   scanErrorText: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginBottom: 20 },
-  scanErrorButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  scanErrorButtonText: { color: '#0a0a0a', fontSize: 14, fontWeight: '800' },
+  scanErrorButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  scanErrorButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
 });

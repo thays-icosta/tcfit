@@ -176,7 +176,7 @@ export default function AlunoAgendaScreen({ studentId, onClose }) {
       </ScrollView>
 
       {loading ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }}>
           {remindersReady && !dayFilter && (
@@ -213,7 +213,7 @@ export default function AlunoAgendaScreen({ studentId, onClose }) {
                     disabled={confirmingId === a.id}
                   >
                     {confirmingId === a.id ? (
-                      <ActivityIndicator color="#0a0a0a" size="small" />
+                      <ActivityIndicator color="#0F0F12" size="small" />
                     ) : (
                       <Text style={styles.confirmButtonText}>Confirmar Presença</Text>
                     )}
@@ -229,37 +229,37 @@ export default function AlunoAgendaScreen({ studentId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
   frequencyRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  frequencyCard: { flex: 1, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  frequencyValue: { color: '#f97316', fontSize: 18, fontWeight: '800' },
+  frequencyCard: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  frequencyValue: { color: '#FF6B00', fontSize: 18, fontWeight: '800' },
   frequencyLabel: { color: '#737373', fontSize: 10, marginTop: 2, textTransform: 'uppercase' },
   confirmedText: { color: '#22c55e', fontSize: 11, fontWeight: '700', marginTop: 8 },
-  confirmButton: { backgroundColor: '#f97316', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
-  confirmButtonText: { color: '#0a0a0a', fontSize: 12, fontWeight: '700' },
+  confirmButton: { backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
+  confirmButtonText: { color: '#0F0F12', fontSize: 12, fontWeight: '700' },
   dayScroll: { maxHeight: 62, marginBottom: 14 },
-  dayChip: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8, alignItems: 'center', minWidth: 48, justifyContent: 'center' },
-  dayChipActive: { backgroundColor: '#f97316', borderColor: '#f97316' },
+  dayChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8, alignItems: 'center', minWidth: 48, justifyContent: 'center' },
+  dayChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   dayChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
   dayChipWeekday: { color: '#737373', fontSize: 9, fontWeight: '700', textTransform: 'uppercase' },
-  dayChipNumber: { color: '#f5f5f5', fontSize: 15, fontWeight: '800', marginTop: 2 },
-  dayChipTextActive: { color: '#0a0a0a' },
-  dayChipDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#f97316', marginTop: 4 },
+  dayChipNumber: { color: '#F5F5F7', fontSize: 15, fontWeight: '800', marginTop: 2 },
+  dayChipTextActive: { color: '#0F0F12' },
+  dayChipDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#FF6B00', marginTop: 4 },
   dayChipDotHidden: { opacity: 0 },
-  dayChipDotActive: { backgroundColor: '#0a0a0a' },
+  dayChipDotActive: { backgroundColor: '#0F0F12' },
   reminderHint: { color: '#525252', fontSize: 10, textAlign: 'center', marginBottom: 14 },
-  sectionTitle: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', marginBottom: 10, marginTop: 4 },
-  emptyBox: { alignItems: 'center', marginTop: 20, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 24 },
+  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 10, marginTop: 4 },
+  emptyBox: { alignItems: 'center', marginTop: 20, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 24 },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center' },
-  card: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 10 },
+  card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  dateTimeText: { color: '#f97316', fontSize: 15, fontWeight: '700' },
+  dateTimeText: { color: '#FF6B00', fontSize: 15, fontWeight: '700' },
   durationText: { color: '#737373', fontSize: 11, marginTop: 4 },
   notesText: { color: '#a3a3a3', fontSize: 12, marginTop: 6, fontStyle: 'italic' },
-  statusPill: { backgroundColor: 'rgba(249,115,22,0.12)', borderWidth: 1, borderColor: '#f97316', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  statusPill: { backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   statusPillDone: { backgroundColor: 'rgba(34,197,94,0.12)', borderColor: '#22c55e' },
   statusPillCancel: { backgroundColor: 'rgba(239,68,68,0.12)', borderColor: '#ef4444' },
-  statusPillText: { color: '#f97316', fontSize: 10, fontWeight: '700' },
+  statusPillText: { color: '#FF6B00', fontSize: 10, fontWeight: '700' },
   statusPillTextDone: { color: '#22c55e' },
   statusPillTextCancel: { color: '#ef4444' },
 });

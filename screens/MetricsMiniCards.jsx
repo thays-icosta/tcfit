@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const ACCENT = '#E05A17';
+const ACCENT = '#FF6B00';
 
 function MetricCard({ icon, label, valueText, percent, subtitle, onPress }) {
   const Wrapper = onPress ? TouchableOpacity : View;
@@ -80,11 +80,11 @@ export default function MetricsMiniCards({
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
-  card: { width: '47%', backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 14, padding: 12 },
+  card: { width: '47%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 12 },
   cardTopRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   cardLabel: { color: '#a3a3a3', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
-  cardValue: { color: '#f5f5f5', fontSize: 14, fontWeight: '800' },
+  cardValue: { color: '#F5F5F7', fontSize: 14, fontWeight: '800' },
   cardSubtitle: { color: '#737373', fontSize: 9, fontWeight: '600', marginTop: 3, marginBottom: 2 },
-  track: { height: 4, backgroundColor: '#0a0a0a', borderRadius: 2, overflow: 'hidden', marginTop: 8 },
+  track: { height: 4, backgroundColor: '#0F0F12', borderRadius: 2, overflow: 'hidden', marginTop: 8 },
   fill: { height: '100%', borderRadius: 2, backgroundColor: ACCENT },
 });

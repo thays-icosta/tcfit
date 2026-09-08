@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const ACTIVE_COLOR = '#f97316';
+const ACTIVE_COLOR = '#FF6B00';
 const INACTIVE_COLOR = '#666666';
 
 const TABS = [
@@ -52,7 +52,7 @@ export default function AlunoTabBar({ activeTab, onChange }) {
 const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
-    backgroundColor: '#171717',
+    backgroundColor: '#1C1C22',
     borderTopWidth: 1,
     borderTopColor: '#222222',
     borderTopLeftRadius: 20,

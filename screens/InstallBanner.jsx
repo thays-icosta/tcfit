@@ -45,7 +45,7 @@ export default function InstallBanner() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalIconCircle}>
-              <Ionicons name={guide ? GUIDES[guide].icon : 'share-outline'} size={22} color="#E05A17" />
+              <Ionicons name={guide ? GUIDES[guide].icon : 'share-outline'} size={22} color="#FF6B00" />
             </View>
             <Text style={styles.modalTitle}>Adicionar à Tela de Início</Text>
             <Text style={styles.modalText}>{guide ? GUIDES[guide].text : ''}</Text>
@@ -97,15 +97,15 @@ const styles = StyleSheet.create({
   modalCard: {
     backgroundColor: 'rgba(23,23,28,0.9)',
     borderWidth: 1,
-    borderColor: 'rgba(224,90,23,0.18)',
+    borderColor: 'rgba(255,107,0,0.18)',
     borderRadius: 24,
     padding: 26,
     alignItems: 'center',
     ...(Platform.OS === 'web' ? { backdropFilter: 'blur(20px)' } : {}),
   },
-  modalIconCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(224,90,23,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
-  modalTitle: { color: '#f5f5f5', fontSize: 16, fontWeight: '800', marginBottom: 10, textAlign: 'center' },
+  modalIconCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  modalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 10, textAlign: 'center' },
   modalText: { color: '#a3a3a3', fontSize: 13, lineHeight: 20, textAlign: 'center', marginBottom: 20 },
-  modalCloseButton: { backgroundColor: '#E05A17', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 32, alignItems: 'center' },
+  modalCloseButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 32, alignItems: 'center' },
   modalCloseButtonText: { color: '#000000', fontSize: 14, fontWeight: '800' },
 });

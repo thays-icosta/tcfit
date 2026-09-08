@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Text, StyleSheet, Animated } from 'react-native
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const ACTIVE_COLOR = '#f97316';
+const ACTIVE_COLOR = '#FF6B00';
 const INACTIVE_COLOR = '#666666';
 
 const TABS = [
@@ -44,9 +44,9 @@ export default function PersonalTabBar({ activeTab, onChange }) {
 const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
-    backgroundColor: '#171717',
+    backgroundColor: '#1C1C22',
     borderTopWidth: 1,
-    borderTopColor: '#292524',
+    borderTopColor: '#2B2B36',
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     paddingTop: 10,
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   label: { color: '#666666', fontSize: 10, fontWeight: '600', marginTop: 3 },
-  labelActive: { color: '#f97316' },
+  labelActive: { color: '#FF6B00' },
   dot: { width: 4, height: 4, borderRadius: 2, marginTop: 4, backgroundColor: 'transparent' },
-  dotActive: { backgroundColor: '#f97316' },
+  dotActive: { backgroundColor: '#FF6B00' },
 });

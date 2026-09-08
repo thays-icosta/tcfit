@@ -118,7 +118,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
     return (
       <View style={styles.container}>
         <HeaderBack title="Modo Aula Presencial" onBack={onClose} />
-        <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 30 }} />
       </View>
     );
   }
@@ -134,9 +134,9 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
           <ScrollView>
             {fichas.map((f) => (
               <TouchableOpacity key={f.id} style={styles.fichaCard} onPress={() => handleSelectFicha(f)} disabled={starting}>
-                <Ionicons name="barbell-outline" size={20} color="#f97316" />
+                <Ionicons name="barbell-outline" size={20} color="#FF6B00" />
                 <Text style={styles.fichaCardText}>{f.name}</Text>
-                {starting ? <ActivityIndicator color="#f97316" size="small" /> : <Ionicons name="chevron-forward-outline" size={18} color="#525252" />}
+                {starting ? <ActivityIndicator color="#FF6B00" size="small" /> : <Ionicons name="chevron-forward-outline" size={18} color="#525252" />}
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -151,7 +151,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
       <Text style={styles.subtitle}>Lançamento rápido — {student.name}</Text>
 
       {loadingExercises ? (
-        <ActivityIndicator color="#f97316" style={{ marginTop: 30 }} />
+        <ActivityIndicator color="#FF6B00" style={{ marginTop: 30 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
           {exercises.map((ex) => {
@@ -196,7 +196,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
                           disabled={done || savingKey === key}
                         >
                           {savingKey === key ? (
-                            <ActivityIndicator color="#0a0a0a" size="small" />
+                            <ActivityIndicator color="#0F0F12" size="small" />
                           ) : (
                             <Text style={styles.checkText}>{done ? '✓' : ''}</Text>
                           )}
@@ -212,21 +212,21 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
       )}
 
       <TouchableOpacity style={styles.finishButton} onPress={handleFinish} disabled={finishing}>
-        {finishing ? <ActivityIndicator color="#0a0a0a" size="small" /> : <Text style={styles.finishButtonText}>Concluir Aula</Text>}
+        {finishing ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.finishButtonText}>Concluir Aula</Text>}
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', paddingTop: 50, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
   subtitle: { color: '#a3a3a3', fontSize: 12, marginBottom: 14 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  fichaCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 10 },
-  fichaCardText: { color: '#f5f5f5', fontSize: 14, fontWeight: '700', flex: 1 },
-  exerciseCard: { backgroundColor: '#171717', borderWidth: 1, borderColor: '#292524', borderRadius: 12, padding: 14, marginBottom: 10 },
-  exerciseName: { color: '#f5f5f5', fontSize: 15, fontWeight: '700', marginBottom: 8 },
-  tableHeader: { flexDirection: 'row', marginBottom: 6, borderBottomWidth: 1, borderBottomColor: '#0a0a0a', paddingBottom: 6 },
+  fichaCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
+  fichaCardText: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', flex: 1 },
+  exerciseCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
+  exerciseName: { color: '#F5F5F7', fontSize: 15, fontWeight: '700', marginBottom: 8 },
+  tableHeader: { flexDirection: 'row', marginBottom: 6, borderBottomWidth: 1, borderBottomColor: '#0F0F12', paddingBottom: 6 },
   tableHeaderText: { color: '#525252', fontSize: 9, textTransform: 'uppercase', fontWeight: '700', textAlign: 'center' },
   tableRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   colSet: { width: 32 },
@@ -234,11 +234,11 @@ const styles = StyleSheet.create({
   colReps: { flex: 1, minWidth: 0, marginHorizontal: 3 },
   colCheck: { width: 40, alignItems: 'center' },
   setNumberText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700', textAlign: 'center' },
-  cellInput: { backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#292524', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 2, minWidth: 0, color: '#f5f5f5', fontSize: 13, textAlign: 'center' },
+  cellInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 2, minWidth: 0, color: '#F5F5F7', fontSize: 13, textAlign: 'center' },
   cellInputDone: { opacity: 0.5 },
-  checkCircle: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: '#292524', alignItems: 'center', justifyContent: 'center' },
+  checkCircle: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center' },
   checkCircleDone: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
-  checkText: { color: '#0a0a0a', fontSize: 15, fontWeight: '800' },
-  finishButton: { backgroundColor: '#f97316', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8, marginBottom: 16 },
-  finishButtonText: { color: '#0a0a0a', fontSize: 15, fontWeight: '700' },
+  checkText: { color: '#0F0F12', fontSize: 15, fontWeight: '800' },
+  finishButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8, marginBottom: 16 },
+  finishButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
 });
