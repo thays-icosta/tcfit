@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, ActivityIndicator, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
@@ -84,6 +84,21 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
   const [savingAccessLevel, setSavingAccessLevel] = useState(false);
   const [attendanceMode, setAttendanceMode] = useState(student.attendance_mode || 'online');
   const [savingAttendanceMode, setSavingAttendanceMode] = useState(false);
+  const [personalNotes, setPersonalNotes] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [notesSaved, setNotesSaved] = useState(false);
+
+  const handleSaveNotes = async () => {
+    setSavingNotes(true);
+    const { error } = await supabase.from('users').update({ personal_notes: personalNotes.trim() || null }).eq('id', student.id);
+    setSavingNotes(false);
+    if (error) {
+      showAlert('Erro', error.message);
+    } else {
+      setNotesSaved(true);
+      setTimeout(() => setNotesSaved(false), 2000);
+    }
+  };
 
   const handleChangeAccessLevel = async (level) => {
     if (level === accessLevel) return;
@@ -179,8 +194,9 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
       .eq('entry_date', todayStr);
     setWaterMl((waterRows || []).reduce((sum, w) => sum + w.amount_ml, 0));
 
-    const { data: studentRow } = await supabase.from('users').select('water_goal_ml').eq('id', student.id).single();
+    const { data: studentRow } = await supabase.from('users').select('water_goal_ml, personal_notes').eq('id', student.id).single();
     setWaterGoalMl(studentRow?.water_goal_ml || 2000);
+    setPersonalNotes(studentRow?.personal_notes || '');
 
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -212,7 +228,8 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
       const { data: templateRows } = await supabase
         .from('workout_templates')
         .select('id, name, level, environment, focus_muscle_group')
-        .eq('personal_id', personalId);
+        .eq('personal_id', personalId)
+        .eq('archived', false);
       if (templateRows && templateRows.length > 0) {
         const { data: sessionRows } = await supabase
           .from('template_sessions')
@@ -443,6 +460,24 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
         </TouchableOpacity>
       </View>
 
+      <View style={styles.notesCard}>
+        <View style={styles.anamneseSummaryHeader}>
+          <Text style={styles.anamneseSummaryTitle}>Suas Observações</Text>
+          {notesSaved && <Text style={styles.notesSavedLabel}>Salvo!</Text>}
+        </View>
+        <TextInput
+          style={styles.notesInput}
+          placeholder="Só você vê isso. Ex: lesão no ombro esquerdo, prefere treinar de manhã..."
+          placeholderTextColor="#525252"
+          value={personalNotes}
+          onChangeText={setPersonalNotes}
+          multiline
+        />
+        <TouchableOpacity style={styles.notesSaveButton} onPress={handleSaveNotes} disabled={savingNotes}>
+          {savingNotes ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.notesSaveButtonText}>Salvar Observações</Text>}
+        </TouchableOpacity>
+      </View>
+
       {anamnese?.completed_at && (
         <View style={styles.anamneseSummaryCard}>
           <View style={styles.anamneseSummaryHeader}>
@@ -622,6 +657,11 @@ const styles = StyleSheet.create({
   anamneseSummaryRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   anamneseSummaryLine: { color: '#a3a3a3', fontSize: 12, flexShrink: 1 },
   suggestionCard: { backgroundColor: 'rgba(255,107,0,0.08)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, padding: 14, marginBottom: 16 },
+  notesCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 16 },
+  notesSavedLabel: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
+  notesInput: { color: '#F5F5F7', fontSize: 12, lineHeight: 17, minHeight: 60, textAlignVertical: 'top', marginBottom: 10 },
+  notesSaveButton: { alignSelf: 'flex-start', backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 9, paddingHorizontal: 14 },
+  notesSaveButtonText: { color: '#0F0F12', fontSize: 12, fontWeight: '700' },
   suggestionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   suggestionTitle: { color: '#FF6B00', fontSize: 13, fontWeight: '800' },
   suggestionText: { color: '#F5F5F7', fontSize: 12, marginTop: 6, lineHeight: 17 },

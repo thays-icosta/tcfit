@@ -298,6 +298,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       .from('workout_templates')
       .select('id, name, description')
       .eq('personal_id', personalId)
+      .eq('archived', false)
       .order('created_at', { ascending: true });
     setTemplates(data || []);
     setLoadingTemplates(false);

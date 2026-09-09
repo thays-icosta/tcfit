@@ -17,6 +17,7 @@ export default function WorkoutsSection({ onSelectWorkout, isDesktop, gender }) 
         .from('workout_templates')
         .select('id, name, description, cover_image_url, workout_tags, is_public, target_audience')
         .eq('is_public', true)
+        .eq('archived', false)
         .not('workout_tags', 'is', null)
         .order('created_at', { ascending: false });
 

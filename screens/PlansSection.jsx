@@ -60,6 +60,7 @@ export default function PlansSection({ onLayout, onLogin, onSignup }) {
         .from('workout_templates')
         .select('id, name, description, price')
         .eq('is_public', true)
+        .eq('archived', false)
         .order('created_at', { ascending: false });
       setTemplates(templatesData || []);
 
