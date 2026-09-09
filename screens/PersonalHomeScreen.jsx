@@ -11,6 +11,7 @@ import TemplateBuilderScreen from './TemplateBuilderScreen';
 import ProductsManagerScreen from './ProductsManagerScreen';
 import FoodCatalogScreen from './FoodCatalogScreen';
 import RecipeManagerScreen from './RecipeManagerScreen';
+import DietTemplateBuilderScreen from './DietTemplateBuilderScreen';
 import AlunoDetailScreen from './AlunoDetailScreen';
 import PersonalTabBar from './PersonalTabBar';
 import { showAlert } from './alertUtils';
@@ -36,6 +37,8 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [showProductsManager, setShowProductsManager] = useState(false);
   const [showFoodCatalog, setShowFoodCatalog] = useState(false);
   const [showRecipeManager, setShowRecipeManager] = useState(false);
+  const [showDietTemplates, setShowDietTemplates] = useState(false);
+  const [nutricaoScope, setNutricaoScope] = useState('planos');
   const [showStudentPicker, setShowStudentPicker] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
   const [financeSummary, setFinanceSummary] = useState({ monthlyRevenue: 0, dueCount: 0 });
@@ -298,6 +301,10 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     return <RecipeManagerScreen personalId={user.id} onClose={() => setShowRecipeManager(false)} />;
   }
 
+  if (showDietTemplates) {
+    return <DietTemplateBuilderScreen personalId={user.id} onClose={() => setShowDietTemplates(false)} />;
+  }
+
   const attentionItems = students
     .map((s) => {
       const done = completedToday[s.id];
@@ -518,53 +525,98 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 24 }}>
           <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Nutrição</Text>
 
-          <TouchableOpacity style={styles.aiShortcutCard} onPress={() => setShowStudentPicker(true)}>
-            <Ionicons name="sparkles" size={20} color="#FF6B00" />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.aiShortcutTitle}>Gerar Dieta com IA</Text>
-              <Text style={styles.aiShortcutSubtitle}>Escolha um aluno e monte um plano alimentar automaticamente</Text>
-            </View>
-            <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
-          </TouchableOpacity>
-
-          <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Biblioteca de Dietas e Receitas</Text>
-          <View style={styles.shortcutGrid}>
-            <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowFoodCatalog(true)}>
-              <View style={styles.shortcutIconCircle}>
-                <Ionicons name="nutrition-outline" size={20} color="#FF6B00" />
-              </View>
-              <Text style={styles.shortcutText}>Catálogo de Alimentos</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowRecipeManager(true)}>
-              <View style={styles.shortcutIconCircle}>
-                <Ionicons name="book-outline" size={20} color="#FF6B00" />
-              </View>
-              <Text style={styles.shortcutText}>Receitas e E-books</Text>
-            </TouchableOpacity>
+          <View style={styles.nutricaoScopeTabs}>
+            {[
+              { value: 'planos', label: 'Planos', icon: 'clipboard-outline' },
+              { value: 'modelos', label: 'Modelos', icon: 'albums-outline' },
+              { value: 'receitas', label: 'Receitas', icon: 'book-outline' },
+              { value: 'produtos', label: 'Produtos', icon: 'bag-handle-outline' },
+            ].map((tab) => (
+              <TouchableOpacity
+                key={tab.value}
+                style={[styles.nutricaoScopeTab, nutricaoScope === tab.value && styles.nutricaoScopeTabActive]}
+                onPress={() => setNutricaoScope(tab.value)}
+              >
+                <Ionicons name={tab.icon} size={13} color={nutricaoScope === tab.value ? '#0F0F12' : '#a3a3a3'} />
+                <Text style={[styles.nutricaoScopeTabText, nutricaoScope === tab.value && styles.nutricaoScopeTabTextActive]}>{tab.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
-          <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Planos Recentes</Text>
-          {recentDiets.length === 0 ? (
-            <Text style={styles.emptyText}>Nenhum plano alimentar criado ainda.</Text>
-          ) : (
-            recentDiets.map((diet) => (
-              <TouchableOpacity
-                key={diet.id}
-                style={styles.recentDietCard}
-                onPress={() => diet.student && setDetailFor(students.find((s) => s.id === diet.student.id) || diet.student)}
-              >
+          {nutricaoScope === 'planos' && (
+            <>
+              <TouchableOpacity style={styles.aiShortcutCard} onPress={() => setShowStudentPicker(true)}>
+                <Ionicons name="sparkles" size={20} color="#FF6B00" />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.recentDietName}>{diet.name}</Text>
-                  <Text style={styles.recentDietStudent}>{diet.student?.name || 'Aluno removido'}</Text>
+                  <Text style={styles.aiShortcutTitle}>Gerar Dieta com IA</Text>
+                  <Text style={styles.aiShortcutSubtitle}>Escolha um aluno e monte um plano alimentar automaticamente</Text>
                 </View>
-                {diet.active && (
-                  <View style={styles.recentDietActiveBadge}>
-                    <Text style={styles.recentDietActiveBadgeText}>Ativo</Text>
-                  </View>
-                )}
-                <Text style={styles.chevron}>›</Text>
+                <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
               </TouchableOpacity>
-            ))
+
+              <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Planos Recentes</Text>
+              {recentDiets.length === 0 ? (
+                <Text style={styles.emptyText}>Nenhum plano alimentar criado ainda.</Text>
+              ) : (
+                recentDiets.map((diet) => (
+                  <TouchableOpacity
+                    key={diet.id}
+                    style={styles.recentDietCard}
+                    onPress={() => diet.student && setDetailFor(students.find((s) => s.id === diet.student.id) || diet.student)}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.recentDietName}>{diet.name}</Text>
+                      <Text style={styles.recentDietStudent}>{diet.student?.name || 'Aluno removido'}</Text>
+                    </View>
+                    {diet.active && (
+                      <View style={styles.recentDietActiveBadge}>
+                        <Text style={styles.recentDietActiveBadgeText}>Ativo</Text>
+                      </View>
+                    )}
+                    <Text style={styles.chevron}>›</Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </>
+          )}
+
+          {nutricaoScope === 'modelos' && (
+            <TouchableOpacity style={styles.aiShortcutCard} onPress={() => setShowDietTemplates(true)}>
+              <Ionicons name="albums-outline" size={20} color="#FF6B00" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.aiShortcutTitle}>Modelos de Dieta</Text>
+                <Text style={styles.aiShortcutSubtitle}>Crie planos alimentares reutilizáveis e aplique rápido em qualquer aluno</Text>
+              </View>
+              <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+            </TouchableOpacity>
+          )}
+
+          {nutricaoScope === 'receitas' && (
+            <View style={styles.shortcutGrid}>
+              <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowFoodCatalog(true)}>
+                <View style={styles.shortcutIconCircle}>
+                  <Ionicons name="nutrition-outline" size={20} color="#FF6B00" />
+                </View>
+                <Text style={styles.shortcutText}>Catálogo de Alimentos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowRecipeManager(true)}>
+                <View style={styles.shortcutIconCircle}>
+                  <Ionicons name="book-outline" size={20} color="#FF6B00" />
+                </View>
+                <Text style={styles.shortcutText}>Receitas e E-books</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {nutricaoScope === 'produtos' && (
+            <TouchableOpacity style={styles.aiShortcutCard} onPress={() => setShowProductsManager(true)}>
+              <Ionicons name="bag-handle-outline" size={20} color="#FF6B00" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.aiShortcutTitle}>Produtos Adicionais</Text>
+                <Text style={styles.aiShortcutSubtitle}>E-books, guias e outros produtos de nutrição à venda</Text>
+              </View>
+              <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+            </TouchableOpacity>
           )}
         </ScrollView>
         <PersonalTabBar activeTab={activeTab} onChange={setActiveTab} />
@@ -808,6 +860,11 @@ const styles = StyleSheet.create({
   viewStudentsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginTop: 4 },
   viewStudentsTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
   viewStudentsSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
+  nutricaoScopeTabs: { flexDirection: 'row', gap: 6, marginBottom: 16 },
+  nutricaoScopeTab: { flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 10 },
+  nutricaoScopeTabActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
+  nutricaoScopeTabText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
+  nutricaoScopeTabTextActive: { color: '#0F0F12' },
   aiShortcutCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,107,0,0.1)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, padding: 16, marginBottom: 8 },
   aiShortcutTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
   aiShortcutSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
