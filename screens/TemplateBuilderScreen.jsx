@@ -30,7 +30,34 @@ const METHOD_LABELS = {
   'piramide': 'Pirâmide',
 };
 
-export default function TemplateBuilderScreen({ personalId, onClose }) {
+function TemplateCard({ t, sessionCount, exerciseCount, studentCount, onPress, onLongPress }) {
+  const levelLabel = PROGRAM_LEVELS.find((l) => l.value === t.level)?.label;
+  const metaBits = [levelLabel, t.duration_weeks ? `${t.duration_weeks} semanas` : null].filter(Boolean);
+  return (
+    <TouchableOpacity style={styles.programCard} onPress={onPress} onLongPress={onLongPress}>
+      {t.cover_image_url ? (
+        <Image source={{ uri: t.cover_image_url }} style={styles.programCardCover} />
+      ) : (
+        <View style={styles.programCardCoverPlaceholder}>
+          <Ionicons name="albums-outline" size={20} color="#525252" />
+        </View>
+      )}
+      <View style={{ flex: 1 }}>
+        <Text style={styles.programCardTitle} numberOfLines={1}>{t.name}</Text>
+        {metaBits.length > 0 && <Text style={styles.programCardMeta}>{metaBits.join(' • ')}</Text>}
+        <Text style={styles.programCardSubtitle}>
+          {sessionCount} ficha{sessionCount !== 1 ? 's' : ''} • {exerciseCount} exercício{exerciseCount !== 1 ? 's' : ''}
+        </Text>
+        {t.is_public && (
+          <Text style={styles.programCardUsage}>Publicado • usado por {studentCount} aluno{studentCount !== 1 ? 's' : ''}</Text>
+        )}
+      </View>
+      <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+    </TouchableOpacity>
+  );
+}
+
+export default function TemplateBuilderScreen({ personalId, onClose, onCreateForStudent }) {
   const [activeMainTab, setActiveMainTab] = useState('templates');
   const [exerciseSubScreenActive, setExerciseSubScreenActive] = useState(false);
   const [templates, setTemplates] = useState([]);
@@ -41,11 +68,14 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [templateSessionCounts, setTemplateSessionCounts] = useState({});
+  const [templateExerciseCounts, setTemplateExerciseCounts] = useState({});
+  const [templateStudentCounts, setTemplateStudentCounts] = useState({});
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [watchingVideo, setWatchingVideo] = useState(null);
   const [showSettingsSheet, setShowSettingsSheet] = useState(false);
   const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
+  const [showCreateTypeSheet, setShowCreateTypeSheet] = useState(false);
   const [showAiTemplateModal, setShowAiTemplateModal] = useState(false);
   const [aiTemplateInstruction, setAiTemplateInstruction] = useState('');
   const [aiTemplateProcessing, setAiTemplateProcessing] = useState(false);
@@ -59,6 +89,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const [editDescription, setEditDescription] = useState('');
   const [editIsPublic, setEditIsPublic] = useState(false);
   const [editPrice, setEditPrice] = useState('');
+  const [editDurationWeeks, setEditDurationWeeks] = useState('');
   const [editCoverImageUrl, setEditCoverImageUrl] = useState(null);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [editCategory, setEditCategory] = useState(null);
@@ -101,7 +132,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
   const loadTemplates = async () => {
     const { data } = await supabase
       .from('workout_templates')
-      .select('id, name, description, is_public, price, cover_image_url, category, environment, level, goal, focus_muscle_group, target_audience, running_level, cover_focal_position, archived')
+      .select('id, name, description, is_public, price, cover_image_url, category, environment, level, goal, focus_muscle_group, target_audience, running_level, cover_focal_position, archived, duration_weeks')
       .eq('personal_id', personalId)
       .order('created_at', { ascending: true });
     setTemplates(data || []);
@@ -113,13 +144,67 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
     if (data && data.length > 0) {
       const { data: sessionRows } = await supabase
         .from('template_sessions')
-        .select('template_id')
+        .select('id, template_id')
         .in('template_id', data.map((t) => t.id));
       const counts = {};
-      (sessionRows || []).forEach((row) => { counts[row.template_id] = (counts[row.template_id] || 0) + 1; });
+      const sessionToTemplate = {};
+      (sessionRows || []).forEach((row) => {
+        counts[row.template_id] = (counts[row.template_id] || 0) + 1;
+        sessionToTemplate[row.id] = row.template_id;
+      });
       setTemplateSessionCounts(counts);
+
+      const sessionIds = Object.keys(sessionToTemplate);
+      if (sessionIds.length > 0) {
+        const { data: exerciseRows } = await supabase
+          .from('workout_template_exercises')
+          .select('session_id')
+          .in('session_id', sessionIds);
+        const exCounts = {};
+        (exerciseRows || []).forEach((row) => {
+          const tId = sessionToTemplate[row.session_id];
+          if (tId) exCounts[tId] = (exCounts[tId] || 0) + 1;
+        });
+        setTemplateExerciseCounts(exCounts);
+      } else {
+        setTemplateExerciseCounts({});
+      }
+
+      const publicIds = data.filter((t) => t.is_public).map((t) => t.id);
+      if (publicIds.length > 0) {
+        const { data: productRows } = await supabase
+          .from('products')
+          .select('id, source_template_id')
+          .in('source_template_id', publicIds);
+        const productToTemplate = {};
+        (productRows || []).forEach((p) => { productToTemplate[p.id] = p.source_template_id; });
+        const productIds = Object.keys(productToTemplate);
+        if (productIds.length > 0) {
+          const { data: workoutRows } = await supabase
+            .from('workouts')
+            .select('product_id, student_id')
+            .in('product_id', productIds)
+            .eq('active', true);
+          const studentsByTemplate = {};
+          (workoutRows || []).forEach((w) => {
+            const tId = productToTemplate[w.product_id];
+            if (!tId) return;
+            if (!studentsByTemplate[tId]) studentsByTemplate[tId] = new Set();
+            studentsByTemplate[tId].add(w.student_id);
+          });
+          const studentCounts = {};
+          Object.keys(studentsByTemplate).forEach((tId) => { studentCounts[tId] = studentsByTemplate[tId].size; });
+          setTemplateStudentCounts(studentCounts);
+        } else {
+          setTemplateStudentCounts({});
+        }
+      } else {
+        setTemplateStudentCounts({});
+      }
     } else {
       setTemplateSessionCounts({});
+      setTemplateExerciseCounts({});
+      setTemplateStudentCounts({});
     }
   };
 
@@ -172,6 +257,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       setEditDescription(t?.description || '');
       setEditIsPublic(t?.is_public || false);
       setEditPrice(t?.price != null ? String(t.price) : '');
+      setEditDurationWeeks(t?.duration_weeks != null ? String(t.duration_weeks) : '');
       setEditCoverImageUrl(t?.cover_image_url || null);
       setEditCategory(t?.category || null);
       setEditWorkoutTags(t?.workout_tags || []);
@@ -482,6 +568,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
       description: editDescription.trim() || null,
       is_public: editIsPublic,
       price: editPrice ? Number(editPrice) : null,
+      duration_weeks: editDurationWeeks ? Number(editDurationWeeks) : null,
       cover_image_url: editCoverImageUrl,
       category: editCategory,
       workout_tags: editWorkoutTags,
@@ -644,7 +731,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                       <TouchableOpacity onPress={() => setShowAiTemplateModal(true)} hitSlop={8}>
                         <Ionicons name="sparkles-outline" size={22} color="#FF6B00" />
                       </TouchableOpacity>
-                      <TouchableOpacity onPress={() => setShowCreateTemplateModal(true)} hitSlop={8}>
+                      <TouchableOpacity onPress={() => setShowCreateTypeSheet(true)} hitSlop={8}>
                         <Ionicons name="add-circle-outline" size={22} color="#FF6B00" />
                       </TouchableOpacity>
                     </>
@@ -686,7 +773,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
             <ScrollView>
               <View style={styles.sectionToggleBox}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.sectionToggleLabel}>Exibir seção “Treinos Prontos” na vitrine {savingSectionToggle && '(salvando...)'}</Text>
+                  <Text style={styles.sectionToggleLabel}>Exibir seção “Programas” na vitrine {savingSectionToggle && '(salvando...)'}</Text>
                   <Text style={styles.helperText}>Desligue pra esconder a seção inteira da página pública sem apagar os templates.</Text>
                 </View>
                 <Switch value={sectionEnabled} onValueChange={handleToggleSection} trackColor={{ false: '#2B2B36', true: '#22c55e' }} thumbColor="#F5F5F7" />
@@ -714,6 +801,16 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                   </TouchableOpacity>
                 ))}
               </View>
+
+              <Text style={styles.metaLabel}>Duração (semanas, opcional)</Text>
+              <TextInput
+                style={styles.metaInput}
+                keyboardType="number-pad"
+                placeholder="ex: 8"
+                placeholderTextColor="#525252"
+                value={editDurationWeeks}
+                onChangeText={setEditDurationWeeks}
+              />
 
               <Text style={styles.metaLabel}>Local</Text>
               <View style={styles.categoryRow}>
@@ -868,10 +965,62 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
         </View>
       </Modal>
 
+      <Modal visible={showCreateTypeSheet} transparent animationType="slide" onRequestClose={() => setShowCreateTypeSheet(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Criar Novo</Text>
+            <TouchableOpacity
+              style={styles.createTypeOption}
+              onPress={() => {
+                setShowCreateTypeSheet(false);
+                setTemplateScope('prontos');
+                setShowCreateTemplateModal(true);
+              }}
+            >
+              <View style={[styles.createTypeDot, { backgroundColor: '#FF6B00' }]} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.createTypeTitle}>Programa Pronto</Text>
+                <Text style={styles.createTypeSubtitle}>Criar um treino para vender ou atribuir aos alunos.</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.createTypeOption}
+              onPress={() => {
+                setShowCreateTypeSheet(false);
+                setTemplateScope('modelos');
+                setShowCreateTemplateModal(true);
+              }}
+            >
+              <View style={styles.createTypeDot} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.createTypeTitle}>Modelo</Text>
+                <Text style={styles.createTypeSubtitle}>Criar uma ficha reutilizável pra sua consultoria.</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.createTypeOption}
+              onPress={() => {
+                setShowCreateTypeSheet(false);
+                onCreateForStudent?.();
+              }}
+            >
+              <View style={styles.createTypeDot} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.createTypeTitle}>Treino Personalizado</Text>
+                <Text style={styles.createTypeSubtitle}>Criar diretamente pra um aluno específico.</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowCreateTypeSheet(false)}>
+              <Text style={styles.modalCloseButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <Modal visible={showCreateTemplateModal} transparent animationType="slide" onRequestClose={() => setShowCreateTemplateModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Criar Novo Template</Text>
+            <Text style={styles.modalTitle}>{templateScope === 'prontos' ? 'Criar Programa Pronto' : 'Criar Modelo'}</Text>
             <Text style={styles.modalSubtitle}>Dá um nome pro template. Ele já nasce com a primeira sessão (Treino A) pra você montar.</Text>
             <View style={styles.newRow}>
               <TextInput
@@ -967,7 +1116,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                 onPress={() => setTemplateScope('prontos')}
               >
                 <Ionicons name="storefront-outline" size={14} color={templateScope === 'prontos' ? '#0F0F12' : '#a3a3a3'} />
-                <Text style={[styles.scopeTabText, templateScope === 'prontos' && styles.scopeTabTextActive]}>Treinos Prontos</Text>
+                <Text style={[styles.scopeTabText, templateScope === 'prontos' && styles.scopeTabTextActive]}>Programas</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.scopeTabButton, templateScope === 'arquivados' && styles.scopeTabButtonActive]}
@@ -979,9 +1128,9 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
             </View>
             <Text style={styles.scopeHelperText}>
               {templateScope === 'modelos'
-                ? 'Biblioteca privada — reaproveite pra montar a ficha de um aluno sem alterar o original.'
+                ? 'Sua ferramenta interna — reaproveite pra montar a ficha de um aluno sem alterar o original.'
                 : templateScope === 'prontos'
-                  ? 'Vendidos na vitrine dos alunos. Publique pelo campo "Vender esse template na vitrine" ao criar ou editar.'
+                  ? 'Produtos vendidos ou atribuídos aos alunos. Publique pelo campo "Vender esse template na vitrine" ao criar ou editar.'
                   : 'Fora das listas ativas, sem aparecer na vitrine. Segure um card pra restaurar.'}
             </Text>
 
@@ -1036,23 +1185,15 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                 <View key={group.value} style={{ marginBottom: 16 }}>
                   <Text style={styles.templateGroupLabel}>{group.label}</Text>
                   {group.items.map((t) => (
-                    <TouchableOpacity key={t.id} style={styles.programCard} onPress={() => setActiveTemplateId(t.id)} onLongPress={() => handleTemplateLongPress(t)}>
-                      {t.cover_image_url ? (
-                        <Image source={{ uri: t.cover_image_url }} style={styles.programCardCover} />
-                      ) : (
-                        <View style={styles.programCardCoverPlaceholder}>
-                          <Ionicons name="albums-outline" size={20} color="#525252" />
-                        </View>
-                      )}
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.programCardTitle} numberOfLines={1}>{t.name}</Text>
-                        <Text style={styles.programCardSubtitle}>
-                          {templateSessionCounts[t.id] || 0} ficha{(templateSessionCounts[t.id] || 0) !== 1 ? 's' : ''}
-                        </Text>
-                      </View>
-                      {t.is_public && <Text style={styles.publicDot}>●</Text>}
-                      <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
-                    </TouchableOpacity>
+                    <TemplateCard
+                      key={t.id}
+                      t={t}
+                      sessionCount={templateSessionCounts[t.id] || 0}
+                      exerciseCount={templateExerciseCounts[t.id] || 0}
+                      studentCount={templateStudentCounts[t.id] || 0}
+                      onPress={() => setActiveTemplateId(t.id)}
+                      onLongPress={() => handleTemplateLongPress(t)}
+                    />
                   ))}
                 </View>
               ))}
@@ -1061,23 +1202,15 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
                 <View style={{ marginBottom: 16 }}>
                   {templateGroups.length > 0 && <Text style={styles.templateGroupLabel}>Sem categoria</Text>}
                   {ungroupedTemplates.map((t) => (
-                    <TouchableOpacity key={t.id} style={styles.programCard} onPress={() => setActiveTemplateId(t.id)} onLongPress={() => handleTemplateLongPress(t)}>
-                      {t.cover_image_url ? (
-                        <Image source={{ uri: t.cover_image_url }} style={styles.programCardCover} />
-                      ) : (
-                        <View style={styles.programCardCoverPlaceholder}>
-                          <Ionicons name="albums-outline" size={20} color="#525252" />
-                        </View>
-                      )}
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.programCardTitle} numberOfLines={1}>{t.name}</Text>
-                        <Text style={styles.programCardSubtitle}>
-                          {templateSessionCounts[t.id] || 0} ficha{(templateSessionCounts[t.id] || 0) !== 1 ? 's' : ''}
-                        </Text>
-                      </View>
-                      {t.is_public && <Text style={styles.publicDot}>●</Text>}
-                      <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
-                    </TouchableOpacity>
+                    <TemplateCard
+                      key={t.id}
+                      t={t}
+                      sessionCount={templateSessionCounts[t.id] || 0}
+                      exerciseCount={templateExerciseCounts[t.id] || 0}
+                      studentCount={templateStudentCounts[t.id] || 0}
+                      onPress={() => setActiveTemplateId(t.id)}
+                      onLongPress={() => handleTemplateLongPress(t)}
+                    />
                   ))}
                 </View>
               )}
@@ -1226,7 +1359,9 @@ const styles = StyleSheet.create({
   programCardCover: { width: 44, height: 44, borderRadius: 10 },
   programCardCoverPlaceholder: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
   programCardTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
+  programCardMeta: { color: '#a3a3a3', fontSize: 11, marginTop: 2, fontWeight: '600' },
   programCardSubtitle: { color: '#737373', fontSize: 11, marginTop: 2 },
+  programCardUsage: { color: '#22c55e', fontSize: 10, marginTop: 3, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   modalSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '80%' },
   modalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 14 },
@@ -1243,7 +1378,10 @@ const styles = StyleSheet.create({
   pickerFilterDivider: { width: 1, height: 20, backgroundColor: '#2B2B36', marginHorizontal: 2 },
   modalCloseButton: { paddingVertical: 12, alignItems: 'center', marginTop: 8 },
   modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  publicDot: { color: '#22c55e', fontSize: 8 },
+  createTypeOption: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
+  createTypeDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#525252' },
+  createTypeTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  createTypeSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
   scopeTabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 8 },
   scopeTabButton: { flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 10 },
   scopeTabButtonActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },

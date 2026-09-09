@@ -271,7 +271,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     return (
       <View style={{ flex: 1 }}>
         <View style={{ flex: 1 }}>
-          <TemplateBuilderScreen personalId={user.id} onClose={() => setActiveTab('inicio')} />
+          <TemplateBuilderScreen personalId={user.id} onClose={() => setActiveTab('inicio')} onCreateForStudent={() => setActiveTab('alunos')} />
         </View>
         <PersonalTabBar activeTab={activeTab} onChange={setActiveTab} />
       </View>
