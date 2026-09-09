@@ -25,6 +25,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [overduePaymentStudents, setOverduePaymentStudents] = useState({});
   const [anamnesePendingStudents, setAnamnesePendingStudents] = useState({});
   const [unreadMessageStudents, setUnreadMessageStudents] = useState({});
+  const [staleWorkoutStudents, setStaleWorkoutStudents] = useState({});
   const [detailFor, setDetailFor] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [activeTab, setActiveTab] = useState('inicio');
@@ -161,6 +162,24 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       const unreadMap = {};
       (unreadRows || []).forEach((m) => { unreadMap[m.student_id] = true; });
       setUnreadMessageStudents(unreadMap);
+
+      const { data: activeWorkoutRows } = await supabase
+        .from('workouts')
+        .select('student_id, created_at')
+        .eq('personal_id', user.id)
+        .eq('active', true)
+        .in('student_id', studentIds);
+      const oldestByStudent = {};
+      (activeWorkoutRows || []).forEach((w) => {
+        const t = new Date(w.created_at).getTime();
+        if (!(w.student_id in oldestByStudent) || t < oldestByStudent[w.student_id]) oldestByStudent[w.student_id] = t;
+      });
+      const staleMap = {};
+      Object.keys(oldestByStudent).forEach((id) => {
+        const weeks = Math.floor((Date.now() - oldestByStudent[id]) / (7 * 24 * 60 * 60 * 1000));
+        if (weeks >= 6) staleMap[id] = weeks;
+      });
+      setStaleWorkoutStudents(staleMap);
     }
 
     setLoading(false);
@@ -280,7 +299,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     if (overduePaymentStudents[s.id]) return 'atrasado';
     const done = completedToday[s.id];
     const daysSince = daysSinceLastTrained[s.id];
-    if ((!done && (daysSince === null || daysSince >= 3)) || anamnesePendingStudents[s.id] || unreadMessageStudents[s.id]) return 'atencao';
+    if ((!done && (daysSince === null || daysSince >= 3)) || anamnesePendingStudents[s.id] || unreadMessageStudents[s.id] || staleWorkoutStudents[s.id] != null) return 'atencao';
     return 'em_dia';
   };
 
@@ -387,13 +406,15 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
               const done = completedToday[item.id];
               const daysSince = daysSinceLastTrained[item.id];
               const status = studentStatus(item);
-              const alertLabel = status === 'atrasado'
-                ? 'Pagamento atrasado'
-                : status === 'atencao'
-                  ? (!done && (daysSince === null || daysSince >= 3)
-                      ? (daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`)
-                      : unreadMessageStudents[item.id] ? 'Mensagem não respondida' : 'Anamnese pendente')
-                  : null;
+              let alertLabel = null;
+              if (status === 'atrasado') {
+                alertLabel = 'Pagamento atrasado';
+              } else if (status === 'atencao') {
+                if (!done && (daysSince === null || daysSince >= 3)) alertLabel = daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`;
+                else if (unreadMessageStudents[item.id]) alertLabel = 'Mensagem não respondida';
+                else if (staleWorkoutStudents[item.id] != null) alertLabel = `Treino há ${staleWorkoutStudents[item.id]}sem sem atualizar`;
+                else alertLabel = 'Anamnese pendente';
+              }
               const isVip = item.access_level === 'consultoria_vip';
               return (
                 <TouchableOpacity key={item.id} style={styles.studentCard} onPress={() => setDetailFor(item)}>
@@ -543,6 +564,9 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       }
       if (unreadMessageStudents[s.id]) {
         flags.push({ key: 'mensagem', tone: 'pending', label: 'Mensagem não respondida' });
+      }
+      if (staleWorkoutStudents[s.id] != null) {
+        flags.push({ key: 'treino_desatualizado', tone: 'pending', label: `Treino há ${staleWorkoutStudents[s.id]}sem sem atualizar` });
       }
       return { student: s, flags };
     })
