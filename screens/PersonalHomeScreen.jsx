@@ -26,6 +26,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [anamnesePendingStudents, setAnamnesePendingStudents] = useState({});
   const [unreadMessageStudents, setUnreadMessageStudents] = useState({});
   const [staleWorkoutStudents, setStaleWorkoutStudents] = useState({});
+  const [lastTrainedDate, setLastTrainedDate] = useState({});
   const [detailFor, setDetailFor] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [activeTab, setActiveTab] = useState('inicio');
@@ -133,6 +134,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         }
       });
       setDaysSinceLastTrained(daysMap);
+      setLastTrainedDate(lastMap);
 
       const { data: overdueRows } = await supabase
         .from('payments')
@@ -295,6 +297,31 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     return <RecipeManagerScreen personalId={user.id} onClose={() => setShowRecipeManager(false)} />;
   }
 
+  const attentionItems = students
+    .map((s) => {
+      const done = completedToday[s.id];
+      const daysSince = daysSinceLastTrained[s.id];
+      const flags = [];
+      if (!done && (daysSince === null || daysSince >= 3)) {
+        flags.push({ key: 'inatividade', tone: 'urgent', label: daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar` });
+      }
+      if (overduePaymentStudents[s.id]) {
+        flags.push({ key: 'pagamento', tone: 'pending', label: 'Pagamento vencido' });
+      }
+      if (anamnesePendingStudents[s.id]) {
+        flags.push({ key: 'anamnese', tone: 'pending', label: 'Anamnese pendente' });
+      }
+      if (unreadMessageStudents[s.id]) {
+        flags.push({ key: 'mensagem', tone: 'pending', label: 'Mensagem não respondida' });
+      }
+      if (staleWorkoutStudents[s.id] != null) {
+        flags.push({ key: 'treino_desatualizado', tone: 'pending', label: `Treino há ${staleWorkoutStudents[s.id]}sem sem atualizar` });
+      }
+      return { student: s, flags };
+    })
+    .filter((item) => item.flags.length > 0)
+    .sort((a, b) => (b.flags.some((f) => f.tone === 'urgent') ? 1 : 0) - (a.flags.some((f) => f.tone === 'urgent') ? 1 : 0));
+
   const studentStatus = (s) => {
     if (overduePaymentStudents[s.id]) return 'atrasado';
     const done = completedToday[s.id];
@@ -329,6 +356,17 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       <View style={{ flex: 1 }}>
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 24 }}>
           <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Meus Alunos</Text>
+
+          {attentionItems.length > 0 && (
+            <TouchableOpacity style={styles.attentionBanner} onPress={() => setStatusFilter('atencao')}>
+              <Ionicons name="warning" size={18} color="#f59e0b" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.attentionBannerTitle}>Precisa da Sua Atenção</Text>
+                <Text style={styles.attentionBannerSubtitle}>{attentionItems.length} aluno{attentionItems.length !== 1 ? 's' : ''}</Text>
+              </View>
+              <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+            </TouchableOpacity>
+          )}
 
           <View style={styles.studentFilterTabs}>
             {[
@@ -416,6 +454,9 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
                 else alertLabel = 'Anamnese pendente';
               }
               const isVip = item.access_level === 'consultoria_vip';
+              const lastTrainedLabel = lastTrainedDate[item.id]
+                ? new Date(lastTrainedDate[item.id]).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+                : null;
               return (
                 <TouchableOpacity key={item.id} style={styles.studentCard} onPress={() => setDetailFor(item)}>
                   <View style={styles.avatarCircle}>
@@ -427,27 +468,16 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.studentName}>{item.name}</Text>
-                    <Text style={styles.studentEmail}>{item.email}</Text>
-                    <View style={styles.badgeRow}>
-                      <View style={[styles.planBadge, isVip ? styles.planBadgeVip : styles.planBadgeApp]}>
-                        <Text style={[styles.planBadgeText, isVip ? styles.planBadgeTextVip : styles.planBadgeTextApp]}>
-                          {isVip ? 'Consultoria VIP' : 'Acesso App'}
-                        </Text>
-                      </View>
-                      <View style={[styles.planBadge, item.attendance_mode === 'presencial' ? styles.planBadgePresencial : styles.planBadgeOnline]}>
-                        <Text style={[styles.planBadgeText, item.attendance_mode === 'presencial' ? styles.planBadgeTextPresencial : styles.planBadgeTextOnline]}>
-                          {item.attendance_mode === 'presencial' ? 'Presencial' : 'Online'}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.statusTag}>
-                    <View style={[styles.statusDot, done ? styles.statusDotDone : styles.statusDotPending]} />
-                    <Text style={styles.statusTagText}>{done ? 'Treinou hoje' : 'Ainda não treinou'}</Text>
-                    {alertLabel && (
-                      <View style={[styles.alertTag, status === 'atencao' && styles.attentionTagPending]}>
+                    <Text style={styles.studentPlanLine}>
+                      {isVip ? 'Consultoria VIP' : 'Acesso App'} • {item.attendance_mode === 'presencial' ? 'Presencial' : 'Online'}
+                    </Text>
+                    {alertLabel ? (
+                      <View style={[styles.alertTag, { marginTop: 6 }, status === 'atencao' && styles.attentionTagPending]}>
+                        <Ionicons name="alert-circle" size={11} color={status === 'atrasado' ? '#ef4444' : '#f59e0b'} />
                         <Text style={[styles.alertTagText, status === 'atencao' && styles.attentionTagPendingText]}>{alertLabel}</Text>
                       </View>
+                    ) : (
+                      <Text style={styles.studentLastTrained}>{lastTrainedLabel ? `Último treino: ${lastTrainedLabel}` : 'Ainda não treinou'}</Text>
                     )}
                   </View>
                   <Text style={styles.chevron}>›</Text>
@@ -547,31 +577,6 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       </View>
     );
   }
-
-  const attentionItems = students
-    .map((s) => {
-      const done = completedToday[s.id];
-      const daysSince = daysSinceLastTrained[s.id];
-      const flags = [];
-      if (!done && (daysSince === null || daysSince >= 3)) {
-        flags.push({ key: 'inatividade', tone: 'urgent', label: daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar` });
-      }
-      if (overduePaymentStudents[s.id]) {
-        flags.push({ key: 'pagamento', tone: 'pending', label: 'Pagamento vencido' });
-      }
-      if (anamnesePendingStudents[s.id]) {
-        flags.push({ key: 'anamnese', tone: 'pending', label: 'Anamnese pendente' });
-      }
-      if (unreadMessageStudents[s.id]) {
-        flags.push({ key: 'mensagem', tone: 'pending', label: 'Mensagem não respondida' });
-      }
-      if (staleWorkoutStudents[s.id] != null) {
-        flags.push({ key: 'treino_desatualizado', tone: 'pending', label: `Treino há ${staleWorkoutStudents[s.id]}sem sem atualizar` });
-      }
-      return { student: s, flags };
-    })
-    .filter((item) => item.flags.length > 0)
-    .sort((a, b) => (b.flags.some((f) => f.tone === 'urgent') ? 1 : 0) - (a.flags.some((f) => f.tone === 'urgent') ? 1 : 0));
 
   return (
     <View style={{ flex: 1 }}>
@@ -792,6 +797,9 @@ const styles = StyleSheet.create({
   recentDietActiveBadgeText: { color: '#22c55e', fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
   studentPickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2B2B36' },
   studentPickerName: { color: '#F5F5F7', fontSize: 14, fontWeight: '600' },
+  attentionBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(245,158,11,0.1)', borderWidth: 1, borderColor: '#f59e0b', borderRadius: 12, padding: 14, marginBottom: 12 },
+  attentionBannerTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  attentionBannerSubtitle: { color: '#f59e0b', fontSize: 11, fontWeight: '700', marginTop: 2 },
   studentFilterTabs: { flexDirection: 'row', backgroundColor: '#1C1C22', borderRadius: 10, padding: 3, marginBottom: 10, gap: 4 },
   studentFilterTab: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 8 },
   studentFilterTabActive: { backgroundColor: '#FF6B00' },
@@ -804,23 +812,8 @@ const styles = StyleSheet.create({
   avatarImage: { width: 44, height: 44 },
   avatarLetter: { color: '#FF6B00', fontSize: 17, fontWeight: '800' },
   studentName: { color: '#F5F5F7', fontSize: 15, fontWeight: '600' },
-  studentEmail: { color: '#737373', fontSize: 11, marginTop: 1 },
-  badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 5 },
-  planBadge: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
-  planBadgeVip: { backgroundColor: 'rgba(168,85,247,0.12)' },
-  planBadgeApp: { backgroundColor: 'rgba(115,115,115,0.16)' },
-  planBadgePresencial: { backgroundColor: 'rgba(255,107,0,0.12)' },
-  planBadgeOnline: { backgroundColor: 'rgba(59,130,246,0.12)' },
-  planBadgeText: { fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
-  planBadgeTextVip: { color: '#a855f7' },
-  planBadgeTextApp: { color: '#a3a3a3' },
-  planBadgeTextPresencial: { color: '#FF6B00' },
-  planBadgeTextOnline: { color: '#3b82f6' },
-  statusTag: { alignItems: 'flex-end', marginRight: 8 },
-  statusDot: { width: 8, height: 8, borderRadius: 4, marginBottom: 3 },
-  statusDotDone: { backgroundColor: '#22c55e' },
-  statusDotPending: { backgroundColor: '#525252' },
-  statusTagText: { color: '#525252', fontSize: 9 },
+  studentPlanLine: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', marginTop: 2 },
+  studentLastTrained: { color: '#525252', fontSize: 10, marginTop: 6 },
   alertTag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(239,68,68,0.12)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 3, marginTop: 4 },
   alertTagText: { color: '#ef4444', fontSize: 9, fontWeight: '700' },
   alertRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', borderRadius: 12, padding: 12, marginBottom: 8 },

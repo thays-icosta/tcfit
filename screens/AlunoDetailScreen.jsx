@@ -87,6 +87,7 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
   const [personalNotes, setPersonalNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [notesSaved, setNotesSaved] = useState(false);
+  const [detailTab, setDetailTab] = useState('resumo');
 
   const handleSaveNotes = async () => {
     setSavingNotes(true);
@@ -460,92 +461,204 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
         </TouchableOpacity>
       </View>
 
-      <View style={styles.notesCard}>
-        <View style={styles.anamneseSummaryHeader}>
-          <Text style={styles.anamneseSummaryTitle}>Suas Observações</Text>
-          {notesSaved && <Text style={styles.notesSavedLabel}>Salvo!</Text>}
-        </View>
-        <TextInput
-          style={styles.notesInput}
-          placeholder="Só você vê isso. Ex: lesão no ombro esquerdo, prefere treinar de manhã..."
-          placeholderTextColor="#525252"
-          value={personalNotes}
-          onChangeText={setPersonalNotes}
-          multiline
-        />
-        <TouchableOpacity style={styles.notesSaveButton} onPress={handleSaveNotes} disabled={savingNotes}>
-          {savingNotes ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.notesSaveButtonText}>Salvar Observações</Text>}
-        </TouchableOpacity>
+      <View style={styles.detailTabRow}>
+        {[
+          { value: 'resumo', label: 'Resumo' },
+          { value: 'treino', label: 'Treino' },
+          { value: 'evolucao', label: 'Evolução' },
+          { value: 'comunicacao', label: 'Comunicação' },
+        ].map((tab) => (
+          <TouchableOpacity
+            key={tab.value}
+            style={[styles.detailTabButton, detailTab === tab.value && styles.detailTabButtonActive]}
+            onPress={() => setDetailTab(tab.value)}
+          >
+            <Text style={[styles.detailTabText, detailTab === tab.value && styles.detailTabTextActive]}>{tab.label}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      {anamnese?.completed_at && (
-        <View style={styles.anamneseSummaryCard}>
-          <View style={styles.anamneseSummaryHeader}>
-            <Text style={styles.anamneseSummaryTitle}>Resumo da Anamnese</Text>
-            <TouchableOpacity onPress={() => setShowAnamnese(true)}>
-              <Text style={styles.anamneseSummaryLink}>Ver completa</Text>
+      {detailTab === 'resumo' && (
+        <>
+          <View style={styles.notesCard}>
+            <View style={styles.anamneseSummaryHeader}>
+              <Text style={styles.anamneseSummaryTitle}>Suas Observações</Text>
+              {notesSaved && <Text style={styles.notesSavedLabel}>Salvo!</Text>}
+            </View>
+            <TextInput
+              style={styles.notesInput}
+              placeholder="Só você vê isso. Ex: lesão no ombro esquerdo, prefere treinar de manhã..."
+              placeholderTextColor="#525252"
+              value={personalNotes}
+              onChangeText={setPersonalNotes}
+              multiline
+            />
+            <TouchableOpacity style={styles.notesSaveButton} onPress={handleSaveNotes} disabled={savingNotes}>
+              {savingNotes ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.notesSaveButtonText}>Salvar Observações</Text>}
             </TouchableOpacity>
           </View>
-          <View style={styles.anamneseSummaryRow}>
-            <Ionicons name="flag-outline" size={13} color="#a3a3a3" />
-            <Text style={styles.anamneseSummaryLine}>
-              {PROGRAM_GOALS.find((g) => g.value === anamnese.main_goal)?.label || '—'}
-              {anamnese.experience_level ? ` · ${PROGRAM_LEVELS.find((l) => l.value === anamnese.experience_level)?.label}` : ''}
-            </Text>
-          </View>
-          <View style={styles.anamneseSummaryRow}>
-            <Ionicons name="location-outline" size={13} color="#a3a3a3" />
-            <Text style={styles.anamneseSummaryLine}>
-              {TRAINING_LOCATIONS.find((l) => l.value === anamnese.training_location)?.label || '—'}
-              {anamnese.days_per_week ? ` · ${anamnese.days_per_week}x/semana` : ''}
-            </Text>
-          </View>
-          {anamnese.focus_muscle_group && (
-            <View style={styles.anamneseSummaryRow}>
-              <Ionicons name="barbell-outline" size={13} color="#a3a3a3" />
-              <Text style={styles.anamneseSummaryLine}>
-                Foco: {MUSCLE_FOCUS_OPTIONS.find((m) => m.value === anamnese.focus_muscle_group)?.label}
-              </Text>
+
+          {anamnese?.completed_at && (
+            <View style={styles.anamneseSummaryCard}>
+              <View style={styles.anamneseSummaryHeader}>
+                <Text style={styles.anamneseSummaryTitle}>Resumo da Anamnese</Text>
+                <TouchableOpacity onPress={() => setShowAnamnese(true)}>
+                  <Text style={styles.anamneseSummaryLink}>Ver completa</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.anamneseSummaryRow}>
+                <Ionicons name="flag-outline" size={13} color="#a3a3a3" />
+                <Text style={styles.anamneseSummaryLine}>
+                  {PROGRAM_GOALS.find((g) => g.value === anamnese.main_goal)?.label || '—'}
+                  {anamnese.experience_level ? ` · ${PROGRAM_LEVELS.find((l) => l.value === anamnese.experience_level)?.label}` : ''}
+                </Text>
+              </View>
+              <View style={styles.anamneseSummaryRow}>
+                <Ionicons name="location-outline" size={13} color="#a3a3a3" />
+                <Text style={styles.anamneseSummaryLine}>
+                  {TRAINING_LOCATIONS.find((l) => l.value === anamnese.training_location)?.label || '—'}
+                  {anamnese.days_per_week ? ` · ${anamnese.days_per_week}x/semana` : ''}
+                </Text>
+              </View>
+              {anamnese.focus_muscle_group && (
+                <View style={styles.anamneseSummaryRow}>
+                  <Ionicons name="barbell-outline" size={13} color="#a3a3a3" />
+                  <Text style={styles.anamneseSummaryLine}>
+                    Foco: {MUSCLE_FOCUS_OPTIONS.find((m) => m.value === anamnese.focus_muscle_group)?.label}
+                  </Text>
+                </View>
+              )}
             </View>
           )}
-        </View>
+
+          <MetricsMiniCards
+            caloriesConsumed={diaryTotals?.consumedKcal || 0}
+            caloriesGoal={diaryTotals?.goalKcal}
+            onPressCalories={() => setDietDiaryFor(true)}
+            waterMl={waterMl}
+            waterGoalMl={waterGoalMl}
+            onPressWater={() => setShowWaterModal(true)}
+            mealsCompleted={mealsCompleted}
+            mealsTotal={mealsTotal}
+            onPressHabits={() => setDietBuildingFor(true)}
+            weeklyPercent={(weekDaysCount / 7) * 100}
+            lastWorkoutLabel={lastSession?.workouts?.name}
+            onPressFrequency={() => setWorkoutHistoryFor(true)}
+          />
+
+          <TouchableOpacity style={styles.dietButton} onPress={() => setDietBuildingFor(true)}>
+            <Ionicons name="restaurant-outline" size={18} color="#0F0F12" />
+            <Text style={styles.dietButtonText}>Montar / Editar Dieta</Text>
+          </TouchableOpacity>
+
+          <View style={styles.accessLevelBox}>
+            <Text style={styles.accessLevelLabel}>Nível de acesso {savingAccessLevel && '(salvando...)'}</Text>
+            <View style={styles.accessLevelRow}>
+              {ACCESS_LEVELS.map((lvl) => (
+                <TouchableOpacity
+                  key={lvl.value}
+                  style={[styles.accessLevelChip, accessLevel === lvl.value && styles.accessLevelChipActive]}
+                  onPress={() => handleChangeAccessLevel(lvl.value)}
+                >
+                  <Text style={[styles.accessLevelChipText, accessLevel === lvl.value && styles.accessLevelChipTextActive]}>{lvl.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.accessLevelBox}>
+            <Text style={styles.accessLevelLabel}>Tipo de atendimento {savingAttendanceMode && '(salvando...)'}</Text>
+            <View style={styles.accessLevelRow}>
+              {ATTENDANCE_MODES.map((m) => (
+                <TouchableOpacity
+                  key={m.value}
+                  style={[styles.accessLevelChip, attendanceMode === m.value && styles.attendanceModeChipActive]}
+                  onPress={() => handleChangeAttendanceMode(m.value)}
+                >
+                  <Text style={[styles.accessLevelChipText, attendanceMode === m.value && styles.accessLevelChipTextActive]}>{m.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </>
       )}
 
-      {suggestedTemplate && !suggestionApplied && (
-        <View style={styles.suggestionCard}>
-          <View style={styles.suggestionTitleRow}>
-            <Ionicons name="bulb-outline" size={16} color="#FF6B00" />
-            <Text style={styles.suggestionTitle}>Recomendação TCFIT</Text>
-          </View>
-          <Text style={styles.suggestionText}>
-            {suggestedTemplate.name} (baseado em {anamnese.days_per_week ? `${anamnese.days_per_week}x/semana` : 'suas respostas'}
-            {anamnese.experience_level ? ` e nível ${PROGRAM_LEVELS.find((l) => l.value === anamnese.experience_level)?.label?.toLowerCase()}` : ''})
-          </Text>
-          <View style={styles.suggestionButtonRow}>
-            <TouchableOpacity style={styles.suggestionApplyButton} onPress={handleApplySuggestedTemplate} disabled={applyingSuggestion}>
-              {applyingSuggestion ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.suggestionApplyButtonText}>Aplicar esta ficha</Text>}
+      {detailTab === 'treino' && (
+        <>
+          {suggestedTemplate && !suggestionApplied && (
+            <View style={styles.suggestionCard}>
+              <View style={styles.suggestionTitleRow}>
+                <Ionicons name="bulb-outline" size={16} color="#FF6B00" />
+                <Text style={styles.suggestionTitle}>Recomendação TCFIT</Text>
+              </View>
+              <Text style={styles.suggestionText}>
+                {suggestedTemplate.name} (baseado em {anamnese.days_per_week ? `${anamnese.days_per_week}x/semana` : 'suas respostas'}
+                {anamnese.experience_level ? ` e nível ${PROGRAM_LEVELS.find((l) => l.value === anamnese.experience_level)?.label?.toLowerCase()}` : ''})
+              </Text>
+              <View style={styles.suggestionButtonRow}>
+                <TouchableOpacity style={styles.suggestionApplyButton} onPress={handleApplySuggestedTemplate} disabled={applyingSuggestion}>
+                  {applyingSuggestion ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.suggestionApplyButtonText}>Aplicar esta ficha</Text>}
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.suggestionCustomButton} onPress={() => setBuildingFor(true)}>
+                  <Text style={styles.suggestionCustomButtonText}>Personalizar / Escolher outro</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          <TouchableOpacity style={styles.actionButtonWide} onPress={() => setBuildingFor(true)}>
+            <Ionicons name="barbell-outline" size={22} color="#FF6B00" />
+            <Text style={styles.actionLabelWide}>Treino Atual / Editar Ficha</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButtonWide} onPress={() => setWorkoutHistoryFor(true)}>
+            <Ionicons name="time-outline" size={22} color="#a3a3a3" />
+            <Text style={styles.actionLabelWide}>Histórico de Treinos</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButtonWide} onPress={() => setShowPeriodization(true)}>
+            <Ionicons name="calendar-outline" size={22} color="#a855f7" />
+            <Text style={styles.actionLabelWide}>Periodização</Text>
+          </TouchableOpacity>
+
+          {attendanceMode === 'presencial' && (
+            <TouchableOpacity style={styles.presencialButton} onPress={() => setShowPresencialSession(true)}>
+              <Ionicons name="play-circle-outline" size={18} color="#0F0F12" />
+              <Text style={styles.presencialButtonText}>Modo Aula Presencial</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.suggestionCustomButton} onPress={() => setBuildingFor(true)}>
-              <Text style={styles.suggestionCustomButtonText}>Personalizar / Escolher outro</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+          )}
+        </>
       )}
 
-      <MetricsMiniCards
-        caloriesConsumed={diaryTotals?.consumedKcal || 0}
-        caloriesGoal={diaryTotals?.goalKcal}
-        onPressCalories={() => setDietDiaryFor(true)}
-        waterMl={waterMl}
-        waterGoalMl={waterGoalMl}
-        onPressWater={() => setShowWaterModal(true)}
-        mealsCompleted={mealsCompleted}
-        mealsTotal={mealsTotal}
-        onPressHabits={() => setDietBuildingFor(true)}
-        weeklyPercent={(weekDaysCount / 7) * 100}
-        lastWorkoutLabel={lastSession?.workouts?.name}
-        onPressFrequency={() => setWorkoutHistoryFor(true)}
-      />
+      {detailTab === 'evolucao' && (
+        <>
+          <WeightEvolutionChart studentId={student.id} />
+
+          <TouchableOpacity style={styles.actionButtonWide} onPress={() => setAssessmentFor(true)}>
+            <Ionicons name="clipboard-outline" size={22} color="#3b82f6" />
+            <Text style={styles.actionLabelWide}>Avaliação Física</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.summaryButton} onPress={() => setShowSummary(true)}>
+            <Ionicons name="stats-chart-outline" size={18} color="#0F0F12" />
+            <Text style={styles.summaryButtonText}>Gerar Resumo Semanal</Text>
+          </TouchableOpacity>
+        </>
+      )}
+
+      {detailTab === 'comunicacao' && (
+        <>
+          <TouchableOpacity style={styles.actionButtonWide} onPress={() => setShowChat(true)}>
+            <Ionicons name="chatbubbles-outline" size={22} color="#22c55e" />
+            <Text style={styles.actionLabelWide}>Abrir Chat</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.financeButton} onPress={() => setShowFinance(true)}>
+            <Ionicons name="cash-outline" size={18} color="#eab308" />
+            <Text style={styles.financeButtonText}>Ver Financeiro</Text>
+          </TouchableOpacity>
+        </>
+      )}
 
       <WaterLogModal
         visible={showWaterModal}
@@ -556,74 +669,6 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
         onAdd={handleAddWater}
         onGoalChanged={setWaterGoalMl}
       />
-
-      <WeightEvolutionChart studentId={student.id} />
-
-      <View style={styles.accessLevelBox}>
-        <Text style={styles.accessLevelLabel}>Nível de acesso {savingAccessLevel && '(salvando...)'}</Text>
-        <View style={styles.accessLevelRow}>
-          {ACCESS_LEVELS.map((lvl) => (
-            <TouchableOpacity
-              key={lvl.value}
-              style={[styles.accessLevelChip, accessLevel === lvl.value && styles.accessLevelChipActive]}
-              onPress={() => handleChangeAccessLevel(lvl.value)}
-            >
-              <Text style={[styles.accessLevelChipText, accessLevel === lvl.value && styles.accessLevelChipTextActive]}>{lvl.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.accessLevelBox}>
-        <Text style={styles.accessLevelLabel}>Tipo de atendimento {savingAttendanceMode && '(salvando...)'}</Text>
-        <View style={styles.accessLevelRow}>
-          {ATTENDANCE_MODES.map((m) => (
-            <TouchableOpacity
-              key={m.value}
-              style={[styles.accessLevelChip, attendanceMode === m.value && styles.attendanceModeChipActive]}
-              onPress={() => handleChangeAttendanceMode(m.value)}
-            >
-              <Text style={[styles.accessLevelChipText, attendanceMode === m.value && styles.accessLevelChipTextActive]}>{m.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {attendanceMode === 'presencial' && (
-        <TouchableOpacity style={styles.presencialButton} onPress={() => setShowPresencialSession(true)}>
-          <Ionicons name="play-circle-outline" size={18} color="#0F0F12" />
-          <Text style={styles.presencialButtonText}>Modo Aula Presencial</Text>
-        </TouchableOpacity>
-      )}
-
-      <View style={styles.actionsGrid}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => setBuildingFor(true)}>
-          <Ionicons name="barbell-outline" size={22} color="#FF6B00" />
-          <Text style={styles.actionLabel}>Treino</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => setDietBuildingFor(true)}>
-          <Ionicons name="restaurant-outline" size={22} color="#22c55e" />
-          <Text style={styles.actionLabel}>Dieta</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => setAssessmentFor(true)}>
-          <Ionicons name="clipboard-outline" size={22} color="#3b82f6" />
-          <Text style={styles.actionLabel}>Avaliação</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => setShowPeriodization(true)}>
-          <Ionicons name="calendar-outline" size={22} color="#a855f7" />
-          <Text style={styles.actionLabel}>Periodização</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity style={styles.summaryButton} onPress={() => setShowSummary(true)}>
-        <Ionicons name="stats-chart-outline" size={18} color="#0F0F12" />
-        <Text style={styles.summaryButtonText}>Gerar Resumo Semanal</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.financeButton} onPress={() => setShowFinance(true)}>
-        <Ionicons name="cash-outline" size={18} color="#eab308" />
-        <Text style={styles.financeButtonText}>Ver Financeiro</Text>
-      </TouchableOpacity>
 
       </ScrollView>
     </View>
@@ -678,9 +723,15 @@ const styles = StyleSheet.create({
   attendanceModeChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   accessLevelChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
   accessLevelChipTextActive: { color: '#0F0F12' },
-  actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 12 },
-  actionButton: { width: '48%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 8 },
-  actionLabel: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', marginTop: 6 },
+  detailTabRow: { flexDirection: 'row', gap: 6, marginBottom: 16 },
+  detailTabButton: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  detailTabButtonActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
+  detailTabText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
+  detailTabTextActive: { color: '#0F0F12' },
+  actionButtonWide: { flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 16, marginBottom: 10 },
+  actionLabelWide: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  dietButton: { flexDirection: 'row', gap: 8, backgroundColor: '#22c55e', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  dietButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
   summaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   summaryButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
   presencialButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
