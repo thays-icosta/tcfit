@@ -630,6 +630,20 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         </View>
       )}
 
+      {students.length > 0 && (
+        <View style={styles.overviewRow}>
+          <View style={styles.overviewItem}>
+            <Text style={styles.overviewValue}>{students.length - attentionItems.length}</Text>
+            <Text style={styles.overviewLabel}>Em Dia</Text>
+          </View>
+          <View style={styles.overviewDivider} />
+          <View style={styles.overviewItem}>
+            <Text style={[styles.overviewValue, attentionItems.length > 0 && styles.overviewValueAlert]}>{attentionItems.length}</Text>
+            <Text style={styles.overviewLabel}>Precisam de Atenção</Text>
+          </View>
+        </View>
+      )}
+
       {attentionItems.length > 0 && (
         <>
           <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Quem Precisa da Sua Atenção</Text>
@@ -738,6 +752,12 @@ const styles = StyleSheet.create({
   summaryDivider: { width: 1, backgroundColor: '#2B2B36' },
   summaryValue: { color: '#F5F5F7', fontSize: 16, fontWeight: '800' },
   summaryLabel: { color: '#737373', fontSize: 9, marginTop: 4, textAlign: 'center' },
+  overviewRow: { flexDirection: 'row', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 14, marginTop: 8, marginBottom: 8 },
+  overviewItem: { flex: 1, alignItems: 'center' },
+  overviewDivider: { width: 1, backgroundColor: '#2B2B36' },
+  overviewValue: { color: '#22c55e', fontSize: 18, fontWeight: '800' },
+  overviewValueAlert: { color: '#f59e0b' },
+  overviewLabel: { color: '#737373', fontSize: 10, marginTop: 4, textAlign: 'center', fontWeight: '600' },
   shortcutGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
   shortcutCard: { width: '47%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, paddingVertical: 16, alignItems: 'center', gap: 8 },
   shortcutIconCircle: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
