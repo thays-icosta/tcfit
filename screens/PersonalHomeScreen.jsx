@@ -24,6 +24,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [daysSinceLastTrained, setDaysSinceLastTrained] = useState({});
   const [overduePaymentStudents, setOverduePaymentStudents] = useState({});
   const [anamnesePendingStudents, setAnamnesePendingStudents] = useState({});
+  const [unreadMessageStudents, setUnreadMessageStudents] = useState({});
   const [detailFor, setDetailFor] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [activeTab, setActiveTab] = useState('inicio');
@@ -150,6 +151,16 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       const pendingMap = {};
       studentIds.forEach((id) => { if (!completedSet.has(id)) pendingMap[id] = true; });
       setAnamnesePendingStudents(pendingMap);
+
+      const { data: unreadRows } = await supabase
+        .from('messages')
+        .select('student_id')
+        .eq('personal_id', user.id)
+        .eq('read', false)
+        .neq('sender_id', user.id);
+      const unreadMap = {};
+      (unreadRows || []).forEach((m) => { unreadMap[m.student_id] = true; });
+      setUnreadMessageStudents(unreadMap);
     }
 
     setLoading(false);
@@ -269,7 +280,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     if (overduePaymentStudents[s.id]) return 'atrasado';
     const done = completedToday[s.id];
     const daysSince = daysSinceLastTrained[s.id];
-    if ((!done && (daysSince === null || daysSince >= 3)) || anamnesePendingStudents[s.id]) return 'atencao';
+    if ((!done && (daysSince === null || daysSince >= 3)) || anamnesePendingStudents[s.id] || unreadMessageStudents[s.id]) return 'atencao';
     return 'em_dia';
   };
 
@@ -379,7 +390,9 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
               const alertLabel = status === 'atrasado'
                 ? 'Pagamento atrasado'
                 : status === 'atencao'
-                  ? (!done && (daysSince === null || daysSince >= 3) ? (daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`) : 'Anamnese pendente')
+                  ? (!done && (daysSince === null || daysSince >= 3)
+                      ? (daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`)
+                      : unreadMessageStudents[item.id] ? 'Mensagem não respondida' : 'Anamnese pendente')
                   : null;
               const isVip = item.access_level === 'consultoria_vip';
               return (
@@ -527,6 +540,9 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       }
       if (anamnesePendingStudents[s.id]) {
         flags.push({ key: 'anamnese', tone: 'pending', label: 'Anamnese pendente' });
+      }
+      if (unreadMessageStudents[s.id]) {
+        flags.push({ key: 'mensagem', tone: 'pending', label: 'Mensagem não respondida' });
       }
       return { student: s, flags };
     })
