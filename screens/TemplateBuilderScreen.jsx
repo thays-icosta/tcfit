@@ -346,7 +346,7 @@ export default function TemplateBuilderScreen({ personalId, onClose }) {
         .eq('session_id', session.id);
 
       if (sourceItems && sourceItems.length > 0) {
-        const copies = sourceItems.map((it) => ({ ...it, session_id: newSession.id }));
+        const copies = sourceItems.map((it) => ({ ...it, template_id: newTemplate.id, session_id: newSession.id }));
         await supabase.from('workout_template_exercises').insert(copies);
       }
     }
