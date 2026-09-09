@@ -42,6 +42,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [studentFilter, setStudentFilter] = useState('todos');
   const [attendanceFilter, setAttendanceFilter] = useState('todos');
   const [statusFilter, setStatusFilter] = useState('todos');
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [studentSearch, setStudentSearch] = useState('');
   const [recentDiets, setRecentDiets] = useState([]);
 
@@ -368,53 +369,27 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
             </TouchableOpacity>
           )}
 
-          <View style={styles.studentFilterTabs}>
-            {[
-              { value: 'todos', label: 'Todos' },
-              { value: 'vip', label: 'Consultoria VIP' },
-              { value: 'app', label: 'Membros do App' },
-            ].map((tab) => (
-              <TouchableOpacity
-                key={tab.value}
-                style={[styles.studentFilterTab, studentFilter === tab.value && styles.studentFilterTabActive]}
-                onPress={() => setStudentFilter(tab.value)}
-              >
-                <Text style={[styles.studentFilterTabText, studentFilter === tab.value && styles.studentFilterTabTextActive]}>{tab.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View style={styles.studentFilterTabs}>
-            {[
-              { value: 'todos', label: 'Todos' },
-              { value: 'presencial', label: 'Presencial' },
-              { value: 'online', label: 'Consultoria Online' },
-            ].map((tab) => (
-              <TouchableOpacity
-                key={tab.value}
-                style={[styles.studentFilterTab, attendanceFilter === tab.value && styles.studentFilterTabActive]}
-                onPress={() => setAttendanceFilter(tab.value)}
-              >
-                <Text style={[styles.studentFilterTabText, attendanceFilter === tab.value && styles.studentFilterTabTextActive]}>{tab.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View style={styles.studentFilterTabs}>
-            {[
-              { value: 'todos', label: 'Todos' },
-              { value: 'em_dia', label: 'Em Dia' },
-              { value: 'atencao', label: 'Atenção' },
-              { value: 'atrasado', label: 'Atrasados' },
-            ].map((tab) => (
-              <TouchableOpacity
-                key={tab.value}
-                style={[styles.studentFilterTab, statusFilter === tab.value && styles.studentFilterTabActive]}
-                onPress={() => setStatusFilter(tab.value)}
-              >
-                <Text style={[styles.studentFilterTabText, statusFilter === tab.value && styles.studentFilterTabTextActive]}>{tab.label}</Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.alunosFilterRow}>
+            <View style={[styles.studentFilterTabs, { flex: 1, marginBottom: 0 }]}>
+              {[
+                { value: 'todos', label: 'Todos' },
+                { value: 'em_dia', label: 'Em Dia' },
+                { value: 'atencao', label: 'Atenção' },
+                { value: 'atrasado', label: 'Atrasados' },
+              ].map((tab) => (
+                <TouchableOpacity
+                  key={tab.value}
+                  style={[styles.studentFilterTab, statusFilter === tab.value && styles.studentFilterTabActive]}
+                  onPress={() => setStatusFilter(tab.value)}
+                >
+                  <Text style={[styles.studentFilterTabText, statusFilter === tab.value && styles.studentFilterTabTextActive]}>{tab.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity style={styles.moreFiltersButton} onPress={() => setShowMoreFilters(true)}>
+              <Ionicons name="options-outline" size={18} color={studentFilter !== 'todos' || attendanceFilter !== 'todos' ? '#FF6B00' : '#a3a3a3'} />
+              {(studentFilter !== 'todos' || attendanceFilter !== 'todos') && <View style={styles.moreFiltersDot} />}
+            </TouchableOpacity>
           </View>
 
           <View style={styles.studentSearchBox}>
@@ -432,6 +407,52 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
               </TouchableOpacity>
             )}
           </View>
+
+          <Modal visible={showMoreFilters} transparent animationType="slide" onRequestClose={() => setShowMoreFilters(false)}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalSheet}>
+                <Text style={styles.modalTitle}>Filtros</Text>
+
+                <Text style={styles.accessLevelLabel}>Plano</Text>
+                <View style={styles.studentFilterTabs}>
+                  {[
+                    { value: 'todos', label: 'Todos' },
+                    { value: 'vip', label: 'Consultoria VIP' },
+                    { value: 'app', label: 'Membros do App' },
+                  ].map((tab) => (
+                    <TouchableOpacity
+                      key={tab.value}
+                      style={[styles.studentFilterTab, studentFilter === tab.value && styles.studentFilterTabActive]}
+                      onPress={() => setStudentFilter(tab.value)}
+                    >
+                      <Text style={[styles.studentFilterTabText, studentFilter === tab.value && styles.studentFilterTabTextActive]}>{tab.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={[styles.accessLevelLabel, { marginTop: 14 }]}>Atendimento</Text>
+                <View style={styles.studentFilterTabs}>
+                  {[
+                    { value: 'todos', label: 'Todos' },
+                    { value: 'presencial', label: 'Presencial' },
+                    { value: 'online', label: 'Consultoria Online' },
+                  ].map((tab) => (
+                    <TouchableOpacity
+                      key={tab.value}
+                      style={[styles.studentFilterTab, attendanceFilter === tab.value && styles.studentFilterTabActive]}
+                      onPress={() => setAttendanceFilter(tab.value)}
+                    >
+                      <Text style={[styles.studentFilterTabText, attendanceFilter === tab.value && styles.studentFilterTabTextActive]}>{tab.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowMoreFilters(false)}>
+                  <Text style={styles.modalCloseButtonText}>Fechar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
 
           {loading ? (
             <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
@@ -800,6 +821,9 @@ const styles = StyleSheet.create({
   attentionBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(245,158,11,0.1)', borderWidth: 1, borderColor: '#f59e0b', borderRadius: 12, padding: 14, marginBottom: 12 },
   attentionBannerTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
   attentionBannerSubtitle: { color: '#f59e0b', fontSize: 11, fontWeight: '700', marginTop: 2 },
+  alunosFilterRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  moreFiltersButton: { width: 38, height: 38, borderRadius: 10, backgroundColor: '#1C1C22', alignItems: 'center', justifyContent: 'center' },
+  moreFiltersDot: { position: 'absolute', top: 6, right: 6, width: 7, height: 7, borderRadius: 4, backgroundColor: '#FF6B00' },
   studentFilterTabs: { flexDirection: 'row', backgroundColor: '#1C1C22', borderRadius: 10, padding: 3, marginBottom: 10, gap: 4 },
   studentFilterTab: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 8 },
   studentFilterTabActive: { backgroundColor: '#FF6B00' },
@@ -828,6 +852,7 @@ const styles = StyleSheet.create({
   modalSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
   modalTitle: { color: '#F5F5F7', fontSize: 18, fontWeight: '800', marginBottom: 6 },
   modalSubtitle: { color: '#a3a3a3', fontSize: 12, marginBottom: 16 },
+  accessLevelLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, fontWeight: '700' },
   modalCodeBox: { backgroundColor: '#0F0F12', borderRadius: 10, padding: 14, marginBottom: 16 },
   modalCodeText: { color: '#FF6B00', fontSize: 11, fontFamily: 'Courier' },
   modalButton: { backgroundColor: '#0F0F12', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
