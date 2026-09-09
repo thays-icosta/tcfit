@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Modal, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
@@ -25,6 +25,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
   const [showPartnerBrands, setShowPartnerBrands] = useState(false);
   const [showAnamneseConfig, setShowAnamneseConfig] = useState(false);
   const [studentCount, setStudentCount] = useState(0);
+  const [memberSince, setMemberSince] = useState(null);
 
   const [brandingExpanded, setBrandingExpanded] = useState(true);
   const [logoUrl, setLogoUrl] = useState(null);
@@ -57,7 +58,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
     (async () => {
       const { data } = await supabase
         .from('users')
-        .select('name, email, avatar_url, logo_url, professional_register, phone, contact_instagram, contact_email, pix_key, referral_discount_pct')
+        .select('name, email, avatar_url, logo_url, professional_register, phone, contact_instagram, contact_email, pix_key, referral_discount_pct, created_at')
         .eq('id', user.id)
         .single();
       if (data) {
@@ -71,6 +72,7 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
         setContactEmail(data.contact_email || '');
         setPixKey(data.pix_key || '');
         setReferralDiscountPct(data.referral_discount_pct != null ? String(data.referral_discount_pct) : '10');
+        setMemberSince(data.created_at || null);
       }
       setLoading(false);
     })();
@@ -90,6 +92,11 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
   const handleMarkRewardApplied = async (rewardId) => {
     await supabase.from('referral_rewards').update({ applied: true }).eq('id', rewardId);
     loadRewards();
+  };
+
+  const handleContactSupport = () => {
+    const message = 'Olá! Sou personal no TcFit e tenho uma dúvida sobre minha assinatura.';
+    Linking.openURL(`https://wa.me/5537998231382?text=${encodeURIComponent(message)}`).catch(() => {});
   };
 
   const handleCopyGenderLink = async (genderTag) => {
@@ -306,6 +313,25 @@ export default function PersonalProfileScreen({ user, onClose, onLogout }) {
         </View>
       </View>
 
+      <View style={styles.formCard}>
+        <Text style={styles.brandingTitle}>Assinatura</Text>
+        <View style={styles.subscriptionRow}>
+          <Text style={styles.subscriptionLabel}>Plano Atual</Text>
+          <Text style={styles.subscriptionValue}>Acesso Completo TcFit</Text>
+        </View>
+        {memberSince && (
+          <View style={styles.subscriptionRow}>
+            <Text style={styles.subscriptionLabel}>Assinante desde</Text>
+            <Text style={styles.subscriptionValue}>{new Date(memberSince).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</Text>
+          </View>
+        )}
+        <Text style={styles.helperText}>A gestão de cobrança da sua assinatura é feita direto com a equipe TcFit — ainda não é self-service por aqui.</Text>
+        <TouchableOpacity style={styles.supportButton} onPress={handleContactSupport}>
+          <Ionicons name="logo-whatsapp" size={16} color="#22c55e" />
+          <Text style={styles.supportButtonText}>Falar com o Suporte TcFit</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.shortcutGrid}>
         <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowTemplateBuilder(true)}>
           <View style={styles.shortcutIconCircle}>
@@ -514,6 +540,11 @@ const styles = StyleSheet.create({
   paymentHint: { color: '#525252', fontSize: 10, marginTop: 4, marginBottom: 4, lineHeight: 14 },
   brandingSavedHint: { color: '#525252', fontSize: 9, marginTop: 14, lineHeight: 13 },
   formCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 16 },
+  subscriptionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },
+  subscriptionLabel: { color: '#737373', fontSize: 11 },
+  subscriptionValue: { color: '#F5F5F7', fontSize: 12, fontWeight: '700' },
+  supportButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#22c55e', borderRadius: 10, paddingVertical: 11, marginTop: 12 },
+  supportButtonText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
   rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#0F0F12', borderRadius: 10, padding: 12, marginTop: 8 },
   rewardText: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
   rewardSubtext: { color: '#22c55e', fontSize: 11, marginTop: 2 },
