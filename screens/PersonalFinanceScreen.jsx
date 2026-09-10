@@ -14,6 +14,20 @@ const CATEGORIES = [
   { value: 'outro', label: 'Outro', color: '#737373' },
 ];
 
+const EXPENSE_CATEGORIES = [
+  { value: 'aluguel', label: 'Aluguel/Espaço' },
+  { value: 'equipamento', label: 'Equipamento' },
+  { value: 'marketing', label: 'Marketing' },
+  { value: 'ferramentas', label: 'Ferramentas/Apps' },
+  { value: 'impostos', label: 'Impostos' },
+  { value: 'outro', label: 'Outro' },
+];
+
+const ACCESS_LEVEL_META = {
+  plataforma_base: { label: 'Acesso App', color: '#3b82f6' },
+  consultoria_vip: { label: 'Consultoria VIP', color: '#a855f7' },
+};
+
 function toDateInputValue(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
@@ -53,6 +67,17 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
   const [isRecurring, setIsRecurring] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const [entries, setEntries] = useState([]);
+  const [subscriberCounts, setSubscriberCounts] = useState({ plataforma_base: 0, consultoria_vip: 0, sem_plano: 0 });
+  const [showEntryModal, setShowEntryModal] = useState(false);
+  const [entryType, setEntryType] = useState('entrada');
+  const [entryAmount, setEntryAmount] = useState('');
+  const [entryDescription, setEntryDescription] = useState('');
+  const [entryCategory, setEntryCategory] = useState('outro');
+  const [entryDate, setEntryDate] = useState(new Date());
+  const [showEntryDatePicker, setShowEntryDatePicker] = useState(false);
+  const [savingEntry, setSavingEntry] = useState(false);
+
   const formatDate = (dateStr) => {
     const d = new Date(dateStr + 'T00:00:00');
     return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -83,6 +108,28 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
       .eq('id', personalId)
       .single();
     if (myRow) setMyPaymentInfo({ pixKey: myRow.pix_key, paymentLink: myRow.payment_link });
+
+    if (!filterStudentId) {
+      const { data: entryRows } = await supabase
+        .from('finance_entries')
+        .select('id, type, amount, description, category, entry_date')
+        .eq('personal_id', personalId)
+        .order('entry_date', { ascending: false });
+      setEntries(entryRows || []);
+
+      const { data: allStudents } = await supabase
+        .from('users')
+        .select('access_level')
+        .eq('personal_id', personalId)
+        .eq('role', 'aluno');
+      const counts = { plataforma_base: 0, consultoria_vip: 0, sem_plano: 0 };
+      (allStudents || []).forEach((s) => {
+        if (s.access_level === 'plataforma_base') counts.plataforma_base += 1;
+        else if (s.access_level === 'consultoria_vip') counts.consultoria_vip += 1;
+        else counts.sem_plano += 1;
+      });
+      setSubscriberCounts(counts);
+    }
 
     setLoading(false);
   };
@@ -166,6 +213,52 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
     ]);
   };
 
+  const handleOpenEntryModal = () => {
+    setEntryType('entrada');
+    setEntryAmount('');
+    setEntryDescription('');
+    setEntryCategory('outro');
+    setEntryDate(new Date());
+    setShowEntryModal(true);
+  };
+
+  const handleConfirmAddEntry = async () => {
+    if (!entryAmount || isNaN(Number(entryAmount))) {
+      showAlert('Ops', 'Digita um valor válido.');
+      return;
+    }
+    setSavingEntry(true);
+    const { error } = await supabase.from('finance_entries').insert({
+      personal_id: personalId,
+      type: entryType,
+      amount: Number(entryAmount),
+      description: entryDescription.trim() || null,
+      category: entryCategory,
+      entry_date: entryDate.toISOString().slice(0, 10),
+    });
+    setSavingEntry(false);
+    if (error) {
+      showAlert('Erro', error.message);
+    } else {
+      setShowEntryModal(false);
+      loadData();
+    }
+  };
+
+  const handleDeleteEntry = (entryId) => {
+    showAlert('Excluir lançamento', 'Tem certeza?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: async () => {
+          await supabase.from('finance_entries').delete().eq('id', entryId);
+          loadData();
+        },
+      },
+    ]);
+  };
+
   const handleWhatsAppCharge = (payment) => {
     const phone = payment.users?.phone;
     if (!phone) {
@@ -189,6 +282,12 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
     .filter((p) => p.paid && p.paid_at && p.paid_at.slice(0, 7) === today.slice(0, 7))
     .reduce((sum, p) => sum + Number(p.amount), 0);
   const overdueCount = payments.filter((p) => !p.paid && p.due_date < today).length;
+
+  const entriesThisMonth = entries.filter((e) => e.entry_date.slice(0, 7) === today.slice(0, 7));
+  const manualEntradasMonth = entriesThisMonth.filter((e) => e.type === 'entrada').reduce((sum, e) => sum + Number(e.amount), 0);
+  const manualSaidasMonth = entriesThisMonth.filter((e) => e.type === 'saida').reduce((sum, e) => sum + Number(e.amount), 0);
+  const entradasMonthTotal = totalReceivedThisMonth + manualEntradasMonth;
+  const saldoMonth = entradasMonthTotal - manualSaidasMonth;
 
   const revenueByCategory = CATEGORIES.map((c) => ({
     ...c,
@@ -224,6 +323,44 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
             </View>
           </View>
 
+          {!filterStudentId && (
+            <View style={styles.summaryCard}>
+              <Text style={styles.summaryTitle}>Resumo do Mês</Text>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryItem}>
+                  <Text style={[styles.summaryValue, { color: '#22c55e' }]}>R$ {entradasMonthTotal.toFixed(0)}</Text>
+                  <Text style={styles.summaryLabel}>Entradas</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={[styles.summaryValue, { color: '#ef4444' }]}>R$ {manualSaidasMonth.toFixed(0)}</Text>
+                  <Text style={styles.summaryLabel}>Saídas</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={[styles.summaryValue, { color: saldoMonth >= 0 ? '#22c55e' : '#ef4444' }]}>R$ {saldoMonth.toFixed(0)}</Text>
+                  <Text style={styles.summaryLabel}>Saldo</Text>
+                </View>
+              </View>
+
+              <View style={styles.subscriberDivider} />
+
+              <Text style={styles.summaryTitle}>Assinantes</Text>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryItem}>
+                  <Text style={[styles.summaryValue, { color: ACCESS_LEVEL_META.plataforma_base.color }]}>{subscriberCounts.plataforma_base}</Text>
+                  <Text style={styles.summaryLabel}>{ACCESS_LEVEL_META.plataforma_base.label}</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={[styles.summaryValue, { color: ACCESS_LEVEL_META.consultoria_vip.color }]}>{subscriberCounts.consultoria_vip}</Text>
+                  <Text style={styles.summaryLabel}>{ACCESS_LEVEL_META.consultoria_vip.label}</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryValue}>{subscriberCounts.sem_plano}</Text>
+                  <Text style={styles.summaryLabel}>Sem plano</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
           {!filterStudentId && revenueByCategory.length > 0 && (
             <TouchableOpacity style={styles.breakdownCard} onPress={() => setShowBreakdown(!showBreakdown)}>
               <View style={styles.breakdownHeader}>
@@ -245,9 +382,16 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity style={styles.addButton} onPress={handleOpenAddModal}>
-            <Text style={styles.addButtonText}>+ Nova Cobrança</Text>
-          </TouchableOpacity>
+          <View style={styles.addButtonRow}>
+            <TouchableOpacity style={[styles.addButton, { flex: 1 }]} onPress={handleOpenAddModal}>
+              <Text style={styles.addButtonText}>+ Nova Cobrança</Text>
+            </TouchableOpacity>
+            {!filterStudentId && (
+              <TouchableOpacity style={styles.addEntryButton} onPress={handleOpenEntryModal}>
+                <Text style={styles.addEntryButtonText}>+ Lançamento</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           <View style={styles.filterRow}>
             {[
@@ -267,6 +411,26 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
           </View>
 
           <ScrollView style={{ flex: 1 }}>
+            {!filterStudentId && entries.length > 0 && (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={styles.sectionLabel}>Lançamentos Manuais</Text>
+                {entries.map((e) => (
+                  <View key={e.id} style={styles.entryCard}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.entryDescription}>{e.description || (e.type === 'entrada' ? 'Entrada' : 'Saída')}</Text>
+                      <Text style={styles.entryMeta}>{formatDate(e.entry_date)} · {(e.type === 'entrada' ? CATEGORIES : EXPENSE_CATEGORIES).find((c) => c.value === e.category)?.label || e.category}</Text>
+                    </View>
+                    <Text style={[styles.entryAmount, { color: e.type === 'entrada' ? '#22c55e' : '#ef4444' }]}>
+                      {e.type === 'entrada' ? '+' : '-'} R$ {Number(e.amount).toFixed(2)}
+                    </Text>
+                    <TouchableOpacity onPress={() => handleDeleteEntry(e.id)} hitSlop={8}>
+                      <Text style={styles.deleteText}>🗑️</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+
             {displayList.length === 0 ? (
               <Text style={styles.emptyText}>Nenhuma cobrança nessa categoria.</Text>
             ) : (
@@ -406,6 +570,91 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
           </View>
         </View>
       </Modal>
+
+      <Modal visible={showEntryModal} transparent animationType="slide" onRequestClose={() => setShowEntryModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <ScrollView style={{ flex: 1 }}>
+              <Text style={styles.modalTitle}>Novo Lançamento</Text>
+
+              <Text style={styles.modalLabel}>Tipo</Text>
+              <View style={styles.entryTypeRow}>
+                <TouchableOpacity
+                  style={[styles.entryTypeChip, entryType === 'entrada' && styles.entryTypeChipEntradaActive]}
+                  onPress={() => { setEntryType('entrada'); setEntryCategory('outro'); }}
+                >
+                  <Text style={[styles.entryTypeChipText, entryType === 'entrada' && styles.entryTypeChipTextActive]}>Entrada</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.entryTypeChip, entryType === 'saida' && styles.entryTypeChipSaidaActive]}
+                  onPress={() => { setEntryType('saida'); setEntryCategory('outro'); }}
+                >
+                  <Text style={[styles.entryTypeChipText, entryType === 'saida' && styles.entryTypeChipTextActive]}>Saída</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.modalLabel}>Valor (R$)</Text>
+              <TextInput style={styles.modalInput} keyboardType="decimal-pad" placeholder="150" placeholderTextColor="#525252" value={entryAmount} onChangeText={setEntryAmount} />
+
+              <Text style={styles.modalLabel}>Categoria</Text>
+              <View style={styles.categoryPickerRow}>
+                {(entryType === 'entrada' ? CATEGORIES : EXPENSE_CATEGORIES).map((c) => (
+                  <TouchableOpacity
+                    key={c.value}
+                    style={[styles.categoryPickerChip, entryCategory === c.value && { backgroundColor: c.color || '#FF6B00', borderColor: c.color || '#FF6B00' }]}
+                    onPress={() => setEntryCategory(c.value)}
+                  >
+                    <Text style={[styles.categoryPickerChipText, entryCategory === c.value && styles.categoryPickerChipTextActive]}>{c.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.modalLabel}>Data</Text>
+              {Platform.OS === 'web' ? (
+                <input
+                  type="date"
+                  value={toDateInputValue(entryDate)}
+                  onChange={(e) => {
+                    if (!e.target.value) return;
+                    const [y, m, d] = e.target.value.split('-').map(Number);
+                    setEntryDate(new Date(y, m - 1, d));
+                  }}
+                  style={webDateInputStyle}
+                />
+              ) : (
+                <>
+                  <TouchableOpacity style={styles.dateButton} onPress={() => setShowEntryDatePicker(true)}>
+                    <Text style={styles.dateButtonText}>{entryDate.toLocaleDateString('pt-BR')}</Text>
+                  </TouchableOpacity>
+                  {showEntryDatePicker && (
+                    <DateTimePicker
+                      value={entryDate}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                      onChange={(event, date) => {
+                        setShowEntryDatePicker(Platform.OS === 'ios');
+                        if (date) setEntryDate(date);
+                      }}
+                    />
+                  )}
+                </>
+              )}
+
+              <Text style={styles.modalLabel}>Descrição (opcional)</Text>
+              <TextInput style={styles.modalInput} placeholder="ex: Compra de halteres" placeholderTextColor="#525252" value={entryDescription} onChangeText={setEntryDescription} />
+
+              <View style={styles.modalButtonRow}>
+                <TouchableOpacity style={styles.modalCancelButton} onPress={() => setShowEntryModal(false)}>
+                  <Text style={styles.modalCancelButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalConfirmButton} onPress={handleConfirmAddEntry} disabled={savingEntry}>
+                  {savingEntry ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>Adicionar</Text>}
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -427,8 +676,29 @@ const styles = StyleSheet.create({
   breakdownBarTrack: { height: 8, backgroundColor: '#0F0F12', borderRadius: 4, overflow: 'hidden', marginBottom: 4 },
   breakdownBarFill: { height: '100%', borderRadius: 4 },
   breakdownValue: { color: '#F5F5F7', fontSize: 10, fontWeight: '700' },
-  addButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 14 },
+  summaryCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 14 },
+  summaryTitle: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', marginBottom: 10 },
+  summaryRow: { flexDirection: 'row' },
+  summaryItem: { flex: 1, alignItems: 'center' },
+  summaryValue: { color: '#F5F5F7', fontSize: 15, fontWeight: '800' },
+  summaryLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 4, textAlign: 'center' },
+  subscriberDivider: { height: 1, backgroundColor: '#2B2B36', marginVertical: 14 },
+  addButtonRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
+  addButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   addButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
+  addEntryButton: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  addEntryButtonText: { color: '#FF6B00', fontSize: 14, fontWeight: '700' },
+  sectionLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, fontWeight: '700' },
+  entryCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 8 },
+  entryDescription: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  entryMeta: { color: '#737373', fontSize: 10, marginTop: 2 },
+  entryAmount: { fontSize: 13, fontWeight: '800' },
+  entryTypeRow: { flexDirection: 'row', gap: 8 },
+  entryTypeChip: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  entryTypeChipEntradaActive: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
+  entryTypeChipSaidaActive: { backgroundColor: '#ef4444', borderColor: '#ef4444' },
+  entryTypeChipText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700' },
+  entryTypeChipTextActive: { color: '#0F0F12' },
   filterRow: { flexDirection: 'row', gap: 6, marginBottom: 14 },
   filterChip: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
   filterChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
