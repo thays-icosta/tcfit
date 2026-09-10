@@ -145,6 +145,8 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [todaysWeightKg, setTodaysWeightKg] = useState(null);
   const [showWeightModal, setShowWeightModal] = useState(false);
   const [lastWorkoutName, setLastWorkoutName] = useState(null);
+  const [todaySessions, setTodaySessions] = useState([]);
+  const [sessionOfInterestExercisesDone, setSessionOfInterestExercisesDone] = useState(0);
   const [showVolumeSummary, setShowVolumeSummary] = useState(false);
   const [dailyNote, setDailyNote] = useState('');
   const [editingNote, setEditingNote] = useState(false);
@@ -269,6 +271,27 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     const map = {};
     (completions || []).forEach((c) => { map[c.workout_id] = true; });
     setCompletedToday(map);
+
+    const { data: todaySessionRows } = await supabase
+      .from('workout_sessions')
+      .select('id, workout_id, started_at, finished_at, pse')
+      .eq('student_id', user.id)
+      .gte('started_at', `${todayStr}T00:00:00`)
+      .order('started_at', { ascending: false });
+    setTodaySessions(todaySessionRows || []);
+
+    const activeSessionRow = (todaySessionRows || []).find((s) => !s.finished_at) || null;
+    const latestFinishedSessionRow = (todaySessionRows || []).find((s) => s.finished_at) || null;
+    const sessionOfInterest = activeSessionRow || latestFinishedSessionRow || null;
+    if (sessionOfInterest) {
+      const { data: sessionSets } = await supabase
+        .from('workout_session_sets')
+        .select('workout_exercise_id')
+        .eq('session_id', sessionOfInterest.id);
+      setSessionOfInterestExercisesDone(new Set((sessionSets || []).map((s) => s.workout_exercise_id)).size);
+    } else {
+      setSessionOfInterestExercisesDone(0);
+    }
 
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -1463,7 +1486,31 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
 
   const todaysWorkout = workouts.find((w) => !completedToday[w.id]) || workouts[0] || null;
   const todaysWorkoutDone = todaysWorkout ? !!completedToday[todaysWorkout.id] : false;
-  const todaysWorkoutExerciseCount = todaysWorkout ? (muscleSummaryByWorkout[todaysWorkout.id] || []).reduce((sum, [, count]) => sum + count, 0) : 0;
+
+  // Home hero card reflects where the aluno actually is right now: hasn't
+  // started, mid-session (workout_sessions row with no finished_at yet),
+  // just finished today, or no active program at all.
+  const activeSessionToday = todaySessions.find((s) => !s.finished_at) || null;
+  const latestFinishedSessionToday = todaySessions.find((s) => s.finished_at) || null;
+  let heroState = 'no_workout';
+  let heroWorkout = null;
+  let heroSession = null;
+  if (activeSessionToday) {
+    heroState = 'in_progress';
+    heroWorkout = workouts.find((w) => w.id === activeSessionToday.workout_id) || null;
+    heroSession = activeSessionToday;
+  } else if (latestFinishedSessionToday) {
+    heroState = 'done';
+    heroWorkout = workouts.find((w) => w.id === latestFinishedSessionToday.workout_id) || null;
+    heroSession = latestFinishedSessionToday;
+  } else if (todaysWorkout) {
+    heroState = 'pending';
+    heroWorkout = todaysWorkout;
+  }
+  const heroWorkoutExerciseCount = heroWorkout ? (muscleSummaryByWorkout[heroWorkout.id] || []).reduce((sum, [, count]) => sum + count, 0) : 0;
+  const heroSessionDurationMin = heroSession && heroSession.finished_at
+    ? Math.max(1, Math.round((new Date(heroSession.finished_at) - new Date(heroSession.started_at)) / 60000))
+    : null;
   const todayLabel = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   const todayLabelCapitalized = todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1);
   const mealsCompletedCount = mealsForActiveDiet.filter((m) => todaysEntries.some((e) => e.meal_type === mapMealNameToType(m.name))).length;
@@ -1508,30 +1555,82 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             onSaved={setTodaysWeightKg}
           />
 
-          {todaysWorkout ? (
-            <TouchableOpacity style={styles.heroWorkoutCard} onPress={() => setPreviewWorkout(todaysWorkout)} activeOpacity={0.85}>
-              <Text style={styles.heroWorkoutEyebrow}>{todaysWorkoutDone ? 'TREINO DE HOJE · CONCLUÍDO' : 'SEU TREINO DE HOJE'}</Text>
-              <Text style={styles.heroWorkoutName}>{todaysWorkout.name}</Text>
-              {todaysWorkoutExerciseCount > 0 && (
-                <Text style={styles.heroWorkoutMeta}>{todaysWorkoutExerciseCount} exercício{todaysWorkoutExerciseCount !== 1 ? 's' : ''}</Text>
+          {heroState === 'pending' && (
+            <TouchableOpacity style={styles.heroWorkoutCard} onPress={() => setPreviewWorkout(heroWorkout)} activeOpacity={0.85}>
+              <View style={styles.heroWorkoutEyebrowRow}>
+                <View style={[styles.heroStatusDot, styles.heroStatusDotAmber]} />
+                <Text style={styles.heroWorkoutEyebrow}>SEU TREINO ESTÁ ESPERANDO</Text>
+              </View>
+              <Text style={styles.heroWorkoutName}>{heroWorkout.name}</Text>
+              {heroWorkoutExerciseCount > 0 && (
+                <Text style={styles.heroWorkoutMeta}>{heroWorkoutExerciseCount} exercício{heroWorkoutExerciseCount !== 1 ? 's' : ''}</Text>
               )}
-              <TouchableOpacity
-                style={[styles.heroWorkoutButton, todaysWorkoutDone && styles.heroWorkoutButtonDone]}
-                onPress={() => setPlayingWorkout(todaysWorkout)}
-              >
-                <Ionicons name={todaysWorkoutDone ? 'checkmark-circle' : 'play'} size={18} color="#0F0F12" />
-                <Text style={styles.heroWorkoutButtonText}>{todaysWorkoutDone ? 'Treinar Novamente' : 'Começar Treino'}</Text>
+              <TouchableOpacity style={styles.heroWorkoutButton} onPress={() => setPlayingWorkout(heroWorkout)}>
+                <Ionicons name="play" size={18} color="#0F0F12" />
+                <Text style={styles.heroWorkoutButtonText}>Começar Treino</Text>
               </TouchableOpacity>
             </TouchableOpacity>
-          ) : (
-            <View style={styles.heroWorkoutCard}>
-              <Text style={styles.heroWorkoutEyebrow}>NENHUM PROGRAMA ATIVO</Text>
-              <Text style={styles.heroWorkoutName}>Escolha seu primeiro treino</Text>
-              <Text style={styles.heroWorkoutMeta}>Veja a biblioteca de programas na aba Treinos e comece agora.</Text>
-              <TouchableOpacity style={styles.heroWorkoutButton} onPress={() => setActiveTab('treinos')}>
-                <Ionicons name="albums-outline" size={18} color="#0F0F12" />
-                <Text style={styles.heroWorkoutButtonText}>Ver Programas</Text>
+          )}
+
+          {heroState === 'in_progress' && heroWorkout && (
+            <TouchableOpacity style={styles.heroWorkoutCard} onPress={() => setPlayingWorkout(heroWorkout)} activeOpacity={0.85}>
+              <View style={styles.heroWorkoutEyebrowRow}>
+                <View style={[styles.heroStatusDot, styles.heroStatusDotAmber]} />
+                <Text style={styles.heroWorkoutEyebrow}>CONTINUE SEU TREINO</Text>
+              </View>
+              <Text style={styles.heroWorkoutName}>{heroWorkout.name}</Text>
+              <Text style={styles.heroWorkoutMeta}>
+                {sessionOfInterestExercisesDone} de {heroWorkoutExerciseCount} exercício{heroWorkoutExerciseCount !== 1 ? 's' : ''} concluído{sessionOfInterestExercisesDone !== 1 ? 's' : ''}
+              </Text>
+              {heroWorkoutExerciseCount > 0 && (
+                <View style={styles.track}>
+                  <View style={[styles.fill, { width: `${Math.min(100, (sessionOfInterestExercisesDone / heroWorkoutExerciseCount) * 100)}%` }]} />
+                </View>
+              )}
+              <TouchableOpacity style={styles.heroWorkoutButton} onPress={() => setPlayingWorkout(heroWorkout)}>
+                <Ionicons name="play" size={18} color="#0F0F12" />
+                <Text style={styles.heroWorkoutButtonText}>Continuar</Text>
               </TouchableOpacity>
+            </TouchableOpacity>
+          )}
+
+          {heroState === 'done' && heroWorkout && (
+            <TouchableOpacity style={styles.heroWorkoutCard} onPress={() => setPreviewWorkout(heroWorkout)} activeOpacity={0.85}>
+              <View style={styles.heroWorkoutEyebrowRow}>
+                <View style={[styles.heroStatusDot, styles.heroStatusDotGreen]} />
+                <Text style={[styles.heroWorkoutEyebrow, styles.heroWorkoutEyebrowGreen]}>TREINO CONCLUÍDO!</Text>
+              </View>
+              <Text style={styles.heroWorkoutName}>{heroWorkout.name}</Text>
+              <Text style={styles.heroWorkoutMeta}>
+                {sessionOfInterestExercisesDone} de {heroWorkoutExerciseCount} exercício{heroWorkoutExerciseCount !== 1 ? 's' : ''}
+                {heroSession?.pse != null ? ` · RPE ${heroSession.pse}` : ''}
+                {heroSessionDurationMin != null ? ` · ${heroSessionDurationMin} min` : ''}
+              </Text>
+              <TouchableOpacity style={[styles.heroWorkoutButton, styles.heroWorkoutButtonDone]} onPress={() => setPreviewWorkout(heroWorkout)}>
+                <Ionicons name="checkmark-circle" size={18} color="#0F0F12" />
+                <Text style={styles.heroWorkoutButtonText}>Ver Resumo</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          )}
+
+          {heroState === 'no_workout' && (
+            <View style={styles.heroWorkoutCard}>
+              {workouts.length === 0 ? (
+                <>
+                  <Text style={styles.heroWorkoutEyebrow}>NENHUM PROGRAMA ATIVO</Text>
+                  <Text style={styles.heroWorkoutName}>Escolha seu primeiro treino</Text>
+                  <Text style={styles.heroWorkoutMeta}>Veja a biblioteca de programas na aba Treinos e comece agora.</Text>
+                  <TouchableOpacity style={styles.heroWorkoutButton} onPress={() => setActiveTab('treinos')}>
+                    <Ionicons name="albums-outline" size={18} color="#0F0F12" />
+                    <Text style={styles.heroWorkoutButtonText}>Ver Programas</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.heroWorkoutName}>Hoje é dia de recuperação 😴</Text>
+                  <Text style={styles.heroWorkoutMeta}>Aproveite pra descansar. Seu próximo treino te espera quando você voltar.</Text>
+                </>
+              )}
             </View>
           )}
 
@@ -1788,12 +1887,19 @@ const styles = StyleSheet.create({
   evolutionRowSubtitle: { color: '#A1A1AA', fontSize: 11, marginTop: 2 },
   progressSectionLabel: { color: '#737373', fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4, marginBottom: 10 },
   heroWorkoutCard: { borderWidth: 1, borderRadius: 20, padding: 20, marginBottom: 16, ...GLASS_CARD, borderColor: ACCENT },
-  heroWorkoutEyebrow: { color: ACCENT, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
+  heroWorkoutEyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  heroStatusDot: { width: 8, height: 8, borderRadius: 4 },
+  heroStatusDotAmber: { backgroundColor: '#f59e0b' },
+  heroStatusDotGreen: { backgroundColor: '#22c55e' },
+  heroWorkoutEyebrow: { color: ACCENT, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+  heroWorkoutEyebrowGreen: { color: '#22c55e' },
   heroWorkoutName: { color: '#F5F5F7', fontSize: 24, fontWeight: '800' },
   heroWorkoutMeta: { color: '#a3a3a3', fontSize: 13, marginTop: 6, lineHeight: 18 },
   heroWorkoutButton: { flexDirection: 'row', gap: 8, backgroundColor: ACCENT, borderRadius: 14, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', marginTop: 18 },
   heroWorkoutButtonDone: { backgroundColor: '#2B2B36' },
   heroWorkoutButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '800' },
+  track: { height: 4, backgroundColor: '#0F0F12', borderRadius: 2, overflow: 'hidden', marginTop: 10 },
+  fill: { height: '100%', borderRadius: 2, backgroundColor: ACCENT },
   contactCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 24, ...GLASS_CARD },
   contactCardIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
   contactCardTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
