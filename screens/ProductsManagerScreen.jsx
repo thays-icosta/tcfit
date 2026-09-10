@@ -17,6 +17,7 @@ const TYPES = [
   { value: 'planilha_treino', label: 'Planilha / E-book de Treino', icon: 'document-text-outline' },
   { value: 'desafio', label: 'Inscrição em Desafio', icon: 'trophy-outline' },
   { value: 'substituicao_alimentar', label: 'Guia de Substituição Alimentar', icon: 'swap-horizontal-outline' },
+  { value: 'projeto', label: 'Projeto (Programa de Dias)', icon: 'rocket-outline' },
   { value: 'outro', label: 'Outro', icon: 'pricetag-outline' },
 ];
 
@@ -82,6 +83,8 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
   const [grantingStudentId, setGrantingStudentId] = useState(null);
   const [selectedTemplateIds, setSelectedTemplateIds] = useState([]);
   const [linkedTemplates, setLinkedTemplates] = useState([]);
+  const [projectTemplateId, setProjectTemplateId] = useState(null);
+  const [projectTemplates, setProjectTemplates] = useState([]);
   const [level, setLevel] = useState(null);
   const [goal, setGoal] = useState(null);
   const [targetAudience, setTargetAudience] = useState('unissex');
@@ -213,11 +216,17 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setRecipes(data || []);
   };
 
+  const loadProjectTemplates = async () => {
+    const { data } = await supabase.from('project_templates').select('id, name').eq('personal_id', personalId).eq('archived', false).order('name');
+    setProjectTemplates(data || []);
+  };
+
   useEffect(() => {
     loadProducts();
     loadRecipes();
     loadSectionToggle();
     loadCollections();
+    loadProjectTemplates();
   }, []);
 
   const toggleSelectedRecipe = (recipeId) => {
@@ -242,6 +251,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setCoverFocalPosition('topo');
     setRequiredAccessLevel(null);
     setSelectedTemplateIds([]);
+    setProjectTemplateId(null);
     setCategory(null);
     setLevel(null);
     setGoal(null);
@@ -335,6 +345,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
     setMaterialType(product.material_type || (product.type === 'ebook_receitas' ? 'ebook_receita' : null));
     setNutritionTags(product.nutrition_tags || []);
     setCollectionId(product.collection_id || null);
+    setProjectTemplateId(product.project_template_id || null);
     setShowForm(true);
 
     if (product.type === 'treino_template') {
@@ -358,6 +369,10 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       showAlert('Foto de capa obrigatória', 'Adicione uma foto de capa antes de salvar esse programa — sem ela, ele não aparece direito na vitrine do aluno.');
       return;
     }
+    if (type === 'projeto' && !projectTemplateId) {
+      showAlert('Escolha o projeto', 'Selecione qual Projeto (criado em Projetos) esse produto libera.');
+      return;
+    }
     setSaving(true);
     const payload = {
       personal_id: personalId,
@@ -376,6 +391,7 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
       cover_focal_position: coverFocalPosition,
       required_access_level: requiredAccessLevel,
       template_id: type === 'treino_template' ? selectedTemplateIds[0] : null,
+      project_template_id: type === 'projeto' ? projectTemplateId : null,
       category,
       level: WORKOUT_PRODUCT_TYPES.includes(type) ? level : null,
       goal: WORKOUT_PRODUCT_TYPES.includes(type) ? goal : null,
@@ -888,6 +904,26 @@ export default function ProductsManagerScreen({ personalId, onClose }) {
                     ))}
                   </View>
                 </>
+              )}
+            </>
+          ) : type === 'projeto' ? (
+            <>
+              <Text style={styles.label}>Projeto</Text>
+              <Text style={styles.helperText}>Qual Projeto (criado em &quot;Projetos&quot;) esse produto libera pro aluno.</Text>
+              {projectTemplates.length === 0 ? (
+                <Text style={styles.helperText}>Você ainda não criou nenhum Projeto. Crie um primeiro em &quot;Projetos&quot;, na tela inicial.</Text>
+              ) : (
+                <View style={styles.accessLevelFormRow}>
+                  {projectTemplates.map((p) => (
+                    <TouchableOpacity
+                      key={p.id}
+                      style={[styles.accessLevelFormChip, projectTemplateId === p.id && styles.accessLevelFormChipActive]}
+                      onPress={() => setProjectTemplateId(p.id)}
+                    >
+                      <Text style={[styles.accessLevelFormChipText, projectTemplateId === p.id && styles.accessLevelFormChipTextActive]}>{p.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               )}
             </>
           ) : null}

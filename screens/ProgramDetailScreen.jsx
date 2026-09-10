@@ -5,8 +5,9 @@ import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
 import { HeaderBack } from './Header';
+import { copySessionToStudentWorkout } from './workoutAssignment';
 
-const WHATSAPP_NUMBER = '5537998231382';
+export const WHATSAPP_NUMBER = '5537998231382';
 
 export default function ProgramDetailScreen({ product, studentId, personalId, unlocked, onClose, onAdded }) {
   const [divisions, setDivisions] = useState([]);
@@ -87,23 +88,38 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
     try {
       let firstWorkout = null;
       for (const division of divisions) {
-        const { data: templateItems } = await supabase
-          .from('workout_template_exercises')
-          .select('exercise_id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes')
-          .eq(sessionBased ? 'session_id' : 'template_id', division.id);
+        if (sessionBased) {
+          // division.id is a template_sessions id — the standard single-ficha copy.
+          const { workout } = await copySessionToStudentWorkout(supabase, {
+            sessionId: division.id,
+            sessionName: division.name,
+            studentId,
+            personalId,
+            productId: product.id,
+          });
+          if (!firstWorkout) firstWorkout = workout;
+        } else {
+          // division.id is a whole workout_templates id (legacy multi-template
+          // product) — copies every session's exercises into one workout, a
+          // different shape from the single-ficha helper above.
+          const { data: templateItems } = await supabase
+            .from('workout_template_exercises')
+            .select('exercise_id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes')
+            .eq('template_id', division.id);
 
-        const { data: newWorkout, error } = await supabase
-          .from('workouts')
-          .insert({ student_id: studentId, personal_id: personalId, name: division.name, active: true, product_id: product.id })
-          .select()
-          .single();
+          const { data: newWorkout, error } = await supabase
+            .from('workouts')
+            .insert({ student_id: studentId, personal_id: personalId, name: division.name, active: true, product_id: product.id })
+            .select()
+            .single();
 
-        if (error || !newWorkout) throw error || new Error('no workout');
-        if (!firstWorkout) firstWorkout = newWorkout;
+          if (error || !newWorkout) throw error || new Error('no workout');
+          if (!firstWorkout) firstWorkout = newWorkout;
 
-        if (templateItems && templateItems.length > 0) {
-          const copies = templateItems.map((it) => ({ ...it, workout_id: newWorkout.id }));
-          await supabase.from('workout_exercises').insert(copies);
+          if (templateItems && templateItems.length > 0) {
+            const copies = templateItems.map((it) => ({ ...it, workout_id: newWorkout.id }));
+            await supabase.from('workout_exercises').insert(copies);
+          }
         }
       }
       setAlreadyAdded(true);

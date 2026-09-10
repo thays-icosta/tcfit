@@ -12,6 +12,7 @@ import ProductsManagerScreen from './ProductsManagerScreen';
 import FoodCatalogScreen from './FoodCatalogScreen';
 import RecipeManagerScreen from './RecipeManagerScreen';
 import DietTemplateBuilderScreen from './DietTemplateBuilderScreen';
+import ProjectTemplateBuilderScreen from './ProjectTemplateBuilderScreen';
 import AlunoDetailScreen from './AlunoDetailScreen';
 import PersonalTabBar from './PersonalTabBar';
 import { showAlert } from './alertUtils';
@@ -38,6 +39,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [showFoodCatalog, setShowFoodCatalog] = useState(false);
   const [showRecipeManager, setShowRecipeManager] = useState(false);
   const [showDietTemplates, setShowDietTemplates] = useState(false);
+  const [showProjectBuilder, setShowProjectBuilder] = useState(false);
   const [nutricaoScope, setNutricaoScope] = useState('planos');
   const [showStudentPicker, setShowStudentPicker] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
@@ -303,6 +305,10 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
 
   if (showDietTemplates) {
     return <DietTemplateBuilderScreen personalId={user.id} onClose={() => setShowDietTemplates(false)} />;
+  }
+
+  if (showProjectBuilder) {
+    return <ProjectTemplateBuilderScreen personalId={user.id} onClose={() => setShowProjectBuilder(false)} />;
   }
 
   const attentionItems = students
@@ -690,6 +696,12 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
             <Ionicons name="bag-handle-outline" size={20} color="#FF6B00" />
           </View>
           <Text style={styles.shortcutText}>Produtos Adicionais</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.shortcutCard, { width: '100%' }]} onPress={() => setShowProjectBuilder(true)}>
+          <View style={styles.shortcutIconCircle}>
+            <Ionicons name="rocket-outline" size={20} color="#FF6B00" />
+          </View>
+          <Text style={styles.shortcutText}>Projetos</Text>
         </TouchableOpacity>
       </View>
 

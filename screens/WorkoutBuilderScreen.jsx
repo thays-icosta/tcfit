@@ -6,6 +6,7 @@ import AddExerciseModal from './AddExerciseModal';
 import EditExerciseModal from './EditExerciseModal';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { loadPeriodizationPlan, getCurrentPhase } from './periodizationUtils';
+import { copySessionToStudentWorkout } from './workoutAssignment';
 import { showAlert, describeFunctionError } from './alertUtils';
 import { useSpeechToText } from './useSpeechToText';
 import PromptModal from './PromptModal';
@@ -327,29 +328,18 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     let totalExercises = 0;
 
     for (const session of sessions) {
-      const { data: newWorkout, error } = await supabase
-        .from('workouts')
-        .insert({
-          student_id: studentId,
-          personal_id: personalId,
-          name: session.name,
-          active: true,
-          phase_id: currentPhase ? currentPhase.phase.id : null,
-        })
-        .select()
-        .single();
-      if (error || !newWorkout) continue;
-      if (!firstWorkoutId) firstWorkoutId = newWorkout.id;
-
-      const { data: templateItems } = await supabase
-        .from('workout_template_exercises')
-        .select('exercise_id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes')
-        .eq('session_id', session.id);
-
-      if (templateItems && templateItems.length > 0) {
-        const copies = templateItems.map((it) => ({ ...it, workout_id: newWorkout.id }));
-        await supabase.from('workout_exercises').insert(copies);
-        totalExercises += templateItems.length;
+      try {
+        const { workout, exerciseCount } = await copySessionToStudentWorkout(supabase, {
+          sessionId: session.id,
+          sessionName: session.name,
+          studentId,
+          personalId,
+          phaseId: currentPhase ? currentPhase.phase.id : null,
+        });
+        if (!firstWorkoutId) firstWorkoutId = workout.id;
+        totalExercises += exerciseCount;
+      } catch {
+        continue;
       }
     }
 

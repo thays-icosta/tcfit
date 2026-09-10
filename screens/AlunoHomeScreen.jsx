@@ -18,6 +18,8 @@ import RecipesScreen from './RecipesScreen';
 import AlunoProductsScreen from './AlunoProductsScreen';
 import AlunoTabBar from './AlunoTabBar';
 import ProgramDetailScreen from './ProgramDetailScreen';
+import MeusProjetosSection from './MeusProjetosSection';
+import ProjectDashboardScreen from './ProjectDashboardScreen';
 import AnamneseFormScreen from './AnamneseFormScreen';
 import UpgradeLockModal from './UpgradeLockModal';
 import AlunoEvolutionScreen from './AlunoEvolutionScreen';
@@ -162,6 +164,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [categorizedProducts, setCategorizedProducts] = useState([]);
   const [unlockedProductIds, setUnlockedProductIds] = useState(new Set());
   const [openProgram, setOpenProgram] = useState(null);
+  const [openStudentProjectId, setOpenStudentProjectId] = useState(null);
   const [openCategoryGroup, setOpenCategoryGroup] = useState(null);
   const [collections, setCollections] = useState([]);
   const [openCollection, setOpenCollection] = useState(null);
@@ -366,6 +369,39 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   useEffect(() => {
     getJsonPref('hub_collapsed_sections_v1', {}).then(setHubCollapsedSections);
   }, []);
+
+  // Tapping a 'projeto' product either resumes the student's existing run
+  // (student_projects, unique per student+project_template) or creates it on
+  // first tap, then opens the dashboard directly — mirrors ProgramDetailScreen's
+  // "add once, then just open" behavior for treino_template products.
+  const handleOpenProjectProduct = async (product) => {
+    if (!unlockedProductIds.has(product.id)) {
+      setSelectedProduct(product);
+      return;
+    }
+    const { data: existing } = await supabase
+      .from('student_projects')
+      .select('id')
+      .eq('student_id', user.id)
+      .eq('project_template_id', product.project_template_id)
+      .maybeSingle();
+    let studentProjectId = existing?.id;
+    if (!studentProjectId) {
+      const { data: created } = await supabase
+        .from('student_projects')
+        .insert({ project_template_id: product.project_template_id, product_id: product.id, student_id: user.id, personal_id: personalId })
+        .select()
+        .single();
+      studentProjectId = created?.id;
+    }
+    if (studentProjectId) setOpenStudentProjectId(studentProjectId);
+  };
+
+  const openProductOrProgram = (p) => {
+    if (p.type === 'treino_template') setOpenProgram(p);
+    else if (p.type === 'projeto') handleOpenProjectProduct(p);
+    else setSelectedProduct(p);
+  };
 
   const toggleHubSection = (key) => {
     animateNextLayout();
@@ -624,6 +660,16 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     );
   }
 
+  if (openStudentProjectId) {
+    return (
+      <ProjectDashboardScreen
+        studentProjectId={openStudentProjectId}
+        studentId={user.id}
+        onClose={() => setOpenStudentProjectId(null)}
+      />
+    );
+  }
+
   if (openProgram) {
     return (
       <ProgramDetailScreen
@@ -658,7 +704,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 <TouchableOpacity
                   key={p.id}
                   style={styles.categoryListCard}
-                  onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setSelectedProduct(p))}
+                  onPress={() => openProductOrProgram(p)}
                 >
                   <View style={styles.categoryListCoverWrap}>
                     {p.cover_image_url ? (
@@ -717,7 +763,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 <TouchableOpacity
                   key={p.id}
                   style={styles.categoryListCard}
-                  onPress={() => (p.type === 'treino_template' ? setOpenProgram(p) : setSelectedProduct(p))}
+                  onPress={() => openProductOrProgram(p)}
                 >
                   <View style={styles.categoryListCoverWrap}>
                     {p.cover_image_url ? (
@@ -864,6 +910,8 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
         </View>
         {workouts.length === 0 ? (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+            <MeusProjetosSection studentId={user.id} onOpenProject={setOpenStudentProjectId} />
+
             <Text style={styles.libraryIntro}>Você ainda não tem um programa ativo. Escolha um abaixo pra começar a treinar hoje.</Text>
 
             {showHubAudienceToggle && (
@@ -926,7 +974,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                             key={lvl.value}
                             style={styles.nutritionCard}
                             disabled={locked}
-                            onPress={() => (lvl.product.type === 'treino_template' ? setOpenProgram(lvl.product) : setSelectedProduct(lvl.product))}
+                            onPress={() => openProductOrProgram(lvl.product)}
                           >
                             <View style={styles.nutritionCoverWrap}>
                               {lvl.product?.cover_image_url ? (
@@ -959,6 +1007,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             keyExtractor={(item) => item.id}
             style={{ flex: 1 }}
             contentContainerStyle={{ paddingHorizontal: 16 }}
+            ListHeaderComponent={<MeusProjetosSection studentId={user.id} onOpenProject={setOpenStudentProjectId} />}
             renderItem={({ item }) => {
               const done = completedToday[item.id];
               const summary = muscleSummaryByWorkout[item.id] || [];
@@ -1662,7 +1711,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                       key={lvl.value}
                       style={styles.nutritionCard}
                       disabled={locked}
-                      onPress={() => (lvl.product.type === 'treino_template' ? setOpenProgram(lvl.product) : setSelectedProduct(lvl.product))}
+                      onPress={() => openProductOrProgram(lvl.product)}
                     >
                       <View style={styles.nutritionCoverWrap}>
                         {lvl.product?.cover_image_url ? (
