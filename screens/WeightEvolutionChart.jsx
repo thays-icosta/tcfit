@@ -21,13 +21,34 @@ export default function WeightEvolutionChart({ studentId }) {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from('physical_assessments')
-        .select('weight_kg, created_at')
-        .eq('student_id', studentId)
-        .not('weight_kg', 'is', null)
-        .order('created_at', { ascending: true });
-      setRows(data || []);
+      const [{ data: assessments }, { data: entries }] = await Promise.all([
+        supabase
+          .from('physical_assessments')
+          .select('weight_kg, created_at')
+          .eq('student_id', studentId)
+          .not('weight_kg', 'is', null)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('weight_entries')
+          .select('weight_kg, entry_date')
+          .eq('student_id', studentId)
+          .order('entry_date', { ascending: true }),
+      ]);
+
+      // Merge both sources (periodic professional assessments + daily
+      // self-logged weight) into one chronological-by-day series. When both
+      // exist for the same day, the self-logged entry wins (it's what the
+      // student just typed in and expects to see reflected immediately).
+      const byDate = new Map();
+      (assessments || []).forEach((r) => {
+        byDate.set(r.created_at.slice(0, 10), { created_at: r.created_at, weight_kg: r.weight_kg });
+      });
+      (entries || []).forEach((r) => {
+        byDate.set(r.entry_date, { created_at: r.entry_date, weight_kg: r.weight_kg });
+      });
+      const merged = Array.from(byDate.values()).sort((a, b) => a.created_at.localeCompare(b.created_at));
+
+      setRows(merged);
       setLoading(false);
     })();
   }, [studentId]);

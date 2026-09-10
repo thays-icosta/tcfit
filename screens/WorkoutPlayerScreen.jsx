@@ -645,9 +645,15 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                     return (
                       <View key={key} style={styles.tableRow}>
                         <Text style={[styles.setNumberText, styles.colSet]}>{setNumber}</Text>
-                        <Text style={[styles.prevText, styles.colPrev]} numberOfLines={1}>
-                          {prevLoad != null ? `${prevLoad}kg×${ex.reps}` : '—'}
-                        </Text>
+                        <TouchableOpacity
+                          style={styles.colPrev}
+                          disabled={prevLoad == null || done}
+                          onPress={() => setSetLoads((prev) => ({ ...prev, [key]: String(prevLoad) }))}
+                        >
+                          <Text style={styles.prevText} numberOfLines={1}>
+                            {prevLoad != null ? `${prevLoad}kg×${ex.reps}` : '—'}
+                          </Text>
+                        </TouchableOpacity>
                         <TextInput
                           style={[styles.cellInput, styles.colKg, done && styles.cellInputDone]}
                           keyboardType="number-pad"
