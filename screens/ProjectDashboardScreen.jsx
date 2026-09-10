@@ -4,12 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { HeaderBack } from './Header';
-import { resolveProjectDay, isDayComplete, computeNextDay, computeStreaks } from './projectUtils';
+import { resolveProjectDay, isDayComplete, computeNextDay, computeStreaks, computeAchievements } from './projectUtils';
 import { copySessionToStudentWorkout } from './workoutAssignment';
 import WorkoutPlayerScreen from './WorkoutPlayerScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import ProjectContentScreen from './ProjectContentScreen';
 import ProjectCelebrationScreen from './ProjectCelebrationScreen';
+import ProjectTimelineScreen from './ProjectTimelineScreen';
 import WeightEvolutionChart from './WeightEvolutionChart';
 
 const ACCENT = '#FF6B00';
@@ -30,6 +31,7 @@ export default function ProjectDashboardScreen({ studentProjectId, studentId, on
   const [viewingVideo, setViewingVideo] = useState(null); // { activity, exercise }
   const [viewingContent, setViewingContent] = useState(null); // { activity, content }
   const [stats, setStats] = useState({ treinosConcluidos: 0, diasAtivos: 0, sequenciaAtual: 0 });
+  const [showTimeline, setShowTimeline] = useState(false);
 
   const refreshAndAdvance = useCallback(async () => {
     setLoading(true);
@@ -70,6 +72,27 @@ export default function ProjectDashboardScreen({ studentProjectId, studentId, on
             .in('activity_id', activityIds)
         : { data: [] };
       let completionsForToday = completions || [];
+
+      // Recovery days need no student action — auto-mark them done so the
+      // "fall through empty/rest days" advance loop treats them like a rest
+      // day, while still leaving a completion row so the timeline can show
+      // "Recuperação" for that day instead of nothing.
+      const pendingRecovery = todaysActivities.filter(
+        (a) => a.activity_type === 'recovery' && !completionsForToday.some((c) => c.activity_id === a.id)
+      );
+      if (pendingRecovery.length > 0) {
+        const nowIso = new Date().toISOString();
+        const rows = pendingRecovery.map((a) => ({
+          student_project_id: currentSp.id,
+          activity_id: a.id,
+          day_in_phase: resolved.dayInPhase,
+          student_id: currentSp.student_id,
+          personal_id: currentSp.personal_id,
+          completed_at: nowIso,
+        }));
+        const { data: inserted } = await supabase.from('student_project_activity_completions').insert(rows).select();
+        completionsForToday = [...completionsForToday, ...(inserted || [])];
+      }
 
       const pendingWorkoutIds = completionsForToday.filter((c) => c.workout_id && !c.completed_at).map((c) => c.workout_id);
       let workoutCompletedIds = new Set();
@@ -249,6 +272,10 @@ export default function ProjectDashboardScreen({ studentProjectId, studentId, on
     );
   }
 
+  if (showTimeline) {
+    return <ProjectTimelineScreen studentProjectId={studentProjectId} onClose={() => setShowTimeline(false)} />;
+  }
+
   if (finished || !resolvedDay) {
     return <ProjectCelebrationScreen studentProject={studentProject} template={template} onClose={onClose} />;
   }
@@ -339,6 +366,29 @@ export default function ProjectDashboardScreen({ studentProjectId, studentId, on
             </View>
           </View>
         </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Conquistas</Text>
+          <View style={styles.badgeGrid}>
+            {computeAchievements({
+              treinosConcluidos: stats.treinosConcluidos,
+              diasAtivos: stats.diasAtivos,
+              currentDay: studentProject.current_day,
+              totalDays: template.total_days,
+              finished: !!studentProject.completed_at,
+            }).map((a) => (
+              <View key={a.key} style={[styles.badge, a.achieved && styles.badgeAchieved]}>
+                <Ionicons name={a.achieved ? 'trophy' : 'trophy-outline'} size={16} color={a.achieved ? ACCENT : '#525252'} />
+                <Text style={[styles.badgeText, a.achieved && styles.badgeTextAchieved]}>{a.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.timelineLink} onPress={() => setShowTimeline(true)}>
+          <Ionicons name="calendar-outline" size={16} color={ACCENT} />
+          <Text style={styles.timelineLinkText}>Ver linha do tempo dos {template.total_days} dias</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -363,4 +413,11 @@ const styles = StyleSheet.create({
   statItem: { alignItems: 'center', flex: 1 },
   statValue: { color: '#F5F5F7', fontSize: 20, fontWeight: '800' },
   statLabel: { color: '#737373', fontSize: 10, marginTop: 4, textAlign: 'center' },
+  badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  badge: { flexDirection: 'row', gap: 6, alignItems: 'center', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7 },
+  badgeAchieved: { borderColor: ACCENT },
+  badgeText: { color: '#525252', fontSize: 11, fontWeight: '600' },
+  badgeTextAchieved: { color: '#F5F5F7' },
+  timelineLink: { flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', paddingVertical: 14, marginBottom: 20 },
+  timelineLinkText: { color: ACCENT, fontSize: 13, fontWeight: '700' },
 });

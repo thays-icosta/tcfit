@@ -24,6 +24,7 @@ const ACTIVITY_TYPES = [
   { value: 'video', label: 'Vídeo', icon: 'play-circle-outline' },
   { value: 'conteudo', label: 'Conteúdo', icon: 'book-outline' },
   { value: 'checklist', label: 'Checklist', icon: 'checkbox-outline' },
+  { value: 'recovery', label: 'Recuperação', icon: 'bed-outline' },
 ];
 
 const REF_KIND_BY_TYPE = {
@@ -33,6 +34,7 @@ const REF_KIND_BY_TYPE = {
   video: 'exercise',
   conteudo: 'content',
   checklist: 'content',
+  recovery: 'none',
 };
 
 // Personal-side authoring screen for the "Projetos" feature (reusable
@@ -430,8 +432,9 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
 
   const handleSaveActivity = async () => {
     const day = Number(activityForm.day);
-    if (!activityForm.title.trim() || !day || day <= 0 || !activityForm.ref_name) {
-      showAlert('Ops', 'Preencha título, dia e escolha uma referência.');
+    const needsRef = REF_KIND_BY_TYPE[activityForm.activity_type] !== 'none';
+    if (!activityForm.title.trim() || !day || day <= 0 || (needsRef && !activityForm.ref_name)) {
+      showAlert('Ops', 'Preencha título, dia' + (needsRef ? ' e escolha uma referência.' : '.'));
       return;
     }
     const payload = {
@@ -657,10 +660,14 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
                     </TouchableOpacity>
                   ))}
                 </View>
+                {REF_KIND_BY_TYPE[activityForm?.activity_type] === 'none' ? (
+                  <Text style={styles.sectionSubtitle}>Sem referência — dia de descanso ativo, sem ação obrigatória.</Text>
+                ) : (
                 <TouchableOpacity style={styles.refButton} onPress={openRefPicker}>
                   <Ionicons name="link-outline" size={16} color="#FF6B00" />
                   <Text style={styles.refButtonText}>{activityForm?.ref_name || 'Escolher referência'}</Text>
                 </TouchableOpacity>
+                )}
                 <TouchableOpacity style={styles.saveMetaButton} onPress={handleSaveActivity}>
                   <Text style={styles.saveMetaButtonText}>Salvar Atividade</Text>
                 </TouchableOpacity>

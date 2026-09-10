@@ -16,6 +16,7 @@ import AnamneseViewScreen from './AnamneseViewScreen';
 import { HeaderBack } from './Header';
 import MetricsMiniCards from './MetricsMiniCards';
 import WeightEvolutionChart from './WeightEvolutionChart';
+import PersonalProjectProgressSection from './PersonalProjectProgressSection';
 import WaterLogModal from './WaterLogModal';
 import PresencialSessionScreen from './PresencialSessionScreen';
 import { PROGRAM_GOALS, PROGRAM_LEVELS, TRAINING_LOCATIONS, PAIN_ZONES, MUSCLE_FOCUS_OPTIONS } from './accessLevel';
@@ -530,6 +531,8 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
               )}
             </View>
           )}
+
+          <PersonalProjectProgressSection studentId={student.id} />
 
           <MetricsMiniCards
             caloriesConsumed={diaryTotals?.consumedKcal || 0}

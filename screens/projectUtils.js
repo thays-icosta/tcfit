@@ -69,6 +69,47 @@ export function computeNextDay(currentDay, totalDays) {
   return next > totalDays ? { done: true, nextDay: currentDay } : { done: false, nextDay: next };
 }
 
+// Builds the full day-by-day timeline (every day 1..total_days across every
+// phase), each with its resolved activities and a status relative to the
+// student's current_day: 'done' (already passed — self-paced guarantees it
+// was fully completed to get past it), 'current', or 'locked' (not reached
+// yet, per "não liberar a jornada de forma confusa").
+export function buildFullTimeline(phases, activitiesByPhaseId, currentDay) {
+  const timeline = [];
+  let cumulative = 0;
+  for (const phase of phases) {
+    const phaseDays = [];
+    for (let dayInPhase = 1; dayInPhase <= phase.duration_days; dayInPhase++) {
+      const absoluteDay = cumulative + dayInPhase;
+      const activities = getActivitiesForDay(activitiesByPhaseId[phase.id] || [], dayInPhase, phase.cycle_length_days);
+      const status = absoluteDay < currentDay ? 'done' : absoluteDay === currentDay ? 'current' : 'locked';
+      phaseDays.push({ dayInPhase, absoluteDay, activities, status });
+    }
+    timeline.push({ phase, days: phaseDays });
+    cumulative += phase.duration_days;
+  }
+  return timeline;
+}
+
+// "Conquistas" — badges derived purely from stats already computed for the
+// dashboard/celebration screens, no separate table (nothing to duplicate or
+// get out of sync).
+export const ACHIEVEMENT_DEFS = [
+  { key: 'primeiro_treino', label: 'Primeiro treino', test: (s) => s.treinosConcluidos >= 1 },
+  { key: 'sete_dias', label: '7 dias', test: (s) => s.currentDay >= 7 || s.diasAtivos >= 7 },
+  { key: 'trinta_dias', label: '30 dias', test: (s) => s.currentDay >= 30 || s.diasAtivos >= 30 },
+  { key: 'metade', label: '50% concluído', test: (s) => s.currentDay / s.totalDays >= 0.5 },
+  { key: 'completo', label: 'Dias concluídos', test: (s) => s.finished },
+];
+
+export function computeAchievements(stats) {
+  return ACHIEVEMENT_DEFS.map((def) => ({
+    key: def.key,
+    label: def.key === 'completo' ? `${stats.totalDays} dias concluídos` : def.label,
+    achieved: def.test(stats),
+  }));
+}
+
 // Longest run of consecutive completed day_in_phase-ordered entries, and the
 // current run ending at the most recent one — used for "sequência atual" /
 // "sequência máxima". `days` is a sorted-ascending array of distinct
