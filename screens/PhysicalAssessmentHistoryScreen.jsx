@@ -40,7 +40,12 @@ async function renderHtmlToPdfBlob(html, fileName) {
       .set({
         filename: fileName,
         margin: [20, 15, 20, 15],
-        image: { type: 'png' },
+        // JPEG (not PNG) — PNG keeps an alpha channel, and any transparent
+        // pixel in the captured canvas (edges, unfilled page remainder on
+        // the last page) can render solid black in some PDF viewers. JPEG
+        // has no alpha, so it's always fully opaque against the white
+        // html2canvas background below.
+        image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] },
@@ -123,6 +128,16 @@ function SimpleBarChart({ data, valueKey, label, color, unit }) {
   );
 }
 
+// html2canvas (used to rasterize the PDF report) does not reliably render
+// inline <svg> elements — it frequently paints a solid black box instead.
+// Wrapping the SVG markup as a data-URI <img> makes html2canvas treat it as
+// a plain raster image, which it handles correctly. encodeURIComponent (not
+// base64) avoids UTF-8 issues with accented labels like "Tríceps".
+function svgToImg(svgMarkup, width, height) {
+  const dataUri = `data:image/svg+xml,${encodeURIComponent(svgMarkup)}`;
+  return `<img src="${dataUri}" width="${width}" height="${height}" style="width:100%; height:auto; display:block;" />`;
+}
+
 function extractPerimeterPoint(a) {
   const p = a.perimeters;
   if (!p) return null;
@@ -186,11 +201,10 @@ function buildPerimeterChartHtml(rawPoints) {
 
   const dateLabels = points.map((p, i) => `<text x="${xFor(i).toFixed(1)}" y="${height - 8}" font-size="8" fill="#888" text-anchor="middle">${new Date(p.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</text>`).join('');
 
+  const svgMarkup = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"><rect width="${width}" height="${height}" fill="#FFFFFF" />${svgLines}${dateLabels}</svg>`;
+
   return `
-    <svg width="100%" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-      ${svgLines}
-      ${dateLabels}
-    </svg>
+    ${svgToImg(svgMarkup, width, height)}
     <div class="legend-box">${legendRows}</div>
   `;
 }
@@ -235,8 +249,10 @@ function buildSkinfoldChartHtml(current, previous, brandColor) {
     bars += `<text x="${groupX.toFixed(1)}" y="${height - 20}" font-size="8" fill="#888" text-anchor="middle" transform="rotate(-30 ${groupX.toFixed(1)} ${height - 20})">${shortLabel}</text>`;
   });
 
+  const svgMarkup = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg"><rect width="${width}" height="${height}" fill="#FFFFFF" />${bars}</svg>`;
+
   return `
-    <svg width="100%" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">${bars}</svg>
+    ${svgToImg(svgMarkup, width, height)}
     <div class="legend-box">
       <div class="legend-row"><span class="legend-dot" style="background:#a3a3a3"></span><span class="legend-label">Avaliação Anterior</span></div>
       <div class="legend-row"><span class="legend-dot" style="background:${brandColor}"></span><span class="legend-label">Avaliação Atual</span></div>
@@ -298,7 +314,7 @@ function buildReportHtml(studentName, assessments, branding) {
   };
 
   const headerBlock = branding?.useLogo && branding?.logoUrl
-    ? `<div class="header-with-logo avoid-break"><img src="${branding.logoUrl}" class="logo" /><div><h1 style="color:${brandColor}">Relatório de Avaliação Física</h1><div class="subtitle">${studentName} · Gerado em ${formatDate(new Date().toISOString())}</div></div></div>`
+    ? `<div class="header-with-logo avoid-break"><img src="${branding.logoUrl}" crossorigin="anonymous" class="logo" /><div><h1 style="color:${brandColor}">Relatório de Avaliação Física</h1><div class="subtitle">${studentName} · Gerado em ${formatDate(new Date().toISOString())}</div></div></div>`
     : `<div class="avoid-break"><h1 style="color:${brandColor}">Relatório de Avaliação Física</h1><div class="subtitle">${studentName} · Gerado em ${formatDate(new Date().toISOString())}</div></div>`;
 
   const footerParts = [];
@@ -388,15 +404,15 @@ function buildReportHtml(studentName, assessments, branding) {
           .legend-value { font-weight: 700; width: 50px; text-align: right; }
           .legend-delta { width: 60px; text-align: right; font-weight: 700; }
           .muted { color: #a3a3a3; font-size: 12px; font-style: italic; }
-          .bio-box { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; background: #f9f9f9; border-radius: 10px; padding: 14px; border: 1px solid #eee; break-inside: avoid; page-break-inside: avoid; }
+          .bio-box { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; background: #FFFFFF; border-radius: 10px; padding: 14px; border: 1px solid #eee; break-inside: avoid; page-break-inside: avoid; }
           .bio-item { width: 30%; text-align: center; padding: 6px 0; }
           .bio-value { font-size: 16px; font-weight: 800; color: ${brandColor}; }
           .bio-label { font-size: 9px; color: #737373; margin-top: 2px; text-transform: uppercase; }
-          .parecer-box { background: #f9f9f9; border: 1px solid #eee; border-left: 4px solid ${brandColor}; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
+          .parecer-box { background: #FFFFFF; border: 1px solid #eee; border-left: 4px solid ${brandColor}; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
           .parecer-title { font-size: 11px; font-weight: 800; color: ${brandColor}; text-transform: uppercase; margin-bottom: 8px; }
           .parecer-text { font-size: 12px; color: #374151; white-space: pre-wrap; line-height: 18px; }
           .report-image-full { width: 100%; border-radius: 10px; border: 1px solid #eee; }
-          .pdf-note-box { background: #f9f9f9; border: 1px dashed #ccc; border-radius: 10px; padding: 16px; text-align: center; font-size: 12px; color: #555; }
+          .pdf-note-box { background: #FFFFFF; border: 1px dashed #ccc; border-radius: 10px; padding: 16px; text-align: center; font-size: 12px; color: #555; }
           .seg-map { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-areas: "arml trunk armr" "legl spacer legr"; gap: 10px; margin-bottom: 16px; }
           .seg-cell { border: 2px solid #eee; border-radius: 10px; padding: 10px; text-align: center; }
           .seg-arml { grid-area: arml; } .seg-armr { grid-area: armr; } .seg-trunk { grid-area: trunk; }
@@ -410,47 +426,53 @@ function buildReportHtml(studentName, assessments, branding) {
       <body>
         ${headerBlock}
 
-        <h2>Avaliação atual (${formatDate(latest.created_at)})</h2>
-        <table>
-          ${row('Modo', latest.mode === 'bioimpedancia' ? 'Bioimpedância' : `Dobras Cutâneas (${latest.protocol || ''})`)}
-          ${row('Peso', latest.weight_kg, 'kg')}
-        </table>
+        <div class="avoid-break">
+          <h2>Avaliação atual (${formatDate(latest.created_at)})</h2>
+          <table>
+            ${row('Modo', latest.mode === 'bioimpedancia' ? 'Bioimpedância' : `Dobras Cutâneas (${latest.protocol || ''})`)}
+            ${row('Peso', latest.weight_kg, 'kg')}
+          </table>
+        </div>
 
         ${bioimpedanciaBlock}
 
-        ${segmentalMapHtml ? `<h2>Análise Segmentada / Equilíbrio Muscular</h2>${segmentalMapHtml}` : ''}
+        ${segmentalMapHtml ? `<div class="avoid-break"><h2>Análise Segmentada / Equilíbrio Muscular</h2>${segmentalMapHtml}</div>` : ''}
 
         ${previous ? `
-          <h2>Comparação com avaliação anterior (${formatDate(previous.created_at)})</h2>
-          <table>
-            ${deltaRow('Peso', latest.weight_kg, previous.weight_kg, 'kg', false)}
-            ${deltaRow('% Gordura', latest.body_fat_pct, previous.body_fat_pct, '%', true)}
-            ${deltaRow('Massa Magra', latest.skeletal_muscle_kg, previous.skeletal_muscle_kg, 'kg', false)}
-          </table>
+          <div class="avoid-break">
+            <h2>Comparação com avaliação anterior (${formatDate(previous.created_at)})</h2>
+            <table>
+              ${deltaRow('Peso', latest.weight_kg, previous.weight_kg, 'kg', false)}
+              ${deltaRow('% Gordura', latest.body_fat_pct, previous.body_fat_pct, '%', true)}
+              ${deltaRow('Massa Magra', latest.skeletal_muscle_kg, previous.skeletal_muscle_kg, 'kg', false)}
+            </table>
+          </div>
         ` : ''}
 
         ${latest.notes ? `
-          <div class="parecer-box">
+          <div class="parecer-box avoid-break">
             <div class="parecer-title">Parecer Técnico & Recomendações</div>
             <div class="parecer-text">${latest.notes}</div>
           </div>
         ` : ''}
 
         <div class="page-break"></div>
-        <div class="chart-page-header">
-          ${branding?.useLogo && branding?.logoUrl ? `<img src="${branding.logoUrl}" class="logo-mini" />` : ''}
+        <div class="chart-page-header avoid-break">
+          ${branding?.useLogo && branding?.logoUrl ? `<img src="${branding.logoUrl}" crossorigin="anonymous" class="logo-mini" />` : ''}
           <span class="chart-page-title">Composição Corporal Detalhada</span>
         </div>
 
         ${currentDobras ? `
-          <div class="badges-row">
+          <div class="badges-row avoid-break">
             <div class="badge-box"><div class="badge-value">${sumFolds != null ? sumFolds.toFixed(1) : '—'}mm</div><div class="badge-label">Σ Dobras</div></div>
             <div class="badge-box"><div class="badge-value">${currentDobras.body_fat_pct != null ? currentDobras.body_fat_pct : '—'}%</div><div class="badge-label">BF% Estimado</div></div>
           </div>
         ` : ''}
 
-        <h2>Evolução de Perímetros (cm)</h2>
-        ${perimeterChartHtml || '<p class="muted">Dados insuficientes de perímetros pra montar o gráfico (precisa de pelo menos 2 avaliações no modo Dobras Cutâneas com cintura, quadril, peitoral, braços e coxas preenchidos).</p>'}
+        <div class="avoid-break">
+          <h2>Evolução de Perímetros (cm)</h2>
+          ${perimeterChartHtml || '<p class="muted">Dados insuficientes de perímetros pra montar o gráfico (precisa de pelo menos 2 avaliações no modo Dobras Cutâneas com cintura, quadril, peitoral, braços e coxas preenchidos).</p>'}
+        </div>
 
         <div class="avoid-break">
           <h2>Comparativo de Dobras Cutâneas (mm)</h2>
@@ -460,10 +482,10 @@ function buildReportHtml(studentName, assessments, branding) {
         ${latest.report_url ? `
           <div class="page-break"></div>
           <div class="chart-page-header">
-            ${branding?.useLogo && branding?.logoUrl ? `<img src="${branding.logoUrl}" class="logo-mini" />` : ''}
+            ${branding?.useLogo && branding?.logoUrl ? `<img src="${branding.logoUrl}" crossorigin="anonymous" class="logo-mini" />` : ''}
             <span class="chart-page-title">Laudo Anexado</span>
           </div>
-          ${isImageAttachment ? `<img src="${latest.report_url}" class="report-image-full" />` : ''}
+          ${isImageAttachment ? `<img src="${latest.report_url}" crossorigin="anonymous" class="report-image-full avoid-break" />` : ''}
           ${isPdfAttachment ? `<div class="pdf-note-box">📎 Um laudo em PDF foi anexado a essa avaliação. Como é um arquivo PDF separado, ele não pode ser incorporado dentro deste relatório — acesse-o diretamente pelo app, na tela de detalhe dessa avaliação.</div>` : ''}
         ` : ''}
 
