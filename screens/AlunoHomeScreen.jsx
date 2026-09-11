@@ -145,6 +145,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [todaysWeightKg, setTodaysWeightKg] = useState(null);
   const [showWeightModal, setShowWeightModal] = useState(false);
   const [lastWorkoutName, setLastWorkoutName] = useState(null);
+  const [lastCompletedWorkoutId, setLastCompletedWorkoutId] = useState(null);
   const [todaySessions, setTodaySessions] = useState([]);
   const [sessionOfInterestExercisesDone, setSessionOfInterestExercisesDone] = useState(0);
   const [showVolumeSummary, setShowVolumeSummary] = useState(false);
@@ -246,7 +247,8 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
       .from('workouts')
       .select('id, name, notes, active, created_at, phase_id')
       .eq('student_id', user.id)
-      .eq('active', true);
+      .eq('active', true)
+      .order('created_at', { ascending: true });
     setWorkouts(workoutRows || []);
     if (workoutRows && workoutRows.length > 0) {
       loadMuscleSummary(workoutRows);
@@ -305,12 +307,13 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
 
     const { data: lastSessionRows } = await supabase
       .from('workout_sessions')
-      .select('workouts (name)')
+      .select('workout_id, workouts (name)')
       .eq('student_id', user.id)
       .not('finished_at', 'is', null)
       .order('finished_at', { ascending: false })
       .limit(1);
     setLastWorkoutName(lastSessionRows?.[0]?.workouts?.name || null);
+    setLastCompletedWorkoutId(lastSessionRows?.[0]?.workout_id || null);
 
     const { data: pendingPayments } = await supabase
       .from('payments')
@@ -1484,8 +1487,17 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     handleOpenChatFor(`Olá! Já estou há ${programWeeksActive} semanas no mesmo ciclo de treino e gostaria de renovar minha ficha. Pode me ajudar?`);
   };
 
-  const todaysWorkout = workouts.find((w) => !completedToday[w.id]) || workouts[0] || null;
-  const todaysWorkoutDone = todaysWorkout ? !!completedToday[todaysWorkout.id] : false;
+  // Offer the *next* ficha in the rotation right after the aluno finishes one
+  // — cycles through active workouts in creation order, wrapping around —
+  // instead of always resetting to the first workout on a new day.
+  let todaysWorkout = workouts[0] || null;
+  if (workouts.length > 0 && lastCompletedWorkoutId) {
+    const lastIndex = workouts.findIndex((w) => w.id === lastCompletedWorkoutId);
+    if (lastIndex !== -1) {
+      todaysWorkout = workouts[(lastIndex + 1) % workouts.length];
+    }
+  }
+  const todaysWorkoutDone = Object.values(completedToday).some(Boolean);
 
   // Home hero card reflects where the aluno actually is right now: hasn't
   // started, mid-session (workout_sessions row with no finished_at yet),
