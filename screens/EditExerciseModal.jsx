@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { supabase } from './supabaseClient';
+import { loadExerciseLoadHistory, suggestNextLoad } from './progressionUtils';
 import { HeaderBack } from './Header';
 
 const METHODS = ['tradicional', 'rest-pause', 'bi-set', 'drop-set', 'piramide'];
@@ -19,6 +22,32 @@ export default function EditExerciseModal({ item, onSave, onClose }) {
   const [restSeconds, setRestSeconds] = useState(item.rest_time_seconds != null ? String(item.rest_time_seconds) : '');
   const [method, setMethod] = useState(item.execution_method || 'tradicional');
   const [notes, setNotes] = useState(item.notes || '');
+  const [loadHistory, setLoadHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [suggestionDismissed, setSuggestionDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!item.id) { setLoadingHistory(false); return; }
+    let active = true;
+    (async () => {
+      const history = await loadExerciseLoadHistory(supabase, item.id);
+      if (active) {
+        setLoadHistory(history);
+        setLoadingHistory(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [item.id]);
+
+  const suggestion = suggestNextLoad(loadHistory, reps);
+  const formatKg = (kg) => (Number.isInteger(kg) ? String(kg) : String(kg).replace('.', ','));
+  const formatDate = (iso) => new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+  const handleApplySuggestion = () => {
+    if (!suggestion) return;
+    setLoadKg(formatKg(suggestion.suggestedLoad));
+    setSuggestionDismissed(true);
+  };
 
   const handleSave = () => {
     onSave({
@@ -65,6 +94,46 @@ export default function EditExerciseModal({ item, onSave, onClose }) {
             <TextInput style={styles.input} keyboardType="number-pad" placeholder="opcional" placeholderTextColor="#525252" value={loadKg} onChangeText={setLoadKg} />
           </View>
         </View>
+
+        {loadingHistory && <ActivityIndicator color="#FF6B00" style={{ marginTop: 12 }} />}
+
+        {!loadingHistory && suggestion && !suggestionDismissed && (
+          <View style={styles.progressionCard}>
+            <View style={styles.progressionHeaderRow}>
+              <Ionicons name="trending-up-outline" size={16} color="#FF6B00" />
+              <Text style={styles.progressionTitle}>Progressão sugerida</Text>
+            </View>
+            <Text style={styles.progressionLast}>
+              Última sessão: {formatKg(suggestion.lastLoad)}kg{suggestion.lastReps != null ? ` × ${suggestion.lastReps}` : ''}
+            </Text>
+            <Text style={[styles.progressionStatus, suggestion.hitTarget ? styles.progressionStatusHit : styles.progressionStatusHold]}>
+              {suggestion.hitTarget ? 'Meta de reps atingida' : 'Ficou abaixo da meta de reps'}
+            </Text>
+            <Text style={styles.progressionSuggestedLabel}>
+              Sugestão: <Text style={styles.progressionSuggestedValue}>{formatKg(suggestion.suggestedLoad)}kg</Text>
+            </Text>
+            <View style={styles.progressionButtonRow}>
+              <TouchableOpacity style={styles.progressionApplyButton} onPress={handleApplySuggestion}>
+                <Text style={styles.progressionApplyButtonText}>Aplicar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.progressionEditButton} onPress={() => setSuggestionDismissed(true)}>
+                <Text style={styles.progressionEditButtonText}>Editar manualmente</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {!loadingHistory && loadHistory.length > 0 && (
+          <View style={styles.historyBlock}>
+            <Text style={styles.formLabel}>Histórico de carga</Text>
+            {loadHistory.map((h) => (
+              <View key={h.sessionId} style={styles.historyRow}>
+                <Text style={styles.historyDate}>{formatDate(h.date)}</Text>
+                <Text style={styles.historyValue}>{formatKg(h.load)}kg{h.reps ? ` × ${h.reps}` : ''}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         <View style={styles.fieldRow}>
           <View style={styles.fieldSmall}>
@@ -116,4 +185,22 @@ const styles = StyleSheet.create({
   methodChipTextActive: { color: '#0F0F12' },
   confirmButton: { backgroundColor: '#FF6B00', margin: 16, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   confirmButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
+  progressionCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, padding: 14, marginTop: 14 },
+  progressionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  progressionTitle: { color: '#FF6B00', fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+  progressionLast: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  progressionStatus: { fontSize: 11, fontWeight: '700', marginTop: 4 },
+  progressionStatusHit: { color: '#22c55e' },
+  progressionStatusHold: { color: '#f59e0b' },
+  progressionSuggestedLabel: { color: '#a3a3a3', fontSize: 13, marginTop: 10 },
+  progressionSuggestedValue: { color: '#F5F5F7', fontSize: 16, fontWeight: '800' },
+  progressionButtonRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  progressionApplyButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  progressionApplyButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '800' },
+  progressionEditButton: { flex: 1, backgroundColor: 'transparent', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  progressionEditButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700' },
+  historyBlock: { marginTop: 14 },
+  historyRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#1C1C22' },
+  historyDate: { color: '#737373', fontSize: 12 },
+  historyValue: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
 });
