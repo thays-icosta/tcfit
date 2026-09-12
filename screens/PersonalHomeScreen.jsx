@@ -28,6 +28,8 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [anamnesePendingStudents, setAnamnesePendingStudents] = useState({});
   const [unreadMessageStudents, setUnreadMessageStudents] = useState({});
   const [staleWorkoutStudents, setStaleWorkoutStudents] = useState({});
+  const [assessmentOverdueStudents, setAssessmentOverdueStudents] = useState({});
+  const [cycleCompletedStudents, setCycleCompletedStudents] = useState({});
   const [lastTrainedDate, setLastTrainedDate] = useState({});
   const [detailFor, setDetailFor] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -188,6 +190,42 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         if (weeks >= 6) staleMap[id] = weeks;
       });
       setStaleWorkoutStudents(staleMap);
+
+      // Only flags a *stale* assessment (one existed before and is now old) —
+      // never nags about a workflow a student simply never had.
+      const { data: assessmentRows } = await supabase
+        .from('physical_assessments')
+        .select('student_id, created_at')
+        .in('student_id', studentIds)
+        .order('created_at', { ascending: false });
+      const lastAssessmentByStudent = {};
+      (assessmentRows || []).forEach((a) => {
+        if (!(a.student_id in lastAssessmentByStudent)) lastAssessmentByStudent[a.student_id] = a.created_at;
+      });
+      const ASSESSMENT_OVERDUE_WEEKS = 8;
+      const assessmentMap = {};
+      Object.keys(lastAssessmentByStudent).forEach((id) => {
+        const weeks = Math.floor((Date.now() - new Date(lastAssessmentByStudent[id]).getTime()) / (7 * 24 * 60 * 60 * 1000));
+        if (weeks >= ASSESSMENT_OVERDUE_WEEKS) assessmentMap[id] = weeks;
+      });
+      setAssessmentOverdueStudents(assessmentMap);
+
+      const { data: planRows } = await supabase
+        .from('periodization_plans')
+        .select('student_id, start_date, total_weeks, created_at')
+        .in('student_id', studentIds)
+        .order('created_at', { ascending: false });
+      const planByStudent = {};
+      (planRows || []).forEach((p) => {
+        if (!(p.student_id in planByStudent)) planByStudent[p.student_id] = p;
+      });
+      const cycleMap = {};
+      Object.entries(planByStudent).forEach(([id, p]) => {
+        const endDate = new Date(p.start_date);
+        endDate.setDate(endDate.getDate() + p.total_weeks * 7);
+        if (Date.now() >= endDate.getTime()) cycleMap[id] = p.total_weeks;
+      });
+      setCycleCompletedStudents(cycleMap);
     }
 
     setLoading(false);
@@ -331,6 +369,12 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       if (staleWorkoutStudents[s.id] != null) {
         flags.push({ key: 'treino_desatualizado', tone: 'pending', label: `Treino há ${staleWorkoutStudents[s.id]}sem sem atualizar` });
       }
+      if (assessmentOverdueStudents[s.id] != null) {
+        flags.push({ key: 'avaliacao', tone: 'pending', label: `Avaliação física há ${assessmentOverdueStudents[s.id]}sem` });
+      }
+      if (cycleCompletedStudents[s.id] != null) {
+        flags.push({ key: 'ciclo_concluido', tone: 'pending', label: `Ciclo de ${cycleCompletedStudents[s.id]}sem concluído` });
+      }
       return { student: s, flags };
     })
     .filter((item) => item.flags.length > 0)
@@ -340,7 +384,14 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     if (overduePaymentStudents[s.id]) return 'atrasado';
     const done = completedToday[s.id];
     const daysSince = daysSinceLastTrained[s.id];
-    if ((!done && (daysSince === null || daysSince >= 3)) || anamnesePendingStudents[s.id] || unreadMessageStudents[s.id] || staleWorkoutStudents[s.id] != null) return 'atencao';
+    if (
+      (!done && (daysSince === null || daysSince >= 3)) ||
+      anamnesePendingStudents[s.id] ||
+      unreadMessageStudents[s.id] ||
+      staleWorkoutStudents[s.id] != null ||
+      assessmentOverdueStudents[s.id] != null ||
+      cycleCompletedStudents[s.id] != null
+    ) return 'atencao';
     return 'em_dia';
   };
 
@@ -485,6 +536,8 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
                 if (!done && (daysSince === null || daysSince >= 3)) alertLabel = daysSince === null ? 'Nunca treinou' : `${daysSince}d sem treinar`;
                 else if (unreadMessageStudents[item.id]) alertLabel = 'Mensagem não respondida';
                 else if (staleWorkoutStudents[item.id] != null) alertLabel = `Treino há ${staleWorkoutStudents[item.id]}sem sem atualizar`;
+                else if (cycleCompletedStudents[item.id] != null) alertLabel = `Ciclo de ${cycleCompletedStudents[item.id]}sem concluído`;
+                else if (assessmentOverdueStudents[item.id] != null) alertLabel = `Avaliação física há ${assessmentOverdueStudents[item.id]}sem`;
                 else alertLabel = 'Anamnese pendente';
               }
               const isVip = item.access_level === 'consultoria_vip';
