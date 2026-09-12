@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, TextInput } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import CreatePeriodizationScreen from './CreatePeriodizationScreen';
 import { getPhaseForWeekIndex, loadPeriodizationPlan } from './periodizationUtils';
+import { loadWeeklyVolumeTargets, saveWeeklyVolumeTarget, resolveSetsMuscleGroups, tallyByMuscleGroup, getVolumeStatus } from './volumeUtils';
 import { showAlert } from './alertUtils';
+import PromptModal from './PromptModal';
 import { HeaderBack } from './Header';
 
 const PHASE_COLORS = ['#FF6B00', '#a855f7', '#3b82f6', '#22c55e', '#eab308', '#ef4444', '#ec4899', '#14b8a6'];
@@ -39,6 +42,8 @@ export default function WeeklyPeriodizationScreen({ studentId, studentName, pers
   const [editingNote, setEditingNote] = useState(false);
   const [noteInput, setNoteInput] = useState('');
   const [savingNote, setSavingNote] = useState(false);
+  const [volumeTargets, setVolumeTargets] = useState({});
+  const [editingTargetGroup, setEditingTargetGroup] = useState(null);
 
   const formatDateShort = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
@@ -100,10 +105,13 @@ export default function WeeklyPeriodizationScreen({ studentId, studentName, pers
     if (sessionIds.length > 0) {
       const { data: setRows } = await supabase
         .from('workout_session_sets')
-        .select('session_id, load_used_kg, workout_exercises (load_kg)')
+        .select('session_id, load_used_kg, substituted_exercise_id, workout_exercises (load_kg, exercises (muscle_group))')
         .in('session_id', sessionIds);
-      sets = setRows || [];
+      sets = await resolveSetsMuscleGroups(supabase, setRows || []);
     }
+
+    const targets = await loadWeeklyVolumeTargets(supabase, selectedStudentId);
+    setVolumeTargets(targets);
 
     const { data: notesRows } = await supabase
       .from('training_weeks')
@@ -154,11 +162,16 @@ export default function WeeklyPeriodizationScreen({ studentId, studentName, pers
         avgPse,
         phaseResult,
         note: notesMap[weekStartStr] || null,
+        muscleGroupCounts: tallyByMuscleGroup(weekSets),
       };
     });
 
     setWeekData(result);
     setLoading(false);
+
+    const today = new Date();
+    const currentWeekIndex = result.findIndex((w) => today >= w.weekStart && today <= w.weekEnd);
+    if (currentWeekIndex !== -1) setSelectedWeekIndex(currentWeekIndex);
   };
 
   useEffect(() => {
@@ -200,6 +213,24 @@ export default function WeeklyPeriodizationScreen({ studentId, studentName, pers
       showAlert('Erro', error.message);
     } else {
       loadData();
+    }
+  };
+
+  const handleSaveTarget = async (value) => {
+    const targetSeries = Number(value);
+    const group = editingTargetGroup;
+    setEditingTargetGroup(null);
+    if (!targetSeries || targetSeries <= 0 || !group) return;
+    const { error } = await saveWeeklyVolumeTarget(supabase, {
+      studentId: selectedStudentId,
+      personalId,
+      muscleGroup: group,
+      targetSeries,
+    });
+    if (error) {
+      showAlert('Erro', error.message);
+    } else {
+      setVolumeTargets((prev) => ({ ...prev, [group]: targetSeries }));
     }
   };
 
@@ -351,11 +382,58 @@ export default function WeeklyPeriodizationScreen({ studentId, studentName, pers
             </View>
           )}
 
+          {selectedWeek && (() => {
+            const groupKeys = [...new Set([...Object.keys(selectedWeek.muscleGroupCounts), ...Object.keys(volumeTargets)])];
+            if (groupKeys.length === 0) return null;
+            const rows = groupKeys
+              .map((group) => ({
+                group,
+                actual: selectedWeek.muscleGroupCounts[group] || 0,
+                target: volumeTargets[group] ?? null,
+              }))
+              .sort((a, b) => b.actual - a.actual || a.group.localeCompare(b.group));
+
+            return (
+              <View style={styles.volumeCard}>
+                <Text style={styles.volumeCardTitle}>Volume por grupo muscular · Semana {selectedWeekIndex + 1}</Text>
+                {rows.map((row) => {
+                  const status = getVolumeStatus(row.actual, row.target);
+                  return (
+                    <View key={row.group} style={styles.volumeRow}>
+                      <Text style={styles.volumeGroupName}>{row.group.toUpperCase()}</Text>
+                      <View style={styles.volumeRowRight}>
+                        <Text style={styles.volumeCountText}>
+                          {row.actual} série{row.actual !== 1 ? 's' : ''}{row.target != null ? ` / meta ${row.target}` : ''}
+                        </Text>
+                        {status && <View style={[styles.volumeStatusDot, { backgroundColor: status.color }]} />}
+                        {isPersonal && (
+                          <TouchableOpacity onPress={() => setEditingTargetGroup(row.group)}>
+                            <Ionicons name="pencil-outline" size={13} color="#525252" />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            );
+          })()}
+
           {!selectedWeek && (
             <Text style={styles.hintText}>Toque numa barra do gráfico pra ver o detalhe daquela semana.</Text>
           )}
         </ScrollView>
       )}
+
+      <PromptModal
+        visible={!!editingTargetGroup}
+        title={`Meta semanal · ${(editingTargetGroup || '').toUpperCase()}`}
+        subtitle="Quantas séries por semana você quer como referência pra esse grupo?"
+        initialValue={editingTargetGroup && volumeTargets[editingTargetGroup] != null ? String(volumeTargets[editingTargetGroup]) : ''}
+        placeholder="ex: 12"
+        onCancel={() => setEditingTargetGroup(null)}
+        onSubmit={handleSaveTarget}
+      />
     </View>
   );
 }
@@ -400,4 +478,11 @@ const styles = StyleSheet.create({
   noteButtonRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16 },
   noteCancelText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   noteSaveText: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
+  volumeCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 20 },
+  volumeCardTitle: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', marginBottom: 10 },
+  volumeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#0F0F12' },
+  volumeGroupName: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
+  volumeRowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  volumeCountText: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
+  volumeStatusDot: { width: 8, height: 8, borderRadius: 4 },
 });
