@@ -14,6 +14,26 @@ function parseReps(repsStr) {
   return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
 }
 
+// Same 1-5 scale already used for RPE across the app (WorkoutPlayerScreen's
+// post-treino question, the weekly RPE average on the periodization screen)
+// — kept identical here so the personal's presencial log and the aluno's own
+// self-logged sessions average together meaningfully.
+const PSE_OPTIONS = [
+  { value: 1, label: 'Leve', color: '#22c55e' },
+  { value: 2, label: 'Moderado', color: '#84cc16' },
+  { value: 3, label: 'Intenso', color: '#eab308' },
+  { value: 4, label: 'Muito Intenso', color: '#FF6B00' },
+  { value: 5, label: 'Extremo', color: '#ef4444' },
+];
+
+const RIR_OPTIONS = [
+  { value: 0, label: '0' },
+  { value: 1, label: '1' },
+  { value: 2, label: '2' },
+  { value: 3, label: '3' },
+  { value: 4, label: '4+' },
+];
+
 export default function PresencialSessionScreen({ student, personalId, onClose }) {
   const [loadingFichas, setLoadingFichas] = useState(true);
   const [fichas, setFichas] = useState([]);
@@ -22,12 +42,17 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
   const [loadingExercises, setLoadingExercises] = useState(false);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [sessionId, setSessionId] = useState(null);
+  const [sessionStartedAt, setSessionStartedAt] = useState(null);
   const [starting, setStarting] = useState(false);
   const [setLoads, setSetLoads] = useState({});
   const [setReps, setSetReps] = useState({});
+  const [setRirs, setSetRirs] = useState({});
   const [completedSets, setCompletedSets] = useState({});
   const [savingKey, setSavingKey] = useState(null);
   const [finishing, setFinishing] = useState(false);
+  const [showFinishStep, setShowFinishStep] = useState(false);
+  const [selectedPse, setSelectedPse] = useState(null);
+  const [finishSummary, setFinishSummary] = useState(null);
   const [previousLoads, setPreviousLoads] = useState({});
   const [pastSetsRaw, setPastSetsRaw] = useState([]);
   const [exerciseHistory, setExerciseHistory] = useState({});
@@ -90,6 +115,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
       return;
     }
     setSessionId(startData.sessionId);
+    setSessionStartedAt(new Date());
   };
 
   // All sets from the most recent finished session for this exercise, in
@@ -129,6 +155,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
     const key = `${exercise.id}-${setNumber}`;
     const loadValue = setLoads[key] !== undefined ? setLoads[key] : getDefaultLoad(exercise, setNumber);
     const repsValue = setReps[key] !== undefined ? setReps[key] : (exercise.reps || '');
+    const rirValue = setRirs[key];
 
     setSavingKey(key);
     const { data, error } = await supabase.functions.invoke('log-presencial-session', {
@@ -140,6 +167,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
         setNumber,
         loadKg: loadValue || null,
         reps: repsValue || null,
+        rir: rirValue != null ? rirValue : null,
       },
     });
     setSavingKey(null);
@@ -154,27 +182,36 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
 
   const handleFinish = async () => {
     let tonnage = 0;
+    let totalSets = 0;
+    let exercisesWithSets = 0;
     exercises.forEach((ex) => {
       const setCount = ex.sets || 3;
+      let exerciseHasSet = false;
       for (let i = 1; i <= setCount; i++) {
         const key = `${ex.id}-${i}`;
         if (!completedSets[key]) continue;
         const load = Number(setLoads[key] || ex.load_kg || 0);
         const reps = parseReps(setReps[key] || ex.reps);
         tonnage += load * reps;
+        totalSets += 1;
+        exerciseHasSet = true;
       }
+      if (exerciseHasSet) exercisesWithSets += 1;
     });
+
+    const durationMin = sessionStartedAt ? Math.max(1, Math.round((new Date() - sessionStartedAt) / 60000)) : null;
 
     setFinishing(true);
     const { data, error } = await supabase.functions.invoke('log-presencial-session', {
-      body: { action: 'finish', studentId: student.id, sessionId, workoutId: workout?.id, totalTonnageKg: tonnage },
+      body: { action: 'finish', studentId: student.id, sessionId, workoutId: workout?.id, totalTonnageKg: tonnage, pse: selectedPse },
     });
     setFinishing(false);
     if (error || !data?.ok) {
       showAlert('Erro ao concluir aula', await describeFunctionError(error, data, 'Não foi possível concluir a aula.'));
       return;
     }
-    showAlert('Aula registrada!', `Sessão presencial de ${student.name} salva com sucesso.`, [{ text: 'OK', onPress: onClose }]);
+    setShowFinishStep(false);
+    setFinishSummary({ durationMin, exercisesCount: exercisesWithSets, setsCount: totalSets, tonnage: Math.round(tonnage) });
   };
 
   if (loadingFichas) {
@@ -226,6 +263,69 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
     );
   }
 
+  if (finishSummary) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.focusExerciseName}>Sessão Concluída ✓</Text>
+        <Text style={styles.focusExerciseMeta}>{student.name} · {workout.name}</Text>
+        <View style={styles.card}>
+          <View style={styles.summaryGrid}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>{finishSummary.durationMin != null ? `${finishSummary.durationMin} min` : '—'}</Text>
+              <Text style={styles.summaryLabel}>Duração</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>{finishSummary.exercisesCount}</Text>
+              <Text style={styles.summaryLabel}>Exercícios</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>{finishSummary.setsCount}</Text>
+              <Text style={styles.summaryLabel}>Séries</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>{finishSummary.tonnage.toLocaleString('pt-BR')}kg</Text>
+              <Text style={styles.summaryLabel}>Volume</Text>
+            </View>
+            {selectedPse != null && (
+              <View style={styles.summaryItem}>
+                <Text style={[styles.summaryValue, { color: PSE_OPTIONS.find((p) => p.value === selectedPse)?.color }]}>
+                  {PSE_OPTIONS.find((p) => p.value === selectedPse)?.label}
+                </Text>
+                <Text style={styles.summaryLabel}>RPE da sessão</Text>
+              </View>
+            )}
+          </View>
+        </View>
+        <TouchableOpacity style={[styles.finishButton, styles.finishButtonStandalone]} onPress={onClose}>
+          <Text style={styles.finishButtonText}>Concluir</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (showFinishStep) {
+    return (
+      <View style={styles.container}>
+        <HeaderBack title="Como foi a sessão?" onBack={() => setShowFinishStep(false)} />
+        <Text style={styles.subtitle}>{student.name} · {workout.name}</Text>
+        <View style={styles.pseRow}>
+          {PSE_OPTIONS.map((opt) => (
+            <TouchableOpacity
+              key={opt.value}
+              style={[styles.psePill, { borderColor: opt.color }, selectedPse === opt.value && { backgroundColor: `${opt.color}22` }]}
+              onPress={() => setSelectedPse(opt.value)}
+            >
+              <Text style={[styles.psePillText, { color: opt.color }]}>{opt.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <TouchableOpacity style={[styles.finishButton, styles.finishButtonStandalone]} onPress={handleFinish} disabled={finishing || selectedPse == null}>
+          {finishing ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.finishButtonText}>Salvar Sessão</Text>}
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   const ex = exercises[currentExerciseIndex];
   const setCount = ex.sets || 3;
   const lastSessionSets = getLastSessionSets(ex.id);
@@ -270,7 +370,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
               return (
                 <View key={key} style={styles.todayDoneRow}>
                   <Text style={styles.todayDoneText}>
-                    Série {setNumber} · {setLoads[key]}kg · {setReps[key]} reps
+                    Série {setNumber} · {setLoads[key]}kg · {setReps[key]} reps{setRirs[key] != null ? ` · RIR ${setRirs[key]}` : ''}
                   </Text>
                   <Ionicons name="checkmark-circle" size={18} color="#22c55e" />
                 </View>
@@ -279,32 +379,46 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
             if (setNumber !== nextPendingSetNumber) return null;
             const defaultLoad = getDefaultLoad(ex, setNumber);
             return (
-              <View key={key} style={styles.entryRow}>
-                <Text style={styles.entryRowLabel}>Série {setNumber}</Text>
-                <TextInput
-                  style={styles.entryInput}
-                  keyboardType="number-pad"
-                  placeholder={defaultLoad || 'kg'}
-                  placeholderTextColor="#525252"
-                  value={setLoads[key] !== undefined ? setLoads[key] : defaultLoad}
-                  onChangeText={(t) => setSetLoads((prev) => ({ ...prev, [key]: t }))}
-                />
-                <Text style={styles.entryUnit}>kg</Text>
-                <TextInput
-                  style={styles.entryInput}
-                  placeholder={ex.reps || 'reps'}
-                  placeholderTextColor="#525252"
-                  value={setReps[key] !== undefined ? setReps[key] : (ex.reps || '')}
-                  onChangeText={(t) => setSetReps((prev) => ({ ...prev, [key]: t }))}
-                />
-                <Text style={styles.entryUnit}>reps</Text>
-                <TouchableOpacity
-                  style={styles.entryCheckButton}
-                  onPress={() => handleCompleteSet(ex, setNumber)}
-                  disabled={savingKey === key}
-                >
-                  {savingKey === key ? <ActivityIndicator color="#0F0F12" size="small" /> : <Ionicons name="checkmark" size={18} color="#0F0F12" />}
-                </TouchableOpacity>
+              <View key={key}>
+                <View style={styles.entryRow}>
+                  <Text style={styles.entryRowLabel}>Série {setNumber}</Text>
+                  <TextInput
+                    style={styles.entryInput}
+                    keyboardType="number-pad"
+                    placeholder={defaultLoad || 'kg'}
+                    placeholderTextColor="#525252"
+                    value={setLoads[key] !== undefined ? setLoads[key] : defaultLoad}
+                    onChangeText={(t) => setSetLoads((prev) => ({ ...prev, [key]: t }))}
+                  />
+                  <Text style={styles.entryUnit}>kg</Text>
+                  <TextInput
+                    style={styles.entryInput}
+                    placeholder={ex.reps || 'reps'}
+                    placeholderTextColor="#525252"
+                    value={setReps[key] !== undefined ? setReps[key] : (ex.reps || '')}
+                    onChangeText={(t) => setSetReps((prev) => ({ ...prev, [key]: t }))}
+                  />
+                  <Text style={styles.entryUnit}>reps</Text>
+                  <TouchableOpacity
+                    style={styles.entryCheckButton}
+                    onPress={() => handleCompleteSet(ex, setNumber)}
+                    disabled={savingKey === key}
+                  >
+                    {savingKey === key ? <ActivityIndicator color="#0F0F12" size="small" /> : <Ionicons name="checkmark" size={18} color="#0F0F12" />}
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.rirRow}>
+                  <Text style={styles.rirLabel}>RIR</Text>
+                  {RIR_OPTIONS.map((opt) => (
+                    <TouchableOpacity
+                      key={opt.value}
+                      style={[styles.rirChip, setRirs[key] === opt.value && styles.rirChipActive]}
+                      onPress={() => setSetRirs((prev) => ({ ...prev, [key]: opt.value }))}
+                    >
+                      <Text style={[styles.rirChipText, setRirs[key] === opt.value && styles.rirChipTextActive]}>{opt.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             );
           })}
@@ -341,8 +455,8 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
           <Text style={styles.navButtonText}>← Anterior</Text>
         </TouchableOpacity>
         {isLastExercise ? (
-          <TouchableOpacity style={styles.finishButton} onPress={handleFinish} disabled={finishing}>
-            {finishing ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.finishButtonText}>Concluir Aula</Text>}
+          <TouchableOpacity style={styles.finishButton} onPress={() => setShowFinishStep(true)}>
+            <Text style={styles.finishButtonText}>Concluir Aula</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={styles.nextButton} onPress={() => setCurrentExerciseIndex((i) => Math.min(exercises.length - 1, i + 1))}>
@@ -363,6 +477,19 @@ const styles = StyleSheet.create({
   fichaCardText: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', flex: 1 },
   focusExerciseName: { color: '#F5F5F7', fontSize: 24, fontWeight: '800', textTransform: 'uppercase' },
   focusExerciseMeta: { color: '#a3a3a3', fontSize: 13, marginTop: 4, marginBottom: 16 },
+  rirRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  rirLabel: { color: '#525252', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', width: 60 },
+  rirChip: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  rirChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
+  rirChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
+  rirChipTextActive: { color: '#0F0F12' },
+  pseRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 20 },
+  psePill: { flexGrow: 1, borderWidth: 1.5, borderRadius: 10, paddingVertical: 14, alignItems: 'center', minWidth: '30%' },
+  psePillText: { fontSize: 13, fontWeight: '800' },
+  summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  summaryItem: { width: '30%', alignItems: 'center', backgroundColor: '#0F0F12', borderRadius: 8, paddingVertical: 12 },
+  summaryValue: { color: '#F5F5F7', fontSize: 16, fontWeight: '800' },
+  summaryLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 4, textAlign: 'center' },
   card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 12 },
   sectionLabel: { color: '#525252', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
   lastSessionLine: { color: '#a3a3a3', fontSize: 14, fontWeight: '600', marginBottom: 4 },
@@ -389,5 +516,6 @@ const styles = StyleSheet.create({
   nextButton: { flex: 2, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   nextButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
   finishButton: { flex: 2, backgroundColor: '#22c55e', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  finishButtonStandalone: { flex: 0, marginTop: 24 },
   finishButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
 });
