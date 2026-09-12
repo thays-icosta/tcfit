@@ -14,6 +14,7 @@ import RecipeManagerScreen from './RecipeManagerScreen';
 import DietTemplateBuilderScreen from './DietTemplateBuilderScreen';
 import ProjectTemplateBuilderScreen from './ProjectTemplateBuilderScreen';
 import AlunoDetailScreen from './AlunoDetailScreen';
+import PresencialSessionScreen from './PresencialSessionScreen';
 import PersonalTabBar from './PersonalTabBar';
 import { showAlert } from './alertUtils';
 import { HeaderWelcome } from './Header';
@@ -31,7 +32,9 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [assessmentOverdueStudents, setAssessmentOverdueStudents] = useState({});
   const [cycleCompletedStudents, setCycleCompletedStudents] = useState({});
   const [lastTrainedDate, setLastTrainedDate] = useState({});
+  const [todayAppointments, setTodayAppointments] = useState([]);
   const [detailFor, setDetailFor] = useState(null);
+  const [presencialFor, setPresencialFor] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [activeTab, setActiveTab] = useState('inicio');
   const [showAgenda, setShowAgenda] = useState(false);
@@ -226,6 +229,32 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         if (Date.now() >= endDate.getTime()) cycleMap[id] = p.total_weeks;
       });
       setCycleCompletedStudents(cycleMap);
+
+      // Today's scheduled sessions for presencial students only — Modo
+      // Atendimento (Iniciar Atendimento) is the whole point of this list,
+      // and it doesn't apply to online students.
+      const presencialIds = new Set((data || []).filter((s) => s.attendance_mode === 'presencial').map((s) => s.id));
+      if (presencialIds.size > 0) {
+        const todayStart = `${todayStr}T00:00:00`;
+        const todayEnd = `${todayStr}T23:59:59`;
+        const { data: apptRows } = await supabase
+          .from('appointments')
+          .select('id, student_id, scheduled_at, status')
+          .eq('personal_id', user.id)
+          .eq('status', 'agendado')
+          .gte('scheduled_at', todayStart)
+          .lte('scheduled_at', todayEnd)
+          .order('scheduled_at', { ascending: true });
+        const studentById = {};
+        (data || []).forEach((s) => { studentById[s.id] = s; });
+        setTodayAppointments(
+          (apptRows || [])
+            .filter((a) => presencialIds.has(a.student_id))
+            .map((a) => ({ ...a, student: studentById[a.student_id] }))
+        );
+      } else {
+        setTodayAppointments([]);
+      }
     }
 
     setLoading(false);
@@ -256,6 +285,19 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         personalName={user.name}
         onClose={() => {
           setDetailFor(null);
+          loadStudents();
+        }}
+      />
+    );
+  }
+
+  if (presencialFor) {
+    return (
+      <PresencialSessionScreen
+        student={presencialFor}
+        personalId={user.id}
+        onClose={() => {
+          setPresencialFor(null);
           loadStudents();
         }}
       />
@@ -773,6 +815,33 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         </View>
       )}
 
+      {todayAppointments.length > 0 && (
+        <>
+          <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Atendimentos de Hoje</Text>
+          {todayAppointments.map((a) => (
+            <View key={a.id} style={styles.appointmentRow}>
+              <View style={styles.checkinAvatarCircle}>
+                {a.student?.avatar_url ? (
+                  <Image source={{ uri: a.student.avatar_url }} style={styles.checkinAvatarImage} />
+                ) : (
+                  <Text style={styles.checkinAvatarLetter}>{a.student?.name?.charAt(0).toUpperCase() || '?'}</Text>
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.checkinName}>{a.student?.name}</Text>
+                <Text style={styles.appointmentTime}>
+                  {new Date(a.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+              </View>
+              <TouchableOpacity style={styles.appointmentButton} onPress={() => setPresencialFor(a.student)} disabled={!a.student}>
+                <Ionicons name="play-circle" size={16} color="#0F0F12" />
+                <Text style={styles.appointmentButtonText}>Iniciar Atendimento</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </>
+      )}
+
       {students.length > 0 && (
         <View style={styles.overviewRow}>
           <View style={styles.overviewItem}>
@@ -963,6 +1032,10 @@ const styles = StyleSheet.create({
   alertTag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(239,68,68,0.12)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 3, marginTop: 4 },
   alertTagText: { color: '#ef4444', fontSize: 9, fontWeight: '700' },
   alertRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', borderRadius: 12, padding: 12, marginBottom: 8 },
+  appointmentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, padding: 12, marginBottom: 8 },
+  appointmentTime: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
+  appointmentButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FF6B00', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 10 },
+  appointmentButtonText: { color: '#0F0F12', fontSize: 11, fontWeight: '800' },
   attentionRowMuted: { borderColor: '#2B2B36' },
   attentionTagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
   attentionTagPending: { backgroundColor: 'rgba(245,158,11,0.12)' },

@@ -460,6 +460,13 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
           <Ionicons name="clipboard-outline" size={16} color="#0F0F12" />
           <Text style={styles.anamneseButtonText}>Abrir Anamnese</Text>
         </TouchableOpacity>
+
+        {attendanceMode === 'presencial' && (
+          <TouchableOpacity style={styles.presencialButton} onPress={() => setShowPresencialSession(true)}>
+            <Ionicons name="play-circle" size={20} color="#0F0F12" />
+            <Text style={styles.presencialButtonText}>Iniciar Atendimento</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.detailTabRow}>
@@ -623,13 +630,6 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
             <Ionicons name="calendar-outline" size={22} color="#a855f7" />
             <Text style={styles.actionLabelWide}>Periodização</Text>
           </TouchableOpacity>
-
-          {attendanceMode === 'presencial' && (
-            <TouchableOpacity style={styles.presencialButton} onPress={() => setShowPresencialSession(true)}>
-              <Ionicons name="play-circle-outline" size={18} color="#0F0F12" />
-              <Text style={styles.presencialButtonText}>Modo Aula Presencial</Text>
-            </TouchableOpacity>
-          )}
         </>
       )}
 
@@ -737,7 +737,7 @@ const styles = StyleSheet.create({
   dietButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
   summaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   summaryButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
-  presencialButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  presencialButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
   presencialButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
   financeButton: { flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: '#eab308', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   financeButtonText: { color: '#eab308', fontSize: 13, fontWeight: '700' },
