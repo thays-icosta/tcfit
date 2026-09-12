@@ -3,8 +3,15 @@ import { View, Text, StyleSheet, ActivityIndicator, Platform, TouchableOpacity }
 import { Ionicons } from '@expo/vector-icons';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceDot } from 'recharts';
 import { supabase } from './supabaseClient';
+import { computeWeightTrend } from './weightTrendUtils';
 
 const ACCENT = '#FF6B00';
+
+const TREND_META = {
+  subindo: { icon: 'trending-up', color: '#f59e0b' },
+  descendo: { icon: 'trending-down', color: '#3b82f6' },
+  estavel: { icon: 'remove', color: '#a3a3a3' },
+};
 
 function formatShortDate(iso) {
   const d = new Date(iso);
@@ -68,12 +75,41 @@ export default function WeightEvolutionChart({ studentId }) {
 
   const chartData = rows.map((r) => ({ date: formatShortDate(r.created_at), weight: Number(r.weight_kg) }));
   const lastPoint = chartData[chartData.length - 1];
+  const trend = computeWeightTrend(rows.map((r) => ({ date: r.created_at.slice(0, 10), weight: Number(r.weight_kg) })));
+  const trendMeta = trend?.trend ? TREND_META[trend.trend] : null;
+
+  const trendRow = trend && (trend.avg7 != null || trend.weeklyChange != null) && (
+    <View style={styles.trendRow}>
+      <View style={styles.trendItem}>
+        <Text style={styles.trendValue}>{trend.current}kg</Text>
+        <Text style={styles.trendLabel}>Atual</Text>
+      </View>
+      {trend.avg7 != null && (
+        <View style={styles.trendItem}>
+          <Text style={styles.trendValue}>{trend.avg7}kg</Text>
+          <Text style={styles.trendLabel}>Média 7 dias</Text>
+        </View>
+      )}
+      {trend.weeklyChange != null && trendMeta && (
+        <View style={styles.trendItem}>
+          <View style={styles.trendArrowRow}>
+            <Ionicons name={trendMeta.icon} size={14} color={trendMeta.color} />
+            <Text style={[styles.trendValue, { color: trendMeta.color }]}>
+              {trend.weeklyChange > 0 ? '+' : ''}{trend.weeklyChange}kg
+            </Text>
+          </View>
+          <Text style={styles.trendLabel}>por semana</Text>
+        </View>
+      )}
+    </View>
+  );
 
   if (Platform.OS !== 'web') {
     return (
       <View style={styles.emptyBox}>
         <Text style={styles.title}>Evolução do Aluno</Text>
         <Text style={styles.emptyText}>Peso atual: {lastPoint.weight} kg</Text>
+        {trendRow}
       </View>
     );
   }
@@ -84,6 +120,7 @@ export default function WeightEvolutionChart({ studentId }) {
         <Text style={styles.title}>Evolução do Aluno</Text>
         <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color="#737373" />
       </TouchableOpacity>
+      {trendRow}
       {expanded && (
         <div style={{ width: '100%', height: 200 }}>
           <ResponsiveContainer width="100%" height="100%">
@@ -121,4 +158,9 @@ const styles = StyleSheet.create({
   title: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
   emptyBox: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 16 },
   emptyText: { color: '#525252', fontSize: 12, marginTop: 8 },
+  trendRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
+  trendItem: { flex: 1, backgroundColor: '#0F0F12', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  trendValue: { color: '#F5F5F7', fontSize: 14, fontWeight: '800' },
+  trendArrowRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  trendLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 2 },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Platform, Modal } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,6 +7,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
+import { calculateHealthyWeightRange } from './accessLevel';
 import { HeaderBack } from './Header';
 
 function uuidv4() {
@@ -108,6 +109,15 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
   const [sex, setSex] = useState('M');
   const [age, setAge] = useState('');
   const [height, setHeight] = useState('');
+
+  // If the aluno already has height on file (from the anamnese), the
+  // Bioimpedância form doesn't need to ask again — just calculates IMC with it.
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from('anamnese_responses').select('height_cm').eq('student_id', studentId).maybeSingle();
+      if (data?.height_cm) setHeight((prev) => prev || String(data.height_cm));
+    })();
+  }, [studentId]);
   const [skinfold1, setSkinfold1] = useState('');
   const [skinfold2, setSkinfold2] = useState('');
   const [skinfold3, setSkinfold3] = useState('');
@@ -147,6 +157,12 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
         return { bodyFatPct, fatMass, leanMass, imc, bmrCalc };
       })()
     : null;
+
+  // Bioimpedância mode doesn't collect skinfolds, but if weight and height
+  // are both known, IMC is still a real, free calculation — no reason to
+  // leave it blank just because this isn't the "dobras" protocol.
+  const bioImc = (weight.trim() && height.trim()) ? calculateImc(Number(weight), Number(height)) : null;
+  const bioHealthyRange = height.trim() ? calculateHealthyWeightRange(Number(height)) : null;
 
   const handleProtocolChange = (newProtocol) => {
     setProtocol(newProtocol);
@@ -333,6 +349,8 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
       personal_id: personalId,
       mode: 'bioimpedancia',
       weight_kg: Number(weight),
+      height_cm: height.trim() ? Number(height) : null,
+      bmi: bioImc != null ? Number(bioImc.toFixed(1)) : null,
       body_fat_pct: bodyFat ? Number(bodyFat) : null,
       skeletal_muscle_kg: muscleMass ? Number(muscleMass) : null,
       fat_mass_kg: fatMassKg ? Number(fatMassKg) : null,
@@ -477,6 +495,27 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
 
           <Text style={styles.label}>Peso (kg) *</Text>
           <TextInput style={styles.input} placeholder="ex: 70.4" placeholderTextColor="#525252" keyboardType="decimal-pad" value={weight} onChangeText={setWeight} />
+
+          <Text style={styles.label}>Altura (cm)</Text>
+          <TextInput style={styles.input} placeholder="ex: 175 (puxa da anamnese, se já tiver)" placeholderTextColor="#525252" keyboardType="decimal-pad" value={height} onChangeText={setHeight} />
+
+          {bioImc != null && (
+            <View style={styles.resultBox}>
+              <View style={styles.resultRow}>
+                <View style={styles.resultItem}>
+                  <Text style={styles.resultValue}>{bioImc.toFixed(1)}</Text>
+                  <Text style={styles.resultLabel}>IMC</Text>
+                </View>
+                {bioHealthyRange && (
+                  <View style={styles.resultItem}>
+                    <Text style={styles.resultValue}>{bioHealthyRange.minKg}–{bioHealthyRange.maxKg}kg</Text>
+                    <Text style={styles.resultLabel}>Faixa de referência</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.protocolNote}>Estimativa baseada na faixa de IMC saudável (18,5–24,9) — não é uma meta individual de peso.</Text>
+            </View>
+          )}
 
           <Text style={styles.label}>Massa Magra (kg)</Text>
           <TextInput style={styles.input} placeholder="ex: 29.1" placeholderTextColor="#525252" keyboardType="decimal-pad" value={muscleMass} onChangeText={setMuscleMass} />
@@ -677,6 +716,14 @@ export default function PhysicalAssessmentFormScreen({ studentId, studentName, p
                   <Text style={styles.resultLabel}>TMB (kcal)</Text>
                 </View>
               </View>
+              {(() => {
+                const range = calculateHealthyWeightRange(Number(height));
+                return range ? (
+                  <Text style={styles.protocolNote}>
+                    Faixa de referência de peso: {range.minKg}–{range.maxKg}kg (baseada em IMC saudável 18,5–24,9 — não é uma meta individual).
+                  </Text>
+                ) : null;
+              })()}
             </View>
           )}
 

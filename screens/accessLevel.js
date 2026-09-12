@@ -139,22 +139,43 @@ const GOAL_CALORIE_FACTOR = {
   condicionamento: 1.0,
 };
 
-// Mifflin-St Jeor BMR + a fixed moderate-activity multiplier (this app's
-// students all train with a personal, so we don't collect a separate
-// activity-level question) + a per-goal calorie adjustment.
-export function calculateMacroGoals({ sex, weightKg, heightCm, age, goal }) {
+// Same three levels the anamnese already asks for (ACTIVITY_LEVELS below) —
+// standard Harris-Benedict-style activity multipliers over BMR to get TDEE.
+const ACTIVITY_MULTIPLIER = {
+  sedentario: 1.2,
+  moderado: 1.55,
+  ativo: 1.725,
+};
+
+// Mifflin-St Jeor BMR × the aluno's actual activity level (from the
+// anamnese) = TDEE, then a per-goal calorie adjustment on top. Falls back to
+// "moderado" only if activityLevel wasn't collected yet.
+export function calculateMacroGoals({ sex, weightKg, heightCm, age, goal, activityLevel }) {
   const w = Number(weightKg);
   const h = Number(heightCm);
   const a = Number(age);
   if (!w || !h || !a || !sex) return null;
 
   const bmr = sex === 'masculino' ? 10 * w + 6.25 * h - 5 * a + 5 : 10 * w + 6.25 * h - 5 * a - 161;
-  const tdee = bmr * 1.55;
+  const activityMultiplier = ACTIVITY_MULTIPLIER[activityLevel] ?? ACTIVITY_MULTIPLIER.moderado;
+  const tdee = bmr * activityMultiplier;
   const kcal = Math.round(tdee * (GOAL_CALORIE_FACTOR[goal] ?? 1));
 
   const proteinG = Math.round(w * 2);
   const fatG = Math.round((kcal * 0.25) / 9);
   const carbsG = Math.max(0, Math.round((kcal - proteinG * 4 - fatG * 9) / 4));
 
-  return { kcal, protein: proteinG, carbs: carbsG, fat: fatG };
+  return { bmr: Math.round(bmr), tdee: Math.round(tdee), kcal, protein: proteinG, carbs: carbsG, fat: fatG };
+}
+
+// BMI 18.5–24.9 (WHO "normal" band) translated into a weight range for this
+// height. A math reference point only — never call this an "ideal weight."
+export function calculateHealthyWeightRange(heightCm) {
+  const h = Number(heightCm);
+  if (!h) return null;
+  const heightM = h / 100;
+  return {
+    minKg: Math.round(18.5 * heightM * heightM * 10) / 10,
+    maxKg: Math.round(24.9 * heightM * heightM * 10) / 10,
+  };
 }

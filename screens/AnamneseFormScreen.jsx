@@ -119,6 +119,9 @@ function Step2Objectives({
 
           {calcResult && (
             <View style={styles.calcResultCard}>
+              {calcResult.bmr != null && (
+                <Text style={styles.calcMetabolismLine}>TMB {calcResult.bmr} kcal · TDEE {calcResult.tdee} kcal</Text>
+              )}
               <Text style={styles.calcResultKcal}>{calcResult.kcal} kcal/dia</Text>
               <Text style={styles.calcResultNote}>Estimativa baseada nos seus dados — não substitui o ajuste do seu personal.</Text>
               <View style={styles.calcMacroRow}>
@@ -327,7 +330,7 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
   }, [studentId, personalId, isVip]);
 
   const handleCalculate = () => {
-    const result = calculateMacroGoals({ sex, weightKg, heightCm, age, goal: mainGoal });
+    const result = calculateMacroGoals({ sex, weightKg, heightCm, age, goal: mainGoal, activityLevel });
     if (!result) {
       showAlert('Ops', 'Preenche sexo, peso, altura e idade no Passo 1 (e um objetivo aqui) pra calcular.');
       return;
@@ -560,6 +563,7 @@ const styles = StyleSheet.create({
   calcButtonDisabled: { opacity: 0.4 },
   calcButtonText: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
   calcResultCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, padding: 16, marginTop: 12, alignItems: 'center' },
+  calcMetabolismLine: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', marginBottom: 6 },
   calcResultKcal: { color: '#FF6B00', fontSize: 26, fontWeight: '800' },
   calcResultNote: { color: '#737373', fontSize: 10, textAlign: 'center', marginTop: 4, marginBottom: 14, lineHeight: 14 },
   calcMacroRow: { flexDirection: 'row', gap: 24 },

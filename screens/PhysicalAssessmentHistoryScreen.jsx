@@ -4,7 +4,14 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
+import { calculateMacroGoals, ACTIVITY_LEVELS, PROGRAM_GOALS } from './accessLevel';
 import { HeaderBack } from './Header';
+
+const normalizeSex = (s) => {
+  if (s === 'M' || s === 'masculino') return 'masculino';
+  if (s === 'F' || s === 'feminino') return 'feminino';
+  return null;
+};
 
 const SEGMENT_META = {
   braco_direito: { label: 'Braço Direito', area: 'armr' },
@@ -503,6 +510,7 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
   const [exportWithBranding, setExportWithBranding] = useState(true);
   const [exportWithAttachment, setExportWithAttachment] = useState(true);
   const [branding, setBranding] = useState(null);
+  const [anamnese, setAnamnese] = useState(null);
 
   const formatDate = (isoString) => {
     const d = new Date(isoString);
@@ -541,6 +549,14 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
         .eq('student_id', studentId)
         .order('created_at', { ascending: false });
       setAssessments(data || []);
+
+      const { data: anamneseRow } = await supabase
+        .from('anamnese_responses')
+        .select('sex, age, weight_kg, height_cm, activity_level, main_goal')
+        .eq('student_id', studentId)
+        .maybeSingle();
+      setAnamnese(anamneseRow || null);
+
       await loadBranding();
       setLoading(false);
     })();
@@ -587,6 +603,25 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
 
   const latest = assessments[0];
   const previous = assessments[1];
+
+  // Best available weight/height/sex/age across the latest assessment and
+  // the anamnese, so the metabolism card works even before a "dobras" mode
+  // assessment (the only mode that asks for height/age itself) exists.
+  const heightSource = assessments.find((a) => a.height_cm) || null;
+  const sexAgeSource = assessments.find((a) => a.sex && a.age) || null;
+  const metabolismInput = (() => {
+    const weightKg = latest?.weight_kg ?? anamnese?.weight_kg;
+    const heightCm = heightSource?.height_cm ?? anamnese?.height_cm;
+    const sex = normalizeSex(sexAgeSource?.sex) ?? normalizeSex(anamnese?.sex);
+    const age = sexAgeSource?.age ?? anamnese?.age;
+    if (!weightKg || !heightCm || !sex || !age) return null;
+    return { weightKg, heightCm, sex, age };
+  })();
+  const metabolism = metabolismInput
+    ? calculateMacroGoals({ ...metabolismInput, activityLevel: anamnese?.activity_level, goal: anamnese?.main_goal })
+    : null;
+  const activityLabel = ACTIVITY_LEVELS.find((a) => a.value === anamnese?.activity_level)?.label;
+  const goalLabel = PROGRAM_GOALS.find((g) => g.value === anamnese?.main_goal)?.label;
 
   return (
     <View style={[styles.container, embedded && styles.containerEmbedded]}>
@@ -645,6 +680,31 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
                     <Delta current={latest.skeletal_muscle_kg} previous={previous.skeletal_muscle_kg} unit="kg" />
                   </View>
                 )}
+              </View>
+            )}
+
+            {metabolism && (
+              <View style={styles.metabolismCard}>
+                <Text style={styles.comparisonTitle}>Metabolismo (estimativa)</Text>
+                <View style={styles.metabolismRow}>
+                  <View style={styles.metabolismItem}>
+                    <Text style={styles.metabolismValue}>{metabolism.bmr}</Text>
+                    <Text style={styles.metabolismLabel}>TMB (kcal)</Text>
+                  </View>
+                  <View style={styles.metabolismItem}>
+                    <Text style={styles.metabolismValue}>{metabolism.tdee}</Text>
+                    <Text style={styles.metabolismLabel}>TDEE{activityLabel ? ` · ${activityLabel.split(' (')[0]}` : ''}</Text>
+                  </View>
+                  {anamnese?.main_goal && (
+                    <View style={styles.metabolismItem}>
+                      <Text style={[styles.metabolismValue, { color: '#FF6B00' }]}>{metabolism.kcal}</Text>
+                      <Text style={styles.metabolismLabel}>Meta{goalLabel ? ` · ${goalLabel}` : ''}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.metabolismNote}>
+                  Estimativa matemática (Mifflin-St Jeor) — não é uma prescrição nutricional automática.
+                </Text>
               </View>
             )}
 
@@ -738,6 +798,12 @@ const styles = StyleSheet.create({
   attachmentLink: { alignItems: 'center', marginBottom: 16 },
   attachmentLinkText: { color: '#3b82f6', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
   comparisonCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, padding: 14, marginBottom: 16 },
+  metabolismCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 16 },
+  metabolismRow: { flexDirection: 'row', marginTop: 10, gap: 8 },
+  metabolismItem: { flex: 1, backgroundColor: '#0F0F12', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
+  metabolismValue: { color: '#F5F5F7', fontSize: 16, fontWeight: '800' },
+  metabolismLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 3, textAlign: 'center' },
+  metabolismNote: { color: '#525252', fontSize: 10, marginTop: 10, lineHeight: 14 },
   comparisonTitle: { color: '#FF6B00', fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
   comparisonDates: { color: '#525252', fontSize: 10, marginBottom: 10, marginTop: 2 },
   comparisonRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#0F0F12' },
