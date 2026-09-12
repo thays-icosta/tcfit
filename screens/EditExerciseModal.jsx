@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
-import { loadExerciseLoadHistory, suggestNextLoad } from './progressionUtils';
+import { loadExerciseLoadHistory, suggestNextLoad, estimate1RM } from './progressionUtils';
 import { HeaderBack } from './Header';
 
 const METHODS = ['tradicional', 'rest-pause', 'bi-set', 'drop-set', 'piramide'];
@@ -126,12 +126,17 @@ export default function EditExerciseModal({ item, onSave, onClose }) {
         {!loadingHistory && loadHistory.length > 0 && (
           <View style={styles.historyBlock}>
             <Text style={styles.formLabel}>Histórico de carga</Text>
-            {loadHistory.map((h) => (
-              <View key={h.sessionId} style={styles.historyRow}>
-                <Text style={styles.historyDate}>{formatDate(h.date)}</Text>
-                <Text style={styles.historyValue}>{formatKg(h.load)}kg{h.reps ? ` × ${h.reps}` : ''}</Text>
-              </View>
-            ))}
+            {loadHistory.map((h) => {
+              const oneRm = estimate1RM(h.load, h.repsNum);
+              return (
+                <View key={h.sessionId} style={styles.historyRow}>
+                  <Text style={styles.historyDate}>{formatDate(h.date)}</Text>
+                  <Text style={styles.historyValue}>
+                    {formatKg(h.load)}kg{h.reps ? ` × ${h.reps}` : ''}{oneRm != null ? ` · 1RM ~${formatKg(oneRm)}kg` : ''}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         )}
 

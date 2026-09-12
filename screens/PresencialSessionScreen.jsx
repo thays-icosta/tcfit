@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Activi
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert, describeFunctionError } from './alertUtils';
-import { loadExerciseLoadHistory, suggestNextLoad } from './progressionUtils';
+import { loadExerciseLoadHistory, suggestNextLoad, estimate1RM } from './progressionUtils';
 import { HeaderBack } from './Header';
 
 function parseReps(repsStr) {
@@ -383,11 +383,19 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
           {lastSessionSets.length === 0 ? (
             <Text style={styles.emptyInlineText}>Sem histórico ainda.</Text>
           ) : (
-            lastSessionSets.map((s) => (
-              <Text key={s.set_number} style={styles.lastSessionLine}>
-                {s.load_used_kg != null ? `${s.load_used_kg}kg` : '-'} × {s.reps_done || '-'}
-              </Text>
-            ))
+            <>
+              {lastSessionSets.map((s) => (
+                <Text key={s.set_number} style={styles.lastSessionLine}>
+                  {s.load_used_kg != null ? `${s.load_used_kg}kg` : '-'} × {s.reps_done || '-'}
+                </Text>
+              ))}
+              {(() => {
+                const best1RM = Math.max(
+                  ...lastSessionSets.map((s) => estimate1RM(s.load_used_kg, parseReps(s.reps_done)) || 0)
+                );
+                return best1RM > 0 ? <Text style={styles.oneRmLine}>1RM estimado: ~{best1RM}kg</Text> : null;
+              })()}
+            </>
           )}
         </View>
 
@@ -526,6 +534,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 12 },
   sectionLabel: { color: '#525252', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
   lastSessionLine: { color: '#a3a3a3', fontSize: 14, fontWeight: '600', marginBottom: 4 },
+  oneRmLine: { color: '#FF6B00', fontSize: 12, fontWeight: '700', marginTop: 4 },
   todayDoneRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#0F0F12' },
   todayDoneText: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
   entryRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },

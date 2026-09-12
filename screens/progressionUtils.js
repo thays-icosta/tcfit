@@ -23,6 +23,15 @@ function roundToHalf(value) {
   return Math.round(value * 2) / 2;
 }
 
+// Epley formula — a widely-used estimate of one-rep max from a lighter,
+// higher-rep set. Shown only as a progress indicator (e.g. "1RM estimado
+// 90kg"), never as a suggestion to actually test a real 1RM.
+export function estimate1RM(loadKg, reps) {
+  if (loadKg == null || !reps || reps <= 0) return null;
+  if (reps === 1) return Math.round(loadKg * 10) / 10;
+  return Math.round(loadKg * (1 + reps / 30) * 10) / 10;
+}
+
 // One row per finished session: the heaviest logged set for this exercise
 // that session (tie-broken by the higher rep count), newest first.
 export function topSetsBySession(sets) {
