@@ -52,6 +52,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
   const [finishing, setFinishing] = useState(false);
   const [showFinishStep, setShowFinishStep] = useState(false);
   const [selectedPse, setSelectedPse] = useState(null);
+  const [sessionNotes, setSessionNotes] = useState('');
   const [finishSummary, setFinishSummary] = useState(null);
   const [previousLoads, setPreviousLoads] = useState({});
   const [pastSetsRaw, setPastSetsRaw] = useState([]);
@@ -210,8 +211,20 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
       showAlert('Erro ao concluir aula', await describeFunctionError(error, data, 'Não foi possível concluir a aula.'));
       return;
     }
+
+    const trimmedNotes = sessionNotes.trim();
+    if (trimmedNotes) {
+      // Written with the personal's own session (not the service-role edge
+      // function) — RLS on this table only allows personal_id = auth.uid(),
+      // and the aluno has no select policy on it at all.
+      await supabase.from('session_personal_notes').upsert(
+        { session_id: sessionId, student_id: student.id, personal_id: personalId, notes: trimmedNotes, updated_at: new Date().toISOString() },
+        { onConflict: 'session_id' }
+      );
+    }
+
     setShowFinishStep(false);
-    setFinishSummary({ durationMin, exercisesCount: exercisesWithSets, setsCount: totalSets, tonnage: Math.round(tonnage) });
+    setFinishSummary({ durationMin, exercisesCount: exercisesWithSets, setsCount: totalSets, tonnage: Math.round(tonnage), notes: trimmedNotes || null });
   };
 
   if (loadingFichas) {
@@ -295,6 +308,12 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
               </View>
             )}
           </View>
+          {finishSummary.notes && (
+            <>
+              <Text style={[styles.sectionLabel, { marginTop: 16 }]}>OBSERVAÇÕES (PRIVADO)</Text>
+              <Text style={styles.notesSummaryText}>{finishSummary.notes}</Text>
+            </>
+          )}
         </View>
         <TouchableOpacity style={[styles.finishButton, styles.finishButtonStandalone]} onPress={onClose}>
           <Text style={styles.finishButtonText}>Concluir</Text>
@@ -307,18 +326,30 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
     return (
       <View style={styles.container}>
         <HeaderBack title="Como foi a sessão?" onBack={() => setShowFinishStep(false)} />
-        <Text style={styles.subtitle}>{student.name} · {workout.name}</Text>
-        <View style={styles.pseRow}>
-          {PSE_OPTIONS.map((opt) => (
-            <TouchableOpacity
-              key={opt.value}
-              style={[styles.psePill, { borderColor: opt.color }, selectedPse === opt.value && { backgroundColor: `${opt.color}22` }]}
-              onPress={() => setSelectedPse(opt.value)}
-            >
-              <Text style={[styles.psePillText, { color: opt.color }]}>{opt.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }} keyboardShouldPersistTaps="handled">
+          <Text style={styles.subtitle}>{student.name} · {workout.name}</Text>
+          <View style={styles.pseRow}>
+            {PSE_OPTIONS.map((opt) => (
+              <TouchableOpacity
+                key={opt.value}
+                style={[styles.psePill, { borderColor: opt.color }, selectedPse === opt.value && { backgroundColor: `${opt.color}22` }]}
+                onPress={() => setSelectedPse(opt.value)}
+              >
+                <Text style={[styles.psePillText, { color: opt.color }]}>{opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.sectionLabel}>OBSERVAÇÕES DA SESSÃO (PRIVADO — SÓ VOCÊ VÊ)</Text>
+          <TextInput
+            style={styles.notesInput}
+            placeholder="ex: Relatou desconforto no ombro. Boa execução no agachamento."
+            placeholderTextColor="#525252"
+            multiline
+            value={sessionNotes}
+            onChangeText={setSessionNotes}
+          />
+        </ScrollView>
         <TouchableOpacity style={[styles.finishButton, styles.finishButtonStandalone]} onPress={handleFinish} disabled={finishing || selectedPse == null}>
           {finishing ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.finishButtonText}>Salvar Sessão</Text>}
         </TouchableOpacity>
@@ -490,6 +521,8 @@ const styles = StyleSheet.create({
   summaryItem: { width: '30%', alignItems: 'center', backgroundColor: '#0F0F12', borderRadius: 8, paddingVertical: 12 },
   summaryValue: { color: '#F5F5F7', fontSize: 16, fontWeight: '800' },
   summaryLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 4, textAlign: 'center' },
+  notesInput: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, color: '#F5F5F7', fontSize: 14, minHeight: 100, textAlignVertical: 'top' },
+  notesSummaryText: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginTop: 6 },
   card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 12 },
   sectionLabel: { color: '#525252', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
   lastSessionLine: { color: '#a3a3a3', fontSize: 14, fontWeight: '600', marginBottom: 4 },
