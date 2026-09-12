@@ -167,7 +167,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
 
     setFinishing(true);
     const { data, error } = await supabase.functions.invoke('log-presencial-session', {
-      body: { action: 'finish', studentId: student.id, sessionId, workoutId: workout.id, totalTonnageKg: tonnage },
+      body: { action: 'finish', studentId: student.id, sessionId, workoutId: workout?.id, totalTonnageKg: tonnage },
     });
     setFinishing(false);
     if (error || !data?.ok) {
@@ -213,6 +213,15 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
       <View style={styles.container}>
         <HeaderBack title={workout.name} onBack={onClose} />
         <ActivityIndicator color="#FF6B00" style={{ marginTop: 30 }} />
+      </View>
+    );
+  }
+
+  if (exercises.length === 0) {
+    return (
+      <View style={styles.container}>
+        <HeaderBack title={workout.name} onBack={onClose} />
+        <Text style={styles.emptyText}>Essa ficha ainda não tem nenhum exercício. Adicione exercícios a ela antes de iniciar o atendimento.</Text>
       </View>
     );
   }
