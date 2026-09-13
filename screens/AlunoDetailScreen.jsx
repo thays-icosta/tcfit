@@ -20,6 +20,7 @@ import PersonalProjectProgressSection from './PersonalProjectProgressSection';
 import WaterLogModal from './WaterLogModal';
 import PresencialSessionScreen from './PresencialSessionScreen';
 import { PROGRAM_GOALS, PROGRAM_LEVELS, TRAINING_LOCATIONS, PAIN_ZONES, MUSCLE_FOCUS_OPTIONS } from './accessLevel';
+import { loadWeeklyVolumeTargets, resolveSetsMuscleGroups, tallyByMuscleGroup } from './volumeUtils';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -47,6 +48,15 @@ function scoreTemplateMatch(sessionCount, anamnese) {
     if (anamnese.focus_muscle_group && template.focus_muscle_group === anamnese.focus_muscle_group) score += 4;
     return score;
   };
+}
+
+function getMonday(d) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  date.setDate(diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
 }
 
 function mapMealNameToType(name) {
@@ -140,6 +150,7 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
   const [showFinance, setShowFinance] = useState(false);
   const [showPresencialSession, setShowPresencialSession] = useState(false);
   const [anamnese, setAnamnese] = useState(null);
+  const [commandCenter, setCommandCenter] = useState({ assessment: null, volume: null, loadTrend: null });
   const [suggestedTemplate, setSuggestedTemplate] = useState(null);
   const [applyingSuggestion, setApplyingSuggestion] = useState(false);
   const [suggestionApplied, setSuggestionApplied] = useState(false);
@@ -149,6 +160,83 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
   const handleAddWater = async (ml) => {
     await supabase.from('water_entries').insert({ student_id: student.id, entry_date: todayStr, amount_ml: ml });
     loadContent();
+  };
+
+  // Feeds the "Centro de Comando" summary row — reads data already computed
+  // elsewhere (physical_assessments, weekly_volume_targets, session sets)
+  // instead of standing up a second copy of any of that logic. Anything
+  // without enough data behind it stays null so the UI can say "dados
+  // insuficientes" rather than guess.
+  const loadCommandCenter = async () => {
+    const { data: assessmentRows } = await supabase
+      .from('physical_assessments')
+      .select('created_at')
+      .eq('student_id', student.id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const lastAssessmentAt = assessmentRows?.[0]?.created_at || null;
+    const assessment = lastAssessmentAt
+      ? { weeks: Math.floor((Date.now() - new Date(lastAssessmentAt).getTime()) / (7 * 24 * 60 * 60 * 1000)) }
+      : null;
+
+    const weekStart = getMonday(new Date());
+    const { data: weekSessions } = await supabase
+      .from('workout_sessions')
+      .select('id')
+      .eq('student_id', student.id)
+      .not('finished_at', 'is', null)
+      .gte('started_at', weekStart.toISOString());
+    const weekSessionIds = (weekSessions || []).map((s) => s.id);
+
+    let volume = null;
+    const targets = await loadWeeklyVolumeTargets(supabase, student.id);
+    const hasTargets = Object.keys(targets).length > 0;
+    if (hasTargets) {
+      let counts = {};
+      if (weekSessionIds.length > 0) {
+        const { data: setRows } = await supabase
+          .from('workout_session_sets')
+          .select('session_id, substituted_exercise_id, workout_exercises (load_kg, exercises (muscle_group))')
+          .in('session_id', weekSessionIds);
+        const resolved = await resolveSetsMuscleGroups(supabase, setRows || []);
+        counts = tallyByMuscleGroup(resolved);
+      }
+      const ratios = Object.entries(targets).map(([group, target]) => Math.min(1.5, (counts[group] || 0) / target));
+      const avgRatio = ratios.reduce((a, b) => a + b, 0) / ratios.length;
+      volume = { pct: Math.round(avgRatio * 100) };
+    }
+
+    const { data: recentSessions } = await supabase
+      .from('workout_sessions')
+      .select('id, started_at')
+      .eq('student_id', student.id)
+      .not('finished_at', 'is', null)
+      .order('started_at', { ascending: false })
+      .limit(2);
+
+    let loadTrend = null;
+    if (recentSessions && recentSessions.length === 2) {
+      const [newer, older] = recentSessions;
+      const { data: sets } = await supabase
+        .from('workout_session_sets')
+        .select('session_id, workout_exercise_id, load_used_kg')
+        .in('session_id', [newer.id, older.id])
+        .not('load_used_kg', 'is', null);
+      const topLoadByExercise = { [newer.id]: {}, [older.id]: {} };
+      (sets || []).forEach((s) => {
+        const bucket = topLoadByExercise[s.session_id];
+        if (!bucket[s.workout_exercise_id] || s.load_used_kg > bucket[s.workout_exercise_id]) {
+          bucket[s.workout_exercise_id] = s.load_used_kg;
+        }
+      });
+      const commonExercises = Object.keys(topLoadByExercise[newer.id]).filter((id) => id in topLoadByExercise[older.id]);
+      if (commonExercises.length > 0) {
+        const improved = commonExercises.filter((id) => topLoadByExercise[newer.id][id] >= topLoadByExercise[older.id][id]).length;
+        loadTrend = { improved, total: commonExercises.length };
+      }
+    }
+
+    setCommandCenter({ assessment, volume, loadTrend });
   };
 
   const loadContent = async () => {
@@ -218,6 +306,8 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
       .lt('due_date', todayStr)
       .limit(1);
     setIsOverdue((overdueRows || []).length > 0);
+
+    await loadCommandCenter();
 
     const { data: anamneseRow } = await supabase
       .from('anamnese_responses')
@@ -411,6 +501,21 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
     return <AnamneseViewScreen studentId={student.id} onClose={() => setShowAnamnese(false)} />;
   }
 
+  const plannedDaysPerWeek = anamnese?.days_per_week || null;
+  const frequencyStatus = plannedDaysPerWeek
+    ? { label: `${weekDaysCount}/${plannedDaysPerWeek}`, color: weekDaysCount >= plannedDaysPerWeek ? '#22c55e' : weekDaysCount >= plannedDaysPerWeek * 0.5 ? '#f59e0b' : '#ef4444' }
+    : { label: `${weekDaysCount} dias`, color: '#a3a3a3' };
+  const goalLabel = PROGRAM_GOALS.find((g) => g.value === anamnese?.main_goal)?.label || null;
+  const assessmentStatus = commandCenter.assessment
+    ? { label: `há ${commandCenter.assessment.weeks}sem`, color: commandCenter.assessment.weeks >= 8 ? '#ef4444' : '#22c55e' }
+    : null;
+  const volumeStatus = commandCenter.volume
+    ? { label: `${commandCenter.volume.pct}%`, color: commandCenter.volume.pct >= 90 ? '#22c55e' : commandCenter.volume.pct >= 60 ? '#f59e0b' : '#ef4444' }
+    : null;
+  const loadTrendStatus = commandCenter.loadTrend
+    ? { label: `${commandCenter.loadTrend.improved}/${commandCenter.loadTrend.total} exercícios`, color: commandCenter.loadTrend.improved >= commandCenter.loadTrend.total * 0.6 ? '#22c55e' : commandCenter.loadTrend.improved > 0 ? '#f59e0b' : '#ef4444' }
+    : null;
+
   return (
     <View style={styles.container}>
       <HeaderBack onBack={onClose} />
@@ -488,6 +593,40 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
 
       {detailTab === 'resumo' && (
         <>
+          <View style={styles.commandCenterCard}>
+            <Text style={styles.commandCenterTitle}>CENTRO DE COMANDO</Text>
+            <View style={styles.commandCenterGrid}>
+              <View style={styles.commandCenterItem}>
+                <Text style={[styles.commandCenterValue, frequencyStatus && { color: frequencyStatus.color }]}>
+                  {frequencyStatus ? frequencyStatus.label : '—'}
+                </Text>
+                <Text style={styles.commandCenterLabel}>Frequência</Text>
+              </View>
+              <View style={styles.commandCenterItem}>
+                <Text style={[styles.commandCenterValue, volumeStatus && { color: volumeStatus.color }]}>
+                  {volumeStatus ? volumeStatus.label : 'Dados insuficientes'}
+                </Text>
+                <Text style={styles.commandCenterLabel}>Volume</Text>
+              </View>
+              <View style={styles.commandCenterItem}>
+                <Text style={[styles.commandCenterValue, assessmentStatus && { color: assessmentStatus.color }]}>
+                  {assessmentStatus ? assessmentStatus.label : 'Nunca avaliado'}
+                </Text>
+                <Text style={styles.commandCenterLabel}>Avaliação</Text>
+              </View>
+              <View style={styles.commandCenterItem}>
+                <Text style={[styles.commandCenterValue, loadTrendStatus && { color: loadTrendStatus.color }]}>
+                  {loadTrendStatus ? loadTrendStatus.label : 'Dados insuficientes'}
+                </Text>
+                <Text style={styles.commandCenterLabel}>Carga</Text>
+              </View>
+              <View style={styles.commandCenterItem}>
+                <Text style={styles.commandCenterValue}>{goalLabel || 'Não definido'}</Text>
+                <Text style={styles.commandCenterLabel}>Objetivo</Text>
+              </View>
+            </View>
+          </View>
+
           <View style={styles.notesCard}>
             <View style={styles.anamneseSummaryHeader}>
               <Text style={styles.anamneseSummaryTitle}>Suas Observações</Text>
@@ -705,6 +844,12 @@ const styles = StyleSheet.create({
   anamneseSummaryRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   anamneseSummaryLine: { color: '#a3a3a3', fontSize: 12, flexShrink: 1 },
   suggestionCard: { backgroundColor: 'rgba(255,107,0,0.08)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, padding: 14, marginBottom: 16 },
+  commandCenterCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 16 },
+  commandCenterTitle: { color: '#525252', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
+  commandCenterGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  commandCenterItem: { width: '30%', backgroundColor: '#0F0F12', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 6, alignItems: 'center' },
+  commandCenterValue: { color: '#F5F5F7', fontSize: 13, fontWeight: '800', textAlign: 'center' },
+  commandCenterLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 4, textAlign: 'center' },
   notesCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 16 },
   notesSavedLabel: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
   notesInput: { color: '#F5F5F7', fontSize: 12, lineHeight: 17, minHeight: 60, textAlignVertical: 'top', marginBottom: 10 },
