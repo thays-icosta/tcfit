@@ -418,36 +418,33 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
             if (setNumber !== nextPendingSetNumber) return null;
             const defaultLoad = getDefaultLoad(ex, setNumber);
             return (
-              <View key={key}>
-                <View style={styles.entryRow}>
-                  <Text style={styles.entryRowLabel}>Série {setNumber}</Text>
-                  <TextInput
-                    style={styles.entryInput}
-                    keyboardType="number-pad"
-                    placeholder={defaultLoad || 'kg'}
-                    placeholderTextColor="#525252"
-                    value={setLoads[key] !== undefined ? setLoads[key] : defaultLoad}
-                    onChangeText={(t) => setSetLoads((prev) => ({ ...prev, [key]: t }))}
-                  />
-                  <Text style={styles.entryUnit}>kg</Text>
-                  <TextInput
-                    style={styles.entryInput}
-                    placeholder={ex.reps || 'reps'}
-                    placeholderTextColor="#525252"
-                    value={setReps[key] !== undefined ? setReps[key] : (ex.reps || '')}
-                    onChangeText={(t) => setSetReps((prev) => ({ ...prev, [key]: t }))}
-                  />
-                  <Text style={styles.entryUnit}>reps</Text>
-                  <TouchableOpacity
-                    style={styles.entryCheckButton}
-                    onPress={() => handleCompleteSet(ex, setNumber)}
-                    disabled={savingKey === key}
-                  >
-                    {savingKey === key ? <ActivityIndicator color="#0F0F12" size="small" /> : <Ionicons name="checkmark" size={18} color="#0F0F12" />}
-                  </TouchableOpacity>
+              <View key={key} style={styles.entryBlock}>
+                <Text style={styles.entryRowLabel}>Série {setNumber}</Text>
+                <View style={styles.entryInputsRow}>
+                  <View style={styles.entryInputCol}>
+                    <TextInput
+                      style={styles.entryInput}
+                      keyboardType="number-pad"
+                      placeholder={defaultLoad ? `${defaultLoad} kg` : 'kg'}
+                      placeholderTextColor="#525252"
+                      value={setLoads[key] !== undefined ? setLoads[key] : defaultLoad}
+                      onChangeText={(t) => setSetLoads((prev) => ({ ...prev, [key]: t }))}
+                    />
+                    <Text style={styles.entryUnit}>kg</Text>
+                  </View>
+                  <View style={styles.entryInputCol}>
+                    <TextInput
+                      style={styles.entryInput}
+                      placeholder={ex.reps ? `${ex.reps} reps` : 'reps'}
+                      placeholderTextColor="#525252"
+                      value={setReps[key] !== undefined ? setReps[key] : (ex.reps || '')}
+                      onChangeText={(t) => setSetReps((prev) => ({ ...prev, [key]: t }))}
+                    />
+                    <Text style={styles.entryUnit}>reps</Text>
+                  </View>
                 </View>
+                <Text style={styles.rirLabel}>RIR (reps em reserva)</Text>
                 <View style={styles.rirRow}>
-                  <Text style={styles.rirLabel}>RIR</Text>
                   {RIR_OPTIONS.map((opt) => (
                     <TouchableOpacity
                       key={opt.value}
@@ -458,6 +455,20 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
                     </TouchableOpacity>
                   ))}
                 </View>
+                <TouchableOpacity
+                  style={styles.entryConfirmButton}
+                  onPress={() => handleCompleteSet(ex, setNumber)}
+                  disabled={savingKey === key}
+                >
+                  {savingKey === key ? (
+                    <ActivityIndicator color="#0F0F12" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark" size={18} color="#0F0F12" />
+                      <Text style={styles.entryConfirmButtonText}>Registrar Série</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
               </View>
             );
           })}
@@ -516,8 +527,8 @@ const styles = StyleSheet.create({
   fichaCardText: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', flex: 1 },
   focusExerciseName: { color: '#F5F5F7', fontSize: 24, fontWeight: '800', textTransform: 'uppercase' },
   focusExerciseMeta: { color: '#a3a3a3', fontSize: 13, marginTop: 4, marginBottom: 16 },
-  rirRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
-  rirLabel: { color: '#525252', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', width: 60 },
+  rirRow: { flexDirection: 'row', gap: 6, marginTop: 6 },
+  rirLabel: { color: '#525252', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', marginTop: 10 },
   rirChip: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
   rirChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   rirChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
@@ -537,11 +548,14 @@ const styles = StyleSheet.create({
   oneRmLine: { color: '#FF6B00', fontSize: 12, fontWeight: '700', marginTop: 4 },
   todayDoneRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#0F0F12' },
   todayDoneText: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
-  entryRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  entryRowLabel: { color: '#F5F5F7', fontSize: 13, fontWeight: '700', width: 60 },
-  entryInput: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 6, color: '#F5F5F7', fontSize: 15, textAlign: 'center' },
-  entryUnit: { color: '#525252', fontSize: 11 },
-  entryCheckButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
+  entryBlock: { marginTop: 4 },
+  entryRowLabel: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  entryInputsRow: { flexDirection: 'row', gap: 10, marginTop: 8 },
+  entryInputCol: { flex: 1, alignItems: 'center' },
+  entryInput: { width: '100%', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 12, paddingHorizontal: 6, color: '#F5F5F7', fontSize: 16, textAlign: 'center' },
+  entryUnit: { color: '#525252', fontSize: 11, marginTop: 4 },
+  entryConfirmButton: { flexDirection: 'row', gap: 6, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  entryConfirmButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
   suggestionCard: { borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, padding: 14, marginBottom: 12 },
   suggestionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   suggestionStatus: { fontSize: 12, fontWeight: '800' },
