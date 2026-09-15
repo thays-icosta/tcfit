@@ -418,7 +418,12 @@ function buildReportHtml(studentName, assessments, branding) {
           .parecer-box { background: #FFFFFF; border: 1px solid #eee; border-left: 4px solid ${brandColor}; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
           .parecer-title { font-size: 11px; font-weight: 800; color: ${brandColor}; text-transform: uppercase; margin-bottom: 8px; }
           .parecer-text { font-size: 12px; color: #374151; white-space: pre-wrap; line-height: 18px; }
-          .report-image-full { width: 100%; border-radius: 10px; border: 1px solid #eee; }
+          /* Never force width:100% alone — a tall (portrait) attachment would then render
+             taller than one page, and the pdf paginator slices straight through it,
+             showing as a crop / black band at the cut. Capping both max-width and
+             max-height with width/height:auto preserves the real aspect ratio and
+             guarantees it fits whole on one page, like object-fit:contain. */
+          .report-image-full { display: block; max-width: 100%; max-height: 210mm; width: auto; height: auto; margin: 0 auto; border-radius: 10px; border: 1px solid #eee; }
           .pdf-note-box { background: #FFFFFF; border: 1px dashed #ccc; border-radius: 10px; padding: 16px; text-align: center; font-size: 12px; color: #555; }
           .seg-map { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-areas: "arml trunk armr" "legl spacer legr"; gap: 10px; margin-bottom: 16px; }
           .seg-cell { border: 2px solid #eee; border-radius: 10px; padding: 10px; text-align: center; }
