@@ -6,6 +6,7 @@ import { showAlert } from './alertUtils';
 import { PROGRAM_LEVELS, PROGRAM_GOALS } from './accessLevel';
 import { HeaderBack } from './Header';
 import { copySessionToStudentWorkout } from './workoutAssignment';
+import PdfViewerScreen from './PdfViewerScreen';
 
 export const WHATSAPP_NUMBER = '5537998231382';
 
@@ -18,6 +19,7 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
   const [alreadyAdded, setAlreadyAdded] = useState(false);
   const [adding, setAdding] = useState(false);
   const [sessionBased, setSessionBased] = useState(false);
+  const [showPdf, setShowPdf] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -137,6 +139,10 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
   const levelLabel = PROGRAM_LEVELS.find((l) => l.value === product.level)?.label;
   const goalLabel = PROGRAM_GOALS.find((g) => g.value === product.goal)?.label;
 
+  if (showPdf && product.pdf_url) {
+    return <PdfViewerScreen fileUrl={product.pdf_url} title={product.name} onClose={() => setShowPdf(false)} />;
+  }
+
   return (
     <View style={styles.container}>
       <HeaderBack title={product.name} onBack={onClose} style={{ paddingHorizontal: 16 }} />
@@ -178,6 +184,13 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
           </>
         ) : (
           <>
+            {product.pdf_url && (
+              <TouchableOpacity style={styles.pdfButton} onPress={() => setShowPdf(true)}>
+                <Ionicons name="document-text-outline" size={18} color="#FF6B00" />
+                <Text style={styles.pdfButtonText}>Ver Guia em PDF</Text>
+              </TouchableOpacity>
+            )}
+
             {alreadyAdded ? (
               <View style={styles.addedBox}>
                 <Ionicons name="checkmark-circle" size={18} color="#22c55e" />
@@ -248,6 +261,8 @@ const styles = StyleSheet.create({
   description: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginTop: 12 },
   price: { color: '#FF6B00', fontSize: 22, fontWeight: '800', marginTop: 16 },
   unlockButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
+  pdfButton: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255,107,0,0.1)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
+  pdfButtonText: { color: '#FF6B00', fontSize: 14, fontWeight: '800' },
   unlockButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
   addedBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(34,197,94,0.1)', borderRadius: 10, padding: 12, marginTop: 16 },
   addedBoxText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
