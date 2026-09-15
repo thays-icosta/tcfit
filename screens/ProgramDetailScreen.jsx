@@ -85,7 +85,11 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
   };
 
   const handleAddProgram = async () => {
-    if (alreadyAdded || divisions.length === 0) return;
+    if (alreadyAdded) return;
+    if (divisions.length === 0) {
+      showAlert('Ops', 'Esse programa ainda não tem nenhuma ficha de treino vinculada. Fale com seu personal.');
+      return;
+    }
     setAdding(true);
     try {
       let firstWorkout = null;

@@ -245,7 +245,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
 
     const { data: workoutRows } = await supabase
       .from('workouts')
-      .select('id, name, notes, active, created_at, phase_id')
+      .select('id, name, notes, active, created_at, phase_id, weekday')
       .eq('student_id', user.id)
       .eq('active', true)
       .order('created_at', { ascending: true });
@@ -1450,7 +1450,22 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     return (
       <View style={{ flex: 1 }}>
         <View style={{ flex: 1 }}>
-          <AlunoProductsScreen studentId={user.id} personalId={personalId} onClose={() => setActiveTab('inicio')} />
+          <AlunoProductsScreen
+            studentId={user.id}
+            personalId={personalId}
+            onClose={() => setActiveTab('inicio')}
+            hubGroups={hubGroups}
+            hasAnyHubProgram={hasAnyHubProgram}
+            runningLevelCards={runningLevelCards}
+            hasAnyRunningProgram={hasAnyRunningProgram}
+            showHubAudienceToggle={showHubAudienceToggle}
+            hubAudienceFilter={hubAudienceFilter}
+            setHubAudienceFilter={setHubAudienceFilter}
+            hubCollapsedSections={hubCollapsedSections}
+            toggleHubSection={toggleHubSection}
+            onOpenCategoryGroup={setOpenCategoryGroup}
+            onOpenProduct={openProductOrProgram}
+          />
         </View>
         <AlunoTabBar activeTab={activeTab} onChange={setActiveTab} />
       </View>
@@ -1487,14 +1502,24 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     handleOpenChatFor(`Olá! Já estou há ${programWeeksActive} semanas no mesmo ciclo de treino e gostaria de renovar minha ficha. Pode me ajudar?`);
   };
 
-  // Offer the *next* ficha in the rotation right after the aluno finishes one
-  // — cycles through active workouts in creation order, wrapping around —
-  // instead of always resetting to the first workout on a new day.
-  let todaysWorkout = workouts[0] || null;
-  if (workouts.length > 0 && lastCompletedWorkoutId) {
-    const lastIndex = workouts.findIndex((w) => w.id === lastCompletedWorkoutId);
-    if (lastIndex !== -1) {
-      todaysWorkout = workouts[(lastIndex + 1) % workouts.length];
+  // When the personal has assigned weekdays to fichas (Planejamento Semanal),
+  // today's workout is simply whichever one is scheduled for today — a rest
+  // day (no ficha assigned to today) means todaysWorkout stays null instead
+  // of falling back to the rotation below. Only plans with no weekday
+  // assignments at all use the older "next in rotation after last completed"
+  // behavior, which predates that feature.
+  const weekdayWorkouts = workouts.filter((w) => w.weekday != null);
+  let todaysWorkout;
+  if (weekdayWorkouts.length > 0) {
+    const todayWeekday = new Date().getDay();
+    todaysWorkout = weekdayWorkouts.find((w) => w.weekday === todayWeekday) || null;
+  } else {
+    todaysWorkout = workouts[0] || null;
+    if (workouts.length > 0 && lastCompletedWorkoutId) {
+      const lastIndex = workouts.findIndex((w) => w.id === lastCompletedWorkoutId);
+      if (lastIndex !== -1) {
+        todaysWorkout = workouts[(lastIndex + 1) % workouts.length];
+      }
     }
   }
   const todaysWorkoutDone = Object.values(completedToday).some(Boolean);
@@ -1753,98 +1778,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
               </View>
               <Ionicons name="lock-closed" size={16} color={ACCENT} />
             </TouchableOpacity>
-          )}
-
-          {hasAnyHubProgram && (
-            <CollapsibleSection
-              title="HUB DE PROGRAMAS"
-              collapsed={!!hubCollapsedSections.hub}
-              onToggle={() => toggleHubSection('hub')}
-              style={styles.sectionTitleSpaced}
-            >
-              {showHubAudienceToggle && (
-                <View style={styles.audienceFilterRow}>
-                  {[{ value: 'todos', label: 'Todos' }, { value: 'feminino', label: 'Feminino' }, { value: 'masculino', label: 'Masculino' }].map((a) => (
-                    <TouchableOpacity
-                      key={a.value}
-                      style={[styles.audienceFilterChip, hubAudienceFilter === a.value && styles.audienceFilterChipActive]}
-                      onPress={() => setHubAudienceFilter(a.value)}
-                    >
-                      <Text style={[styles.audienceFilterChipText, hubAudienceFilter === a.value && styles.audienceFilterChipTextActive]}>{a.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-              {hubGroups.length === 0 && !hasAnyRunningProgram ? (
-                <Text style={[styles.emptyText, { marginBottom: 16, marginTop: 10 }]}>Nenhum programa para esse público ainda.</Text>
-              ) : hubGroups.length > 0 && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginTop: 10, marginBottom: 24 }}>
-                {hubGroups.map((group) => (
-                  <TouchableOpacity key={group.key} style={styles.nutritionCard} onPress={() => setOpenCategoryGroup(group)}>
-                    <View style={styles.nutritionCoverWrap}>
-                      {group.cover ? (
-                        <Image source={{ uri: group.cover }} style={styles.nutritionCoverImage} resizeMode="cover" />
-                      ) : (
-                        <View style={styles.nutritionCoverPlaceholder}>
-                          <Ionicons name={group.icon} size={22} color={ACCENT} />
-                        </View>
-                      )}
-                    </View>
-                    <Text style={styles.nutritionCardName} numberOfLines={2}>{group.title}</Text>
-                    {group.badges.length > 0 && (
-                      <View style={styles.hubBadgeRow}>
-                        {group.badges.map((b) => (
-                          <View key={b} style={styles.hubBadgeChip}>
-                            <Text style={styles.hubBadgeChipText}>{b}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-              )}
-            </CollapsibleSection>
-          )}
-
-          {hasAnyRunningProgram && (
-            <CollapsibleSection
-              title="MÓDULO CORRIDA"
-              collapsed={!!hubCollapsedSections.corrida}
-              onToggle={() => toggleHubSection('corrida')}
-              style={styles.sectionTitleSpaced}
-            >
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginTop: 10, marginBottom: 24 }}>
-                {runningLevelCards.map((lvl) => {
-                  const locked = !lvl.product;
-                  return (
-                    <TouchableOpacity
-                      key={lvl.value}
-                      style={styles.nutritionCard}
-                      disabled={locked}
-                      onPress={() => openProductOrProgram(lvl.product)}
-                    >
-                      <View style={styles.nutritionCoverWrap}>
-                        {lvl.product?.cover_image_url ? (
-                          <Image source={{ uri: lvl.product.cover_image_url }} style={coverFocalImageStyle(lvl.product.cover_focal_position)} resizeMode="cover" />
-                        ) : (
-                          <View style={styles.nutritionCoverPlaceholder}>
-                            <Ionicons name={lvl.icon} size={22} color={locked ? '#525252' : ACCENT} />
-                          </View>
-                        )}
-                        {locked && (
-                          <View style={styles.categoryLockOverlay}>
-                            <Ionicons name="lock-closed" size={14} color="#F5F5F7" />
-                          </View>
-                        )}
-                      </View>
-                      <Text style={[styles.nutritionCardName, locked && { color: '#737373' }]} numberOfLines={2}>{lvl.label}</Text>
-                      {locked && <Text style={styles.runningLevelLockedText}>Em breve</Text>}
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </CollapsibleSection>
           )}
 
         </>

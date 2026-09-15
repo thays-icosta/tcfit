@@ -27,6 +27,26 @@ const CLASS_META = {
   acima: { label: 'Acima', color: '#FF6B00' },
 };
 
+// html2pdf's pagebreak plugin measures every element's height BEFORE
+// rasterizing to decide where page breaks go. A remote <img> (logo, attached
+// laudo photo) that hasn't finished downloading yet measures as ~0-height at
+// that moment, so the space reserved for it is wrong — when it then paints
+// mid-capture, it overflows into content below it (cropped image, text/
+// background overlap). Waiting on each image's real load/error event (not a
+// guessed delay) makes sure every image has its final size before capture.
+function waitForImages(doc, maxWaitMs = 8000) {
+  const imgs = Array.from(doc.images || []);
+  const pending = imgs.filter((img) => !img.complete);
+  if (pending.length === 0) return Promise.resolve();
+  return Promise.race([
+    Promise.all(pending.map((img) => new Promise((resolve) => {
+      img.addEventListener('load', resolve, { once: true });
+      img.addEventListener('error', resolve, { once: true });
+    }))),
+    new Promise((resolve) => setTimeout(resolve, maxWaitMs)),
+  ]);
+}
+
 // Renders `html` (a full <html>...</html> document string) into a hidden
 // offscreen iframe and rasterizes it into a PDF Blob via html2pdf.js —
 // avoids window.print()/the browser print dialog entirely.
@@ -41,7 +61,7 @@ async function renderHtmlToPdfBlob(html, fileName) {
   iframe.contentDocument.close();
 
   try {
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await waitForImages(iframe.contentDocument);
     const blob = await html2pdf()
       .from(iframe.contentDocument.body)
       .set({
@@ -493,7 +513,7 @@ function buildReportHtml(studentName, assessments, branding) {
 
         ${latest.report_url ? `
           <div class="page-break"></div>
-          <div class="chart-page-header">
+          <div class="chart-page-header avoid-break">
             ${branding?.useLogo && branding?.logoUrl ? `<img src="${branding.logoUrl}" crossorigin="anonymous" class="logo-mini" />` : ''}
             <span class="chart-page-title">Laudo Anexado</span>
           </div>

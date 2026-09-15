@@ -4,14 +4,31 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from './supabaseClient';
 import { HeaderBack } from './Header';
+import CollapsibleSection from './CollapsibleSection';
+import { COVER_TOP_IMAGE, coverFocalImageStyle, GLASS_CARD } from './vitrineStyles';
 
 const WHATSAPP_NUMBER = '5537998231382';
+const ACCENT = '#FF6B00';
 
-// Loja is reserved for the VIP consultancy upsell and partner/affiliate
-// discounts — training programs live in Treinos (browse + start immediately)
-// and nutrition guides/e-books live in the Home hub's Biblioteca de Nutrição,
-// so neither is duplicated here.
-export default function AlunoProductsScreen({ studentId, personalId, onClose }) {
+// Training programs (Hub de Programas / Módulo Corrida) are browsed and
+// started here in Loja; nutrition guides/e-books still live in the Home
+// hub's Biblioteca de Nutrição, so those aren't duplicated here.
+export default function AlunoProductsScreen({
+  studentId,
+  personalId,
+  onClose,
+  hubGroups = [],
+  hasAnyHubProgram = false,
+  runningLevelCards = [],
+  hasAnyRunningProgram = false,
+  showHubAudienceToggle = false,
+  hubAudienceFilter,
+  setHubAudienceFilter,
+  hubCollapsedSections = {},
+  toggleHubSection,
+  onOpenCategoryGroup,
+  onOpenProduct,
+}) {
   const [loading, setLoading] = useState(true);
   const [studentAccessLevel, setStudentAccessLevel] = useState('plataforma_base');
   const [personalName, setPersonalName] = useState(null);
@@ -73,6 +90,96 @@ export default function AlunoProductsScreen({ studentId, personalId, onClose }) 
         <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+          {hasAnyHubProgram && (
+            <CollapsibleSection
+              title="HUB DE PROGRAMAS"
+              collapsed={!!hubCollapsedSections.hub}
+              onToggle={() => toggleHubSection?.('hub')}
+            >
+              {showHubAudienceToggle && (
+                <View style={styles.audienceFilterRow}>
+                  {[{ value: 'todos', label: 'Todos' }, { value: 'feminino', label: 'Feminino' }, { value: 'masculino', label: 'Masculino' }].map((a) => (
+                    <TouchableOpacity
+                      key={a.value}
+                      style={[styles.audienceFilterChip, hubAudienceFilter === a.value && styles.audienceFilterChipActive]}
+                      onPress={() => setHubAudienceFilter?.(a.value)}
+                    >
+                      <Text style={[styles.audienceFilterChipText, hubAudienceFilter === a.value && styles.audienceFilterChipTextActive]}>{a.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+              {hubGroups.length === 0 && !hasAnyRunningProgram ? (
+                <Text style={[styles.emptyText, { marginBottom: 16, marginTop: 10 }]}>Nenhum programa para esse público ainda.</Text>
+              ) : hubGroups.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginTop: 10, marginBottom: 24 }}>
+                {hubGroups.map((group) => (
+                  <TouchableOpacity key={group.key} style={styles.nutritionCard} onPress={() => onOpenCategoryGroup?.(group)}>
+                    <View style={styles.nutritionCoverWrap}>
+                      {group.cover ? (
+                        <Image source={{ uri: group.cover }} style={styles.nutritionCoverImage} resizeMode="cover" />
+                      ) : (
+                        <View style={styles.nutritionCoverPlaceholder}>
+                          <Ionicons name={group.icon} size={22} color={ACCENT} />
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.nutritionCardName} numberOfLines={2}>{group.title}</Text>
+                    {group.badges.length > 0 && (
+                      <View style={styles.hubBadgeRow}>
+                        {group.badges.map((b) => (
+                          <View key={b} style={styles.hubBadgeChip}>
+                            <Text style={styles.hubBadgeChipText}>{b}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              )}
+            </CollapsibleSection>
+          )}
+
+          {hasAnyRunningProgram && (
+            <CollapsibleSection
+              title="MÓDULO CORRIDA"
+              collapsed={!!hubCollapsedSections.corrida}
+              onToggle={() => toggleHubSection?.('corrida')}
+            >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginTop: 10, marginBottom: 24 }}>
+                {runningLevelCards.map((lvl) => {
+                  const locked = !lvl.product;
+                  return (
+                    <TouchableOpacity
+                      key={lvl.value}
+                      style={styles.nutritionCard}
+                      disabled={locked}
+                      onPress={() => onOpenProduct?.(lvl.product)}
+                    >
+                      <View style={styles.nutritionCoverWrap}>
+                        {lvl.product?.cover_image_url ? (
+                          <Image source={{ uri: lvl.product.cover_image_url }} style={coverFocalImageStyle(lvl.product.cover_focal_position)} resizeMode="cover" />
+                        ) : (
+                          <View style={styles.nutritionCoverPlaceholder}>
+                            <Ionicons name={lvl.icon} size={22} color={locked ? '#525252' : ACCENT} />
+                          </View>
+                        )}
+                        {locked && (
+                          <View style={styles.categoryLockOverlay}>
+                            <Ionicons name="lock-closed" size={14} color="#F5F5F7" />
+                          </View>
+                        )}
+                      </View>
+                      <Text style={[styles.nutritionCardName, locked && { color: '#737373' }]} numberOfLines={2}>{lvl.label}</Text>
+                      {locked && <Text style={styles.runningLevelLockedText}>Em breve</Text>}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </CollapsibleSection>
+          )}
+
           {studentAccessLevel !== 'consultoria_vip' && (
             <View style={styles.upsellCard}>
               <Text style={styles.upsellTitle}>Quer um acompanhamento 100% individual?</Text>
@@ -141,6 +248,21 @@ const styles = StyleSheet.create({
   upsellButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
   upsellButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '800' },
   sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 12 },
+  audienceFilterRow: { flexDirection: 'row', gap: 6, marginBottom: 10 },
+  audienceFilterChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  audienceFilterChipActive: { backgroundColor: ACCENT, borderColor: ACCENT },
+  audienceFilterChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
+  audienceFilterChipTextActive: { color: '#0F0F12' },
+  nutritionCard: { width: 176 },
+  nutritionCoverWrap: { width: '100%', aspectRatio: 16 / 9, borderRadius: 16, borderWidth: 1, overflow: 'hidden', marginBottom: 6, position: 'relative', ...GLASS_CARD },
+  nutritionCoverImage: { ...COVER_TOP_IMAGE },
+  nutritionCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  nutritionCardName: { color: '#F5F5F7', fontSize: 11, fontWeight: '600', lineHeight: 15 },
+  runningLevelLockedText: { color: '#525252', fontSize: 10, fontWeight: '600', marginTop: 2 },
+  hubBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  hubBadgeChip: { backgroundColor: '#27272A', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
+  hubBadgeChipText: { color: '#D4D4D8', fontSize: 10, fontWeight: '600' },
+  categoryLockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
   partnerBanner: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, padding: 12, marginBottom: 10 },
   partnerBannerLogoWrap: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   partnerBannerLogoImage: { width: '100%', height: '100%' },
