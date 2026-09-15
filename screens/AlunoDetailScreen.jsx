@@ -10,6 +10,7 @@ import StudentWorkoutHistoryScreen from './StudentWorkoutHistoryScreen';
 import StudentDietDiaryViewScreen from './StudentDietDiaryViewScreen';
 import VolumeSummaryScreen from './VolumeSummaryScreen';
 import WeeklyPeriodizationScreen from './WeeklyPeriodizationScreen';
+import WeeklyPlanScreen from './WeeklyPlanScreen';
 import PersonalFinanceScreen from './PersonalFinanceScreen';
 import ChatScreen from './ChatScreen';
 import AnamneseViewScreen from './AnamneseViewScreen';
@@ -147,6 +148,7 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
   const [dietDiaryFor, setDietDiaryFor] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [showPeriodization, setShowPeriodization] = useState(false);
+  const [showWeeklyPlan, setShowWeeklyPlan] = useState(false);
   const [showFinance, setShowFinance] = useState(false);
   const [showPresencialSession, setShowPresencialSession] = useState(false);
   const [anamnese, setAnamnese] = useState(null);
@@ -466,6 +468,16 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
       />
     );
   }
+  if (showWeeklyPlan) {
+    return (
+      <WeeklyPlanScreen
+        studentId={student.id}
+        studentName={student.name}
+        personalId={personalId}
+        onClose={() => setShowWeeklyPlan(false)}
+      />
+    );
+  }
   if (showFinance) {
     return (
       <PersonalFinanceScreen
@@ -768,6 +780,11 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
           <TouchableOpacity style={styles.actionButtonWide} onPress={() => setShowPeriodization(true)}>
             <Ionicons name="calendar-outline" size={22} color="#a855f7" />
             <Text style={styles.actionLabelWide}>Periodização</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButtonWide} onPress={() => setShowWeeklyPlan(true)}>
+            <Ionicons name="today-outline" size={22} color="#3b82f6" />
+            <Text style={styles.actionLabelWide}>Planejamento Semanal</Text>
           </TouchableOpacity>
         </>
       )}

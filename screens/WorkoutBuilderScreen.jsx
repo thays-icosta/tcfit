@@ -20,6 +20,19 @@ const FICHA_NAME_SUGGESTIONS = [
   'Treino Full Body',
 ];
 
+// value matches JS Date.getDay() (0 = Sunday), so "today's ficha" can later
+// be found with a plain === check — ordered Mon→Sun here only for display.
+const WEEKDAY_OPTIONS = [
+  { value: 1, label: 'Segunda' },
+  { value: 2, label: 'Terça' },
+  { value: 3, label: 'Quarta' },
+  { value: 4, label: 'Quinta' },
+  { value: 5, label: 'Sexta' },
+  { value: 6, label: 'Sábado' },
+  { value: 0, label: 'Domingo' },
+];
+const WEEKDAY_SHORT = { 0: 'Dom', 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb' };
+
 const METHOD_LABELS = {
   'tradicional': 'Tradicional',
   'rest-pause': 'Rest-Pause',
@@ -50,6 +63,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const [periodizationPlan, setPeriodizationPlan] = useState(null);
   const [periodizationPhases, setPeriodizationPhases] = useState([]);
   const [showPhasePicker, setShowPhasePicker] = useState(false);
+  const [showWeekdayPicker, setShowWeekdayPicker] = useState(false);
 
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [templates, setTemplates] = useState([]);
@@ -70,7 +84,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const loadWorkouts = async () => {
     const { data } = await supabase
       .from('workouts')
-      .select('id, name, phase_id')
+      .select('id, name, phase_id, weekday')
       .eq('student_id', studentId)
       .eq('active', true)
       .order('created_at', { ascending: true });
@@ -221,6 +235,17 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     if (!activeWorkoutId) return;
     const { error } = await supabase.from('workouts').update({ phase_id: phaseId }).eq('id', activeWorkoutId);
     setShowPhasePicker(false);
+    if (error) {
+      showAlert('Erro', error.message);
+    } else {
+      loadWorkouts();
+    }
+  };
+
+  const handleSelectWeekdayForFicha = async (weekday) => {
+    if (!activeWorkoutId) return;
+    const { error } = await supabase.from('workouts').update({ weekday }).eq('id', activeWorkoutId);
+    setShowWeekdayPicker(false);
     if (error) {
       showAlert('Erro', error.message);
     } else {
@@ -604,6 +629,9 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
               onLongPress={() => handleLongPressFicha(w)}
             >
               <Text style={[styles.fichaTabText, activeWorkoutId === w.id && styles.fichaTabTextActive]}>{w.name}</Text>
+              {w.weekday != null && (
+                <Text style={[styles.fichaTabWeekday, activeWorkoutId === w.id && styles.fichaTabWeekdayActive]}>{WEEKDAY_SHORT[w.weekday]}</Text>
+              )}
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -640,6 +668,17 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         <Text style={styles.emptyText}>Cria uma ficha acima pra começar.</Text>
       ) : (
         <>
+          <TouchableOpacity style={styles.weekdaySelectorRow} onPress={() => setShowWeekdayPicker(true)}>
+            {activeWorkout?.weekday != null ? (
+              <View style={styles.weekdayBadge}>
+                <Ionicons name="calendar-outline" size={13} color="#3b82f6" />
+                <Text style={styles.weekdayBadgeText}>{WEEKDAY_OPTIONS.find((d) => d.value === activeWorkout.weekday)?.label}</Text>
+              </View>
+            ) : (
+              <Text style={styles.phaseSelectorPlaceholder}>+ Definir dia da semana</Text>
+            )}
+          </TouchableOpacity>
+
           {periodizationPhases.length > 0 && (
             <TouchableOpacity style={styles.phaseSelectorRow} onPress={() => setShowPhasePicker(true)}>
               {phaseProgress ? (
@@ -925,6 +964,25 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         </View>
       </Modal>
 
+      <Modal visible={showWeekdayPicker} transparent animationType="fade" onRequestClose={() => setShowWeekdayPicker(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Dia da Semana</Text>
+            {WEEKDAY_OPTIONS.map((d) => (
+              <TouchableOpacity key={d.value} style={styles.phaseOption} onPress={() => handleSelectWeekdayForFicha(d.value)}>
+                <Text style={styles.phaseOptionText}>{d.label}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.phaseOptionNone} onPress={() => handleSelectWeekdayForFicha(null)}>
+              <Text style={styles.phaseOptionNoneText}>Sem dia fixo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalCancelButton} onPress={() => setShowWeekdayPicker(false)}>
+              <Text style={styles.modalCancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <Modal visible={showTemplatePicker} transparent animationType="slide" onRequestClose={() => setShowTemplatePicker(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.sendModalSheet}>
@@ -967,6 +1025,8 @@ const styles = StyleSheet.create({
   fichaTabActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
   fichaTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
   fichaTabTextActive: { color: '#0F0F12' },
+  fichaTabWeekday: { color: '#3b82f6', fontSize: 9, fontWeight: '800', textTransform: 'uppercase', marginTop: 2 },
+  fichaTabWeekdayActive: { color: '#0F0F12' },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 6 },
   aiButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 13, marginHorizontal: 16, marginBottom: 10 },
   aiButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
@@ -988,6 +1048,9 @@ const styles = StyleSheet.create({
   phaseBadgeCurrent: { backgroundColor: 'rgba(168,85,247,0.15)' },
   phaseBadgeText: { color: '#a855f7', fontSize: 11, fontWeight: '700' },
   phaseSelectorPlaceholder: { color: '#525252', fontSize: 11, textDecorationLine: 'underline' },
+  weekdaySelectorRow: { marginHorizontal: 16, marginBottom: 8 },
+  weekdayBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  weekdayBadgeText: { color: '#3b82f6', fontSize: 11, fontWeight: '700' },
   summaryCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, marginHorizontal: 16, marginBottom: 6 },
   summaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   summaryTitle: { color: '#737373', fontSize: 9, textTransform: 'uppercase' },
