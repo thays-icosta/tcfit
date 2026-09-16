@@ -103,6 +103,30 @@ async function deliverPdfBlobWeb(blob, fileName) {
   URL.revokeObjectURL(url);
 }
 
+// Both PDF renderers have the same failure mode for a remote <img src="https://...">
+// that hasn't fully arrived by the time they snapshot the page: html2canvas
+// (web) paints a solid black box for a load-incomplete/CORS-tainted image —
+// the exact "known" failure this file already works around for inline SVGs
+// via svgToImg below — and expo-print's native iOS renderer (WKWebView,
+// configured with a *transparent* background) signals "done" as soon as the
+// initial HTML document itself has loaded, not once every subresource image
+// has finished downloading, so an in-flight photo can be sliced away mid-
+// paint and the still-transparent gaps behind it render solid black in the
+// final PDF. Converting every remote image to a data: URI *before* handing
+// the HTML off to either renderer removes the race and any CORS dependency
+// entirely — the bytes are already inline, so there's nothing left to fetch.
+async function urlToDataUri(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`image fetch failed: ${res.status}`);
+  const blob = await res.blob();
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error || new Error('FileReader failed'));
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+}
+
 function withTimeout(promise, ms, timeoutMessage) {
   return Promise.race([
     promise,
@@ -597,7 +621,31 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
         ? assessments
         : assessments.map((a, i) => (i === 0 ? { ...a, report_url: null } : a));
 
-      const html = buildReportHtml(studentName, assessmentsForPdf, brandingToUse);
+      // Inline every remote image as a data: URI first (see urlToDataUri) —
+      // if a fetch fails for any reason (offline, broken URL), fall back to
+      // the original remote URL rather than blocking PDF generation.
+      let brandingForHtml = brandingToUse;
+      if (brandingToUse?.logoUrl) {
+        try {
+          brandingForHtml = { ...brandingToUse, logoUrl: await urlToDataUri(brandingToUse.logoUrl) };
+        } catch (e) {
+          console.error('Não foi possível inlinar o logo, usando URL remota:', e);
+        }
+      }
+
+      let assessmentsForHtml = assessmentsForPdf;
+      const firstReportUrl = assessmentsForPdf[0]?.report_url;
+      const firstIsImageAttachment = firstReportUrl && !firstReportUrl.toLowerCase().split('?')[0].endsWith('.pdf');
+      if (firstIsImageAttachment) {
+        try {
+          const reportDataUri = await urlToDataUri(firstReportUrl);
+          assessmentsForHtml = assessmentsForPdf.map((a, i) => (i === 0 ? { ...a, report_url: reportDataUri } : a));
+        } catch (e) {
+          console.error('Não foi possível inlinar a foto do laudo, usando URL remota:', e);
+        }
+      }
+
+      const html = buildReportHtml(studentName, assessmentsForHtml, brandingForHtml);
       const fileName = `Avaliacao_Fisica_TcFit_${studentName.replace(/\s+/g, '_')}.pdf`;
 
       if (Platform.OS === 'web') {
@@ -608,8 +656,15 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
         );
         await deliverPdfBlobWeb(blob, fileName);
       } else {
+        // Without an explicit width/height, expo-print defaults the native
+        // page canvas to US Letter (612×792pt) while our CSS's own `@page`
+        // rule declares A4 — a silent size mismatch that lets the native
+        // renderer clip/reflow content the CSS laid out assuming a taller
+        // A4 page. Pass A4 at 72dpi explicitly (595×842pt) and zero native
+        // margins so the CSS `@page margin` stays the single source of
+        // truth for spacing instead of the two systems compounding.
         const { uri } = await withTimeout(
-          Print.printToFileAsync({ html }),
+          Print.printToFileAsync({ html, width: 595, height: 842, margins: { top: 0, right: 0, bottom: 0, left: 0 } }),
           25000,
           'O PDF demorou demais pra gerar. Se você anexou uma foto de laudo, tente sem anexo — ou tente novamente com internet mais estável.'
         );
