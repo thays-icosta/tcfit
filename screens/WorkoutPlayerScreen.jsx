@@ -15,6 +15,10 @@ function isGifUrl(url) {
   return !!url && url.toLowerCase().split('?')[0].endsWith('.gif');
 }
 
+function isStaticImageUrl(url) {
+  return !!url && /\.(jpe?g|png|webp)$/i.test(url.toLowerCase().split('?')[0]);
+}
+
 function parseReps(repsStr) {
   if (!repsStr) return 10;
   const numbers = repsStr.match(/\d+/g);
@@ -740,7 +744,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
             </View>
             <ScrollView style={styles.videoModalBody}>
               {videoModalFor?.exercises?.video_url ? (
-                isGifUrl(videoModalFor.exercises.video_url) ? (
+                isGifUrl(videoModalFor.exercises.video_url) || isStaticImageUrl(videoModalFor.exercises.video_url) ? (
                   <Image source={{ uri: videoModalFor.exercises.video_url }} style={styles.videoModalMedia} resizeMode="contain" />
                 ) : getYoutubeVideoId(videoModalFor.exercises.video_url) ? (
                   <iframe
@@ -758,6 +762,11 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                     loop
                   />
                 )
+              ) : !videoModalFor?.exercises?.instructions ? (
+                <View style={styles.noMediaBox}>
+                  <Ionicons name="film-outline" size={28} color="#525252" />
+                  <Text style={styles.noMediaText}>Demonstração em breve</Text>
+                </View>
               ) : null}
               {videoModalFor?.exercises?.instructions ? (
                 <Text style={styles.videoModalInstructions}>{videoModalFor.exercises.instructions}</Text>
@@ -828,6 +837,8 @@ const styles = StyleSheet.create({
   videoModalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '700', flex: 1, marginRight: 12 },
   videoModalBody: { paddingHorizontal: 18, paddingTop: 14 },
   videoModalMedia: { width: '100%', height: 220, borderRadius: 10, backgroundColor: '#0F0F12' },
+  noMediaBox: { width: '100%', height: 140, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  noMediaText: { color: '#525252', fontSize: 12, fontWeight: '600' },
   videoModalInstructions: { color: '#d4d4d4', fontSize: 13, lineHeight: 20, marginTop: 14, marginBottom: 4 },
   celebrationContainer: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 60, paddingHorizontal: 24 },
   trophyCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#1C1C22', borderWidth: 2, borderColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },

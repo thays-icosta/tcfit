@@ -48,6 +48,10 @@ function isGifUrl(url) {
   return !!url && url.toLowerCase().split('?')[0].endsWith('.gif');
 }
 
+function isStaticImageUrl(url) {
+  return !!url && /\.(jpe?g|png|webp)$/i.test(url.toLowerCase().split('?')[0]);
+}
+
 export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }) {
   const [allExercises, setAllExercises] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +66,8 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
   const [gifPreviewExercise, setGifPreviewExercise] = useState(null);
   const [bulkLinking, setBulkLinking] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0, linked: 0 });
+  const [bulkLinkingPhotos, setBulkLinkingPhotos] = useState(false);
+  const [bulkPhotoProgress, setBulkPhotoProgress] = useState({ done: 0, total: 0, linked: 0 });
   const copyInFlightRef = useRef(false);
 
   // These sub-views replace this whole screen's return, so the parent
@@ -122,6 +128,48 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
     );
   };
 
+  // Photos come from wger.de (free, CC-licensed) and only ever fill a gap —
+  // an exercise that already has ExerciseDB (or any other) video/gif never
+  // gets touched, so this never downgrades an existing video to a photo.
+  const handleBulkLinkPhotos = async () => {
+    const missing = allExercises.filter((ex) => ex.personal_id === null && !ex.video_url);
+    if (missing.length === 0) {
+      showAlert('Tudo em dia', 'Todos os exercícios da Biblioteca do App já têm alguma mídia (vídeo ou foto).');
+      return;
+    }
+    showAlert(
+      'Adicionar fotos automaticamente?',
+      `Vou buscar uma foto (fonte: wger.de, licença Creative Commons) pra ${missing.length} exercício${missing.length !== 1 ? 's' : ''} da Biblioteca do App que ainda não têm nenhuma mídia. Isso pode levar alguns minutos.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Adicionar',
+          onPress: async () => {
+            setBulkLinkingPhotos(true);
+            setBulkPhotoProgress({ done: 0, total: missing.length, linked: 0 });
+            let linkedCount = 0;
+            for (let i = 0; i < missing.length; i++) {
+              const ex = missing[i];
+              try {
+                const { data, error } = await supabase.functions.invoke('link-library-exercise-wger-photo', {
+                  body: { exerciseId: ex.id, query: translateExerciseNamePtToEn(ex.name) },
+                });
+                if (!error && data?.linked) linkedCount += 1;
+              } catch (e) {
+                console.error('Erro ao vincular foto em lote:', e);
+              }
+              setBulkPhotoProgress({ done: i + 1, total: missing.length, linked: linkedCount });
+              await new Promise((resolve) => setTimeout(resolve, 350));
+            }
+            setBulkLinkingPhotos(false);
+            await loadExercises();
+            showAlert('Concluído!', `${linkedCount} de ${missing.length} exercício${missing.length !== 1 ? 's' : ''} ganharam foto automaticamente (wger.de). Os demais não tiveram correspondência.`);
+          },
+        },
+      ]
+    );
+  };
+
   const myExerciseNames = new Set(
     allExercises.filter((ex) => ex.personal_id === personalId).map((ex) => ex.name.trim().toLowerCase())
   );
@@ -148,7 +196,7 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
 
   const handlePreview = (exercise) => {
     if (!exercise.video_url) return;
-    if (isGifUrl(exercise.video_url)) {
+    if (isGifUrl(exercise.video_url) || isStaticImageUrl(exercise.video_url)) {
       setGifPreviewExercise(exercise);
     } else {
       setPreviewExercise(exercise);
@@ -258,6 +306,13 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
             <ActivityIndicator color="#3b82f6" size="small" />
           ) : (
             <Ionicons name="sync-outline" size={18} color="#3b82f6" />
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.photoIconButton} onPress={handleBulkLinkPhotos} disabled={bulkLinkingPhotos}>
+          {bulkLinkingPhotos ? (
+            <ActivityIndicator color="#22c55e" size="small" />
+          ) : (
+            <Ionicons name="image-outline" size={18} color="#22c55e" />
           )}
         </TouchableOpacity>
       </View>
@@ -389,6 +444,15 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
           </Text>
         </View>
       )}
+
+      {bulkLinkingPhotos && (
+        <View style={[styles.syncToast, { borderColor: '#22c55e' }]}>
+          <ActivityIndicator color="#22c55e" size="small" />
+          <Text style={[styles.syncToastText, { color: '#22c55e' }]}>
+            Buscando fotos {bulkPhotoProgress.done}/{bulkPhotoProgress.total} ({bulkPhotoProgress.linked} encontradas)
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -400,6 +464,7 @@ const styles = StyleSheet.create({
   createButton: { flex: 1, backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   createButtonText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
   syncIconButton: { width: 40, backgroundColor: 'rgba(59,130,246,0.1)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  photoIconButton: { width: 40, backgroundColor: 'rgba(34,197,94,0.1)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   syncToast: { position: 'absolute', bottom: 16, left: 16, right: 16, flexDirection: 'row', gap: 8, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
   syncToastText: { color: '#3b82f6', fontSize: 11, fontWeight: '700', flexShrink: 1 },
   searchInput: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: '#F5F5F7', fontSize: 13, marginBottom: 10 },
