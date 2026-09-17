@@ -458,6 +458,13 @@ function buildReportHtml(studentName, assessments, branding) {
         <meta name="color-scheme" content="light" />
         <style>
           @page { size: A4; margin: 20mm 15mm; }
+          /* Print engines drop background colors by default to save ink —
+             invisible on real paper (already white) but catastrophic here,
+             since the native renderer's own canvas is transparent (see
+             ExpoWKPDFRenderer.swift's webView.backgroundColor = .clear)
+             and shows through as black wherever a background isn't forced
+             to actually paint. This is the fix for that class of bug. */
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
           html, body { background: #FFFFFF; background-color: #FFFFFF; color-scheme: light; }
           body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #111827; margin: 0; width: 100%; box-sizing: border-box; }
           h1 { font-size: 22px; margin-bottom: 4px; }
