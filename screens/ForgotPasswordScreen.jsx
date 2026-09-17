@@ -17,7 +17,8 @@ export default function ForgotPasswordScreen({ onClose }) {
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
     setSending(false);
     if (error) {
-      showAlert('Erro', error.message);
+      console.error('Erro ao enviar e-mail de redefinição:', error);
+      showAlert('Ops', 'Não foi possível enviar o e-mail de redefinição agora. Confere o e-mail digitado e tenta de novo.');
     } else {
       setSent(true);
     }

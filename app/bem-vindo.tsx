@@ -37,7 +37,8 @@ export default function BemVindoLanding() {
     });
     setSendingLead(false);
     if (error) {
-      showAlert('Erro', error.message);
+      console.error('Erro ao enviar lead:', error);
+      showAlert('Ops', 'Não foi possível enviar seus dados agora. Tenta de novo em instantes.');
       return;
     }
     setLeadSent(true);

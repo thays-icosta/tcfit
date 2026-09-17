@@ -22,7 +22,8 @@ export default function WaterLogModal({ visible, studentId, currentMl, goalMl, o
     const { error } = await supabase.from('users').update({ water_goal_ml: value }).eq('id', studentId);
     setSavingGoal(false);
     if (error) {
-      showAlert('Erro', error.message);
+      console.error('Erro ao salvar meta de água:', error);
+      showAlert('Ops', 'Não foi possível salvar sua meta de água agora. Tenta de novo em instantes.');
     } else {
       onGoalChanged?.(value);
     }

@@ -517,7 +517,8 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     }).select().single();
     setRegisteringKey(null);
     if (error) {
-      showAlert('Erro', error.message);
+      console.error('Erro ao registrar alimento:', error);
+      showAlert('Ops', 'Não foi possível registrar esse alimento agora. Tenta de novo em instantes.');
     } else {
       applyEntriesDelta([data], 1);
       showAlert('Registrado!', `${option.food_name} adicionado ao seu diário de hoje.`);
@@ -544,7 +545,8 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
     ).select();
     setRegisteringKey(null);
     if (error) {
-      showAlert('Erro', error.message);
+      console.error('Erro ao registrar refeição:', error);
+      showAlert('Ops', 'Não foi possível registrar essa refeição agora. Tenta de novo em instantes.');
     } else {
       applyEntriesDelta(data, 1);
       showAlert('Refeição concluída!', `${meal.name} registrada no seu diário de hoje.`);

@@ -134,7 +134,8 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
       .eq('id', user.id);
     setSaving(false);
     if (error) {
-      showAlert('Erro', error.message);
+      console.error('Erro ao salvar perfil:', error);
+      showAlert('Ops', 'Não foi possível salvar suas informações agora. Tenta de novo em instantes.');
     } else {
       showAlert('Salvo!', 'Seu perfil foi atualizado.', [{ text: 'OK', onPress: onClose }]);
     }
@@ -217,7 +218,8 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setSavingPassword(false);
     if (error) {
-      showAlert('Erro', error.message);
+      console.error('Erro ao trocar senha:', error);
+      showAlert('Ops', 'Não foi possível trocar sua senha agora. Saia e entre novamente, depois tenta de novo.');
     } else {
       setShowPasswordModal(false);
       setNewPassword('');

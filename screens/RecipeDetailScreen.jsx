@@ -31,7 +31,8 @@ export default function RecipeDetailScreen({ recipe, studentId, onClose }) {
     setAdding(null);
     setShowMealPicker(false);
     if (error) {
-      showAlert('Erro', error.message);
+      console.error('Erro ao adicionar receita ao diário:', error);
+      showAlert('Ops', 'Não foi possível registrar essa receita agora. Tenta de novo em instantes.');
     } else {
       showAlert('Adicionado!', `${recipe.title} foi para o seu diário de hoje.`);
     }

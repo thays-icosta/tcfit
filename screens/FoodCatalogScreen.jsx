@@ -213,7 +213,8 @@ export default function FoodCatalogScreen({ onAddFood, onClose, recentForStudent
       .single();
     setSavingNewFood(false);
     if (error) {
-      showAlert('Erro', error.message);
+      console.error('Erro ao salvar alimento:', error);
+      showAlert('Ops', 'Não foi possível salvar esse alimento agora. Confere os dados e tenta de novo.');
       return;
     }
     await loadFoods();

@@ -434,7 +434,8 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
 
     setSaving(false);
     if (responseError) {
-      showAlert('Erro', responseError.message);
+      console.error('Erro ao salvar anamnese:', responseError);
+      showAlert('Ops', 'Não foi possível salvar suas respostas agora. Tenta de novo em instantes.');
       return;
     }
 

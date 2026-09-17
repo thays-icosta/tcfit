@@ -29,7 +29,8 @@ export default function WeightLogModal({ visible, studentId, currentWeightKg, on
       .upsert({ student_id: studentId, entry_date: todayStr, weight_kg: value }, { onConflict: 'student_id,entry_date' });
     setSaving(false);
     if (error) {
-      showAlert('Erro', error.message);
+      console.error('Erro ao salvar peso:', error);
+      showAlert('Ops', 'Não foi possível salvar seu peso agora. Tenta de novo em instantes.');
     } else {
       onSaved?.(value);
       onClose?.();
