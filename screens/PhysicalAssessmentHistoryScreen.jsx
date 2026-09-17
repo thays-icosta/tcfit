@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Modal, Switch, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Modal, Switch, Platform, Image } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { calculateMacroGoals, ACTIVITY_LEVELS, PROGRAM_GOALS } from './accessLevel';
@@ -103,19 +104,13 @@ async function deliverPdfBlobWeb(blob, fileName) {
   URL.revokeObjectURL(url);
 }
 
-// Both PDF renderers have the same failure mode for a remote <img src="https://...">
-// that hasn't fully arrived by the time they snapshot the page: html2canvas
-// (web) paints a solid black box for a load-incomplete/CORS-tainted image —
-// the exact "known" failure this file already works around for inline SVGs
-// via svgToImg below — and expo-print's native iOS renderer (WKWebView,
-// configured with a *transparent* background) signals "done" as soon as the
-// initial HTML document itself has loaded, not once every subresource image
-// has finished downloading, so an in-flight photo can be sliced away mid-
-// paint and the still-transparent gaps behind it render solid black in the
-// final PDF. Converting every remote image to a data: URI *before* handing
-// the HTML off to either renderer removes the race and any CORS dependency
-// entirely — the bytes are already inline, so there's nothing left to fetch.
-async function urlToDataUri(url) {
+function getImageSize(uri) {
+  return new Promise((resolve, reject) => {
+    Image.getSize(uri, (width, height) => resolve({ width, height }), reject);
+  });
+}
+
+async function fetchAsDataUri(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`image fetch failed: ${res.status}`);
   const blob = await res.blob();
@@ -125,6 +120,42 @@ async function urlToDataUri(url) {
     reader.onload = () => resolve(reader.result);
     reader.readAsDataURL(blob);
   });
+}
+
+// Both PDF renderers have the same failure mode for a remote <img src="https://...">
+// that hasn't fully arrived by the time they snapshot the page: html2canvas
+// (web) paints a solid black box for a load-incomplete/CORS-tainted image —
+// the exact "known" failure this file already works around for inline SVGs
+// via svgToImg below — and expo-print's native iOS renderer (WKWebView,
+// configured with a *transparent* background) signals "done" as soon as the
+// initial HTML document itself has loaded, not once every subresource image
+// has finished downloading, so an in-flight photo can be sliced away mid-
+// paint and the still-transparent gaps behind it render solid black in the
+// final PDF.
+//
+// The branding logo/photo are also very often much larger, in raw pixels,
+// than the small CSS box (`.logo { width: 56px }`) they're displayed in —
+// e.g. a marketing-sized logo graphic or an un-downscaled phone photo. On
+// the native print pipeline that oversized image can consume most or all of
+// a page by itself (pushing the rest of the header onto the next page,
+// which is exactly the "page 1 is just a giant cropped logo, page 2 has the
+// black block" bug this was rewritten to fix), regardless of the CSS
+// width/height/object-fit on the <img> tag. So this doesn't just inline the
+// image — it actually resizes the *pixels* first (expo-image-manipulator,
+// same on web and native) to a sane bound for where it's displayed, then
+// inlines the small result as a data: URI. That removes both the load race
+// and any dependency on the target renderer honoring CSS image sizing.
+async function urlToResizedDataUri(url, maxDimension, format) {
+  // Natural size from the original remote URL (well-supported on both
+  // platforms) and the pixel data as a data: URI (fetch+FileReader, already
+  // proven to work cross-platform) are fetched independently, so the
+  // resize itself never depends on ImageManipulator's own network fetching
+  // — only on it accepting a data: URI as input, which is documented.
+  const [{ width, height }, dataUri] = await Promise.all([getImageSize(url), fetchAsDataUri(url)]);
+  const resize = width >= height ? { width: Math.min(width, maxDimension) } : { height: Math.min(height, maxDimension) };
+  const image = await ImageManipulator.manipulate(dataUri).resize(resize).renderAsync();
+  const { base64 } = await image.saveAsync({ base64: true, compress: format === SaveFormat.PNG ? 1 : 0.85, format });
+  return `data:image/${format};base64,${base64}`;
 }
 
 function withTimeout(promise, ms, timeoutMessage) {
@@ -621,15 +652,18 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
         ? assessments
         : assessments.map((a, i) => (i === 0 ? { ...a, report_url: null } : a));
 
-      // Inline every remote image as a data: URI first (see urlToDataUri) —
-      // if a fetch fails for any reason (offline, broken URL), fall back to
-      // the original remote URL rather than blocking PDF generation.
+      // Resize + inline every remote image first (see urlToResizedDataUri) —
+      // if this fails for any reason (offline, broken URL), fall back to the
+      // original remote URL rather than blocking PDF generation.
       let brandingForHtml = brandingToUse;
       if (brandingToUse?.logoUrl) {
         try {
-          brandingForHtml = { ...brandingToUse, logoUrl: await urlToDataUri(brandingToUse.logoUrl) };
+          // 240px is generous for a box displayed at 56px/40px CSS width —
+          // PNG keeps it lossless so a transparent-background logo doesn't
+          // pick up a stray fill color.
+          brandingForHtml = { ...brandingToUse, logoUrl: await urlToResizedDataUri(brandingToUse.logoUrl, 240, SaveFormat.PNG) };
         } catch (e) {
-          console.error('Não foi possível inlinar o logo, usando URL remota:', e);
+          console.error('Não foi possível redimensionar/inlinar o logo, usando URL remota:', e);
         }
       }
 
@@ -638,10 +672,13 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
       const firstIsImageAttachment = firstReportUrl && !firstReportUrl.toLowerCase().split('?')[0].endsWith('.pdf');
       if (firstIsImageAttachment) {
         try {
-          const reportDataUri = await urlToDataUri(firstReportUrl);
+          // 1600px is plenty for a photo displayed at up to one page's width
+          // (~180mm) while keeping the embedded HTML small; a raw phone
+          // photo can otherwise be 3000-4000px on its long edge.
+          const reportDataUri = await urlToResizedDataUri(firstReportUrl, 1600, SaveFormat.JPEG);
           assessmentsForHtml = assessmentsForPdf.map((a, i) => (i === 0 ? { ...a, report_url: reportDataUri } : a));
         } catch (e) {
-          console.error('Não foi possível inlinar a foto do laudo, usando URL remota:', e);
+          console.error('Não foi possível redimensionar/inlinar a foto do laudo, usando URL remota:', e);
         }
       }
 
