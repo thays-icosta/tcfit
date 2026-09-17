@@ -116,7 +116,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [hubCollapsedSections, setHubCollapsedSections] = useState({});
   const [resumoDoDiaCollapsed, setResumoDoDiaCollapsed] = useState(false);
   const [waterCardCollapsed, setWaterCardCollapsed] = useState(false);
-  const [diarioMealOverrides, setDiarioMealOverrides] = useState({});
   const [personalName, setPersonalName] = useState(null);
   const [personalAvatarUrl, setPersonalAvatarUrl] = useState(null);
   const [personalPhone, setPersonalPhone] = useState(null);
@@ -126,7 +125,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [studentType, setStudentType] = useState('consultoria');
   const [mode, setMode] = useState(null);
   const [chatPrefill, setChatPrefill] = useState('');
-  const [dietSubTab, setDietSubTab] = useState('prescrita');
+  const [dietSubTab, setDietSubTab] = useState('diario');
   const [workouts, setWorkouts] = useState([]);
   const [diets, setDiets] = useState([]);
   const [activeDietId, setActiveDietId] = useState(null);
@@ -136,7 +135,6 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [mealsForActiveDiet, setMealsForActiveDiet] = useState([]);
   const [loadingMeals, setLoadingMeals] = useState(false);
   const [expandedMealId, setExpandedMealId] = useState(null);
-  const [hojeExpanded, setHojeExpanded] = useState(true);
   const [consumedTotals, setConsumedTotals] = useState({ kcal: 0, protein: 0, carbs: 0, fat: 0 });
   const [todaysEntries, setTodaysEntries] = useState([]);
   const [waterMl, setWaterMl] = useState(0);
@@ -158,8 +156,8 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
   const [previewWorkout, setPreviewWorkout] = useState(null);
   const [showRecipes, setShowRecipes] = useState(false);
   const [showNutritionLibrary, setShowNutritionLibrary] = useState(false);
+  const [recipesPreview, setRecipesPreview] = useState([]);
   const [addingFoodForMeal, setAddingFoodForMeal] = useState(null);
-  const [showMealPicker, setShowMealPicker] = useState(false);
   const [diaryRefreshKey, setDiaryRefreshKey] = useState(0);
   const [registeringKey, setRegisteringKey] = useState(null);
   const [pixCopied, setPixCopied] = useState(false);
@@ -226,12 +224,14 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
       setPersonalPixKey(personalRow?.pix_key || null);
       setPersonalPaymentLink(personalRow?.payment_link || null);
 
-      const [{ data: productRows }, { data: grantRows }, { data: collectionRows }] = await Promise.all([
+      const [{ data: productRows }, { data: grantRows }, { data: collectionRows }, { data: recipeRows }] = await Promise.all([
         supabase.from('products').select('*').eq('personal_id', myRow.personal_id).eq('active', true),
         supabase.from('product_grants').select('product_id').eq('student_id', user.id),
         supabase.from('product_collections').select('*').eq('personal_id', myRow.personal_id).order('order_index'),
+        supabase.from('recipes').select('id, title, photo_url, category').order('created_at', { ascending: false }).limit(4),
       ]);
       setCollections(collectionRows || []);
+      setRecipesPreview(recipeRows || []);
       const level = myRow?.access_level || 'plataforma_base';
       setMyAccessLevel(level);
       const grantedIds = new Set((grantRows || []).map((g) => g.product_id));
@@ -1079,66 +1079,18 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
           <Text style={styles.subTitle}>Nutrição</Text>
         </View>
 
-        <View style={{ paddingHorizontal: 16 }}>
-          <View style={styles.nutriTopCard}>
-            <CollapsibleSection
-              title="Resumo do Dia"
-              collapsed={resumoDoDiaCollapsed}
-              onToggle={() => { animateNextLayout(); setResumoDoDiaCollapsed((v) => !v); }}
-              style={{ padding: 14 }}
-              headerRight={
-                <Text style={styles.hojeSummary}>
-                  {Math.round(consumedTotals.kcal)}{diets[0]?.goal_kcal ? ` / ${diets[0].goal_kcal}` : ''} kcal
-                </Text>
-              }
-            >
-              <View style={styles.resumoDoDiaBody}>
-                {[
-                  { label: 'Proteína', value: consumedTotals.protein, goal: diets[0]?.goal_protein_g, unit: 'g', color: '#a3a3a3' },
-                  { label: 'Carboidrato', value: consumedTotals.carbs, goal: diets[0]?.goal_carbs_g, unit: 'g', color: '#eab308' },
-                  { label: 'Gordura', value: consumedTotals.fat, goal: diets[0]?.goal_fat_g, unit: 'g', color: '#ef4444' },
-                ].map((macro) => (
-                  <View key={macro.label} style={styles.macroRow}>
-                    <View style={styles.macroLabelRow}>
-                      <Text style={styles.macroLabel}>{macro.label}</Text>
-                      <Text style={styles.macroValue}>
-                        {Math.round(macro.value)}{macro.goal ? ` / ${macro.goal}` : ''}{macro.unit}
-                      </Text>
-                    </View>
-                    <View style={styles.macroBarTrack}>
-                      <View style={[styles.macroBarFill, { width: macro.goal ? `${Math.min(100, (macro.value / macro.goal) * 100)}%` : '0%', backgroundColor: macro.color }]} />
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </CollapsibleSection>
-          </View>
-
-          <TouchableOpacity style={styles.nutriLibraryShortcut} onPress={() => setShowNutritionLibrary(true)}>
-            <Ionicons name="book-outline" size={18} color={ACCENT} />
-            <Text style={styles.nutriLibraryShortcutText}>Biblioteca de Receitas e E-books</Text>
-            <Ionicons name="chevron-forward-outline" size={16} color="#525252" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.nutriLibraryShortcut} onPress={() => setShowRecipes(true)}>
-            <Ionicons name="restaurant-outline" size={18} color={ACCENT} />
-            <Text style={styles.nutriLibraryShortcutText}>Ver Receitas</Text>
-            <Ionicons name="chevron-forward-outline" size={16} color="#525252" />
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.dietSubTabRow}>
-          <TouchableOpacity
-            style={[styles.dietSubTabButton, dietSubTab === 'prescrita' && styles.dietSubTabButtonActive]}
-            onPress={() => setDietSubTab('prescrita')}
-          >
-            <Text style={[styles.dietSubTabText, dietSubTab === 'prescrita' && styles.dietSubTabTextActive]}>Dieta Prescrita</Text>
-          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.dietSubTabButton, dietSubTab === 'diario' && styles.dietSubTabButtonActive]}
             onPress={() => setDietSubTab('diario')}
           >
             <Text style={[styles.dietSubTabText, dietSubTab === 'diario' && styles.dietSubTabTextActive]}>Diário Alimentar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.dietSubTabButton, dietSubTab === 'prescrita' && styles.dietSubTabButtonActive]}
+            onPress={() => setDietSubTab('prescrita')}
+          >
+            <Text style={[styles.dietSubTabText, dietSubTab === 'prescrita' && styles.dietSubTabTextActive]}>Dieta Prescrita</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.dietSubTabButton, dietSubTab === 'substituicoes' && styles.dietSubTabButtonActive]}
@@ -1284,50 +1236,28 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
           </>
         ) : (
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
-            {!showMealPicker ? (
-              <TouchableOpacity style={styles.addExtraButton} onPress={() => setShowMealPicker(true)}>
-                <Text style={styles.addExtraButtonText}>+ Registrar Alimento Extra</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.mealPickerBox}>
-                <View style={styles.mealPickerHeaderRow}>
-                  <Text style={styles.mealPickerLabel}>Em qual refeição?</Text>
-                  <TouchableOpacity onPress={() => setShowMealPicker(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Ionicons name="close" size={20} color="#a3a3a3" />
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.mealPickerRow}>
-                  {MEAL_OPTIONS.map((m) => (
-                    <TouchableOpacity
-                      key={m.value}
-                      style={styles.mealPickerChip}
-                      onPress={() => {
-                        setShowMealPicker(false);
-                        setAddingFoodForMeal(m.value);
-                      }}
-                    >
-                      <Text style={styles.mealPickerChipText}>{m.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            )}
+            <Text style={styles.nutritionStateText}>
+              {todaysEntries.length === 0
+                ? 'Como está sua alimentação hoje? Registre sua primeira refeição.'
+                : new Set(todaysEntries.map((e) => e.meal_type)).size >= MEAL_OPTIONS.length
+                ? 'Dia completo! Confira seu resumo abaixo.'
+                : 'Continue registrando suas refeições de hoje.'}
+            </Text>
 
-            <View style={styles.hojeCard}>
-              <TouchableOpacity style={styles.hojeHeader} onPress={() => { animateNextLayout(); setHojeExpanded(!hojeExpanded); }}>
-                <Text style={styles.hojeTitle}>Hoje</Text>
-                <View style={styles.hojeHeaderRight}>
+            <View style={styles.nutriTopCard}>
+              <CollapsibleSection
+                title="Resumo do Dia"
+                collapsed={resumoDoDiaCollapsed}
+                onToggle={() => { animateNextLayout(); setResumoDoDiaCollapsed((v) => !v); }}
+                style={{ padding: 14 }}
+                headerRight={
                   <Text style={styles.hojeSummary}>
                     {Math.round(consumedTotals.kcal)}{diets[0]?.goal_kcal ? ` / ${diets[0].goal_kcal}` : ''} kcal
                   </Text>
-                  <Ionicons name={hojeExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={18} color="#737373" />
-                </View>
-              </TouchableOpacity>
-
-              {hojeExpanded && (
-                <View style={styles.hojeBody}>
+                }
+              >
+                <View style={styles.resumoDoDiaBody}>
                   {[
-                    { label: 'Calorias', value: consumedTotals.kcal, goal: diets[0]?.goal_kcal, unit: 'kcal', color: '#FF6B00' },
                     { label: 'Proteína', value: consumedTotals.protein, goal: diets[0]?.goal_protein_g, unit: 'g', color: '#a3a3a3' },
                     { label: 'Carboidrato', value: consumedTotals.carbs, goal: diets[0]?.goal_carbs_g, unit: 'g', color: '#eab308' },
                     { label: 'Gordura', value: consumedTotals.fat, goal: diets[0]?.goal_fat_g, unit: 'g', color: '#ef4444' },
@@ -1339,27 +1269,63 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                           {Math.round(macro.value)}{macro.goal ? ` / ${macro.goal}` : ''}{macro.unit}
                         </Text>
                       </View>
-                      {macro.goal ? (
-                        <View style={styles.macroBarTrack}>
-                          <View style={[styles.macroBarFill, { width: `${Math.min(100, (macro.value / macro.goal) * 100)}%`, backgroundColor: macro.color }]} />
-                        </View>
-                      ) : null}
+                      <View style={styles.macroBarTrack}>
+                        <View style={[styles.macroBarFill, { width: macro.goal ? `${Math.min(100, (macro.value / macro.goal) * 100)}%` : '0%', backgroundColor: macro.color }]} />
+                      </View>
                     </View>
                   ))}
                 </View>
-              )}
+              </CollapsibleSection>
             </View>
 
-            <View style={styles.waterCard}>
+            <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Refeições de hoje</Text>
+            {MEAL_OPTIONS.map((m) => {
+              const mealEntries = todaysEntries.filter((e) => e.meal_type === m.value);
+              const hasEntries = mealEntries.length > 0;
+              const mealKcal = mealEntries.reduce((sum, e) => sum + (e.calories_kcal || 0), 0);
+              return (
+                <View key={m.value} style={styles.mealDiaryCard}>
+                  <View style={styles.mealDiaryHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.mealDiaryName}>{m.label}</Text>
+                      <Text style={styles.mealDiaryMeta}>
+                        {hasEntries ? `${Math.round(mealKcal)} kcal · ${mealEntries.length} alimento${mealEntries.length !== 1 ? 's' : ''}` : 'Nada registrado ainda'}
+                      </Text>
+                    </View>
+                    <TouchableOpacity style={styles.mealDiaryAddButton} onPress={() => setAddingFoodForMeal(m.value)}>
+                      <Ionicons name="add" size={14} color="#FF6B00" />
+                      <Text style={styles.mealDiaryAddButtonText}>Adicionar</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {hasEntries && (
+                    <View style={styles.diarioMealBody}>
+                      {mealEntries.map((entry) => (
+                        <View key={entry.id} style={styles.entryRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.entryFoodName}>{entry.food_name}</Text>
+                            <Text style={styles.entryMeta}>{entry.quantity_g ? `${entry.quantity_g}g · ` : ''}{Math.round(entry.calories_kcal || 0)}kcal</Text>
+                          </View>
+                          <TouchableOpacity onPress={() => handleDeleteEntry(entry.id)}>
+                            <Text style={styles.entryDelete}>✕</Text>
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+
+            <View style={[styles.waterCard, styles.sectionTitleSpaced]}>
               <CollapsibleSection
                 title="Água"
                 collapsed={waterCardCollapsed}
                 onToggle={() => { animateNextLayout(); setWaterCardCollapsed((v) => !v); }}
-                headerRight={<Text style={styles.waterValue}>{(waterMl / 1000).toFixed(1)}L / 2.0L</Text>}
+                headerRight={<Text style={styles.waterValue}>{(waterMl / 1000).toFixed(1)}L / {((waterGoalMl || 2000) / 1000).toFixed(1)}L</Text>}
               >
                 <View style={{ marginTop: 10 }}>
                   <View style={styles.macroBarTrack}>
-                    <View style={[styles.macroBarFill, { width: `${Math.min(100, (waterMl / 2000) * 100)}%`, backgroundColor: '#5EC8D8' }]} />
+                    <View style={[styles.macroBarFill, { width: `${Math.min(100, (waterMl / (waterGoalMl || 2000)) * 100)}%`, backgroundColor: '#5EC8D8' }]} />
                   </View>
                   <View style={styles.waterButtonsRow}>
                     <TouchableOpacity style={styles.waterButton} onPress={() => handleAddWater(250)}>
@@ -1368,12 +1334,15 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                     <TouchableOpacity style={styles.waterButton} onPress={() => handleAddWater(500)}>
                       <Text style={styles.waterButtonText}>+500ml</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity style={styles.waterButton} onPress={() => setShowWaterModal(true)}>
+                      <Text style={styles.waterButtonText}>Ajustar</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               </CollapsibleSection>
             </View>
 
-            <View style={styles.noteCard}>
+            <View style={[styles.noteCard, styles.sectionTitleSpaced]}>
               <Text style={styles.noteCardTitle}>Observação sobre sua dieta hoje</Text>
               {editingNote ? (
                 <>
@@ -1396,48 +1365,73 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
               )}
             </View>
 
-            <Text style={styles.sectionTitle}>Registros de hoje</Text>
-            {MEAL_OPTIONS.map((m) => {
-              const mealEntries = todaysEntries.filter((e) => e.meal_type === m.value);
-              const hasEntries = mealEntries.length > 0;
-              const mealKcal = mealEntries.reduce((sum, e) => sum + (e.calories_kcal || 0), 0);
-              // Current-time meal starts open (if not logged yet); already-logged
-              // and not-yet-due meals start collapsed — until the aluno overrides it.
-              const smartDefaultCollapsed = !(m.value === currentMealWindowKey() && !hasEntries);
-              const collapsed = diarioMealOverrides[m.value] !== undefined ? diarioMealOverrides[m.value] : smartDefaultCollapsed;
-              return (
-                <View key={m.value} style={styles.mealAccordionCard}>
-                  <CollapsibleSection
-                    title={m.label}
-                    collapsed={collapsed}
-                    onToggle={() => {
-                      animateNextLayout();
-                      setDiarioMealOverrides((prev) => ({ ...prev, [m.value]: !collapsed }));
-                    }}
-                    style={styles.diarioMealHeader}
-                    headerRight={hasEntries ? <Text style={styles.mealAccordionMeta}>{Math.round(mealKcal)} kcal</Text> : null}
-                  >
-                    <View style={styles.diarioMealBody}>
-                      {hasEntries ? (
-                        mealEntries.map((entry) => (
-                          <View key={entry.id} style={styles.entryRow}>
-                            <View style={{ flex: 1 }}>
-                              <Text style={styles.entryFoodName}>{entry.food_name}</Text>
-                              <Text style={styles.entryMeta}>{entry.quantity_g ? `${entry.quantity_g}g · ` : ''}{Math.round(entry.calories_kcal || 0)}kcal</Text>
-                            </View>
-                            <TouchableOpacity onPress={() => handleDeleteEntry(entry.id)}>
-                              <Text style={styles.entryDelete}>✕</Text>
-                            </TouchableOpacity>
-                          </View>
-                        ))
-                      ) : (
-                        <Text style={styles.emptyText}>Nada registrado ainda.</Text>
-                      )}
-                    </View>
-                  </CollapsibleSection>
+            {recipesPreview.length > 0 && (
+              <>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Receitas TCFit</Text>
+                  <TouchableOpacity onPress={() => setShowRecipes(true)}>
+                    <Text style={styles.sectionViewAllText}>Ver todas</Text>
+                  </TouchableOpacity>
                 </View>
-              );
-            })}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginBottom: 20 }}>
+                  {recipesPreview.map((r) => (
+                    <TouchableOpacity key={r.id} style={styles.nutritionCard} onPress={() => setShowRecipes(true)}>
+                      <View style={styles.nutritionCoverWrap}>
+                        {r.photo_url ? (
+                          <Image source={{ uri: r.photo_url }} style={styles.nutritionCoverImage} resizeMode="cover" />
+                        ) : (
+                          <View style={styles.nutritionCoverPlaceholder}>
+                            <Ionicons name="restaurant-outline" size={22} color={ACCENT} />
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.nutritionCardName} numberOfLines={2}>{r.title}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </>
+            )}
+
+            {(nutritionCollections.length > 0 || ungroupedNutritionItems.length > 0) && (
+              <>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Biblioteca de Nutrição</Text>
+                  <TouchableOpacity onPress={() => setShowNutritionLibrary(true)}>
+                    <Text style={styles.sectionViewAllText}>Ver tudo</Text>
+                  </TouchableOpacity>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, marginBottom: 20 }}>
+                  {nutritionCollections.slice(0, 3).map((c) => (
+                    <TouchableOpacity key={c.id} style={styles.nutritionCard} onPress={() => setShowNutritionLibrary(true)}>
+                      <View style={styles.nutritionCoverWrap}>
+                        {c.cover_image_url ? (
+                          <Image source={{ uri: c.cover_image_url }} style={styles.nutritionCoverImage} resizeMode="cover" />
+                        ) : (
+                          <View style={styles.nutritionCoverPlaceholder}>
+                            <Ionicons name="folder-outline" size={22} color={ACCENT} />
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.nutritionCardName} numberOfLines={2}>{toTitleCase(c.name)}</Text>
+                    </TouchableOpacity>
+                  ))}
+                  {ungroupedNutritionItems.slice(0, 3).map((p) => (
+                    <TouchableOpacity key={p.id} style={styles.nutritionCard} onPress={() => setShowNutritionLibrary(true)}>
+                      <View style={styles.nutritionCoverWrap}>
+                        {p.cover_image_url ? (
+                          <Image source={{ uri: p.cover_image_url }} style={styles.nutritionCoverImage} resizeMode="cover" />
+                        ) : (
+                          <View style={styles.nutritionCoverPlaceholder}>
+                            <Ionicons name="book-outline" size={22} color={ACCENT} />
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.nutritionCardName} numberOfLines={2}>{toTitleCase(p.name)}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </>
+            )}
           </ScrollView>
         )}
       </View>
@@ -1700,7 +1694,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             onPressWater={() => setShowWaterModal(true)}
             mealsCompleted={mealsCompletedCount}
             mealsTotal={mealsForActiveDiet.length}
-            onPressHabits={() => { setActiveTab('nutricao'); setDietSubTab('prescrita'); }}
+            onPressHabits={() => { setActiveTab('nutricao'); setDietSubTab('diario'); }}
             weeklyPercent={(weekDaysCount / 7) * 100}
             lastWorkoutLabel={lastWorkoutName}
             onPressFrequency={() => setShowVolumeSummary(true)}
@@ -1965,4 +1959,13 @@ const styles = StyleSheet.create({
   entryFoodName: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
   entryMeta: { color: '#737373', fontSize: 10, marginTop: 2 },
   entryDelete: { color: '#ef4444', fontSize: 14, marginLeft: 8 },
+  nutritionStateText: { color: '#a3a3a3', fontSize: 13, marginTop: 14, marginBottom: 6, lineHeight: 18 },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
+  sectionViewAllText: { color: ACCENT, fontSize: 12, fontWeight: '700' },
+  mealDiaryCard: { borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 8, ...GLASS_CARD },
+  mealDiaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  mealDiaryName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  mealDiaryMeta: { color: '#737373', fontSize: 11, marginTop: 2 },
+  mealDiaryAddButton: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,107,0,0.12)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7 },
+  mealDiaryAddButtonText: { color: ACCENT, fontSize: 11, fontWeight: '700' },
 });
