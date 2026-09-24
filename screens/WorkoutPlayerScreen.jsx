@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Vibration, Image, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, InputAccessoryView, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Vibration, Image, Keyboard, KeyboardAvoidingView, Pressable, Platform, InputAccessoryView, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
@@ -301,7 +301,10 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
     const key = `${exercise.id}-${setNumber}`;
     const loadValue = setLoads[key] !== undefined ? setLoads[key] : (exercise.load_kg != null ? String(exercise.load_kg) : '');
     const repsValue = setReps[key] !== undefined ? setReps[key] : (exercise.reps || '');
-    const loadNum = loadValue ? Number(loadValue) : null;
+    // decimal-pad shows a comma on pt-BR keyboards (e.g. "62,5") — Number()
+    // only understands a dot, so without this a decimal load would silently
+    // fail to parse and get saved as null.
+    const loadNum = loadValue ? Number(String(loadValue).replace(',', '.')) : null;
     const substitute = substitutions[exercise.id];
 
     const setPayload = {
@@ -535,7 +538,12 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      {/* Plain Pressable, not TouchableWithoutFeedback — TouchableWithoutFeedback's
+          legacy responder claims the touch before it reaches nested children on
+          some RN versions/platforms, which is exactly why tapping the Kg/Reps
+          TextInputs below wasn't focusing them. Pressable negotiates properly and
+          lets the TextInputs claim their own taps first. */}
+      <Pressable onPress={Keyboard.dismiss} style={{ flex: 1 }}>
         <View style={styles.container}>
           <HeaderBack backLabel="← Sair" title={workout.name} onBack={handleExit} style={{ paddingHorizontal: 16 }} />
 
@@ -660,7 +668,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                         </TouchableOpacity>
                         <TextInput
                           style={[styles.cellInput, styles.colKg, done && styles.cellInputDone]}
-                          keyboardType="number-pad"
+                          keyboardType="decimal-pad"
                           editable={!done}
                           placeholder={ex.load_kg != null ? String(ex.load_kg) : '-'}
                           placeholderTextColor="#525252"
@@ -719,7 +727,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
             <Text style={styles.finishButtonText}>Finalizar Treino</Text>
           </TouchableOpacity>
         </View>
-      </TouchableWithoutFeedback>
+      </Pressable>
 
       {Platform.OS === 'ios' && (
         <InputAccessoryView nativeID={KEYBOARD_TOOLBAR_ID}>
