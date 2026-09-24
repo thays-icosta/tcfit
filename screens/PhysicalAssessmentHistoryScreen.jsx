@@ -665,10 +665,15 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
       let brandingForHtml = brandingToUse;
       if (brandingToUse?.logoUrl) {
         try {
-          // 240px is generous for a box displayed at 56px/40px CSS width —
+          // The native PDF renderer does not honor the .logo CSS box
+          // (width: 56px; object-fit: contain) — the image paints at its
+          // own native pixel size regardless of what the CSS asks for. So
+          // the fix has to be the actual pixel size, not a generous bound:
+          // resize to exactly the largest on-screen box this logo is shown
+          // in (.logo is 56px; .logo-mini is 40px), not a cushion above it.
           // PNG keeps it lossless so a transparent-background logo doesn't
           // pick up a stray fill color.
-          brandingForHtml = { ...brandingToUse, logoUrl: await urlToResizedDataUri(brandingToUse.logoUrl, 240, SaveFormat.PNG) };
+          brandingForHtml = { ...brandingToUse, logoUrl: await urlToResizedDataUri(brandingToUse.logoUrl, 56, SaveFormat.PNG) };
         } catch (e) {
           console.error('Não foi possível redimensionar/inlinar o logo, usando URL remota:', e);
         }
@@ -679,10 +684,14 @@ export default function PhysicalAssessmentHistoryScreen({ studentId, studentName
       const firstIsImageAttachment = firstReportUrl && !firstReportUrl.toLowerCase().split('?')[0].endsWith('.pdf');
       if (firstIsImageAttachment) {
         try {
-          // 1600px is plenty for a photo displayed at up to one page's width
-          // (~180mm) while keeping the embedded HTML small; a raw phone
-          // photo can otherwise be 3000-4000px on its long edge.
-          const reportDataUri = await urlToResizedDataUri(firstReportUrl, 1600, SaveFormat.JPEG);
+          // Same reasoning as the logo above: the CSS bounds on
+          // .report-image-full (max-width/max-height) aren't honored by the
+          // native renderer, so the pixel size itself has to already fit —
+          // 500px keeps the longer edge under the page's usable content box
+          // (A4 minus the 15mm/20mm margins is ~510x728pt) regardless of
+          // orientation, since urlToResizedDataUri caps whichever dimension
+          // is larger. A raw phone photo can otherwise be 3000-4000px.
+          const reportDataUri = await urlToResizedDataUri(firstReportUrl, 500, SaveFormat.JPEG);
           assessmentsForHtml = assessmentsForPdf.map((a, i) => (i === 0 ? { ...a, report_url: reportDataUri } : a));
         } catch (e) {
           console.error('Não foi possível redimensionar/inlinar a foto do laudo, usando URL remota:', e);
