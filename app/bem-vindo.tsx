@@ -110,7 +110,7 @@ export default function BemVindoLanding() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0F0F12' },
   container: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 50, paddingBottom: 60 },
-  logo: { width: 90, height: 90, marginBottom: 16 },
+  logo: { width: 190, height: 86, marginBottom: 16 },
   heroTitle: { color: '#F5F5F7', fontSize: 26, fontWeight: '800', textAlign: 'center', lineHeight: 32 },
   heroSubtitle: { color: '#FF6B00', fontSize: 14, fontWeight: '700', marginTop: 6, letterSpacing: 0.5 },
   heroText: { color: '#a3a3a3', fontSize: 13, textAlign: 'center', marginTop: 10, marginBottom: 24, lineHeight: 19, paddingHorizontal: 8 },

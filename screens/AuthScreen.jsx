@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   backLink: { marginBottom: 20 },
   backLinkText: { color: '#FF6B00', fontSize: 14, fontWeight: '600' },
   brandBlock: { alignItems: 'center', marginBottom: 8 },
-  logo: { width: 110, height: 110, marginBottom: 4 },
+  logo: { width: 230, height: 104, marginBottom: 4 },
   appName: { color: '#FF6B00', fontSize: 36, fontWeight: '800', textAlign: 'center', letterSpacing: 0.5 },
   slogan: { color: '#a3a3a3', fontSize: 12, textAlign: 'center', marginTop: 4, fontWeight: '500' },
   tagline: { color: '#a3a3a3', fontSize: 14, textAlign: 'center', marginBottom: 28, marginTop: 20 },

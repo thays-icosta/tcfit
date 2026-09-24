@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   },
   heroWrap: { paddingTop: 60, paddingBottom: 24, overflow: 'hidden' },
   centerBlock: { alignItems: 'center' },
-  logo: { width: 120, height: 120, marginBottom: 12 },
+  logo: { width: 250, height: 113, marginBottom: 12 },
   appName: {
     fontSize: 32,
     fontFamily: 'PlusJakartaSans_700Bold',
