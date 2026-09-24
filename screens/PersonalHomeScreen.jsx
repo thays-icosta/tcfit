@@ -16,7 +16,7 @@ import ProjectTemplateBuilderScreen from './ProjectTemplateBuilderScreen';
 import AlunoDetailScreen from './AlunoDetailScreen';
 import PresencialSessionScreen from './PresencialSessionScreen';
 import PersonalTabBar from './PersonalTabBar';
-import { showAlert } from './alertUtils';
+import { showAlert, describeFunctionError } from './alertUtils';
 import { HeaderWelcome } from './Header';
 
 export default function PersonalHomeScreen({ user, onLogout, initialChatStudentId, onConsumeInitialChat }) {
@@ -36,6 +36,14 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [detailFor, setDetailFor] = useState(null);
   const [presencialFor, setPresencialFor] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [addStudentTab, setAddStudentTab] = useState('direto');
+  const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [newStudentPassword, setNewStudentPassword] = useState('');
+  const [newStudentPhone, setNewStudentPhone] = useState('');
+  const [newStudentAttendanceMode, setNewStudentAttendanceMode] = useState('online');
+  const [newStudentNotes, setNewStudentNotes] = useState('');
+  const [creatingStudent, setCreatingStudent] = useState(false);
   const [activeTab, setActiveTab] = useState('inicio');
   const [showAgenda, setShowAgenda] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -73,11 +81,57 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const handleShareInvite = async () => {
     try {
       await Share.share({
-        message: `Olá! Baixe o app e use meu código de convite: ${user.id}`,
+        message: `Olá! Baixe o app TCFit em https://tcfit.vercel.app e use meu código de convite: ${user.id}`,
       });
     } catch {
       showAlert('Erro', 'Não foi possível abrir o compartilhamento.');
     }
+  };
+
+  const resetNewStudentForm = () => {
+    setNewStudentName('');
+    setNewStudentEmail('');
+    setNewStudentPassword('');
+    setNewStudentPhone('');
+    setNewStudentAttendanceMode('online');
+    setNewStudentNotes('');
+  };
+
+  const handleCloseAddStudentModal = () => {
+    setShowInviteModal(false);
+    setAddStudentTab('direto');
+    resetNewStudentForm();
+  };
+
+  const handleCreateStudentDirect = async () => {
+    if (!newStudentName.trim() || !newStudentEmail.trim() || !newStudentPassword.trim()) {
+      showAlert('Ops', 'Preenche nome, e-mail e senha temporária.');
+      return;
+    }
+    if (newStudentPassword.length < 6) {
+      showAlert('Ops', 'A senha temporária precisa ter pelo menos 6 caracteres.');
+      return;
+    }
+    setCreatingStudent(true);
+    const { data, error } = await supabase.functions.invoke('create-student', {
+      body: {
+        name: newStudentName.trim(),
+        email: newStudentEmail.trim(),
+        password: newStudentPassword,
+        phone: newStudentPhone.trim() || null,
+        attendanceMode: newStudentAttendanceMode,
+        notes: newStudentNotes.trim() || null,
+      },
+    });
+    setCreatingStudent(false);
+    if (error || data?.error) {
+      showAlert('Não deu pra cadastrar', await describeFunctionError(error, data, 'Não foi possível cadastrar o aluno agora. Tenta de novo em instantes.'));
+      return;
+    }
+    const createdName = newStudentName.trim();
+    showAlert('Aluno cadastrado!', `${createdName} já pode entrar no app com o e-mail e a senha temporária que você definiu.`, [
+      { text: 'OK', onPress: () => { handleCloseAddStudentModal(); loadStudents(); } },
+    ]);
   };
 
   const loadOwnProfile = async () => {
@@ -929,21 +983,89 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         <Text style={styles.buttonText}>Sair</Text>
       </TouchableOpacity>
 
-      <Modal visible={showInviteModal} transparent animationType="slide" onRequestClose={() => setShowInviteModal(false)}>
+      <Modal visible={showInviteModal} transparent animationType="slide" onRequestClose={handleCloseAddStudentModal}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Convidar Aluno</Text>
-            <Text style={styles.modalSubtitle}>Compartilhe esse código pro aluno usar no cadastro:</Text>
-            <View style={styles.modalCodeBox}>
-              <Text style={styles.modalCodeText}>{user.id}</Text>
+          <View style={[styles.modalSheet, { maxHeight: '88%' }]}>
+            <Text style={styles.modalTitle}>Adicionar Aluno</Text>
+
+            <View style={styles.addStudentTabRow}>
+              <TouchableOpacity
+                style={[styles.addStudentTabButton, addStudentTab === 'direto' && styles.addStudentTabButtonActive]}
+                onPress={() => setAddStudentTab('direto')}
+              >
+                <Text style={[styles.addStudentTabText, addStudentTab === 'direto' && styles.addStudentTabTextActive]}>Cadastro Direto</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.addStudentTabButton, addStudentTab === 'convite' && styles.addStudentTabButtonActive]}
+                onPress={() => setAddStudentTab('convite')}
+              >
+                <Text style={[styles.addStudentTabText, addStudentTab === 'convite' && styles.addStudentTabTextActive]}>Convite por Código</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity style={[styles.modalButton, justCopied && styles.modalButtonDone]} onPress={handleCopyInvite}>
-              <Text style={styles.modalButtonText}>{justCopied ? 'Copiado!' : 'Copiar código'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalButton} onPress={handleShareInvite}>
-              <Text style={styles.modalButtonText}>Compartilhar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowInviteModal(false)}>
+
+            {addStudentTab === 'convite' ? (
+              <>
+                <Text style={styles.modalSubtitle}>Compartilhe esse código pro aluno usar no cadastro:</Text>
+                <View style={styles.modalCodeBox}>
+                  <Text style={styles.modalCodeText}>{user.id}</Text>
+                </View>
+                <Text style={styles.modalLinkText}>App: tcfit.vercel.app</Text>
+                <TouchableOpacity style={[styles.modalButton, justCopied && styles.modalButtonDone]} onPress={handleCopyInvite}>
+                  <Text style={styles.modalButtonText}>{justCopied ? 'Copiado!' : 'Copiar código'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalButton} onPress={handleShareInvite}>
+                  <Text style={styles.modalButtonText}>Compartilhar</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: 420 }}>
+                <Text style={styles.modalSubtitle}>Cria a conta do aluno na hora, com uma senha temporária. Ele pode trocar depois no perfil.</Text>
+
+                <Text style={styles.addStudentLabel}>Nome *</Text>
+                <TextInput style={styles.addStudentInput} placeholder="Nome completo" placeholderTextColor="#525252" value={newStudentName} onChangeText={setNewStudentName} />
+
+                <Text style={styles.addStudentLabel}>E-mail *</Text>
+                <TextInput style={styles.addStudentInput} placeholder="email@exemplo.com" placeholderTextColor="#525252" value={newStudentEmail} onChangeText={setNewStudentEmail} autoCapitalize="none" keyboardType="email-address" />
+
+                <Text style={styles.addStudentLabel}>Senha temporária *</Text>
+                <TextInput style={styles.addStudentInput} placeholder="mínimo 6 caracteres" placeholderTextColor="#525252" value={newStudentPassword} onChangeText={setNewStudentPassword} secureTextEntry autoCapitalize="none" />
+
+                <Text style={styles.addStudentLabel}>Telefone</Text>
+                <TextInput style={styles.addStudentInput} placeholder="(11) 91234-5678" placeholderTextColor="#525252" value={newStudentPhone} onChangeText={setNewStudentPhone} keyboardType="phone-pad" />
+
+                <Text style={styles.addStudentLabel}>Modo</Text>
+                <View style={styles.addStudentModeRow}>
+                  <TouchableOpacity
+                    style={[styles.addStudentModeChip, newStudentAttendanceMode === 'online' && styles.addStudentModeChipActive]}
+                    onPress={() => setNewStudentAttendanceMode('online')}
+                  >
+                    <Text style={[styles.addStudentModeChipText, newStudentAttendanceMode === 'online' && styles.addStudentModeChipTextActive]}>Online</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.addStudentModeChip, newStudentAttendanceMode === 'presencial' && styles.addStudentModeChipActive]}
+                    onPress={() => setNewStudentAttendanceMode('presencial')}
+                  >
+                    <Text style={[styles.addStudentModeChipText, newStudentAttendanceMode === 'presencial' && styles.addStudentModeChipTextActive]}>Presencial</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.addStudentLabel}>Observações</Text>
+                <TextInput
+                  style={[styles.addStudentInput, styles.addStudentTextArea]}
+                  placeholder="objetivo, observações..."
+                  placeholderTextColor="#525252"
+                  value={newStudentNotes}
+                  onChangeText={setNewStudentNotes}
+                  multiline
+                />
+
+                <TouchableOpacity style={styles.modalButton} onPress={handleCreateStudentDirect} disabled={creatingStudent}>
+                  {creatingStudent ? <ActivityIndicator color="#F5F5F7" /> : <Text style={styles.modalButtonText}>Cadastrar Aluno</Text>}
+                </TouchableOpacity>
+              </ScrollView>
+            )}
+
+            <TouchableOpacity style={styles.modalCloseButton} onPress={handleCloseAddStudentModal}>
               <Text style={styles.modalCloseButtonText}>Fechar</Text>
             </TouchableOpacity>
           </View>
@@ -1050,9 +1172,23 @@ const styles = StyleSheet.create({
   accessLevelLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, fontWeight: '700' },
   modalCodeBox: { backgroundColor: '#0F0F12', borderRadius: 10, padding: 14, marginBottom: 16 },
   modalCodeText: { color: '#FF6B00', fontSize: 11, fontFamily: 'Courier' },
+  modalLinkText: { color: '#737373', fontSize: 11, marginBottom: 16, marginTop: -8 },
   modalButton: { backgroundColor: '#0F0F12', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
   modalButtonDone: { backgroundColor: 'rgba(34,197,94,0.15)' },
   modalButtonText: { color: '#FF6B00', fontSize: 13, fontWeight: '700' },
   modalCloseButton: { paddingVertical: 10, alignItems: 'center', marginTop: 4 },
   modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
+  addStudentTabRow: { flexDirection: 'row', backgroundColor: '#0F0F12', borderRadius: 10, padding: 3, marginBottom: 16 },
+  addStudentTabButton: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 8 },
+  addStudentTabButtonActive: { backgroundColor: '#FF6B00' },
+  addStudentTabText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
+  addStudentTabTextActive: { color: '#0F0F12' },
+  addStudentLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 12 },
+  addStudentInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
+  addStudentTextArea: { height: 70, textAlignVertical: 'top' },
+  addStudentModeRow: { flexDirection: 'row', gap: 8 },
+  addStudentModeChip: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 9, alignItems: 'center' },
+  addStudentModeChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
+  addStudentModeChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  addStudentModeChipTextActive: { color: '#0F0F12' },
 });
