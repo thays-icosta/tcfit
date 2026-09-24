@@ -43,7 +43,10 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
   const [newStudentPhone, setNewStudentPhone] = useState('');
   const [newStudentAttendanceMode, setNewStudentAttendanceMode] = useState('online');
   const [newStudentNotes, setNewStudentNotes] = useState('');
+  const [newStudentBirthDate, setNewStudentBirthDate] = useState('');
   const [creatingStudent, setCreatingStudent] = useState(false);
+  const [createdAccessInfo, setCreatedAccessInfo] = useState(null);
+  const [accessCopied, setAccessCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('inicio');
   const [showAgenda, setShowAgenda] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -95,11 +98,14 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
     setNewStudentPhone('');
     setNewStudentAttendanceMode('online');
     setNewStudentNotes('');
+    setNewStudentBirthDate('');
   };
 
   const handleCloseAddStudentModal = () => {
     setShowInviteModal(false);
     setAddStudentTab('direto');
+    setCreatedAccessInfo(null);
+    setAccessCopied(false);
     resetNewStudentForm();
   };
 
@@ -112,6 +118,10 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       showAlert('Ops', 'A senha temporária precisa ter pelo menos 6 caracteres.');
       return;
     }
+    if (newStudentBirthDate.trim() && !/^\d{4}-\d{2}-\d{2}$/.test(newStudentBirthDate.trim())) {
+      showAlert('Ops', 'Data de nascimento precisa estar no formato AAAA-MM-DD (ex: 1998-04-20).');
+      return;
+    }
     setCreatingStudent(true);
     const { data, error } = await supabase.functions.invoke('create-student', {
       body: {
@@ -121,6 +131,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
         phone: newStudentPhone.trim() || null,
         attendanceMode: newStudentAttendanceMode,
         notes: newStudentNotes.trim() || null,
+        birthDate: newStudentBirthDate.trim() || null,
       },
     });
     setCreatingStudent(false);
@@ -128,10 +139,19 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       showAlert('Não deu pra cadastrar', await describeFunctionError(error, data, 'Não foi possível cadastrar o aluno agora. Tenta de novo em instantes.'));
       return;
     }
-    const createdName = newStudentName.trim();
-    showAlert('Aluno cadastrado!', `${createdName} já pode entrar no app com o e-mail e a senha temporária que você definiu.`, [
-      { text: 'OK', onPress: () => { handleCloseAddStudentModal(); loadStudents(); } },
-    ]);
+    // Show the temp password back to the personal exactly once, right here —
+    // it's never retrievable again after this (create-student can't read it
+    // back, and once the aluno sets their own password on first login it's
+    // gone for good, by design).
+    setCreatedAccessInfo({ id: data.id, name: newStudentName.trim(), email: newStudentEmail.trim(), password: newStudentPassword });
+    loadStudents();
+  };
+
+  const handleCopyAccess = async () => {
+    if (!createdAccessInfo) return;
+    await Clipboard.setStringAsync(`E-mail: ${createdAccessInfo.email}\nSenha temporária: ${createdAccessInfo.password}`);
+    setAccessCopied(true);
+    setTimeout(() => setAccessCopied(false), 2500);
   };
 
   const loadOwnProfile = async () => {
@@ -1017,9 +1037,38 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
                   <Text style={styles.modalButtonText}>Compartilhar</Text>
                 </TouchableOpacity>
               </>
+            ) : createdAccessInfo ? (
+              <View>
+                <View style={styles.accessSuccessBanner}>
+                  <Ionicons name="checkmark-circle" size={22} color="#22c55e" />
+                  <Text style={styles.accessSuccessTitle}>Aluno criado com sucesso!</Text>
+                </View>
+                <Text style={styles.modalSubtitle}>Acesso do aluno — copia e entrega pra {createdAccessInfo.name.split(' ')[0]}. Essa senha não fica mais visível depois.</Text>
+
+                <View style={styles.modalCodeBox}>
+                  <Text style={styles.addStudentLabel}>E-mail</Text>
+                  <Text style={styles.modalCodeText}>{createdAccessInfo.email}</Text>
+                  <Text style={[styles.addStudentLabel, { marginTop: 10 }]}>Senha temporária</Text>
+                  <Text style={styles.modalCodeText}>{createdAccessInfo.password}</Text>
+                </View>
+
+                <TouchableOpacity style={[styles.modalButton, accessCopied && styles.modalButtonDone]} onPress={handleCopyAccess}>
+                  <Text style={styles.modalButtonText}>{accessCopied ? 'Copiado!' : 'Copiar acesso'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalButton}
+                  onPress={() => {
+                    const info = createdAccessInfo;
+                    handleCloseAddStudentModal();
+                    setDetailFor({ id: info.id, name: info.name });
+                  }}
+                >
+                  <Text style={styles.modalButtonText}>Ir para perfil do aluno</Text>
+                </TouchableOpacity>
+              </View>
             ) : (
               <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: 420 }}>
-                <Text style={styles.modalSubtitle}>Cria a conta do aluno na hora, com uma senha temporária. Ele pode trocar depois no perfil.</Text>
+                <Text style={styles.modalSubtitle}>Cria a conta do aluno na hora, com uma senha temporária.</Text>
 
                 <Text style={styles.addStudentLabel}>Nome *</Text>
                 <TextInput style={styles.addStudentInput} placeholder="Nome completo" placeholderTextColor="#525252" value={newStudentName} onChangeText={setNewStudentName} />
@@ -1033,26 +1082,29 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
                 <Text style={styles.addStudentLabel}>Telefone</Text>
                 <TextInput style={styles.addStudentInput} placeholder="(11) 91234-5678" placeholderTextColor="#525252" value={newStudentPhone} onChangeText={setNewStudentPhone} keyboardType="phone-pad" />
 
-                <Text style={styles.addStudentLabel}>Modo</Text>
+                <Text style={styles.addStudentLabel}>Data de nascimento</Text>
+                <TextInput style={styles.addStudentInput} placeholder="AAAA-MM-DD" placeholderTextColor="#525252" value={newStudentBirthDate} onChangeText={setNewStudentBirthDate} keyboardType="numbers-and-punctuation" />
+
+                <Text style={styles.addStudentLabel}>Tipo de atendimento</Text>
                 <View style={styles.addStudentModeRow}>
-                  <TouchableOpacity
-                    style={[styles.addStudentModeChip, newStudentAttendanceMode === 'online' && styles.addStudentModeChipActive]}
-                    onPress={() => setNewStudentAttendanceMode('online')}
-                  >
-                    <Text style={[styles.addStudentModeChipText, newStudentAttendanceMode === 'online' && styles.addStudentModeChipTextActive]}>Online</Text>
-                  </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.addStudentModeChip, newStudentAttendanceMode === 'presencial' && styles.addStudentModeChipActive]}
                     onPress={() => setNewStudentAttendanceMode('presencial')}
                   >
-                    <Text style={[styles.addStudentModeChipText, newStudentAttendanceMode === 'presencial' && styles.addStudentModeChipTextActive]}>Presencial</Text>
+                    <Text style={[styles.addStudentModeChipText, newStudentAttendanceMode === 'presencial' && styles.addStudentModeChipTextActive]}>🟠 Personal Presencial</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.addStudentModeChip, newStudentAttendanceMode === 'online' && styles.addStudentModeChipActive]}
+                    onPress={() => setNewStudentAttendanceMode('online')}
+                  >
+                    <Text style={[styles.addStudentModeChipText, newStudentAttendanceMode === 'online' && styles.addStudentModeChipTextActive]}>🔵 Consultoria Online</Text>
                   </TouchableOpacity>
                 </View>
 
-                <Text style={styles.addStudentLabel}>Observações</Text>
+                <Text style={styles.addStudentLabel}>Objetivo</Text>
                 <TextInput
                   style={[styles.addStudentInput, styles.addStudentTextArea]}
-                  placeholder="objetivo, observações..."
+                  placeholder="ex: hipertrofia, emagrecimento, condicionamento..."
                   placeholderTextColor="#525252"
                   value={newStudentNotes}
                   onChangeText={setNewStudentNotes}
@@ -1178,6 +1230,8 @@ const styles = StyleSheet.create({
   modalButtonText: { color: '#FF6B00', fontSize: 13, fontWeight: '700' },
   modalCloseButton: { paddingVertical: 10, alignItems: 'center', marginTop: 4 },
   modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
+  accessSuccessBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  accessSuccessTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800' },
   addStudentTabRow: { flexDirection: 'row', backgroundColor: '#0F0F12', borderRadius: 10, padding: 3, marginBottom: 16 },
   addStudentTabButton: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 8 },
   addStudentTabButtonActive: { backgroundColor: '#FF6B00' },

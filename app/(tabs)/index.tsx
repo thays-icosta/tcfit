@@ -5,6 +5,7 @@ import * as Notifications from 'expo-notifications';
 import AuthScreen from '../../screens/AuthScreen';
 import PersonalHomeScreen from '../../screens/PersonalHomeScreen';
 import AlunoHomeScreen from '../../screens/AlunoHomeScreen';
+import ForcePasswordChangeScreen from '../../screens/ForcePasswordChangeScreen';
 import WelcomeScreen from '../../screens/WelcomeScreen';
 import { supabase } from '../../screens/supabaseClient';
 import { registerPushToken, extractChatTarget } from '../../screens/pushNotifications';
@@ -15,6 +16,7 @@ export default function HomeTab() {
   const params = useGlobalSearchParams<{ view?: string; mode?: string; role?: string; invite?: string; gender?: string; chatPersonalId?: string; chatStudentId?: string }>();
   const [user, setUser] = useState<{ id: string; email?: string; name?: string } | null>(null);
   const [role, setRole] = useState(null);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [authView, setAuthView] = useState('welcome');
   const [chatTarget, setChatTarget] = useState<{ personalId: string | null; studentId: string | null } | null>(null);
@@ -28,7 +30,7 @@ export default function HomeTab() {
   const loadProfile = async (sessionUser) => {
     const { data, error } = await supabase
       .from('users')
-      .select('name, role')
+      .select('name, role, must_change_password')
       .eq('id', sessionUser.id)
       .single();
 
@@ -39,6 +41,7 @@ export default function HomeTab() {
 
     setUser({ id: sessionUser.id, email: sessionUser.email, name: data?.name || sessionUser.email });
     setRole(data?.role || 'aluno');
+    setMustChangePassword(!!data?.must_change_password);
     setErrorLoggerUser({ id: sessionUser.id, role: data?.role || 'aluno' });
   };
 
@@ -136,6 +139,16 @@ export default function HomeTab() {
         onLogout={handleLogout}
         initialChatStudentId={chatTarget?.studentId || null}
         onConsumeInitialChat={() => setChatTarget(null)}
+      />
+    );
+  }
+
+  if (mustChangePassword) {
+    return (
+      <ForcePasswordChangeScreen
+        user={user}
+        onDone={() => setMustChangePassword(false)}
+        onLogout={handleLogout}
       />
     );
   }

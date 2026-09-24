@@ -97,6 +97,7 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
   const [savingAccessLevel, setSavingAccessLevel] = useState(false);
   const [attendanceMode, setAttendanceMode] = useState(student.attendance_mode || 'online');
   const [savingAttendanceMode, setSavingAttendanceMode] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const [personalNotes, setPersonalNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [notesSaved, setNotesSaved] = useState(false);
@@ -288,9 +289,10 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
       .eq('entry_date', todayStr);
     setWaterMl((waterRows || []).reduce((sum, w) => sum + w.amount_ml, 0));
 
-    const { data: studentRow } = await supabase.from('users').select('water_goal_ml, personal_notes').eq('id', student.id).single();
+    const { data: studentRow } = await supabase.from('users').select('water_goal_ml, personal_notes, must_change_password').eq('id', student.id).single();
     setWaterGoalMl(studentRow?.water_goal_ml || 2000);
     setPersonalNotes(studentRow?.personal_notes || '');
+    setMustChangePassword(!!studentRow?.must_change_password);
 
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -561,6 +563,9 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
             <View style={styles.statusRow}>
               <View style={[styles.statusDot, isOverdue && styles.statusDotInactive]} />
               <Text style={[styles.statusText, isOverdue && styles.statusTextInactive]}>{isOverdue ? 'Inativo' : 'Ativo'}</Text>
+            </View>
+            <View style={styles.statusRow}>
+              <Text style={styles.accessStatusText}>{mustChangePassword ? '🟡 Cadastrado — acesso ainda não ativado' : '🟢 Acesso ativado'}</Text>
             </View>
           </View>
           <TouchableOpacity style={styles.chatShortcutButton} onPress={() => setShowChat(true)}>
@@ -859,6 +864,7 @@ const styles = StyleSheet.create({
   statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' },
   statusDotInactive: { backgroundColor: '#ef4444' },
   statusText: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
+  accessStatusText: { color: '#a3a3a3', fontSize: 10, fontWeight: '600', marginTop: 2 },
   statusTextInactive: { color: '#ef4444' },
   chatShortcutButton: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(34,197,94,0.1)', alignItems: 'center', justifyContent: 'center' },
   anamneseButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
