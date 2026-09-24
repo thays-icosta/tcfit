@@ -14,7 +14,7 @@ const METHOD_LABELS = {
   'piramide': 'Pirâmide',
 };
 
-export default function EditExerciseModal({ item, onSave, onClose }) {
+export default function EditExerciseModal({ item, studentId, onSave, onClose }) {
   const [sets, setSets] = useState(item.sets != null ? String(item.sets) : '3');
   const [reps, setReps] = useState(item.reps || '');
   const [loadKg, setLoadKg] = useState(item.load_kg != null ? String(item.load_kg) : '');
@@ -27,17 +27,18 @@ export default function EditExerciseModal({ item, onSave, onClose }) {
   const [suggestionDismissed, setSuggestionDismissed] = useState(false);
 
   useEffect(() => {
-    if (!item.id) { setLoadingHistory(false); return; }
+    const exerciseId = item.exercises?.id;
+    if (!exerciseId || !studentId) { setLoadingHistory(false); return; }
     let active = true;
     (async () => {
-      const history = await loadExerciseLoadHistory(supabase, item.id);
+      const history = await loadExerciseLoadHistory(supabase, { studentId, exerciseId });
       if (active) {
         setLoadHistory(history);
         setLoadingHistory(false);
       }
     })();
     return () => { active = false; };
-  }, [item.id]);
+  }, [item.id, item.exercises?.id, studentId]);
 
   const suggestion = suggestNextLoad(loadHistory, reps);
   const formatKg = (kg) => (Number.isInteger(kg) ? String(kg) : String(kg).replace('.', ','));

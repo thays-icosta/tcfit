@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import WorkoutBuilderScreen from './WorkoutBuilderScreen';
+import WorkoutProgramManagerScreen from './WorkoutProgramManagerScreen';
 import DietBuilderScreen from './DietBuilderScreen';
 import PhysicalAssessmentScreen from './PhysicalAssessmentScreen';
 import StudentWorkoutHistoryScreen from './StudentWorkoutHistoryScreen';
@@ -142,6 +143,7 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
   };
 
   const [buildingFor, setBuildingFor] = useState(false);
+  const [managingProgramFor, setManagingProgramFor] = useState(false);
   const [dietBuildingFor, setDietBuildingFor] = useState(false);
   const [assessmentFor, setAssessmentFor] = useState(false);
   const [workoutHistoryFor, setWorkoutHistoryFor] = useState(false);
@@ -407,6 +409,16 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
         studentName={student.name}
         personalId={personalId}
         onClose={() => { setBuildingFor(false); loadContent(); }}
+      />
+    );
+  }
+  if (managingProgramFor) {
+    return (
+      <WorkoutProgramManagerScreen
+        studentId={student.id}
+        studentName={student.name}
+        personalId={personalId}
+        onClose={() => { setManagingProgramFor(false); loadContent(); }}
       />
     );
   }
@@ -767,9 +779,9 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
             </View>
           )}
 
-          <TouchableOpacity style={styles.actionButtonWide} onPress={() => setBuildingFor(true)}>
+          <TouchableOpacity style={styles.actionButtonWide} onPress={() => setManagingProgramFor(true)}>
             <Ionicons name="barbell-outline" size={22} color="#FF6B00" />
-            <Text style={styles.actionLabelWide}>Treino Atual / Editar Ficha</Text>
+            <Text style={styles.actionLabelWide}>Programa de Treino</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButtonWide} onPress={() => setWorkoutHistoryFor(true)}>

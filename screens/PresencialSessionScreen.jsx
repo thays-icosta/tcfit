@@ -100,7 +100,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
       setPreviousLoads(prevMap);
 
       const historyEntries = await Promise.all(
-        exList.map(async (ex) => [ex.id, await loadExerciseLoadHistory(supabase, ex.id)])
+        exList.map(async (ex) => [ex.id, await loadExerciseLoadHistory(supabase, { studentId: student.id, exerciseId: ex.exercise_id })])
       );
       setExerciseHistory(Object.fromEntries(historyEntries));
     }

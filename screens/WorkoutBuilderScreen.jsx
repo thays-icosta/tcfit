@@ -166,15 +166,18 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
   const handleDeleteFicha = (workout) => {
     showAlert(
-      'Excluir ficha',
-      `Tem certeza que quer excluir "${workout.name}"? Todos os exercícios dela também serão removidos.`,
+      'Arquivar ficha',
+      `Arquivar "${workout.name}"? Ela sai da lista de fichas ativas, mas o histórico de treinos do aluno com ela continua preservado.`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Excluir',
+          text: 'Arquivar',
           style: 'destructive',
           onPress: async () => {
-            const { error } = await supabase.from('workouts').update({ active: false }).eq('id', workout.id);
+            const { error } = await supabase
+              .from('workouts')
+              .update({ active: false, archived_at: new Date().toISOString(), weekday: null })
+              .eq('id', workout.id);
             if (error) {
               showAlert('Erro', error.message);
             } else {
@@ -225,7 +228,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       [
         { text: 'Renomear', onPress: () => handleRenameFicha(workout) },
         { text: 'Duplicar', onPress: () => handleDuplicateFicha(workout) },
-        { text: 'Excluir', style: 'destructive', onPress: () => handleDeleteFicha(workout) },
+        { text: 'Arquivar', style: 'destructive', onPress: () => handleDeleteFicha(workout) },
         { text: 'Cancelar', style: 'cancel' },
       ]
     );
@@ -478,7 +481,24 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     }
   };
 
-  const handleRemoveItem = (itemId) => {
+  const handleRemoveItem = async (itemId) => {
+    // workout_session_sets -> workout_exercise_id cascades on delete, so
+    // removing an exercise the student already logged sets against would
+    // permanently wipe that history. Block it outright instead — archiving
+    // the whole ficha (or starting a new week) is the safe way to retire an
+    // exercise once it has real history.
+    const { count } = await supabase
+      .from('workout_session_sets')
+      .select('id', { count: 'exact', head: true })
+      .eq('workout_exercise_id', itemId);
+    if (count && count > 0) {
+      showAlert(
+        'Não é possível remover',
+        'Esse exercício já tem histórico de execução registrado pelo aluno. Removê-lo apagaria esse histórico permanentemente. Se a prescrição mudou, crie uma nova semana em vez de editar esta.'
+      );
+      return;
+    }
+
     showAlert('Remover exercício', 'Tem certeza?', [
       { text: 'Cancelar', style: 'cancel' },
       {
@@ -608,6 +628,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     return (
       <EditExerciseModal
         item={editingItem}
+        studentId={studentId}
         onSave={handleSaveEditItem}
         onClose={() => setEditingItem(null)}
       />

@@ -67,13 +67,31 @@ export function suggestNextLoad(history, prescribedReps) {
   };
 }
 
-// Loads the last `limit` finished sessions' top set for one workout_exercise
-// row. Returns [] if the aluno never logged a set for it yet.
-export async function loadExerciseLoadHistory(supabase, workoutExerciseId, limit = 6) {
+// Every workout_exercises.id for this student+exercise, across EVERY ficha
+// version (active or archived via "+ Nova Semana"/arquivar) — without this,
+// "last time"/progression would look reset to zero right after a new week
+// is created, even though the student's real history is sitting under the
+// now-archived ficha's workout_exercise rows.
+export async function resolveWorkoutExerciseIdsForExercise(supabase, { studentId, exerciseId }) {
+  const { data } = await supabase
+    .from('workout_exercises')
+    .select('id, workouts!inner(student_id)')
+    .eq('exercise_id', exerciseId)
+    .eq('workouts.student_id', studentId);
+  return (data || []).map((r) => r.id);
+}
+
+// Loads the last `limit` finished sessions' top set for one exercise,
+// spanning every ficha version the student has ever had it on (see
+// resolveWorkoutExerciseIdsForExercise). Returns [] if never logged.
+export async function loadExerciseLoadHistory(supabase, { studentId, exerciseId, limit = 6 }) {
+  const workoutExerciseIds = await resolveWorkoutExerciseIdsForExercise(supabase, { studentId, exerciseId });
+  if (workoutExerciseIds.length === 0) return [];
+
   const { data: setRows } = await supabase
     .from('workout_session_sets')
     .select('session_id, load_used_kg, reps_done')
-    .eq('workout_exercise_id', workoutExerciseId)
+    .in('workout_exercise_id', workoutExerciseIds)
     .not('load_used_kg', 'is', null);
 
   if (!setRows || setRows.length === 0) return [];
