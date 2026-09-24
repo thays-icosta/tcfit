@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import DraggableFlatList from 'react-native-draggable-flatlist';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { supabase } from './supabaseClient';
 import AddExerciseModal from './AddExerciseModal';
 import EditExerciseModal from './EditExerciseModal';
@@ -526,6 +528,15 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     loadItems(activeWorkoutId);
   };
 
+  // Drag-to-reorder (DraggableFlatList's onDragEnd): the dropped array is
+  // already in its final order, so order_index just becomes each item's new
+  // position — same persistence target as the ▲▼ buttons above, just for an
+  // arbitrary reorder instead of a single swap.
+  const handleReorderComplete = async ({ data }) => {
+    setItems(data);
+    await Promise.all(data.map((item, idx) => supabase.from('workout_exercises').update({ order_index: idx }).eq('id', item.id)));
+  };
+
   const handleSaveEditItem = async (config) => {
     const { error } = await supabase.from('workout_exercises').update(config).eq('id', editingItem.id);
     setEditingItem(null);
@@ -635,11 +646,78 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <HeaderBack title={studentName} onBack={onClose} style={{ paddingHorizontal: 16 }} />
+  const renderExerciseItem = ({ item, getIndex, drag, isActive }) => {
+    const index = getIndex();
+    const hasVideo = !!item.exercises?.video_url;
+    const metrics = [
+      { label: 'Séries', value: item.sets || 3 },
+      { label: 'Reps', value: item.reps || '-' },
+    ];
+    if (item.load_kg != null) metrics.push({ label: 'Carga', value: `${item.load_kg}kg` });
+    if (item.cadence) metrics.push({ label: 'Cadência', value: item.cadence });
+    else metrics.push({ label: 'Método', value: METHOD_LABELS[item.execution_method] || item.execution_method });
+    if (item.rest_time_seconds != null) metrics.push({ label: 'Descanso', value: `${item.rest_time_seconds}s` });
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 120 }}>
+    return (
+      <View style={[styles.exerciseCard, isActive && styles.exerciseCardDragging]}>
+        <TouchableOpacity
+          onPress={() => hasVideo && setWatchingVideo({ url: item.exercises.video_url, name: item.exercises.name })}
+          disabled={!hasVideo}
+          style={styles.exerciseThumbWrap}
+        >
+          {item.exercises?.thumbnail_url ? (
+            <Image source={{ uri: item.exercises.thumbnail_url }} style={styles.exerciseThumbImage} />
+          ) : (
+            <View style={styles.exerciseThumbPlaceholder}>
+              <Text style={styles.exerciseThumbMuscle}>{item.exercises?.muscle_group?.toUpperCase() || '?'}</Text>
+            </View>
+          )}
+          {hasVideo && (
+            <View style={styles.playOverlay}>
+              <Text style={styles.playOverlayText}>▶</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.exerciseInfo}>
+          <View style={styles.exerciseHeaderRow}>
+            <Text style={styles.exerciseName}>{item.exercises?.name}</Text>
+            <View style={styles.exerciseHeaderActions}>
+              <TouchableOpacity hitSlop={10} onLongPress={drag} disabled={isActive} style={styles.dragHandle}>
+                <Ionicons name="reorder-three-outline" size={20} color="#737373" />
+              </TouchableOpacity>
+              <TouchableOpacity hitSlop={10} onPress={() => handleMove(index, -1)} disabled={index === 0}>
+                <Text style={[styles.moveArrow, index === 0 && styles.moveArrowDisabled]}>▲</Text>
+              </TouchableOpacity>
+              <TouchableOpacity hitSlop={10} onPress={() => handleMove(index, 1)} disabled={index === items.length - 1}>
+                <Text style={[styles.moveArrow, index === items.length - 1 && styles.moveArrowDisabled]}>▼</Text>
+              </TouchableOpacity>
+              <TouchableOpacity hitSlop={10} onPress={() => setEditingItem(item)}>
+                <Ionicons name="pencil-outline" size={16} color="#3b82f6" />
+              </TouchableOpacity>
+              <TouchableOpacity hitSlop={10} onPress={() => handleRemoveItem(item.id)}>
+                <Ionicons name="trash-outline" size={16} color="#ef4444" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.metricsGrid}>
+            {metrics.map((m) => (
+              <View key={m.label} style={styles.metricPill}>
+                <Text style={styles.metricValue}>{m.value}</Text>
+                <Text style={styles.metricLabel}>{m.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          {item.notes ? <Text style={styles.exerciseNotes}>📝 {item.notes}</Text> : null}
+        </View>
+      </View>
+    );
+  };
+
+  const listHeader = (
+    <>
       <View style={styles.fichaRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
           {workouts.map((w) => (
@@ -675,7 +753,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         </TouchableOpacity>
         {activeWorkoutId && items.length > 0 && (
           <TouchableOpacity style={styles.actionChip} onPress={handleOpenReplicate}>
-            <Text style={styles.actionChipText}>📋 Copiar para Todos</Text>
+            <Text style={styles.actionChipText}>📋 Editar Todos (séries/reps/descanso)</Text>
           </TouchableOpacity>
         )}
         {activeWorkoutId && (
@@ -737,85 +815,36 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
             <Text style={styles.addExerciseButtonText}>+ Adicionar Exercício</Text>
           </TouchableOpacity>
 
-          <>
-            <Text style={styles.sectionTitle}>Exercícios da ficha ({items.length})</Text>
-            {items.length === 0 ? (
-              <Text style={styles.emptyText}>Nenhum exercício ainda nessa ficha.</Text>
-            ) : (
-              items.map((item, index) => {
-                const hasVideo = !!item.exercises?.video_url;
-                const metrics = [
-                  { label: 'Séries', value: item.sets || 3 },
-                  { label: 'Reps', value: item.reps || '-' },
-                ];
-                if (item.load_kg != null) metrics.push({ label: 'Carga', value: `${item.load_kg}kg` });
-                if (item.cadence) metrics.push({ label: 'Cadência', value: item.cadence });
-                else metrics.push({ label: 'Método', value: METHOD_LABELS[item.execution_method] || item.execution_method });
-                if (item.rest_time_seconds != null) metrics.push({ label: 'Descanso', value: `${item.rest_time_seconds}s` });
-
-                return (
-                  <View key={item.id} style={styles.exerciseCard}>
-                    <TouchableOpacity
-                      onPress={() => hasVideo && setWatchingVideo({ url: item.exercises.video_url, name: item.exercises.name })}
-                      disabled={!hasVideo}
-                      style={styles.exerciseThumbWrap}
-                    >
-                      {item.exercises?.thumbnail_url ? (
-                        <Image source={{ uri: item.exercises.thumbnail_url }} style={styles.exerciseThumbImage} />
-                      ) : (
-                        <View style={styles.exerciseThumbPlaceholder}>
-                          <Text style={styles.exerciseThumbMuscle}>{item.exercises?.muscle_group?.toUpperCase() || '?'}</Text>
-                        </View>
-                      )}
-                      {hasVideo && (
-                        <View style={styles.playOverlay}>
-                          <Text style={styles.playOverlayText}>▶</Text>
-                        </View>
-                      )}
-                    </TouchableOpacity>
-
-                    <View style={styles.exerciseInfo}>
-                      <View style={styles.exerciseHeaderRow}>
-                        <Text style={styles.exerciseName}>{item.exercises?.name}</Text>
-                        <View style={styles.exerciseHeaderActions}>
-                          <TouchableOpacity hitSlop={10} onPress={() => handleMove(index, -1)} disabled={index === 0}>
-                            <Text style={[styles.moveArrow, index === 0 && styles.moveArrowDisabled]}>▲</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity hitSlop={10} onPress={() => handleMove(index, 1)} disabled={index === items.length - 1}>
-                            <Text style={[styles.moveArrow, index === items.length - 1 && styles.moveArrowDisabled]}>▼</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity hitSlop={10} onPress={() => setEditingItem(item)}>
-                            <Ionicons name="pencil-outline" size={16} color="#3b82f6" />
-                          </TouchableOpacity>
-                          <TouchableOpacity hitSlop={10} onPress={() => handleRemoveItem(item.id)}>
-                            <Ionicons name="trash-outline" size={16} color="#ef4444" />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-
-                      <View style={styles.metricsGrid}>
-                        {metrics.map((m) => (
-                          <View key={m.label} style={styles.metricPill}>
-                            <Text style={styles.metricValue}>{m.value}</Text>
-                            <Text style={styles.metricLabel}>{m.label}</Text>
-                          </View>
-                        ))}
-                      </View>
-
-                      {item.notes ? <Text style={styles.exerciseNotes}>📝 {item.notes}</Text> : null}
-                    </View>
-                  </View>
-                );
-              })
-            )}
-          </>
+          <Text style={styles.sectionTitle}>Exercícios da ficha ({items.length})</Text>
+          {items.length === 0 && (
+            <Text style={styles.emptyText}>Nenhum exercício ainda nessa ficha.</Text>
+          )}
         </>
       )}
+    </>
+  );
 
-      <TouchableOpacity style={styles.saveButton} onPress={onClose}>
-        <Text style={styles.saveButtonText}>Salvar Ficha</Text>
-      </TouchableOpacity>
-      </ScrollView>
+  const listFooter = (
+    <TouchableOpacity style={styles.saveButton} onPress={onClose}>
+      <Text style={styles.saveButtonText}>Salvar Ficha</Text>
+    </TouchableOpacity>
+  );
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+    <View style={styles.container}>
+      <HeaderBack title={studentName} onBack={onClose} style={{ paddingHorizontal: 16 }} />
+
+      <DraggableFlatList
+        data={activeWorkoutId ? items : []}
+        keyExtractor={(item) => item.id}
+        renderItem={renderExerciseItem}
+        onDragEnd={handleReorderComplete}
+        containerStyle={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        ListHeaderComponent={listHeader}
+        ListFooterComponent={listFooter}
+      />
 
       <Modal visible={showAiModal} transparent animationType="slide" onRequestClose={() => setShowAiModal(false)}>
         <View style={styles.modalOverlay}>
@@ -1035,6 +1064,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         </View>
       </Modal>
     </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -1083,6 +1113,8 @@ const styles = StyleSheet.create({
   addExerciseButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
   sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
   exerciseCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden' },
+  exerciseCardDragging: { borderColor: '#FF6B00', opacity: 0.9 },
+  dragHandle: { marginRight: 2 },
   exerciseThumbWrap: { width: '100%', height: 100, position: 'relative' },
   exerciseThumbImage: { width: '100%', height: 100 },
   exerciseThumbPlaceholder: { width: '100%', height: 100, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
