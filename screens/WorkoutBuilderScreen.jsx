@@ -43,9 +43,9 @@ const METHOD_LABELS = {
   'piramide': 'Pirâmide',
 };
 
-export default function WorkoutBuilderScreen({ studentId, studentName, personalId, onClose }) {
+export default function WorkoutBuilderScreen({ studentId, studentName, personalId, onClose, initialWorkoutId }) {
   const [workouts, setWorkouts] = useState([]);
-  const [activeWorkoutId, setActiveWorkoutId] = useState(null);
+  const [activeWorkoutId, setActiveWorkoutId] = useState(initialWorkoutId || null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);

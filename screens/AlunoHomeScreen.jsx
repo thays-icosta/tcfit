@@ -35,6 +35,18 @@ import { getJsonPref, setJsonPref } from './localPrefs';
 
 const ACCENT = '#FF6B00';
 
+// Same convention as WeeklyPlanScreen/WorkoutBuilderScreen: value matches JS
+// Date.getDay() (0 = Sunday), ordered Mon→Sun here only for display.
+const WEEKDAY_OPTIONS = [
+  { value: 1, label: 'Segunda' },
+  { value: 2, label: 'Terça' },
+  { value: 3, label: 'Quarta' },
+  { value: 4, label: 'Quinta' },
+  { value: 5, label: 'Sexta' },
+  { value: 6, label: 'Sábado' },
+  { value: 0, label: 'Domingo' },
+];
+
 const PROGRAM_HUB_GROUPS = [
   { key: 'academia', title: 'TREINOS NA ACADEMIA', categories: ['planilha_academia', 'treino_3d', 'treino_extra'], icon: 'barbell-outline' },
   { key: 'corrida_cardio', title: 'CORRIDA & CARDIO', categories: ['modulo_corrida'], icon: 'walk-outline' },
@@ -106,6 +118,44 @@ function currentMealWindowKey() {
   if (hour >= 14 && hour < 17) return 'lanche';
   if (hour >= 17 && hour < 21) return 'jantar';
   return 'ceia';
+}
+
+// Simplified weekday view for the Treinos tab — "Minha Semana": the same
+// weekday cards concept as the personal's Planejamento da Semana, but
+// stripped down to just what the aluno needs to know (no counts, no
+// history navigation, no editing). Today's card is highlighted and, when
+// there's a workout, opens the same preview→"Começar treino" flow the
+// per-ficha cards below already use.
+function MinhaSemanaSection({ workouts, muscleSummaryByWorkout, onPressWorkout }) {
+  const todayWeekday = new Date().getDay();
+  return (
+    <View style={styles.minhaSemanaSection}>
+      <Text style={styles.sectionTitle}>MINHA SEMANA</Text>
+      {WEEKDAY_OPTIONS.map((day) => {
+        const workout = workouts.find((w) => w.weekday === day.value);
+        const isToday = todayWeekday === day.value;
+        const muscles = workout ? (muscleSummaryByWorkout[workout.id] || []) : [];
+        const muscleLabel = muscles.slice(0, 2).map(([g]) => g).join(' + ');
+        return (
+          <TouchableOpacity
+            key={day.value}
+            style={[styles.minhaSemanaCard, isToday && styles.minhaSemanaCardToday]}
+            onPress={workout ? () => onPressWorkout(workout) : undefined}
+            activeOpacity={workout ? 0.7 : 1}
+          >
+            <Text style={styles.minhaSemanaDayLabel}>{day.label}{isToday ? ' · HOJE' : ''}</Text>
+            {workout ? (
+              <Text style={styles.minhaSemanaWorkoutText} numberOfLines={1}>
+                {workout.name}{muscleLabel ? ` — ${muscleLabel}` : ''}
+              </Text>
+            ) : (
+              <Text style={styles.minhaSemanaRestText}>Descanso</Text>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
 }
 
 export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onConsumeInitialChat }) {
@@ -1035,7 +1085,18 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
             keyExtractor={(item) => item.id}
             style={{ flex: 1 }}
             contentContainerStyle={{ paddingHorizontal: 16 }}
-            ListHeaderComponent={<MeusProjetosSection studentId={user.id} onOpenProject={setOpenStudentProjectId} />}
+            ListHeaderComponent={
+              <>
+                {workouts.some((w) => w.weekday != null) && (
+                  <MinhaSemanaSection
+                    workouts={workouts}
+                    muscleSummaryByWorkout={muscleSummaryByWorkout}
+                    onPressWorkout={setPreviewWorkout}
+                  />
+                )}
+                <MeusProjetosSection studentId={user.id} onOpenProject={setOpenStudentProjectId} />
+              </>
+            }
             renderItem={({ item }) => {
               const done = completedToday[item.id];
               const summary = muscleSummaryByWorkout[item.id] || [];
@@ -1957,6 +2018,12 @@ const styles = StyleSheet.create({
   mealPickerChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
   mealPickerChipText: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
   sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 10 },
+  minhaSemanaSection: { marginBottom: 24 },
+  minhaSemanaCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
+  minhaSemanaCardToday: { borderColor: '#FF6B00' },
+  minhaSemanaDayLabel: { color: '#737373', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, width: 92 },
+  minhaSemanaWorkoutText: { flex: 1, color: '#F5F5F7', fontSize: 13, fontWeight: '700', textAlign: 'right' },
+  minhaSemanaRestText: { flex: 1, color: '#525252', fontSize: 12, fontWeight: '600', textAlign: 'right' },
   entryRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, padding: 12, marginBottom: 8 },
   entryFoodName: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
   entryMeta: { color: '#737373', fontSize: 10, marginTop: 2 },

@@ -1,5 +1,15 @@
 import { supabase } from './supabaseClient';
 
+// Same "top of the range counts" convention progressionUtils.parseRepsTarget
+// uses for suggesting loads — here we want a representative rep count for a
+// volume *estimate*, so we average the range instead ("10-12" -> 11).
+function parseRepsAverage(repsStr) {
+  if (!repsStr) return null;
+  const numbers = String(repsStr).match(/\d+/g);
+  if (!numbers || numbers.length === 0) return null;
+  return numbers.map(Number).reduce((a, b) => a + b, 0) / numbers.length;
+}
+
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
@@ -63,23 +73,35 @@ export async function loadWeekHistory(client, studentId) {
 // Loads exercise counts (and dominant muscle group) for a list of workout
 // ids in one query, for the compact summary cards — mirrors
 // AlunoHomeScreen.loadMuscleSummary's shape.
+//
+// Also returns a prescribed-volume estimate (sets × avg reps × load_kg) per
+// workout — the same tonnage formula VolumeSummaryScreen uses for *executed*
+// sets (load × reps), just applied to what's prescribed in the ficha, since
+// a freshly-planned week has no logged sessions yet to compute real tonnage
+// from. Rows with no load_kg set (bodyweight, or not filled in yet) simply
+// don't contribute, rather than being counted as zero-effort.
 export async function loadWorkoutSummaries(client, workoutIds) {
   const c = client || supabase;
   const summaries = {};
-  for (const id of workoutIds) summaries[id] = { exerciseCount: 0, setCount: 0, muscleGroups: [] };
+  for (const id of workoutIds) summaries[id] = { exerciseCount: 0, setCount: 0, muscleGroups: [], volumeKg: 0 };
   if (workoutIds.length === 0) return summaries;
 
   const { data } = await c
     .from('workout_exercises')
-    .select('workout_id, sets, exercises (muscle_group)')
+    .select('workout_id, sets, reps, load_kg, exercises (muscle_group)')
     .in('workout_id', workoutIds);
 
   const groupCounts = {};
   (data || []).forEach((row) => {
     const s = summaries[row.workout_id];
     if (!s) return;
+    const sets = row.sets || 3;
     s.exerciseCount += 1;
-    s.setCount += row.sets || 3;
+    s.setCount += sets;
+    if (row.load_kg != null) {
+      const avgReps = parseRepsAverage(row.reps);
+      if (avgReps != null) s.volumeKg += sets * avgReps * row.load_kg;
+    }
     const group = row.exercises?.muscle_group;
     if (group) {
       groupCounts[row.workout_id] = groupCounts[row.workout_id] || {};
@@ -90,6 +112,7 @@ export async function loadWorkoutSummaries(client, workoutIds) {
     const entries = Object.entries(groupCounts[workoutId]).sort((a, b) => b[1] - a[1]);
     summaries[workoutId].muscleGroups = entries.slice(0, 2).map(([g]) => g);
   });
+  Object.values(summaries).forEach((s) => { s.volumeKg = Math.round(s.volumeKg); });
   return summaries;
 }
 
