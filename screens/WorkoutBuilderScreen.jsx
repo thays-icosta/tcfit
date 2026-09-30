@@ -10,6 +10,12 @@ import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { loadPeriodizationPlan, getCurrentPhase } from './periodizationUtils';
 import { copySessionToStudentWorkout } from './workoutAssignment';
 import { showAlert, describeFunctionError } from './alertUtils';
+import {
+  loadWeekHistory,
+  loadWorkoutSummaries,
+  createNewWeekVersion,
+  estimateExerciseVolumeKg,
+} from './workoutVersioning';
 import { useSpeechToText } from './useSpeechToText';
 import PromptModal from './PromptModal';
 import { HeaderBack } from './Header';
@@ -83,6 +89,21 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const [aiInstruction, setAiInstruction] = useState('');
   const [aiProcessing, setAiProcessing] = useState(false);
 
+  // "Semana Atual" landing — shown whenever no specific ficha is selected
+  // (activeWorkoutId null), so opening Treino never dumps the personal
+  // straight into one ficha's full exercise editor. Reuses the exact same
+  // version-history system Planejamento da Semana/Programa de Treino use —
+  // see workoutVersioning.js — instead of a second one.
+  const [weekSummaries, setWeekSummaries] = useState({});
+  const [weekHistory, setWeekHistory] = useState([]);
+  const [creatingWeek, setCreatingWeek] = useState(false);
+  const [showOtherWeekPicker, setShowOtherWeekPicker] = useState(false);
+
+  // "Trocar exercício" — reuses AddExerciseModal's browse UI, but on
+  // confirm it replaces replacingItem's exercise in place instead of
+  // inserting a new row.
+  const [replacingItem, setReplacingItem] = useState(null);
+
   const loadWorkouts = async () => {
     const { data } = await supabase
       .from('workouts')
@@ -91,11 +112,62 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       .eq('active', true)
       .order('created_at', { ascending: true });
     setWorkouts(data || []);
+    // Unlike before, an empty/invalid selection no longer falls back to
+    // the first ficha — it falls back to null, which shows the "Semana
+    // Atual" overview instead of silently dumping into Treino A. Picking a
+    // ficha (from the overview, a tab, or an initialWorkoutId prop) is
+    // always an explicit choice.
     if (data && data.length > 0) {
-      setActiveWorkoutId((prev) => (prev && data.some((w) => w.id === prev)) ? prev : data[0].id);
+      setActiveWorkoutId((prev) => (prev && data.some((w) => w.id === prev)) ? prev : null);
     } else {
       setActiveWorkoutId(null);
     }
+    const ids = (data || []).map((w) => w.id);
+    setWeekSummaries(await loadWorkoutSummaries(supabase, ids));
+  };
+
+  const loadWeekHistoryList = async () => {
+    setWeekHistory(await loadWeekHistory(supabase, studentId));
+  };
+
+  // "+ Nova Semana" — the same createNewWeekVersion versioning system
+  // Planejamento da Semana/Programa de Treino use: it archives every
+  // current ficha (active:false, archived_at, weekday cleared) and creates
+  // fresh ones tagged with previous_version_id/version_group_id, so history
+  // and progression lookups keep working across the new week.
+  const handleNewWeek = () => {
+    if (workouts.length === 0) {
+      setShowCreateFichaModal(true);
+      return;
+    }
+    showAlert(
+      '+ Nova Semana',
+      'Como você quer montar a prescrição desta semana?',
+      [
+        { text: 'Copiar semana anterior', onPress: () => runNewWeek('copy-current') },
+        { text: 'Copiar outra semana', onPress: () => setShowOtherWeekPicker(true) },
+        { text: 'Criar do zero', onPress: () => runNewWeek('scratch') },
+        { text: 'Cancelar', style: 'cancel' },
+      ]
+    );
+  };
+
+  const runNewWeek = async (mode, sourceWorkouts = []) => {
+    setCreatingWeek(true);
+    try {
+      await createNewWeekVersion(supabase, { studentId, personalId, mode, sourceWorkouts });
+      await loadWorkouts();
+      await loadWeekHistoryList();
+    } catch (e) {
+      console.error('Erro ao criar nova semana:', e);
+      showAlert('Ops', 'Não foi possível criar a nova semana agora. Tenta de novo em instantes.');
+    }
+    setCreatingWeek(false);
+  };
+
+  const handlePickOtherWeek = async (group) => {
+    setShowOtherWeekPicker(false);
+    await runNewWeek('other-week', group.workouts);
   };
 
   const loadItems = async (workoutId) => {
@@ -118,6 +190,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     (async () => {
       await loadWorkouts();
       await loadPeriodization();
+      await loadWeekHistoryList();
       setLoading(false);
     })();
   }, [studentId]);
@@ -447,11 +520,23 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       setShowAiModal(false);
       await loadWorkouts();
       setActiveWorkoutId(newWorkout.id);
-      showAlert('Treino gerado!', `"${newWorkout.name}" criado com ${rows.length} exercício(s). Revisa e ajusta o que quiser antes de salvar.`);
+      // requested_count can be higher than rows.length when the AI named an
+      // exercise slightly differently than the library despite instructions
+      // to copy it exactly — tell the personal instead of leaving a
+      // silently-shorter ficha for them to notice later.
+      const skipped = (data.requested_count || rows.length) - rows.length;
+      showAlert(
+        'Treino gerado!',
+        `"${newWorkout.name}" criado com ${rows.length} exercício(s). Revisa e ajusta o que quiser antes de salvar.` +
+          (skipped > 0 ? `\n\n${skipped} exercício(s) sugerido(s) pela IA não foram encontrados na sua biblioteca e ficaram de fora.` : '')
+      );
     } catch (e) {
+      // The ficha being edited (if any) is untouched by anything above —
+      // an AI failure never costs work already in progress, only the
+      // ability to generate this one new ficha right now.
       console.error('Erro ao gerar treino com IA:', e);
       setAiProcessing(false);
-      showAlert('Erro', e?.message || 'Não foi possível gerar o treino agora.');
+      showAlert('Não deu pra gerar o treino', 'Algo deu errado do nosso lado ao falar com a IA. Você pode montar esse treino manualmente enquanto isso — tenta a IA de novo daqui a pouco.');
     }
   };
 
@@ -483,17 +568,22 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     }
   };
 
-  const handleRemoveItem = async (itemId) => {
-    // workout_session_sets -> workout_exercise_id cascades on delete, so
-    // removing an exercise the student already logged sets against would
-    // permanently wipe that history. Block it outright instead — archiving
-    // the whole ficha (or starting a new week) is the safe way to retire an
-    // exercise once it has real history.
+  // Shared by "Excluir" and "Trocar exercício": both would otherwise
+  // corrupt or destroy the student's logged history if applied to a row
+  // that already has workout_session_sets against it — deleting wipes it
+  // via the FK cascade, and swapping in place would silently reattribute
+  // it to the new exercise's progression lookup. "+ Nova Semana" is the
+  // safe path once a row has real history.
+  const hasLoggedHistory = async (itemId) => {
     const { count } = await supabase
       .from('workout_session_sets')
       .select('id', { count: 'exact', head: true })
       .eq('workout_exercise_id', itemId);
-    if (count && count > 0) {
+    return !!count && count > 0;
+  };
+
+  const handleRemoveItem = async (itemId) => {
+    if (await hasLoggedHistory(itemId)) {
       showAlert(
         'Não é possível remover',
         'Esse exercício já tem histórico de execução registrado pelo aluno. Removê-lo apagaria esse histórico permanentemente. Se a prescrição mudou, crie uma nova semana em vez de editar esta.'
@@ -518,20 +608,60 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     ]);
   };
 
-  const handleMove = async (index, direction) => {
-    const newIndex = index + direction;
-    if (newIndex < 0 || newIndex >= items.length) return;
-    const a = items[index];
-    const b = items[newIndex];
-    await supabase.from('workout_exercises').update({ order_index: b.order_index }).eq('id', a.id);
-    await supabase.from('workout_exercises').update({ order_index: a.order_index }).eq('id', b.id);
-    loadItems(activeWorkoutId);
+  const handleDuplicateItem = async (item) => {
+    const { data: maxRow } = await supabase
+      .from('workout_exercises')
+      .select('order_index')
+      .eq('workout_id', activeWorkoutId)
+      .order('order_index', { ascending: false })
+      .limit(1);
+    const nextOrder = maxRow && maxRow.length > 0 ? maxRow[0].order_index + 1 : 0;
+    const { error } = await supabase.from('workout_exercises').insert({
+      workout_id: activeWorkoutId,
+      exercise_id: item.exercise_id || item.exercises?.id,
+      order_index: nextOrder,
+      sets: item.sets,
+      reps: item.reps,
+      load_kg: item.load_kg,
+      cadence: item.cadence,
+      rest_time_seconds: item.rest_time_seconds,
+      execution_method: item.execution_method,
+      notes: item.notes,
+    });
+    if (error) showAlert('Erro ao duplicar', error.message);
+    else loadItems(activeWorkoutId);
+  };
+
+  const handleOpenSwap = async (item) => {
+    if (await hasLoggedHistory(item.id)) {
+      showAlert(
+        'Não é possível trocar',
+        'Esse exercício já tem histórico de execução registrado pelo aluno. Trocá-lo misturaria o histórico com o exercício novo. Se a prescrição mudou, crie uma nova semana em vez de editar esta.'
+      );
+      return;
+    }
+    setReplacingItem(item);
+  };
+
+  const handleConfirmSwap = async (exercise, config) => {
+    const { error } = await supabase.from('workout_exercises').update({ exercise_id: exercise.id, ...config }).eq('id', replacingItem.id);
+    setReplacingItem(null);
+    if (error) showAlert('Erro ao trocar', error.message);
+    else loadItems(activeWorkoutId);
+  };
+
+  const handleOpenItemActions = (item) => {
+    showAlert(item.exercises?.name || 'Exercício', 'O que você quer fazer?', [
+      { text: 'Trocar exercício', onPress: () => handleOpenSwap(item) },
+      { text: 'Duplicar exercício', onPress: () => handleDuplicateItem(item) },
+      { text: 'Excluir', style: 'destructive', onPress: () => handleRemoveItem(item.id) },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
   };
 
   // Drag-to-reorder (DraggableFlatList's onDragEnd): the dropped array is
   // already in its final order, so order_index just becomes each item's new
-  // position — same persistence target as the ▲▼ buttons above, just for an
-  // arbitrary reorder instead of a single swap.
+  // position.
   const handleReorderComplete = async ({ data }) => {
     setItems(data);
     await Promise.all(data.map((item, idx) => supabase.from('workout_exercises').update({ order_index: idx }).eq('id', item.id)));
@@ -582,6 +712,15 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     muscleGroupCounts[group] = (muscleGroupCounts[group] || 0) + 1;
   });
   const muscleGroupEntries = Object.entries(muscleGroupCounts);
+  // Dominant group in the ficha so far — used to prioritize "mesmo grupo
+  // muscular" suggestions when adding a new exercise (swapping one uses
+  // that specific exercise's own group instead, see handleOpenSwap).
+  const dominantMuscleGroup = muscleGroupEntries.length > 0
+    ? muscleGroupEntries.sort((a, b) => b[1] - a[1])[0][0]
+    : null;
+
+  const totalSets = items.reduce((sum, item) => sum + (item.sets || 3), 0);
+  const totalVolumeKg = Math.round(items.reduce((sum, item) => sum + estimateExerciseVolumeKg(item), 0));
 
   const activeWorkout = workouts.find((w) => w.id === activeWorkoutId);
 
@@ -619,8 +758,23 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     return (
       <AddExerciseModal
         personalId={personalId}
+        studentId={studentId}
+        suggestedMuscleGroup={dominantMuscleGroup}
         onConfirm={handleConfirmAddExercise}
         onClose={() => setShowAddModal(false)}
+      />
+    );
+  }
+
+  if (replacingItem) {
+    return (
+      <AddExerciseModal
+        personalId={personalId}
+        studentId={studentId}
+        suggestedMuscleGroup={replacingItem.exercises?.muscle_group}
+        replaceItem={replacingItem}
+        onConfirm={handleConfirmSwap}
+        onClose={() => setReplacingItem(null)}
       />
     );
   }
@@ -646,17 +800,22 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     );
   }
 
-  const renderExerciseItem = ({ item, getIndex, drag, isActive }) => {
-    const index = getIndex();
+  // Compact single-line metrics ("4 séries · 8–10 reps · 90s"), extended
+  // inline with load/cadência/método only when actually set, instead of the
+  // old pill grid — same data, much less visual weight per card.
+  const formatCompactMetrics = (item) => {
+    const parts = [`${item.sets || 3} séries`, `${item.reps || '-'} reps`];
+    if (item.rest_time_seconds != null) parts.push(`${item.rest_time_seconds}s`);
+    if (item.load_kg != null) parts.push(`${item.load_kg}kg`);
+    if (item.cadence) parts.push(`cad. ${item.cadence}`);
+    if (item.execution_method && item.execution_method !== 'tradicional') {
+      parts.push(METHOD_LABELS[item.execution_method] || item.execution_method);
+    }
+    return parts.join(' · ');
+  };
+
+  const renderExerciseItem = ({ item, drag, isActive }) => {
     const hasVideo = !!item.exercises?.video_url;
-    const metrics = [
-      { label: 'Séries', value: item.sets || 3 },
-      { label: 'Reps', value: item.reps || '-' },
-    ];
-    if (item.load_kg != null) metrics.push({ label: 'Carga', value: `${item.load_kg}kg` });
-    if (item.cadence) metrics.push({ label: 'Cadência', value: item.cadence });
-    else metrics.push({ label: 'Método', value: METHOD_LABELS[item.execution_method] || item.execution_method });
-    if (item.rest_time_seconds != null) metrics.push({ label: 'Descanso', value: `${item.rest_time_seconds}s` });
 
     return (
       <View style={[styles.exerciseCard, isActive && styles.exerciseCardDragging]}>
@@ -680,44 +839,106 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         </TouchableOpacity>
 
         <View style={styles.exerciseInfo}>
-          <View style={styles.exerciseHeaderRow}>
-            <Text style={styles.exerciseName}>{item.exercises?.name}</Text>
-            <View style={styles.exerciseHeaderActions}>
-              <TouchableOpacity hitSlop={10} onLongPress={drag} disabled={isActive} style={styles.dragHandle}>
-                <Ionicons name="reorder-three-outline" size={20} color="#737373" />
-              </TouchableOpacity>
-              <TouchableOpacity hitSlop={10} onPress={() => handleMove(index, -1)} disabled={index === 0}>
-                <Text style={[styles.moveArrow, index === 0 && styles.moveArrowDisabled]}>▲</Text>
-              </TouchableOpacity>
-              <TouchableOpacity hitSlop={10} onPress={() => handleMove(index, 1)} disabled={index === items.length - 1}>
-                <Text style={[styles.moveArrow, index === items.length - 1 && styles.moveArrowDisabled]}>▼</Text>
-              </TouchableOpacity>
-              <TouchableOpacity hitSlop={10} onPress={() => setEditingItem(item)}>
-                <Ionicons name="pencil-outline" size={16} color="#3b82f6" />
-              </TouchableOpacity>
-              <TouchableOpacity hitSlop={10} onPress={() => handleRemoveItem(item.id)}>
-                <Ionicons name="trash-outline" size={16} color="#ef4444" />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.metricsGrid}>
-            {metrics.map((m) => (
-              <View key={m.label} style={styles.metricPill}>
-                <Text style={styles.metricValue}>{m.value}</Text>
-                <Text style={styles.metricLabel}>{m.label}</Text>
-              </View>
-            ))}
-          </View>
-
+          <Text style={styles.exerciseName}>{item.exercises?.name}</Text>
+          <Text style={styles.exerciseMetrics}>{formatCompactMetrics(item)}</Text>
+          {item.exercises?.muscle_group && <Text style={styles.exerciseMuscle}>{item.exercises.muscle_group}</Text>}
           {item.notes ? <Text style={styles.exerciseNotes}>📝 {item.notes}</Text> : null}
+
+          <View style={styles.exerciseActionsRow}>
+            <TouchableOpacity hitSlop={10} onLongPress={drag} disabled={isActive} style={styles.dragHandleButton}>
+              <Ionicons name="reorder-three-outline" size={20} color="#a3a3a3" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.exerciseActionButton} onPress={() => setEditingItem(item)}>
+              <Ionicons name="pencil-outline" size={14} color="#3b82f6" />
+              <Text style={styles.exerciseActionButtonText}>Editar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.exerciseActionButton} onPress={() => handleOpenItemActions(item)}>
+              <Ionicons name="ellipsis-horizontal" size={14} color="#a3a3a3" />
+              <Text style={styles.exerciseActionButtonText}>Mais</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
   };
 
-  const listHeader = (
+  // "Semana Atual" landing — the primary entry point now (items 1/9/16 of
+  // the redesign): pick a ficha here instead of always dropping into
+  // Treino A. Nova Ficha/Template/IA sit below as secondary, auxiliary
+  // actions, never the main flow.
+  const weekOverviewHeader = (
     <>
+      <Text style={styles.sectionTitle}>SEMANA ATUAL</Text>
+
+      {workouts.length === 0 ? (
+        <Text style={styles.emptyText}>Nenhuma ficha ainda pra {studentName}.</Text>
+      ) : (
+        workouts.map((w) => {
+          const s = weekSummaries[w.id] || { exerciseCount: 0, setCount: 0, muscleGroups: [] };
+          return (
+            <TouchableOpacity
+              key={w.id}
+              style={styles.weekOverviewCard}
+              onPress={() => setActiveWorkoutId(w.id)}
+              onLongPress={() => handleLongPressFicha(w)}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.weekOverviewCardName}>{w.name}</Text>
+                <Text style={styles.weekOverviewCardMeta}>
+                  {w.weekday != null ? `${WEEKDAY_OPTIONS.find((d) => d.value === w.weekday)?.label} · ` : ''}
+                  {s.exerciseCount} exercício{s.exerciseCount !== 1 ? 's' : ''} · {s.setCount} série{s.setCount !== 1 ? 's' : ''}
+                </Text>
+                {s.muscleGroups.length > 0 && <Text style={styles.weekOverviewCardMuscles}>{s.muscleGroups.join(' + ')}</Text>}
+              </View>
+              <Ionicons name="chevron-forward-outline" size={18} color="#525252" />
+            </TouchableOpacity>
+          );
+        })
+      )}
+
+      <TouchableOpacity
+        style={styles.newWeekButton}
+        onPress={workouts.length === 0 ? () => setShowCreateFichaModal(true) : handleNewWeek}
+        disabled={creatingWeek}
+      >
+        {creatingWeek ? (
+          <ActivityIndicator color="#0F0F12" size="small" />
+        ) : (
+          <>
+            <Ionicons name="add-circle-outline" size={18} color="#0F0F12" />
+            <Text style={styles.newWeekButtonText}>{workouts.length === 0 ? '+ Criar Primeira Ficha' : '+ NOVA SEMANA'}</Text>
+          </>
+        )}
+      </TouchableOpacity>
+      {workouts.length > 0 && (
+        <Text style={styles.hintText}>Segure uma ficha pra renomear, duplicar ou arquivar</Text>
+      )}
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.actionsRow} contentContainerStyle={styles.actionsRowContent}>
+        <TouchableOpacity style={styles.actionChip} onPress={() => setShowCreateFichaModal(true)}>
+          <Text style={styles.actionChipText}>+ Nova Ficha</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionChip} onPress={handleOpenTemplatePicker}>
+          <Text style={styles.actionChipText}>⚡ Importar Template</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionChip} onPress={handleOpenAiModal}>
+          <Text style={styles.actionChipText}>✨ Gerar Treino com IA</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </>
+  );
+
+  // Inside a specific ficha's editor — unchanged apart from the compact
+  // resumo replacing the old separate weekday/muscle-summary rows, and
+  // "+ Nova Ficha"/Template/IA moving to the overview above.
+  const activeWorkoutMuscles = muscleGroupEntries.slice().sort((a, b) => b[1] - a[1]).slice(0, 2).map(([g]) => g);
+  const editorHeader = (
+    <>
+      <TouchableOpacity style={styles.backToOverviewButton} onPress={() => setActiveWorkoutId(null)}>
+        <Ionicons name="chevron-back" size={16} color="#a3a3a3" />
+        <Text style={styles.backToOverviewButtonText}>Semana Atual</Text>
+      </TouchableOpacity>
+
       <View style={styles.fichaRow}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
           {workouts.map((w) => (
@@ -735,94 +956,83 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
           ))}
         </ScrollView>
       </View>
-      {workouts.length > 0 && (
-        <Text style={styles.hintText}>Segure uma aba pra renomear, duplicar ou excluir</Text>
+
+      <View style={styles.compactSummaryCard}>
+        <Text style={styles.compactSummaryTitle}>
+          {activeWorkout?.name}{activeWorkoutMuscles.length > 0 ? ` — ${activeWorkoutMuscles.join(' + ')}` : ''}
+        </Text>
+        <Text style={styles.compactSummaryMeta}>
+          {items.length} exercício{items.length !== 1 ? 's' : ''} · {totalSets} série{totalSets !== 1 ? 's' : ''} totais
+          {totalVolumeKg > 0 ? ` · ${totalVolumeKg.toLocaleString('pt-BR')}kg de volume` : ''}
+        </Text>
+        <TouchableOpacity style={styles.weekdaySelectorRow} onPress={() => setShowWeekdayPicker(true)}>
+          {activeWorkout?.weekday != null ? (
+            <View style={styles.weekdayBadge}>
+              <Ionicons name="calendar-outline" size={13} color="#3b82f6" />
+              <Text style={styles.weekdayBadgeText}>{WEEKDAY_OPTIONS.find((d) => d.value === activeWorkout.weekday)?.label}</Text>
+            </View>
+          ) : (
+            <Text style={styles.phaseSelectorPlaceholder}>+ Definir dia da semana</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {periodizationPhases.length > 0 && (
+        <TouchableOpacity style={styles.phaseSelectorRow} onPress={() => setShowPhasePicker(true)}>
+          {phaseProgress ? (
+            <View style={[styles.phaseBadge, phaseProgress.isCurrent && styles.phaseBadgeCurrent]}>
+              <Text style={styles.phaseBadgeText}>
+                {phaseProgress.phaseName}{phaseProgress.isCurrent ? ` • Sem. ${phaseProgress.weekInPhase}/${phaseProgress.totalWeeksInPhase}` : ` (sem. ${phaseProgress.startWeek}-${phaseProgress.endWeek})`}
+              </Text>
+            </View>
+          ) : (
+            <Text style={styles.phaseSelectorPlaceholder}>+ Vincular fase da periodização</Text>
+          )}
+        </TouchableOpacity>
       )}
 
-      <TouchableOpacity style={styles.aiButton} onPress={handleOpenAiModal}>
-        <Ionicons name="sparkles" size={16} color="#0F0F12" />
-        <Text style={styles.aiButtonText}>Gerar Treino com IA</Text>
-      </TouchableOpacity>
+      {muscleGroupEntries.length > 0 && (
+        <View style={styles.summaryCard}>
+          <TouchableOpacity style={styles.summaryHeader} onPress={() => setSummaryExpanded(!summaryExpanded)}>
+            <Text style={styles.summaryTitle}>Resumo por grupo muscular</Text>
+            <Ionicons name={summaryExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={14} color="#737373" />
+          </TouchableOpacity>
+          {summaryExpanded && (
+            <View style={styles.summaryRow}>
+              {muscleGroupEntries.map(([group, count]) => (
+                <View key={group} style={styles.summaryBadge}>
+                  <Text style={styles.summaryBadgeCount}>{count}</Text>
+                  <Text style={styles.summaryBadgeLabel}>{group}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.actionsRow} contentContainerStyle={styles.actionsRowContent}>
-        <TouchableOpacity style={styles.actionChip} onPress={() => setShowCreateFichaModal(true)}>
-          <Text style={styles.actionChipText}>+ Nova Ficha</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionChip} onPress={handleOpenTemplatePicker}>
-          <Text style={styles.actionChipText}>⚡ Importar Template</Text>
-        </TouchableOpacity>
-        {activeWorkoutId && items.length > 0 && (
+        {items.length > 0 && (
           <TouchableOpacity style={styles.actionChip} onPress={handleOpenReplicate}>
             <Text style={styles.actionChipText}>📋 Editar Todos (séries/reps/descanso)</Text>
           </TouchableOpacity>
         )}
-        {activeWorkoutId && (
-          <TouchableOpacity style={styles.actionChip} onPress={handleOpenSendModal}>
-            <Text style={styles.actionChipText}>📤 Enviar p/ outro aluno</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity style={styles.actionChip} onPress={handleOpenSendModal}>
+          <Text style={styles.actionChipText}>📤 Enviar p/ outro aluno</Text>
+        </TouchableOpacity>
       </ScrollView>
 
-      {!activeWorkoutId ? (
-        <Text style={styles.emptyText}>Cria uma ficha acima pra começar.</Text>
-      ) : (
-        <>
-          <TouchableOpacity style={styles.weekdaySelectorRow} onPress={() => setShowWeekdayPicker(true)}>
-            {activeWorkout?.weekday != null ? (
-              <View style={styles.weekdayBadge}>
-                <Ionicons name="calendar-outline" size={13} color="#3b82f6" />
-                <Text style={styles.weekdayBadgeText}>{WEEKDAY_OPTIONS.find((d) => d.value === activeWorkout.weekday)?.label}</Text>
-              </View>
-            ) : (
-              <Text style={styles.phaseSelectorPlaceholder}>+ Definir dia da semana</Text>
-            )}
-          </TouchableOpacity>
+      <TouchableOpacity style={styles.addExerciseButton} onPress={() => setShowAddModal(true)}>
+        <Text style={styles.addExerciseButtonText}>+ Adicionar Exercício</Text>
+      </TouchableOpacity>
 
-          {periodizationPhases.length > 0 && (
-            <TouchableOpacity style={styles.phaseSelectorRow} onPress={() => setShowPhasePicker(true)}>
-              {phaseProgress ? (
-                <View style={[styles.phaseBadge, phaseProgress.isCurrent && styles.phaseBadgeCurrent]}>
-                  <Text style={styles.phaseBadgeText}>
-                    {phaseProgress.phaseName}{phaseProgress.isCurrent ? ` • Sem. ${phaseProgress.weekInPhase}/${phaseProgress.totalWeeksInPhase}` : ` (sem. ${phaseProgress.startWeek}-${phaseProgress.endWeek})`}
-                  </Text>
-                </View>
-              ) : (
-                <Text style={styles.phaseSelectorPlaceholder}>+ Vincular fase da periodização</Text>
-              )}
-            </TouchableOpacity>
-          )}
-
-          {muscleGroupEntries.length > 0 && (
-            <View style={styles.summaryCard}>
-              <TouchableOpacity style={styles.summaryHeader} onPress={() => setSummaryExpanded(!summaryExpanded)}>
-                <Text style={styles.summaryTitle}>Resumo por grupo muscular</Text>
-                <Ionicons name={summaryExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={14} color="#737373" />
-              </TouchableOpacity>
-              {summaryExpanded && (
-                <View style={styles.summaryRow}>
-                  {muscleGroupEntries.map(([group, count]) => (
-                    <View key={group} style={styles.summaryBadge}>
-                      <Text style={styles.summaryBadgeCount}>{count}</Text>
-                      <Text style={styles.summaryBadgeLabel}>{group}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
-          )}
-
-          <TouchableOpacity style={styles.addExerciseButton} onPress={() => setShowAddModal(true)}>
-            <Text style={styles.addExerciseButtonText}>+ Adicionar Exercício</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.sectionTitle}>Exercícios da ficha ({items.length})</Text>
-          {items.length === 0 && (
-            <Text style={styles.emptyText}>Nenhum exercício ainda nessa ficha.</Text>
-          )}
-        </>
+      <Text style={styles.sectionTitle}>Exercícios da ficha ({items.length})</Text>
+      {items.length === 0 && (
+        <Text style={styles.emptyText}>Nenhum exercício ainda nessa ficha.</Text>
       )}
     </>
   );
+
+  const listHeader = activeWorkoutId ? editorHeader : weekOverviewHeader;
 
   const listFooter = (
     <TouchableOpacity style={styles.saveButton} onPress={onClose}>
@@ -1063,6 +1273,30 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
           </View>
         </View>
       </Modal>
+
+      {showOtherWeekPicker && (
+        <View style={styles.pickerOverlay}>
+          <View style={styles.pickerSheet}>
+            <View style={styles.pickerHeaderRow}>
+              <Text style={styles.modalTitle}>Copiar qual semana?</Text>
+              <TouchableOpacity onPress={() => setShowOtherWeekPicker(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Ionicons name="close" size={20} color="#a3a3a3" />
+              </TouchableOpacity>
+            </View>
+            {weekHistory.length === 0 ? (
+              <Text style={styles.emptyText}>Nenhuma semana no histórico ainda.</Text>
+            ) : (
+              <ScrollView style={{ maxHeight: 320 }}>
+                {weekHistory.map((group) => (
+                  <TouchableOpacity key={group.key} style={styles.fichaOption} onPress={() => handlePickOtherWeek(group)}>
+                    <Text style={styles.fichaOptionText} numberOfLines={1}>{group.workouts.map((w) => w.name).join(' · ')}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      )}
     </View>
     </GestureHandlerRootView>
   );
@@ -1079,8 +1313,6 @@ const styles = StyleSheet.create({
   fichaTabWeekday: { color: '#3b82f6', fontSize: 9, fontWeight: '800', textTransform: 'uppercase', marginTop: 2 },
   fichaTabWeekdayActive: { color: '#0F0F12' },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 6 },
-  aiButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 13, marginHorizontal: 16, marginBottom: 10 },
-  aiButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
   aiMicButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, marginTop: 12 },
   aiMicButtonActive: { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
   aiMicButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
@@ -1099,7 +1331,7 @@ const styles = StyleSheet.create({
   phaseBadgeCurrent: { backgroundColor: 'rgba(168,85,247,0.15)' },
   phaseBadgeText: { color: '#a855f7', fontSize: 11, fontWeight: '700' },
   phaseSelectorPlaceholder: { color: '#525252', fontSize: 11, textDecorationLine: 'underline' },
-  weekdaySelectorRow: { marginHorizontal: 16, marginBottom: 8 },
+  weekdaySelectorRow: { marginTop: 10 },
   weekdayBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
   weekdayBadgeText: { color: '#3b82f6', fontSize: 11, fontWeight: '700' },
   summaryCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, marginHorizontal: 16, marginBottom: 6 },
@@ -1114,7 +1346,6 @@ const styles = StyleSheet.create({
   sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
   exerciseCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden' },
   exerciseCardDragging: { borderColor: '#FF6B00', opacity: 0.9 },
-  dragHandle: { marginRight: 2 },
   exerciseThumbWrap: { width: '100%', height: 100, position: 'relative' },
   exerciseThumbImage: { width: '100%', height: 100 },
   exerciseThumbPlaceholder: { width: '100%', height: 100, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
@@ -1122,16 +1353,33 @@ const styles = StyleSheet.create({
   playOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' },
   playOverlayText: { color: '#F5F5F7', fontSize: 32 },
   exerciseInfo: { padding: 12 },
-  exerciseHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, gap: 8 },
-  exerciseName: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', flex: 1 },
-  exerciseHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  exerciseName: { color: '#F5F5F7', fontSize: 15, fontWeight: '700' },
+  exerciseMetrics: { color: '#a3a3a3', fontSize: 12, fontWeight: '600', marginTop: 4 },
+  exerciseMuscle: { color: '#FF6B00', fontSize: 11, fontWeight: '600', marginTop: 2, textTransform: 'capitalize' },
   exerciseNotes: { color: '#737373', fontSize: 10, marginTop: 8, fontStyle: 'italic' },
-  moveArrow: { color: '#525252', fontSize: 12 },
-  moveArrowDisabled: { color: '#2B2B36' },
-  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  metricPill: { backgroundColor: '#0F0F12', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', minWidth: 56 },
-  metricValue: { color: '#FF6B00', fontSize: 15, fontWeight: '800' },
-  metricLabel: { color: '#525252', fontSize: 8, textTransform: 'uppercase', marginTop: 1 },
+  exerciseActionsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
+  dragHandleButton: { padding: 6, marginLeft: -6 },
+  exerciseActionButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  exerciseActionButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+
+  weekOverviewCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 10 },
+  weekOverviewCardName: { color: '#F5F5F7', fontSize: 15, fontWeight: '800' },
+  weekOverviewCardMeta: { color: '#a3a3a3', fontSize: 11, marginTop: 3 },
+  weekOverviewCardMuscles: { color: '#FF6B00', fontSize: 11, fontWeight: '600', marginTop: 3, textTransform: 'capitalize' },
+  newWeekButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 15, marginHorizontal: 16, marginTop: 6 },
+  newWeekButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '800', letterSpacing: 0.3 },
+  backToOverviewButton: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 16, marginBottom: 6 },
+  backToOverviewButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  compactSummaryCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginHorizontal: 16, marginTop: 6, marginBottom: 8 },
+  compactSummaryTitle: { color: '#F5F5F7', fontSize: 15, fontWeight: '800', textTransform: 'capitalize' },
+  compactSummaryMeta: { color: '#a3a3a3', fontSize: 12, marginTop: 4 },
+
+  pickerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  pickerSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 36, maxHeight: '75%' },
+  pickerHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  fichaOption: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 8 },
+  fichaOptionText: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+
   saveButton: { backgroundColor: '#FF6B00', margin: 16, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },

@@ -31,7 +31,7 @@ function isGifUrl(url) {
   return !!url && url.toLowerCase().split('?')[0].endsWith('.gif');
 }
 
-export default function AddExerciseModal({ personalId, editingItem, onConfirm, onClose }) {
+export default function AddExerciseModal({ personalId, studentId, editingItem, replaceItem, suggestedMuscleGroup, onConfirm, onClose }) {
   const [mode, setMode] = useState(editingItem ? 'configure' : 'browse');
   const [allExercises, setAllExercises] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +40,7 @@ export default function AddExerciseModal({ personalId, editingItem, onConfirm, o
   const [selectedExercise, setSelectedExercise] = useState(editingItem?.exercises || null);
   const [previewExercise, setPreviewExercise] = useState(null);
   const [gifPreviewExercise, setGifPreviewExercise] = useState(null);
+  const [recentExerciseIds, setRecentExerciseIds] = useState([]);
 
   const [sets, setSets] = useState(editingItem?.sets != null ? String(editingItem.sets) : '3');
   const [reps, setReps] = useState(editingItem?.reps || '10');
@@ -59,21 +60,69 @@ export default function AddExerciseModal({ personalId, editingItem, onConfirm, o
     loadExercises();
   }, []);
 
+  // "Recentes": exercises this specific student has had prescribed before,
+  // most recent first — a personal building/updating a ficha tends to reach
+  // for the same handful of exercises across sessions. No favorites table
+  // exists yet in the schema, so that tier isn't shown (would need explicit
+  // approval to add one, per project rules).
+  useEffect(() => {
+    if (!studentId) return;
+    (async () => {
+      const { data } = await supabase
+        .from('workout_exercises')
+        .select('exercise_id, created_at, workouts!inner(student_id)')
+        .eq('workouts.student_id', studentId)
+        .order('created_at', { ascending: false })
+        .limit(40);
+      const seen = new Set();
+      const ids = [];
+      (data || []).forEach((row) => {
+        if (row.exercise_id && !seen.has(row.exercise_id)) {
+          seen.add(row.exercise_id);
+          ids.push(row.exercise_id);
+        }
+      });
+      setRecentExerciseIds(ids.slice(0, 8));
+    })();
+  }, [studentId]);
+
   const filtered = allExercises.filter((e) => {
     if (muscleFilter !== 'todos' && e.muscle_group !== muscleFilter) return false;
     if (search.trim() && !e.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
+  const isCuratedBrowse = !search.trim() && muscleFilter === 'todos';
+  const recentExercises = isCuratedBrowse
+    ? recentExerciseIds.map((id) => allExercises.find((e) => e.id === id)).filter(Boolean)
+    : [];
+  const sameMuscleExercises = isCuratedBrowse && suggestedMuscleGroup
+    ? allExercises.filter((e) => e.muscle_group === suggestedMuscleGroup && !recentExerciseIds.includes(e.id)).slice(0, 8)
+    : [];
+
   const handleSelectExercise = (exercise) => {
     setSelectedExercise(exercise);
-    setSets('3');
-    setReps('10');
-    setLoadKg('');
-    setCadence('');
-    setRestSeconds('60');
-    setMethod('tradicional');
-    setNotes('');
+    // Swapping an exercise carries over the row it's replacing's own
+    // sets/reps/descanso/método automatically, per the spec — everything
+    // else (picking a fresh exercise to add) still starts from sane
+    // defaults.
+    if (replaceItem) {
+      setSets(replaceItem.sets != null ? String(replaceItem.sets) : '3');
+      setReps(replaceItem.reps || '10');
+      setLoadKg(replaceItem.load_kg != null ? String(replaceItem.load_kg) : '');
+      setCadence(replaceItem.cadence || '');
+      setRestSeconds(replaceItem.rest_time_seconds != null ? String(replaceItem.rest_time_seconds) : '60');
+      setMethod(replaceItem.execution_method || 'tradicional');
+      setNotes(replaceItem.notes || '');
+    } else {
+      setSets('3');
+      setReps('10');
+      setLoadKg('');
+      setCadence('');
+      setRestSeconds('60');
+      setMethod('tradicional');
+      setNotes('');
+    }
     setMode('configure');
   };
 
@@ -145,6 +194,13 @@ export default function AddExerciseModal({ personalId, editingItem, onConfirm, o
                 <Text style={styles.closeText}>Cancelar</Text>
               </TouchableOpacity>
             </>
+          ) : replaceItem ? (
+            <>
+              <Text style={styles.title}>Trocar Exercício</Text>
+              <TouchableOpacity onPress={() => setMode('browse')}>
+                <Text style={styles.closeText}>← Escolher outro</Text>
+              </TouchableOpacity>
+            </>
           ) : (
             <TouchableOpacity onPress={() => setMode('browse')}>
               <Text style={styles.closeText}>← Trocar exercício</Text>
@@ -214,16 +270,51 @@ export default function AddExerciseModal({ personalId, editingItem, onConfirm, o
         </ScrollView>
 
         <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-          <Text style={styles.confirmButtonText}>{editingItem ? 'Salvar alterações' : 'Adicionar à ficha'}</Text>
+          <Text style={styles.confirmButtonText}>{editingItem ? 'Salvar alterações' : replaceItem ? 'Confirmar troca' : 'Adicionar à ficha'}</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
+  const renderCuratedCard = (item) => (
+    <TouchableOpacity key={item.id} style={styles.curatedCard} onPress={() => handleSelectExercise(item)}>
+      {item.thumbnail_url ? (
+        <Image source={{ uri: item.thumbnail_url }} style={styles.curatedThumb} />
+      ) : (
+        <View style={styles.curatedThumbPlaceholder}>
+          <Text style={styles.thumbPlaceholderText}>{item.name.charAt(0)}</Text>
+        </View>
+      )}
+      <Text style={styles.curatedCardName} numberOfLines={2}>{item.name}</Text>
+    </TouchableOpacity>
+  );
+
+  const curatedHeader = isCuratedBrowse && (recentExercises.length > 0 || sameMuscleExercises.length > 0) ? (
+    <View style={{ marginBottom: 8 }}>
+      {recentExercises.length > 0 && (
+        <>
+          <Text style={styles.curatedSectionTitle}>Recentes dessa aluna</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.curatedRow}>
+            {recentExercises.map(renderCuratedCard)}
+          </ScrollView>
+        </>
+      )}
+      {sameMuscleExercises.length > 0 && (
+        <>
+          <Text style={styles.curatedSectionTitle}>Mesmo grupo muscular</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.curatedRow}>
+            {sameMuscleExercises.map(renderCuratedCard)}
+          </ScrollView>
+        </>
+      )}
+      <Text style={styles.curatedSectionTitle}>Biblioteca completa</Text>
+    </View>
+  ) : null;
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <Text style={styles.title}>Adicionar Exercício</Text>
+        <Text style={styles.title}>{replaceItem ? 'Trocar Exercício' : 'Adicionar Exercício'}</Text>
         <TouchableOpacity onPress={onClose}>
           <Text style={styles.closeText}>Cancelar</Text>
         </TouchableOpacity>
@@ -267,6 +358,7 @@ export default function AddExerciseModal({ personalId, editingItem, onConfirm, o
           data={filtered}
           keyExtractor={(item) => item.id}
           style={{ flex: 1, paddingHorizontal: 16, marginTop: 8 }}
+          ListHeaderComponent={curatedHeader}
           ListEmptyComponent={<Text style={styles.emptyText}>Nenhum exercício encontrado com esses filtros.</Text>}
           renderItem={({ item }) => {
             const isCustom = item.personal_id === personalId;
@@ -322,6 +414,12 @@ const styles = StyleSheet.create({
   chipText: { color: '#a3a3a3', fontSize: 10, fontWeight: '600' },
   chipTextActive: { color: '#0F0F12' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
+  curatedSectionTitle: { color: '#737373', fontSize: 10, textTransform: 'uppercase', fontWeight: '700', marginTop: 10, marginBottom: 8 },
+  curatedRow: { gap: 10, paddingBottom: 4 },
+  curatedCard: { width: 84 },
+  curatedThumb: { width: 84, height: 84, borderRadius: 10 },
+  curatedThumbPlaceholder: { width: 84, height: 84, borderRadius: 10, backgroundColor: '#1C1C22', alignItems: 'center', justifyContent: 'center' },
+  curatedCardName: { color: '#F5F5F7', fontSize: 11, fontWeight: '600', marginTop: 4 },
   exerciseRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, padding: 10, marginBottom: 8 },
   thumbWrap: { marginRight: 10 },
   thumb: { width: 48, height: 48, borderRadius: 10 },

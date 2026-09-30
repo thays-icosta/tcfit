@@ -10,6 +10,18 @@ function parseRepsAverage(repsStr) {
   return numbers.map(Number).reduce((a, b) => a + b, 0) / numbers.length;
 }
 
+// sets × avg reps × load — the one formula every "volume" number in the app
+// (this file's loadWorkoutSummaries, WorkoutBuilderScreen's ficha header)
+// should go through, so a personal never sees two different volume figures
+// for the same data. Returns 0 (not null) when load isn't set, so callers
+// can sum freely without null-checking each exercise.
+export function estimateExerciseVolumeKg({ sets, reps, load_kg }) {
+  if (load_kg == null) return 0;
+  const avgReps = parseRepsAverage(reps);
+  if (avgReps == null) return 0;
+  return (sets || 3) * avgReps * load_kg;
+}
+
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
@@ -98,10 +110,7 @@ export async function loadWorkoutSummaries(client, workoutIds) {
     const sets = row.sets || 3;
     s.exerciseCount += 1;
     s.setCount += sets;
-    if (row.load_kg != null) {
-      const avgReps = parseRepsAverage(row.reps);
-      if (avgReps != null) s.volumeKg += sets * avgReps * row.load_kg;
-    }
+    s.volumeKg += estimateExerciseVolumeKg(row);
     const group = row.exercises?.muscle_group;
     if (group) {
       groupCounts[row.workout_id] = groupCounts[row.workout_id] || {};
