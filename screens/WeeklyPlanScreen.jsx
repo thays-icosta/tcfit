@@ -10,6 +10,7 @@ import {
   loadWeekHistory,
   loadWorkoutSummaries,
   createNewWeekVersion,
+  duplicateWorkout,
 } from './workoutVersioning';
 import { loadExerciseLoadHistory, suggestNextLoad } from './progressionUtils';
 
@@ -60,6 +61,7 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
   const [showBuilder, setShowBuilder] = useState(false); // opens WorkoutBuilderScreen with no specific ficha
   const [assigningDay, setAssigningDay] = useState(null);
   const [savingDay, setSavingDay] = useState(false);
+  const [duplicatingWorkoutId, setDuplicatingWorkoutId] = useState(null);
 
   const [creatingWeek, setCreatingWeek] = useState(false);
   const [showOtherWeekPicker, setShowOtherWeekPicker] = useState(false);
@@ -149,12 +151,12 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
       return;
     }
     showAlert(
-      '+ Criar Nova Semana',
-      'Como você quer montar a prescrição desta semana?',
+      'Como deseja criar a nova semana?',
+      null,
       [
         { text: 'Copiar semana anterior', onPress: () => runNewWeek('copy-current') },
-        { text: 'Usar outra semana como modelo', onPress: () => setShowOtherWeekPicker(true) },
-        { text: 'Criar do zero', onPress: () => runNewWeek('scratch') },
+        { text: 'Usar outra semana como base', onPress: () => setShowOtherWeekPicker(true) },
+        { text: 'Começar do zero', onPress: () => runNewWeek('scratch') },
         { text: 'Cancelar', style: 'cancel' },
       ]
     );
@@ -163,9 +165,15 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
   const runNewWeek = async (mode, sourceWorkouts = []) => {
     setCreatingWeek(true);
     try {
-      await createNewWeekVersion(supabase, { studentId, personalId, mode, sourceWorkouts });
+      const result = await createNewWeekVersion(supabase, { studentId, personalId, mode, sourceWorkouts });
       setHistoryIndex(null);
       await loadAll();
+      if (result.unmatchedNames?.length > 0) {
+        showAlert(
+          'Semana criada, mas com atenção',
+          `"${result.unmatchedNames.join('", "')}" não tinha uma ficha com o mesmo nome na semana escolhida como base, então foi criada em branco. Adicione os exercícios manualmente.`
+        );
+      }
     } catch (e) {
       console.error('Erro ao criar nova semana:', e);
       showAlert('Ops', 'Não foi possível criar a nova semana agora. Tenta de novo em instantes.');
@@ -192,6 +200,20 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
     setSavingDay(false);
     setAssigningDay(null);
     loadAll();
+  };
+
+  // "Duplicar" quick action per day — creates an unassigned copy of that
+  // day's ficha (same reused duplicateWorkout as the ficha editor), which
+  // the personal can then assign to another day via the pencil icon.
+  const handleDuplicateDay = async (workout) => {
+    setDuplicatingWorkoutId(workout.id);
+    try {
+      await duplicateWorkout(supabase, workout, { studentId, personalId });
+      await loadAll();
+    } catch (e) {
+      showAlert('Erro', e?.message || 'Não foi possível duplicar essa ficha.');
+    }
+    setDuplicatingWorkoutId(null);
   };
 
   const handleOpenHistoryWorkout = async (workout) => {
@@ -309,9 +331,18 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
                     <View style={styles.dayCardHeader}>
                       <Text style={styles.dayLabel}>{day.label}{isToday ? ' · HOJE' : ''}</Text>
                       {workout && viewingCurrent && (
-                        <TouchableOpacity onPress={() => setAssigningDay(day.value)} hitSlop={10}>
-                          <Ionicons name="create-outline" size={16} color="#525252" />
-                        </TouchableOpacity>
+                        <View style={styles.dayCardHeaderActions}>
+                          <TouchableOpacity onPress={() => handleDuplicateDay(workout)} hitSlop={10} disabled={duplicatingWorkoutId === workout.id}>
+                            {duplicatingWorkoutId === workout.id ? (
+                              <ActivityIndicator color="#525252" size="small" />
+                            ) : (
+                              <Ionicons name="copy-outline" size={16} color="#525252" />
+                            )}
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => setAssigningDay(day.value)} hitSlop={10}>
+                            <Ionicons name="create-outline" size={16} color="#525252" />
+                          </TouchableOpacity>
+                        </View>
                       )}
                     </View>
                     {workout ? (
@@ -443,7 +474,7 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
         <View style={styles.pickerOverlay}>
           <View style={styles.pickerSheet}>
             <View style={styles.pickerHeaderRow}>
-              <Text style={styles.modalTitle}>Usar qual semana como modelo?</Text>
+              <Text style={styles.modalTitle}>Usar qual semana como base?</Text>
               <TouchableOpacity onPress={() => setShowOtherWeekPicker(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Ionicons name="close" size={20} color="#a3a3a3" />
               </TouchableOpacity>
@@ -497,6 +528,7 @@ const styles = StyleSheet.create({
   dayCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 10 },
   dayCardToday: { borderColor: '#FF6B00' },
   dayCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  dayCardHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   dayLabel: { color: '#525252', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
   dayCardBody: {},
   workoutName: { color: '#F5F5F7', fontSize: 15, fontWeight: '800' },

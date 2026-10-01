@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Image, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DraggableFlatList from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -14,6 +14,7 @@ import {
   loadWeekHistory,
   loadWorkoutSummaries,
   createNewWeekVersion,
+  duplicateWorkout,
   estimateExerciseVolumeKg,
 } from './workoutVersioning';
 import { useSpeechToText } from './useSpeechToText';
@@ -141,12 +142,12 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       return;
     }
     showAlert(
-      '+ Nova Semana',
-      'Como você quer montar a prescrição desta semana?',
+      'Como deseja criar a nova semana?',
+      null,
       [
         { text: 'Copiar semana anterior', onPress: () => runNewWeek('copy-current') },
-        { text: 'Copiar outra semana', onPress: () => setShowOtherWeekPicker(true) },
-        { text: 'Criar do zero', onPress: () => runNewWeek('scratch') },
+        { text: 'Usar outra semana como base', onPress: () => setShowOtherWeekPicker(true) },
+        { text: 'Começar do zero', onPress: () => runNewWeek('scratch') },
         { text: 'Cancelar', style: 'cancel' },
       ]
     );
@@ -155,9 +156,15 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const runNewWeek = async (mode, sourceWorkouts = []) => {
     setCreatingWeek(true);
     try {
-      await createNewWeekVersion(supabase, { studentId, personalId, mode, sourceWorkouts });
+      const result = await createNewWeekVersion(supabase, { studentId, personalId, mode, sourceWorkouts });
       await loadWorkouts();
       await loadWeekHistoryList();
+      if (result.unmatchedNames?.length > 0) {
+        showAlert(
+          'Semana criada, mas com atenção',
+          `"${result.unmatchedNames.join('", "')}" não tinha uma ficha com o mesmo nome na semana escolhida como base, então foi criada em branco. Adicione os exercícios manualmente.`
+        );
+      }
     } catch (e) {
       console.error('Erro ao criar nova semana:', e);
       showAlert('Ops', 'Não foi possível criar a nova semana agora. Tenta de novo em instantes.');
@@ -268,32 +275,15 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const handleDuplicateFicha = async (workout) => {
     if (saving) return;
     setSaving(true);
-    const { data: newWorkout, error } = await supabase
-      .from('workouts')
-      .insert({ student_id: studentId, personal_id: personalId, name: `${workout.name} (cópia)`, active: true, phase_id: workout.phase_id || null })
-      .select()
-      .single();
-
-    if (error) {
-      showAlert('Erro', error.message);
-      setSaving(false);
-      return;
+    try {
+      const newWorkout = await duplicateWorkout(supabase, workout, { studentId, personalId });
+      await loadWorkouts();
+      setActiveWorkoutId(newWorkout.id);
+      showAlert('Feito!', `Ficha duplicada como "${newWorkout.name}".`);
+    } catch (e) {
+      showAlert('Erro', e?.message || 'Não foi possível duplicar a ficha.');
     }
-
-    const { data: originalItems } = await supabase
-      .from('workout_exercises')
-      .select('exercise_id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes')
-      .eq('workout_id', workout.id);
-
-    if (originalItems && originalItems.length > 0) {
-      const copies = originalItems.map((it) => ({ ...it, workout_id: newWorkout.id }));
-      await supabase.from('workout_exercises').insert(copies);
-    }
-
     setSaving(false);
-    await loadWorkouts();
-    setActiveWorkoutId(newWorkout.id);
-    showAlert('Feito!', `Ficha duplicada como "${newWorkout.name}".`);
   };
 
   const handleLongPressFicha = (workout) => {
@@ -814,35 +804,27 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     return parts.join(' · ');
   };
 
-  const renderExerciseItem = ({ item, drag, isActive }) => {
+  // Ultra-compact: a numbered row (name + one metrics line), no inline
+  // thumbnail/video — media only opens on demand via "Ver execução", so the
+  // list of a 6-8 exercise ficha fits on screen without scrolling past
+  // images, per the "rapidez > visual" priority.
+  const renderExerciseItem = ({ item, getIndex, drag, isActive }) => {
+    const index = getIndex();
     const hasVideo = !!item.exercises?.video_url;
 
     return (
       <View style={[styles.exerciseCard, isActive && styles.exerciseCardDragging]}>
-        <TouchableOpacity
-          onPress={() => hasVideo && setWatchingVideo({ url: item.exercises.video_url, name: item.exercises.name })}
-          disabled={!hasVideo}
-          style={styles.exerciseThumbWrap}
-        >
-          {item.exercises?.thumbnail_url ? (
-            <Image source={{ uri: item.exercises.thumbnail_url }} style={styles.exerciseThumbImage} />
-          ) : (
-            <View style={styles.exerciseThumbPlaceholder}>
-              <Text style={styles.exerciseThumbMuscle}>{item.exercises?.muscle_group?.toUpperCase() || '?'}</Text>
-            </View>
-          )}
-          {hasVideo && (
-            <View style={styles.playOverlay}>
-              <Text style={styles.playOverlayText}>▶</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        <Text style={styles.exerciseIndex}>{String(index + 1).padStart(2, '0')}</Text>
 
         <View style={styles.exerciseInfo}>
           <Text style={styles.exerciseName}>{item.exercises?.name}</Text>
           <Text style={styles.exerciseMetrics}>{formatCompactMetrics(item)}</Text>
-          {item.exercises?.muscle_group && <Text style={styles.exerciseMuscle}>{item.exercises.muscle_group}</Text>}
           {item.notes ? <Text style={styles.exerciseNotes}>📝 {item.notes}</Text> : null}
+          {hasVideo && (
+            <TouchableOpacity onPress={() => setWatchingVideo({ url: item.exercises.video_url, name: item.exercises.name })}>
+              <Text style={styles.watchLink}>▶ Ver execução</Text>
+            </TouchableOpacity>
+          )}
 
           <View style={styles.exerciseActionsRow}>
             <TouchableOpacity hitSlop={10} onLongPress={drag} disabled={isActive} style={styles.dragHandleButton}>
@@ -1016,6 +998,9 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
             <Text style={styles.actionChipText}>📋 Editar Todos (séries/reps/descanso)</Text>
           </TouchableOpacity>
         )}
+        <TouchableOpacity style={styles.actionChip} onPress={() => activeWorkout && handleDuplicateFicha(activeWorkout)} disabled={saving}>
+          <Text style={styles.actionChipText}>📑 Duplicar este treino</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.actionChip} onPress={handleOpenSendModal}>
           <Text style={styles.actionChipText}>📤 Enviar p/ outro aluno</Text>
         </TouchableOpacity>
@@ -1344,19 +1329,14 @@ const styles = StyleSheet.create({
   addExerciseButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 8 },
   addExerciseButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
   sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
-  exerciseCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden' },
+  exerciseCard: { flexDirection: 'row', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, marginHorizontal: 16, marginBottom: 8, padding: 12 },
   exerciseCardDragging: { borderColor: '#FF6B00', opacity: 0.9 },
-  exerciseThumbWrap: { width: '100%', height: 100, position: 'relative' },
-  exerciseThumbImage: { width: '100%', height: 100 },
-  exerciseThumbPlaceholder: { width: '100%', height: 100, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
-  exerciseThumbMuscle: { color: '#FF6B00', fontSize: 13, fontWeight: '800', letterSpacing: 1 },
-  playOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' },
-  playOverlayText: { color: '#F5F5F7', fontSize: 32 },
-  exerciseInfo: { padding: 12 },
-  exerciseName: { color: '#F5F5F7', fontSize: 15, fontWeight: '700' },
-  exerciseMetrics: { color: '#a3a3a3', fontSize: 12, fontWeight: '600', marginTop: 4 },
-  exerciseMuscle: { color: '#FF6B00', fontSize: 11, fontWeight: '600', marginTop: 2, textTransform: 'capitalize' },
-  exerciseNotes: { color: '#737373', fontSize: 10, marginTop: 8, fontStyle: 'italic' },
+  exerciseIndex: { color: '#525252', fontSize: 13, fontWeight: '800', width: 24, marginTop: 1 },
+  exerciseInfo: { flex: 1 },
+  exerciseName: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
+  exerciseMetrics: { color: '#a3a3a3', fontSize: 12, fontWeight: '600', marginTop: 3 },
+  exerciseNotes: { color: '#737373', fontSize: 10, marginTop: 6, fontStyle: 'italic' },
+  watchLink: { color: '#FF6B00', fontSize: 11, fontWeight: '700', marginTop: 6 },
   exerciseActionsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
   dragHandleButton: { padding: 6, marginLeft: -6 },
   exerciseActionButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },

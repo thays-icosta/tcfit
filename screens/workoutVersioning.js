@@ -32,6 +32,31 @@ function uuidv4() {
 
 const EXERCISE_COLUMNS = 'exercise_id, order_index, sets, reps, load_kg, cadence, rest_time_seconds, execution_method, notes';
 
+// "Copiar treino"/"Duplicar treino" — a plain, unversioned copy: a new
+// active ficha with no weekday assigned (so it never collides with the
+// original's day) and the same exercises, starting fresh (no
+// previous_version_id/version_group_id, since it isn't replacing anything —
+// that's what "+ Nova Semana" is for). Used by both the ficha editor's
+// "Duplicar" and Planejamento da Semana's per-day "Duplicar" action, so
+// there's one place this logic lives instead of two.
+export async function duplicateWorkout(client, workout, { studentId, personalId }) {
+  const c = client || supabase;
+  const { data: newWorkout, error } = await c
+    .from('workouts')
+    .insert({ student_id: studentId, personal_id: personalId, name: `${workout.name} (cópia)`, active: true, phase_id: workout.phase_id || null })
+    .select()
+    .single();
+  if (error || !newWorkout) throw error || new Error(`Falha ao duplicar "${workout.name}".`);
+
+  const { data: originalItems } = await c.from('workout_exercises').select(EXERCISE_COLUMNS).eq('workout_id', workout.id);
+  if (originalItems && originalItems.length > 0) {
+    const copies = originalItems.map((it) => ({ ...it, workout_id: newWorkout.id }));
+    await c.from('workout_exercises').insert(copies);
+  }
+
+  return newWorkout;
+}
+
 // The student's current "week" — every active ficha. Deliberately the same
 // active=true filter WorkoutBuilderScreen/PresencialSessionScreen/
 // AlunoHomeScreen already use, so a "week" is never a new, separate concept
@@ -133,7 +158,8 @@ export async function loadWorkoutSummaries(client, workoutIds) {
 // mode:
 //   'copy-current' — copy each ficha's own current exercises forward
 //   'other-week'   — copy exercises from a chosen historical group, matched
-//                    by ficha name (falls back to empty if no name match)
+//                    by ficha name (falls back to empty if no name match —
+//                    reported back via the returned unmatchedNames)
 //   'scratch'      — new fichas start with zero exercises
 export async function createNewWeekVersion(client, { studentId, personalId, mode, sourceWorkouts = [] }) {
   const c = client || supabase;
@@ -144,6 +170,7 @@ export async function createNewWeekVersion(client, { studentId, personalId, mode
 
   const groupId = uuidv4();
   const created = [];
+  const unmatchedNames = [];
 
   for (const src of current) {
     const { data: newWorkout, error } = await c
@@ -170,6 +197,12 @@ export async function createNewWeekVersion(client, { studentId, personalId, mode
       if (match) {
         const { data } = await c.from('workout_exercises').select(EXERCISE_COLUMNS).eq('workout_id', match.id);
         exerciseRows = data;
+      } else {
+        // No ficha with this exact name in the chosen week (e.g. it was
+        // renamed since) — the new version is still created so the week
+        // stays complete, but empty and silently so is worse than empty and
+        // flagged: callers surface unmatchedNames to the personal instead.
+        unmatchedNames.push(src.name);
       }
     }
 
@@ -187,5 +220,5 @@ export async function createNewWeekVersion(client, { studentId, personalId, mode
     created.push(newWorkout);
   }
 
-  return { groupId, workouts: created };
+  return { groupId, workouts: created, unmatchedNames };
 }
