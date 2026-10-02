@@ -27,10 +27,10 @@ export default function Root({ children }: PropsWithChildren) {
 
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#FF6B00" />
-        <link rel="icon" href="/favicon.png" />
+        <link rel="icon" href="/favicon.png?v=2" />
 
         {/* iOS "Add to Home Screen" */}
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="TcFit" />

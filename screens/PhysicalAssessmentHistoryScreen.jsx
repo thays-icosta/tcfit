@@ -61,10 +61,48 @@ async function renderHtmlToPdfBlob(html, fileName) {
   iframe.contentDocument.write(html);
   iframe.contentDocument.close();
 
+  let wrapper = null;
   try {
-    await waitForImages(iframe.contentDocument);
+    // html2pdf CLONES whatever element it's given into the *main* page (not
+    // the iframe) before rasterizing it. Handing it iframe.body used to drop
+    // the report's <style> (it lives in <head>) and — worse — the cloned
+    // <body> tag got the app's own global body styles instead, which is the
+    // dark app background: the PDF came out unstyled (serif font, no layout)
+    // on a black block. Instead, copy the report's CSS rules into a host <div>
+    // with every selector scoped under .tcfit-pdf-root (html/body rules map to
+    // the root itself), so the report is self-contained and the app's CSS can't
+    // reach in or the report's CSS leak out.
+    const scopedRules = [];
+    Array.from(iframe.contentDocument.styleSheets).forEach((sheet) => {
+      Array.from(sheet.cssRules).forEach((rule) => {
+        if (rule.type !== 1) return; // style rules only; drops @page (not applicable here)
+        const selector = rule.selectorText
+          .split(',')
+          .map((s) => {
+            const sel = s.trim();
+            if (sel === 'html' || sel === 'body') return '.tcfit-pdf-root';
+            if (sel === '*') return '.tcfit-pdf-root, .tcfit-pdf-root *';
+            return `.tcfit-pdf-root ${sel}`;
+          })
+          .join(', ');
+        scopedRules.push(`${selector} { ${rule.style.cssText} }`);
+      });
+    });
+
+    // The wrapper is what's positioned offscreen; the host itself must stay in
+    // normal flow because html2pdf clones the host's inline styles too — a
+    // fixed-position clone collapses to zero height.
+    wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:fixed; top:0; left:-10000px; width:800px;';
+    const host = document.createElement('div');
+    host.className = 'tcfit-pdf-root';
+    host.innerHTML = `<style>${scopedRules.join(' ')}</style>${iframe.contentDocument.body.innerHTML}`;
+    wrapper.appendChild(host);
+    document.body.appendChild(wrapper);
+
+    await waitForImages({ images: host.querySelectorAll('img') });
     const blob = await html2pdf()
-      .from(iframe.contentDocument.body)
+      .from(host)
       .set({
         filename: fileName,
         margin: [20, 15, 20, 15],
@@ -81,6 +119,7 @@ async function renderHtmlToPdfBlob(html, fileName) {
       .outputPdf('blob');
     return blob;
   } finally {
+    if (wrapper) document.body.removeChild(wrapper);
     document.body.removeChild(iframe);
   }
 }

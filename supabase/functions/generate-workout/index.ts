@@ -4,7 +4,47 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-const GEMINI_MODEL = "gemini-3.6-flash";
+// Primary model first; if Google's side is overloaded ("high demand" 503s are
+// usually brief spikes), retry it once and then fall back to the next models
+// in this list instead of failing the personal's request on the first hiccup.
+const GEMINI_MODELS = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.5-flash"];
+const ATTEMPT_PLAN = [GEMINI_MODELS[0], GEMINI_MODELS[0], GEMINI_MODELS[1], GEMINI_MODELS[2]];
+const TRANSIENT_STATUSES = new Set([429, 500, 502, 503, 504]);
+
+type GeminiResult =
+  | { ok: true; json: any }
+  | { ok: false; transient: boolean };
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function callGemini(body: string, apiKey: string): Promise<GeminiResult> {
+  let transient = false;
+  for (let i = 0; i < ATTEMPT_PLAN.length; i++) {
+    const model = ATTEMPT_PLAN[i];
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        { method: "POST", headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" }, body },
+      );
+      if (res.ok) return { ok: true, json: await res.json() };
+
+      const errText = await res.text();
+      console.error(`generate-workout: ${model} respondeu ${res.status} (tentativa ${i + 1}): ${errText.slice(0, 500)}`);
+      if (TRANSIENT_STATUSES.has(res.status)) {
+        transient = true;
+      } else if (res.status !== 404) {
+        // 400/401/403 — the request or key itself is wrong; another try or model won't change that.
+        return { ok: false, transient: false };
+      }
+      // 404 on a fallback model (not available for this key) just moves on to the next one.
+    } catch (e) {
+      console.error(`generate-workout: falha de rede com ${model} (tentativa ${i + 1}):`, e);
+      transient = true;
+    }
+    if (i < ATTEMPT_PLAN.length - 1) await sleep(i === 0 ? 1500 : 700);
+  }
+  return { ok: false, transient };
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,39 +134,34 @@ Deno.serve(async (req: Request) => {
       "Sets é um número inteiro de séries. Reps é uma faixa em texto (ex: '10-12'). rest_time_seconds é o descanso entre séries em segundos (número inteiro, ex: 60).\n\n" +
       "Exercícios disponíveis:\n" + catalogText;
 
-    let geminiRes: Response;
-    try {
-      geminiRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-        {
-          method: "POST",
-          headers: {
-            "x-goog-api-key": GEMINI_API_KEY,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: instruction }] }],
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-            generationConfig: {
-              responseMimeType: "application/json",
-              responseSchema: RESPONSE_SCHEMA,
-              temperature: 0.4,
-            },
-          }),
-        }
-      );
-    } catch (fetchErr) {
-      console.error("generate-workout: falha de rede ao chamar o Gemini:", fetchErr);
-      return json({ error: "Falha de rede ao chamar a IA. Tente novamente em instantes." }, 502);
+    const gemini = await callGemini(
+      JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: instruction }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: RESPONSE_SCHEMA,
+          temperature: 0.4,
+        },
+      }),
+      GEMINI_API_KEY,
+    );
+
+    if (!gemini.ok) {
+      // The raw Gemini error body is only ever logged, never shown to the
+      // personal — it's an English JSON blob that tells them nothing useful.
+      if (gemini.transient) {
+        return json({
+          error: "A IA do Google está com muita demanda agora. Tenta de novo em alguns instantes — enquanto isso, você pode montar o treino manualmente.",
+          retryable: true,
+        }, 503);
+      }
+      return json({
+        error: "Não consegui falar com a IA agora. Você pode montar o treino manualmente enquanto isso, e tentar a IA de novo daqui a pouco.",
+      }, 502);
     }
 
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      console.error(`generate-workout: Gemini respondeu ${geminiRes.status}: ${errText}`);
-      return json({ error: `Erro do Gemini: ${errText.slice(0, 300)}` }, 502);
-    }
-
-    const geminiJson = await geminiRes.json();
+    const geminiJson = gemini.json;
     const content = geminiJson?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!content) {
       console.error("generate-workout: resposta do Gemini sem conteúdo:", JSON.stringify(geminiJson));
