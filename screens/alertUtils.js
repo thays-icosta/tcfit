@@ -30,6 +30,19 @@ export async function describeFunctionError(error, data, fallback) {
   return data?.error || error?.message || fallback;
 }
 
+// On web, showAlert renders the app's own dialog (AlertHost, mounted once in
+// the root layout) instead of the browser's window.alert/confirm/prompt. The
+// host registers itself here; until it has (or if it ever unmounts) the
+// legacy browser-dialog path below still works, so an early alert is never lost.
+let alertHost = null;
+
+export function registerAlertHost(handler) {
+  alertHost = handler;
+  return () => {
+    if (alertHost === handler) alertHost = null;
+  };
+}
+
 // React Native Web's Alert.alert is a no-op stub — it never shows anything,
 // and callback buttons never fire. This wraps it with the exact same
 // signature so it's a drop-in replacement everywhere in the app.
@@ -39,6 +52,15 @@ export function showAlert(title, message, buttons) {
     return;
   }
 
+  if (alertHost) {
+    alertHost({ title, message, buttons });
+    return;
+  }
+
+  showBrowserAlert(title, message, buttons);
+}
+
+function showBrowserAlert(title, message, buttons) {
   if (!buttons || buttons.length === 0) {
     window.alert(message ? `${title}\n\n${message}` : title);
     return;

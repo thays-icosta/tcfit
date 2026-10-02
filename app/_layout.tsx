@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { logError, installGlobalErrorHandlers } from '@/screens/errorLogger';
+import AlertHost from '@/screens/AlertHost';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -102,6 +103,7 @@ function RootLayoutInner() {
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style="auto" />
+        <AlertHost />
       </ThemeProvider>
     </SafeAreaProvider>
   );

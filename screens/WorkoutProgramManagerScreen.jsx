@@ -62,12 +62,12 @@ export default function WorkoutProgramManagerScreen({ studentId, studentName, pe
       return;
     }
     showAlert(
-      '+ Nova Semana',
-      'Como você quer montar a prescrição desta semana?',
+      'Como deseja criar a nova semana?',
+      null,
       [
-        { text: 'Copiar semana atual', onPress: () => runNewWeek('copy-current') },
+        { text: 'Copiar semana anterior', onPress: () => runNewWeek('copy-current') },
         { text: 'Usar outra semana como base', onPress: () => setShowOtherWeekPicker(true) },
-        { text: 'Criar do zero', onPress: () => runNewWeek('scratch') },
+        { text: 'Começar do zero', onPress: () => runNewWeek('scratch') },
         { text: 'Cancelar', style: 'cancel' },
       ]
     );
@@ -76,9 +76,15 @@ export default function WorkoutProgramManagerScreen({ studentId, studentName, pe
   const runNewWeek = async (mode, sourceWorkouts = []) => {
     setCreatingWeek(true);
     try {
-      await createNewWeekVersion(supabase, { studentId, personalId, mode, sourceWorkouts });
+      const result = await createNewWeekVersion(supabase, { studentId, personalId, mode, sourceWorkouts });
       await loadAll();
       setView('builder');
+      if (result.unmatchedNames?.length > 0) {
+        showAlert(
+          'Semana criada, mas com atenção',
+          `"${result.unmatchedNames.join('", "')}" não tinha uma ficha com o mesmo nome na semana escolhida como base, então foi criada em branco. Adicione os exercícios manualmente.`
+        );
+      }
     } catch (e) {
       console.error('Erro ao criar nova semana:', e);
       showAlert('Ops', 'Não foi possível criar a nova semana agora. Tenta de novo em instantes.');
