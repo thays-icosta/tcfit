@@ -128,14 +128,11 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount,
           />
           <View style={styles.centerBlock}>
             <Image
-              source={require('../assets/images/brand-logo.png')}
+              source={require('../assets/images/brand-wordmark.png')}
               style={styles.logo}
               resizeMode="contain"
+              accessibilityLabel="TcFit"
             />
-            <Text style={styles.appName}>
-              <Text style={styles.appNameTc}>Tc</Text>
-              <Text style={styles.appNameFit}>Fit</Text>
-            </Text>
             <Text style={styles.slogan}>Sua plataforma exclusiva de treino e saúde</Text>
             <Text style={[styles.heroSupportText, { fontSize: isDesktop ? 15 : 14, lineHeight: (isDesktop ? 15 : 14) * 1.5 }]}>
               Acompanhamento completo e metodologia validada para transformar o seu corpo de forma simples.
@@ -146,7 +143,7 @@ export default function WelcomeScreen({ onLogin, onSignup, scrollToPlansOnMount,
         <View style={styles.trustStrip}>
           {TRUST_STRIP.map((item, i) => (
             <View key={i} style={styles.trustRow}>
-              <View style={styles.trustIconCircle}>
+              <View style={[styles.trustIconCircle, styles.trustIconCircleBrand]}>
                 <Ionicons name={item.icon} size={16} color={ACCENT} />
               </View>
               <Text style={styles.trustText}>{item.text}</Text>
@@ -207,32 +204,18 @@ const styles = StyleSheet.create({
       ? { maxWidth: 480, width: '100%', marginHorizontal: 'auto', paddingHorizontal: 16 }
       : { paddingHorizontal: 16 }),
   },
-  heroWrap: { paddingTop: 60, paddingBottom: 24, overflow: 'hidden' },
+  heroWrap: { paddingTop: 64, paddingBottom: 28, overflow: 'hidden' },
   centerBlock: { alignItems: 'center' },
-  logo: { width: 250, height: 113, marginBottom: 12 },
-  appName: {
-    fontSize: 32,
+  // brand-wordmark.png is 663x201 (3.3:1) — width/height keep that ratio exactly.
+  logo: { width: 200, height: 61, marginBottom: 22 },
+  slogan: {
+    color: '#F4F4F5',
+    fontSize: 16,
     fontFamily: 'PlusJakartaSans_700Bold',
     fontWeight: '700',
-    letterSpacing: 32 * 0.08,
-    ...(Platform.OS === 'web' ? { WebkitFontSmoothing: 'antialiased', fontSmoothing: 'antialiased' } : {}),
-  },
-  appNameTc: { color: '#FFFFFF' },
-  appNameFit: {
-    color: ACCENT,
-    textShadowColor: 'rgba(255,107,0,0.55)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 14,
-  },
-  slogan: {
-    color: '#A1A1AA',
-    fontSize: 13,
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontWeight: '400',
-    letterSpacing: 0.4,
-    marginTop: 8,
+    letterSpacing: 0.2,
     textAlign: 'center',
-    paddingHorizontal: 20,
+    maxWidth: 215, // breaks as "Sua plataforma exclusiva / de treino e saúde" instead of orphaning "saúde"
   },
   heroSupportText: {
     color: '#A1A1AA',
@@ -240,14 +223,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: 360,
     alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 24,
+    marginTop: 10,
+    marginBottom: 26,
   },
-  trustStrip: { ...FLAT_CARD, marginBottom: 20, gap: 12 },
+  trustStrip: { ...FLAT_CARD, borderColor: 'rgba(255,107,0,0.22)', marginBottom: 20, gap: 14 },
   highlightStrip: { ...FLAT_CARD, borderWidth: 1, marginBottom: 20, gap: 12 },
   highlightTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 0.6, marginBottom: 2 },
   trustRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   trustIconCircle: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
+  trustIconCircleBrand: { borderWidth: 1, borderColor: 'rgba(255,107,0,0.4)' },
   trustText: { color: '#d4d4d4', fontSize: 12, fontWeight: '600', flexShrink: 1 },
   exploreButton: {
     flexDirection: 'row',
