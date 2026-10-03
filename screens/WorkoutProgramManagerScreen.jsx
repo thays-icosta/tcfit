@@ -44,6 +44,7 @@ export default function WorkoutProgramManagerScreen({ studentId, studentName, pe
   const [showOtherWeekPicker, setShowOtherWeekPicker] = useState(false);
 
   const [historyDetailGroup, setHistoryDetailGroup] = useState(null);
+  const [deletingWeeks, setDeletingWeeks] = useState(false);
   const [historyDetailItems, setHistoryDetailItems] = useState(null);
   const [loadingHistoryDetail, setLoadingHistoryDetail] = useState(false);
 
@@ -66,6 +67,64 @@ export default function WorkoutProgramManagerScreen({ studentId, studentName, pe
   // The days the student actually trains = the weekdays assigned to the active fichas
   // (the same weekday column Planejamento da Semana and the aluno's "Minha Semana" read).
   const trainingDays = [1, 2, 3, 4, 5, 6, 0].filter((d) => currentWeek.some((w) => w.weekday === d));
+
+  // Deleting archived weeks. The database cascades from workouts to their
+  // exercises, to the treinos the student did on them and to the sets logged
+  // there (that is the progression history), so the dialog states exactly how
+  // much goes before anything is deleted. Only archived fichas (active = false)
+  // can be deleted here — the current week is never touched.
+  const weekImpact = async (workoutIds) => {
+    const { count: sessionCount } = await supabase
+      .from('workout_sessions')
+      .select('id', { count: 'exact', head: true })
+      .in('workout_id', workoutIds);
+    const { data: exRows } = await supabase.from('workout_exercises').select('id').in('workout_id', workoutIds);
+    const exIds = (exRows || []).map((r) => r.id);
+    let setCount = 0;
+    if (exIds.length > 0) {
+      const { count } = await supabase
+        .from('workout_session_sets')
+        .select('id', { count: 'exact', head: true })
+        .in('workout_exercise_id', exIds);
+      setCount = count || 0;
+    }
+    return { sessions: sessionCount || 0, sets: setCount };
+  };
+
+  const runDeleteWeeks = async (groups) => {
+    const ids = groups.flatMap((g) => g.workouts.map((w) => w.id));
+    setDeletingWeeks(true);
+    const { error } = await supabase.from('workouts').delete().in('id', ids).eq('active', false);
+    if (error) {
+      console.error('Erro ao apagar semanas:', error);
+      showAlert('Não deu pra apagar', 'Não foi possível apagar essa semana agora. Ela pode estar ligada a um projeto do aluno. Tenta de novo em instantes.');
+    }
+    setDeletingWeeks(false);
+    setView('overview');
+    await loadAll();
+  };
+
+  const confirmDeleteWeeks = async (groups, title) => {
+    const ids = groups.flatMap((g) => g.workouts.map((w) => w.id));
+    if (ids.length === 0) return;
+    setDeletingWeeks(true);
+    const impact = await weekImpact(ids);
+    setDeletingWeeks(false);
+    const what = groups.length === 1
+      ? `as fichas dessa semana (${groups[0].workouts.map((w) => w.name).join(', ')})`
+      : `as fichas de ${groups.length} semanas arquivadas`;
+    const lost = impact.sessions > 0
+      ? ` Também apaga ${impact.sessions} treino${impact.sessions !== 1 ? 's' : ''} já feito${impact.sessions !== 1 ? 's' : ''} com elas, com ${impact.sets} série${impact.sets !== 1 ? 's' : ''} de carga registrada${impact.sets !== 1 ? 's' : ''} — a progressão desses exercícios deixa de contar com isso.`
+      : ' Nenhum treino do aluno foi feito com elas.';
+    showAlert(
+      title,
+      `Isso apaga ${what} do histórico.${lost} Não dá pra desfazer.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: groups.length === 1 ? 'Apagar semana' : 'Apagar tudo', style: 'destructive', onPress: () => runDeleteWeeks(groups) },
+      ]
+    );
+  };
 
   const handleNewWeek = () => {
     if (currentWeek.length === 0) {
@@ -185,6 +244,15 @@ export default function WorkoutProgramManagerScreen({ studentId, studentName, pe
               );
             })
           )}
+
+          <TouchableOpacity style={styles.dangerButton} onPress={() => confirmDeleteWeeks([historyDetailGroup], 'Apagar esta semana?')} disabled={deletingWeeks}>
+            {deletingWeeks ? <ActivityIndicator color="#ef4444" size="small" /> : (
+              <>
+                <Ionicons name="trash-outline" size={15} color="#ef4444" />
+                <Text style={styles.dangerButtonText}>Apagar esta semana do histórico</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </ScrollView>
       </View>
     );
@@ -264,13 +332,21 @@ export default function WorkoutProgramManagerScreen({ studentId, studentName, pe
 
           {history.length > 0 && (
             <>
-              <Text style={[styles.sectionTitle, { marginTop: 28 }]}>HISTÓRICO DE SEMANAS</Text>
+              <View style={styles.historyHeaderRow}>
+                <Text style={[styles.sectionTitle, { marginTop: 28, marginBottom: 0 }]}>HISTÓRICO DE SEMANAS</Text>
+                <TouchableOpacity onPress={() => confirmDeleteWeeks(history, 'Limpar todo o histórico de semanas?')} disabled={deletingWeeks} hitSlop={8} style={{ marginTop: 28 }}>
+                  <Text style={styles.clearLink}>Limpar tudo</Text>
+                </TouchableOpacity>
+              </View>
               {history.map((group) => (
                 <TouchableOpacity key={group.key} style={styles.historyRow} onPress={() => handleOpenHistoryDetail(group)}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.historyRowDate}>{weekRangeLabel(group)}</Text>
                     <Text style={styles.historyRowNames} numberOfLines={1}>{group.workouts.map((w) => w.name).join(' · ')}</Text>
                   </View>
+                  <TouchableOpacity onPress={() => confirmDeleteWeeks([group], 'Apagar esta semana?')} disabled={deletingWeeks} hitSlop={10} style={styles.historyRowDelete} accessibilityLabel="Apagar esta semana">
+                    <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                  </TouchableOpacity>
                   <Ionicons name="chevron-forward-outline" size={16} color="#525252" />
                 </TouchableOpacity>
               ))}
@@ -332,6 +408,11 @@ const styles = StyleSheet.create({
   historyRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, padding: 12, marginBottom: 8 },
   historyRowDate: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   historyRowNames: { color: '#737373', fontSize: 11, marginTop: 2 },
+  historyHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  clearLink: { color: '#ef4444', fontSize: 11, fontWeight: '700', textDecorationLine: 'underline' },
+  historyRowDelete: { paddingHorizontal: 10, paddingVertical: 4 },
+  dangerButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', borderRadius: 12, paddingVertical: 13, marginTop: 8 },
+  dangerButtonText: { color: '#ef4444', fontSize: 13, fontWeight: '700' },
   readOnlyBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#121419', borderRadius: 8, padding: 10, marginBottom: 14 },
   readOnlyBannerText: { color: '#737373', fontSize: 10, flexShrink: 1 },
   historyExerciseRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#08090B', paddingVertical: 8 },
