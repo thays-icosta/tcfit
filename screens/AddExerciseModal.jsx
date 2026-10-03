@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, TextInput, FlatList, ScrollVi
 import { supabase } from './supabaseClient';
 import CustomExerciseFormScreen from './CustomExerciseFormScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
+import { METHODS, METHOD_LABELS, DEFAULT_EXERCISE_CONFIG } from './exerciseMethods';
 
 const MUSCLE_CHIPS = [
   { value: 'todos', label: 'Todos' },
@@ -18,20 +19,16 @@ const MUSCLE_CHIPS = [
   { value: 'aerobico', label: 'Aeróbico' },
 ];
 
-const METHODS = ['tradicional', 'rest-pause', 'bi-set', 'drop-set', 'piramide'];
-const METHOD_LABELS = {
-  'tradicional': 'Tradicional',
-  'rest-pause': 'Rest-Pause',
-  'bi-set': 'Bi-set',
-  'drop-set': 'Drop-set',
-  'piramide': 'Pirâmide',
-};
-
 function isGifUrl(url) {
   return !!url && url.toLowerCase().split('?')[0].endsWith('.gif');
 }
 
-export default function AddExerciseModal({ personalId, studentId, editingItem, replaceItem, suggestedMuscleGroup, onConfirm, onClose }) {
+// quickAdd: picking an exercise confirms it right away (with the default
+// config, or — when swapping — the config of the row being replaced) and
+// returns to the ficha, instead of opening the per-exercise configure step.
+// Used by the ficha builder, where the numbers are then set for the whole
+// ficha at once; without it (e.g. the Modelos builder) nothing changes.
+export default function AddExerciseModal({ personalId, studentId, editingItem, replaceItem, suggestedMuscleGroup, quickAdd, onConfirm, onClose }) {
   const [mode, setMode] = useState(editingItem ? 'configure' : 'browse');
   const [allExercises, setAllExercises] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -101,6 +98,18 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
     : [];
 
   const handleSelectExercise = (exercise) => {
+    if (quickAdd) {
+      onConfirm(exercise, replaceItem ? {
+        sets: replaceItem.sets != null ? replaceItem.sets : DEFAULT_EXERCISE_CONFIG.sets,
+        reps: replaceItem.reps || DEFAULT_EXERCISE_CONFIG.reps,
+        load_kg: replaceItem.load_kg != null ? replaceItem.load_kg : null,
+        cadence: replaceItem.cadence || null,
+        rest_time_seconds: replaceItem.rest_time_seconds != null ? replaceItem.rest_time_seconds : DEFAULT_EXERCISE_CONFIG.rest_time_seconds,
+        execution_method: replaceItem.execution_method || DEFAULT_EXERCISE_CONFIG.execution_method,
+        notes: replaceItem.notes || null,
+      } : { ...DEFAULT_EXERCISE_CONFIG });
+      return;
+    }
     setSelectedExercise(exercise);
     // Swapping an exercise carries over the row it's replacing's own
     // sets/reps/descanso/método automatically, per the spec — everything

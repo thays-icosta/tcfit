@@ -15,11 +15,14 @@ import {
   loadWorkoutSummaries,
   createNewWeekVersion,
   duplicateWorkout,
+  hasLoggedExerciseHistory,
   estimateExerciseVolumeKg,
 } from './workoutVersioning';
 import { useSpeechToText } from './useSpeechToText';
 import PromptModal from './PromptModal';
 import { HeaderBack } from './Header';
+import { METHOD_LABELS } from './exerciseMethods';
+import WorkoutBulkEditScreen from './WorkoutBulkEditScreen';
 
 const FICHA_NAME_SUGGESTIONS = [
   'Treino A - Quadríceps',
@@ -41,14 +44,6 @@ const WEEKDAY_OPTIONS = [
   { value: 0, label: 'Domingo' },
 ];
 const WEEKDAY_SHORT = { 0: 'Dom', 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb' };
-
-const METHOD_LABELS = {
-  'tradicional': 'Tradicional',
-  'rest-pause': 'Rest-Pause',
-  'bi-set': 'Bi-set',
-  'drop-set': 'Drop-set',
-  'piramide': 'Pirâmide',
-};
 
 export default function WorkoutBuilderScreen({ studentId, studentName, personalId, onClose, initialWorkoutId }) {
   const [workouts, setWorkouts] = useState([]);
@@ -104,6 +99,9 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   // confirm it replaces replacingItem's exercise in place instead of
   // inserting a new row.
   const [replacingItem, setReplacingItem] = useState(null);
+
+  // "Editar treino": set the whole ficha's numbers on one screen (step 2 of building a ficha).
+  const [bulkEditing, setBulkEditing] = useState(false);
 
   const loadWorkouts = async () => {
     const { data } = await supabase
@@ -564,13 +562,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   // via the FK cascade, and swapping in place would silently reattribute
   // it to the new exercise's progression lookup. "+ Nova Semana" is the
   // safe path once a row has real history.
-  const hasLoggedHistory = async (itemId) => {
-    const { count } = await supabase
-      .from('workout_session_sets')
-      .select('id', { count: 'exact', head: true })
-      .eq('workout_exercise_id', itemId);
-    return !!count && count > 0;
-  };
+  const hasLoggedHistory = (itemId) => hasLoggedExerciseHistory(supabase, itemId);
 
   const handleRemoveItem = async (itemId) => {
     if (await hasLoggedHistory(itemId)) {
@@ -744,12 +736,29 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     );
   }
 
+  if (bulkEditing) {
+    return (
+      <WorkoutBulkEditScreen
+        workoutId={activeWorkoutId}
+        workoutName={workouts.find((w) => w.id === activeWorkoutId)?.name || ''}
+        items={items}
+        onSaved={async () => {
+          setBulkEditing(false);
+          await loadItems(activeWorkoutId);
+          loadWorkouts();
+        }}
+        onClose={() => setBulkEditing(false)}
+      />
+    );
+  }
+
   if (showAddModal) {
     return (
       <AddExerciseModal
         personalId={personalId}
         studentId={studentId}
         suggestedMuscleGroup={dominantMuscleGroup}
+        quickAdd
         onConfirm={handleConfirmAddExercise}
         onClose={() => setShowAddModal(false)}
       />
@@ -762,6 +771,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         personalId={personalId}
         studentId={studentId}
         suggestedMuscleGroup={replacingItem.exercises?.muscle_group}
+        quickAdd
         replaceItem={replacingItem}
         onConfirm={handleConfirmSwap}
         onClose={() => setReplacingItem(null)}
@@ -1009,6 +1019,12 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       <TouchableOpacity style={styles.addExerciseButton} onPress={() => setShowAddModal(true)}>
         <Text style={styles.addExerciseButtonText}>+ Adicionar Exercício</Text>
       </TouchableOpacity>
+      {items.length > 0 && (
+        <TouchableOpacity style={styles.editWorkoutButton} onPress={() => setBulkEditing(true)}>
+          <Ionicons name="options-outline" size={16} color="#FFFFFF" />
+          <Text style={styles.editWorkoutButtonText}>Editar treino</Text>
+        </TouchableOpacity>
+      )}
 
       <Text style={styles.sectionTitle}>Exercícios da ficha ({items.length})</Text>
       {items.length === 0 && (
@@ -1020,9 +1036,17 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const listHeader = activeWorkoutId ? editorHeader : weekOverviewHeader;
 
   const listFooter = (
-    <TouchableOpacity style={styles.saveButton} onPress={onClose}>
-      <Text style={styles.saveButtonText}>Salvar Ficha</Text>
-    </TouchableOpacity>
+    <>
+      {activeWorkoutId && items.length > 0 && (
+        <TouchableOpacity style={[styles.editWorkoutButton, { marginTop: 8 }]} onPress={() => setBulkEditing(true)}>
+          <Ionicons name="options-outline" size={16} color="#FFFFFF" />
+          <Text style={styles.editWorkoutButtonText}>Editar treino</Text>
+        </TouchableOpacity>
+      )}
+      <TouchableOpacity style={styles.saveButton} onPress={onClose}>
+        <Text style={styles.saveButtonText}>Salvar Ficha</Text>
+      </TouchableOpacity>
+    </>
   );
 
   return (
@@ -1328,6 +1352,8 @@ const styles = StyleSheet.create({
   summaryBadgeLabel: { color: '#A7AAB0', fontSize: 8, textTransform: 'capitalize', marginTop: 1 },
   addExerciseButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 8 },
   addExerciseButtonText: { color: '#08090B', fontSize: 14, fontWeight: '700' },
+  editWorkoutButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, paddingVertical: 13, marginHorizontal: 16, marginBottom: 8 },
+  editWorkoutButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   sectionTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
   exerciseCard: { flexDirection: 'row', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, marginHorizontal: 16, marginBottom: 8, padding: 12 },
   exerciseCardDragging: { borderColor: '#FFFFFF', opacity: 0.9 },

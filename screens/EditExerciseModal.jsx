@@ -4,15 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { loadExerciseLoadHistory, suggestNextLoad, estimate1RM } from './progressionUtils';
 import { HeaderBack } from './Header';
-
-const METHODS = ['tradicional', 'rest-pause', 'bi-set', 'drop-set', 'piramide'];
-const METHOD_LABELS = {
-  'tradicional': 'Tradicional',
-  'rest-pause': 'Rest-Pause',
-  'bi-set': 'Bi-set',
-  'drop-set': 'Drop-set',
-  'piramide': 'Pirâmide',
-};
+import { METHODS, METHOD_LABELS } from './exerciseMethods';
 
 export default function EditExerciseModal({ item, studentId, onSave, onClose }) {
   const [sets, setSets] = useState(item.sets != null ? String(item.sets) : '3');

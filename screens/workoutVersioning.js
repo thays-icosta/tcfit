@@ -222,3 +222,17 @@ export async function createNewWeekVersion(client, { studentId, personalId, mode
 
   return { groupId, workouts: created, unmatchedNames };
 }
+
+// Whether the student has already logged sets against this prescription row.
+// Deleting such a row would wipe that history (workout_session_sets cascades
+// on workout_exercise_id), and swapping its exercise in place would silently
+// reattribute the history to the new exercise — so both are blocked once this
+// is true; "+ Nova Semana" is the safe way to change a prescription.
+export async function hasLoggedExerciseHistory(client, workoutExerciseId) {
+  const c = client || supabase;
+  const { count } = await c
+    .from('workout_session_sets')
+    .select('id', { count: 'exact', head: true })
+    .eq('workout_exercise_id', workoutExerciseId);
+  return !!count && count > 0;
+}
