@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import Head from 'expo-router/head';
@@ -11,6 +11,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { logError, installGlobalErrorHandlers } from '@/screens/errorLogger';
 import AlertHost from '@/screens/AlertHost';
+import { installVersionWatcher } from '@/screens/versionWatcher';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -67,6 +68,9 @@ export default function RootLayout() {
 }
 
 function RootLayoutInner() {
+  // Web/PWA only: pick up new deploys even when the installed app is reopened from the background.
+  useEffect(() => installVersionWatcher(), []);
+
   const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({ PlusJakartaSans_400Regular, PlusJakartaSans_700Bold });
 
