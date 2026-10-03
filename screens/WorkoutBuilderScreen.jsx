@@ -52,11 +52,6 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [watchingVideo, setWatchingVideo] = useState(null);
-  const [showReplicateModal, setShowReplicateModal] = useState(false);
-  const [replicateSets, setReplicateSets] = useState('4');
-  const [replicateReps, setReplicateReps] = useState('10-12');
-  const [replicateRest, setReplicateRest] = useState('60');
-  const [replicating, setReplicating] = useState(false);
 
   const [showSendModal, setShowSendModal] = useState(false);
   const [otherStudents, setOtherStudents] = useState([]);
@@ -533,10 +528,13 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     }
   };
 
+  // Called once per exercise picked in the library, which stays open
+  // (multiAdd). Resolves to true when the row was written, false when not, so
+  // the library only marks "Adicionado" what actually landed in the ficha.
   const handleConfirmAddExercise = async (exercise, config) => {
     if (!activeWorkoutId) {
       showAlert('Ops', 'Cria ou seleciona uma ficha primeiro.');
-      return;
+      return false;
     }
 
     const { data: maxRow } = await supabase
@@ -555,10 +553,10 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     });
     if (error) {
       showAlert('Erro ao adicionar', error.message);
-    } else {
-      setShowAddModal(false);
-      loadItems(activeWorkoutId);
+      return false;
     }
+    await loadItems(activeWorkoutId);
+    return true;
   };
 
   // Shared by "Excluir" and "Trocar exercício": both would otherwise
@@ -664,41 +662,21 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     }
   };
 
-  const handleOpenReplicate = () => {
-    if (items.length === 0) {
-      showAlert('Ops', 'Ainda não tem exercício nessa ficha pra aplicar valores.');
-      return;
-    }
-    setShowReplicateModal(true);
-  };
-
-  const handleConfirmReplicate = async () => {
-    setReplicating(true);
-    const updates = {};
-    if (replicateSets.trim()) updates.sets = Number(replicateSets);
-    if (replicateReps.trim()) updates.reps = replicateReps.trim();
-    if (replicateRest.trim()) updates.rest_time_seconds = Number(replicateRest);
-
-    const { error } = await supabase
-      .from('workout_exercises')
-      .update(updates)
-      .eq('workout_id', activeWorkoutId);
-
-    setReplicating(false);
-    setShowReplicateModal(false);
-    if (error) {
-      showAlert('Erro', error.message);
-    } else {
-      loadItems(activeWorkoutId);
-    }
-  };
-
   const muscleGroupCounts = {};
   items.forEach((item) => {
     const group = item.exercises?.muscle_group || 'outro';
     muscleGroupCounts[group] = (muscleGroupCounts[group] || 0) + 1;
   });
   const muscleGroupEntries = Object.entries(muscleGroupCounts);
+  // The collapsible summary reports séries per group (what the personal checks to
+  // see how the ficha is distributed); exercise counts above still drive the
+  // "dominant group" used elsewhere.
+  const muscleGroupSets = {};
+  items.forEach((item) => {
+    const group = item.exercises?.muscle_group || 'outro';
+    muscleGroupSets[group] = (muscleGroupSets[group] || 0) + (item.sets || 3);
+  });
+  const muscleSetEntries = Object.entries(muscleGroupSets).sort((a, b) => b[1] - a[1]);
   // Dominant group in the ficha so far — used to prioritize "mesmo grupo
   // muscular" suggestions when adding a new exercise (swapping one uses
   // that specific exercise's own group instead, see handleOpenSwap).
@@ -764,8 +742,10 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         studentId={studentId}
         suggestedMuscleGroup={dominantMuscleGroup}
         quickAdd
+        multiAdd
+        existingExerciseIds={items.map((it) => it.exercises?.id).filter(Boolean)}
         onConfirm={handleConfirmAddExercise}
-        onClose={() => setShowAddModal(false)}
+        onClose={() => { setShowAddModal(false); loadWorkouts(); }}
       />
     );
   }
@@ -829,31 +809,29 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
     return (
       <View style={[styles.exerciseCard, isActive && styles.exerciseCardDragging]}>
+        <TouchableOpacity hitSlop={10} onLongPress={drag} disabled={isActive} style={styles.dragHandleButton} accessibilityLabel="Arrastar para reordenar">
+          <Ionicons name="reorder-three-outline" size={20} color="#737373" />
+        </TouchableOpacity>
         <Text style={styles.exerciseIndex}>{String(index + 1).padStart(2, '0')}</Text>
 
         <View style={styles.exerciseInfo}>
-          <Text style={styles.exerciseName}>{item.exercises?.name}</Text>
+          <Text style={styles.exerciseName} numberOfLines={2}>{item.exercises?.name}</Text>
           <Text style={styles.exerciseMetrics}>{formatCompactMetrics(item)}</Text>
-          {item.notes ? <Text style={styles.exerciseNotes}>📝 {item.notes}</Text> : null}
+          {item.notes ? <Text style={styles.exerciseNotes} numberOfLines={1}>📝 {item.notes}</Text> : null}
           {hasVideo && (
             <TouchableOpacity onPress={() => setWatchingVideo({ url: item.exercises.video_url, name: item.exercises.name })}>
               <Text style={styles.watchLink}>▶ Ver execução</Text>
             </TouchableOpacity>
           )}
+        </View>
 
-          <View style={styles.exerciseActionsRow}>
-            <TouchableOpacity hitSlop={10} onLongPress={drag} disabled={isActive} style={styles.dragHandleButton}>
-              <Ionicons name="reorder-three-outline" size={20} color="#A7AAB0" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.exerciseActionButton} onPress={() => setEditingItem(item)}>
-              <Ionicons name="pencil-outline" size={14} color="#D1D5DB" />
-              <Text style={styles.exerciseActionButtonText}>Editar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.exerciseActionButton} onPress={() => handleOpenItemActions(item)}>
-              <Ionicons name="ellipsis-horizontal" size={14} color="#A7AAB0" />
-              <Text style={styles.exerciseActionButtonText}>Mais</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.exerciseActions}>
+          <TouchableOpacity style={styles.exerciseActionButton} onPress={() => setEditingItem(item)}>
+            <Text style={styles.exerciseActionButtonText}>Editar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.exerciseActionButton} onPress={() => handleOpenItemActions(item)}>
+            <Text style={styles.exerciseActionButtonText}>Mais</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -955,6 +933,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       </View>
 
       <View style={styles.compactSummaryCard}>
+        <Text style={styles.weekTag}>SEMANA ATUAL</Text>
         <Text style={styles.compactSummaryTitle}>
           {activeWorkout?.name}{activeWorkoutMuscles.length > 0 ? ` — ${activeWorkoutMuscles.join(' + ')}` : ''}
         </Text>
@@ -996,10 +975,11 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
           </TouchableOpacity>
           {summaryExpanded && (
             <View style={styles.summaryRow}>
-              {muscleGroupEntries.map(([group, count]) => (
+              {muscleSetEntries.map(([group, setCount]) => (
                 <View key={group} style={styles.summaryBadge}>
-                  <Text style={styles.summaryBadgeCount}>{count}</Text>
-                  <Text style={styles.summaryBadgeLabel}>{group}</Text>
+                  <Text style={styles.summaryBadgeCount}>{setCount}</Text>
+                  <Text style={styles.summaryBadgeLabel}>séries · {group}</Text>
+                  <Text style={styles.summaryBadgeSub}>{muscleGroupCounts[group]} ex.</Text>
                 </View>
               ))}
             </View>
@@ -1008,11 +988,6 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       )}
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.actionsRow} contentContainerStyle={styles.actionsRowContent}>
-        {items.length > 0 && (
-          <TouchableOpacity style={styles.actionChip} onPress={handleOpenReplicate}>
-            <Text style={styles.actionChipText}>📋 Editar Todos (séries/reps/descanso)</Text>
-          </TouchableOpacity>
-        )}
         <TouchableOpacity style={styles.actionChip} onPress={() => activeWorkout && handleDuplicateFicha(activeWorkout)} disabled={saving}>
           <Text style={styles.actionChipText}>📑 Duplicar este treino</Text>
         </TouchableOpacity>
@@ -1042,12 +1017,6 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
   const listFooter = (
     <>
-      {activeWorkoutId && items.length > 0 && (
-        <TouchableOpacity style={[styles.editWorkoutButton, { marginTop: 8 }]} onPress={() => setBulkEditing(true)}>
-          <Ionicons name="options-outline" size={16} color="#FFFFFF" />
-          <Text style={styles.editWorkoutButtonText}>Editar treino</Text>
-        </TouchableOpacity>
-      )}
       <TouchableOpacity style={styles.saveButton} onPress={onClose}>
         <Text style={styles.saveButtonText}>Salvar Ficha</Text>
       </TouchableOpacity>
@@ -1150,33 +1119,6 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalConfirmButton} onPress={handleCreateFicha}>
                 <Text style={styles.modalConfirmButtonText}>Criar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={showReplicateModal} transparent animationType="fade" onRequestClose={() => setShowReplicateModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Aplicar a todos os exercícios</Text>
-            <Text style={styles.modalSubtitle}>Isso vai sobrescrever séries, reps e descanso de todos os exercícios já adicionados nessa ficha.</Text>
-
-            <Text style={styles.modalLabel}>Séries</Text>
-            <TextInput style={styles.modalInput} keyboardType="number-pad" value={replicateSets} onChangeText={setReplicateSets} />
-
-            <Text style={styles.modalLabel}>Reps</Text>
-            <TextInput style={styles.modalInput} value={replicateReps} onChangeText={setReplicateReps} />
-
-            <Text style={styles.modalLabel}>Descanso (segundos)</Text>
-            <TextInput style={styles.modalInput} keyboardType="number-pad" value={replicateRest} onChangeText={setReplicateRest} />
-
-            <View style={styles.modalButtonRow}>
-              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setShowReplicateModal(false)}>
-                <Text style={styles.modalCancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalConfirmButton} onPress={handleConfirmReplicate} disabled={replicating}>
-                {replicating ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.modalConfirmButtonText}>Aplicar a todos</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -1355,23 +1297,24 @@ const styles = StyleSheet.create({
   summaryBadge: { backgroundColor: '#08090B', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', minWidth: 50 },
   summaryBadgeCount: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   summaryBadgeLabel: { color: '#A7AAB0', fontSize: 8, textTransform: 'capitalize', marginTop: 1 },
+  summaryBadgeSub: { color: '#737373', fontSize: 8, marginTop: 1 },
   addExerciseButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 8 },
   addExerciseButtonText: { color: '#08090B', fontSize: 14, fontWeight: '700' },
   editWorkoutButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, paddingVertical: 13, marginHorizontal: 16, marginBottom: 8 },
   editWorkoutButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   sectionTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
-  exerciseCard: { flexDirection: 'row', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, marginHorizontal: 16, marginBottom: 8, padding: 12 },
+  exerciseCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, marginHorizontal: 16, marginBottom: 6, paddingVertical: 10, paddingHorizontal: 10 },
   exerciseCardDragging: { borderColor: '#FFFFFF', opacity: 0.9 },
-  exerciseIndex: { color: '#525252', fontSize: 13, fontWeight: '800', width: 24, marginTop: 1 },
-  exerciseInfo: { flex: 1 },
+  exerciseIndex: { color: '#525252', fontSize: 12, fontWeight: '800', width: 22, marginLeft: 2 },
+  exerciseInfo: { flex: 1, paddingRight: 6 },
   exerciseName: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   exerciseMetrics: { color: '#A7AAB0', fontSize: 12, fontWeight: '600', marginTop: 3 },
   exerciseNotes: { color: '#737373', fontSize: 10, marginTop: 6, fontStyle: 'italic' },
   watchLink: { color: '#FFFFFF', fontSize: 11, fontWeight: '700', marginTop: 6 },
-  exerciseActionsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
-  dragHandleButton: { padding: 6, marginLeft: -6 },
-  exerciseActionButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  exerciseActionButtonText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
+  exerciseActions: { flexDirection: 'row', gap: 6 },
+  dragHandleButton: { paddingVertical: 6, paddingRight: 6 },
+  exerciseActionButton: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 16, paddingHorizontal: 11, paddingVertical: 7 },
+  exerciseActionButtonText: { color: '#D1D5DB', fontSize: 11, fontWeight: '700' },
 
   weekOverviewCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 10 },
   weekOverviewCardName: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
@@ -1382,6 +1325,7 @@ const styles = StyleSheet.create({
   backToOverviewButton: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 16, marginBottom: 6 },
   backToOverviewButtonText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
   compactSummaryCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginHorizontal: 16, marginTop: 6, marginBottom: 8 },
+  weekTag: { color: '#737373', fontSize: 9, fontWeight: '800', letterSpacing: 0.8, marginBottom: 4 },
   compactSummaryTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800', textTransform: 'capitalize' },
   compactSummaryMeta: { color: '#A7AAB0', fontSize: 12, marginTop: 4 },
 

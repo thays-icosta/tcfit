@@ -28,7 +28,11 @@ function isGifUrl(url) {
 // returns to the ficha, instead of opening the per-exercise configure step.
 // Used by the ficha builder, where the numbers are then set for the whole
 // ficha at once; without it (e.g. the Modelos builder) nothing changes.
-export default function AddExerciseModal({ personalId, studentId, editingItem, replaceItem, suggestedMuscleGroup, quickAdd, onConfirm, onClose }) {
+// multiAdd (with quickAdd): the library stays open after each pick. onConfirm
+// must resolve to false if the exercise could NOT be added; anything else
+// counts as added and the row is marked "Adicionado". The user leaves with
+// "Concluir seleção" (onClose). existingExerciseIds only drives a "Na ficha" tag.
+export default function AddExerciseModal({ personalId, studentId, editingItem, replaceItem, suggestedMuscleGroup, quickAdd, multiAdd, existingExerciseIds, onConfirm, onClose }) {
   const [mode, setMode] = useState(editingItem ? 'configure' : 'browse');
   const [allExercises, setAllExercises] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +42,9 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
   const [previewExercise, setPreviewExercise] = useState(null);
   const [gifPreviewExercise, setGifPreviewExercise] = useState(null);
   const [recentExerciseIds, setRecentExerciseIds] = useState([]);
+  const [addedIds, setAddedIds] = useState({}); // exercise ids added during this visit
+  const [addingId, setAddingId] = useState(null); // one write at a time keeps order_index sequential
+  const addedCount = Object.keys(addedIds).length;
 
   const [sets, setSets] = useState(editingItem?.sets != null ? String(editingItem.sets) : '3');
   const [reps, setReps] = useState(editingItem?.reps || '10');
@@ -97,7 +104,15 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
     ? allExercises.filter((e) => e.muscle_group === suggestedMuscleGroup && !recentExerciseIds.includes(e.id)).slice(0, 8)
     : [];
 
-  const handleSelectExercise = (exercise) => {
+  const handleSelectExercise = async (exercise) => {
+    if (quickAdd && multiAdd && !replaceItem) {
+      if (addingId || addedIds[exercise.id]) return; // double tap / already added this visit
+      setAddingId(exercise.id);
+      const ok = await onConfirm(exercise, { ...DEFAULT_EXERCISE_CONFIG });
+      setAddingId(null);
+      if (ok !== false) setAddedIds((prev) => ({ ...prev, [exercise.id]: true }));
+      return;
+    }
     if (quickAdd) {
       onConfirm(exercise, replaceItem ? {
         sets: replaceItem.sets != null ? replaceItem.sets : DEFAULT_EXERCISE_CONFIG.sets,
@@ -286,7 +301,7 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
   }
 
   const renderCuratedCard = (item) => (
-    <TouchableOpacity key={item.id} style={styles.curatedCard} onPress={() => handleSelectExercise(item)}>
+    <TouchableOpacity key={item.id} style={[styles.curatedCard, addedIds[item.id] && styles.curatedCardAdded]} onPress={() => handleSelectExercise(item)}>
       {item.thumbnail_url ? (
         <Image source={{ uri: item.thumbnail_url }} style={styles.curatedThumb} />
       ) : (
@@ -295,6 +310,7 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
         </View>
       )}
       <Text style={styles.curatedCardName} numberOfLines={2}>{item.name}</Text>
+      {addedIds[item.id] && <Text style={styles.curatedAddedTag}>✓ Adicionado</Text>}
     </TouchableOpacity>
   );
 
@@ -325,7 +341,7 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
       <View style={styles.topBar}>
         <Text style={styles.title}>{replaceItem ? 'Trocar Exercício' : 'Adicionar Exercício'}</Text>
         <TouchableOpacity onPress={onClose}>
-          <Text style={styles.closeText}>Cancelar</Text>
+          <Text style={styles.closeText}>{multiAdd ? 'Fechar' : 'Cancelar'}</Text>
         </TouchableOpacity>
       </View>
 
@@ -367,13 +383,18 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
           data={filtered}
           keyExtractor={(item) => item.id}
           style={{ flex: 1, paddingHorizontal: 16, marginTop: 8 }}
+          contentContainerStyle={{ paddingBottom: multiAdd ? 110 : 20 }}
+          extraData={[addedIds, addingId]}
+          keyboardShouldPersistTaps="handled"
           ListHeaderComponent={curatedHeader}
           ListEmptyComponent={<Text style={styles.emptyText}>Nenhum exercício encontrado com esses filtros.</Text>}
           renderItem={({ item }) => {
             const isCustom = item.personal_id === personalId;
             const hasVideo = !!item.video_url;
+            const added = !!addedIds[item.id];
+            const inFicha = !added && Array.isArray(existingExerciseIds) && existingExerciseIds.includes(item.id);
             return (
-              <View style={styles.exerciseRow}>
+              <View style={[styles.exerciseRow, added && styles.exerciseRowAdded]}>
                 <TouchableOpacity onPress={() => handleSelectExercise(item)} style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                   <View style={styles.thumbWrap}>
                     {item.thumbnail_url ? (
@@ -388,6 +409,7 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
                     <View style={styles.exerciseNameRow}>
                       <Text style={styles.exerciseName}>{item.name}</Text>
                       {isCustom && <Text style={styles.customTag}>Meu</Text>}
+                      {inFicha && <Text style={styles.inFichaTag}>Na ficha</Text>}
                     </View>
                     <Text style={styles.exerciseMeta}>{item.muscle_group}{item.equipment ? ` · ${item.equipment}` : ''}</Text>
                   </View>
@@ -397,13 +419,27 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
                     <Text style={styles.previewButtonText}>▶</Text>
                   </TouchableOpacity>
                 )}
-                <TouchableOpacity onPress={() => handleSelectExercise(item)}>
-                  <Text style={styles.addIcon}>+</Text>
+                <TouchableOpacity onPress={() => handleSelectExercise(item)} disabled={added}>
+                  {added ? (
+                    <Text style={styles.addedTag}>✓ Adicionado</Text>
+                  ) : addingId === item.id ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" style={{ paddingHorizontal: 8 }} />
+                  ) : (
+                    <Text style={styles.addIcon}>+</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             );
           }}
         />
+      )}
+
+      {multiAdd && (
+        <View style={styles.doneBar}>
+          <TouchableOpacity style={styles.doneButton} onPress={onClose} accessibilityLabel="Concluir seleção">
+            <Text style={styles.doneButtonText}>{addedCount > 0 ? `Concluir seleção (${addedCount})` : 'Concluir seleção'}</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -442,6 +478,14 @@ const styles = StyleSheet.create({
   previewButtonText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
   execucaoLink: { color: '#FFFFFF', fontSize: 10, fontWeight: '700', marginTop: 4 },
   addIcon: { color: '#FFFFFF', fontSize: 22, fontWeight: '800', paddingHorizontal: 4 },
+  addedTag: { color: '#22c55e', fontSize: 11, fontWeight: '800', paddingHorizontal: 4 },
+  exerciseRowAdded: { borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.06)' },
+  inFichaTag: { color: '#A7AAB0', fontSize: 9, fontWeight: '700', borderWidth: 1, borderColor: '#292D34', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 },
+  curatedCardAdded: { opacity: 0.55 },
+  curatedAddedTag: { color: '#22c55e', fontSize: 10, fontWeight: '800', marginTop: 2 },
+  doneBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 22, backgroundColor: '#08090B', borderTopWidth: 1, borderTopColor: '#292D34' },
+  doneButton: { backgroundColor: '#FFFFFF', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
+  doneButtonText: { color: '#08090B', fontSize: 15, fontWeight: '800' },
   selectedHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   selectedThumb: { width: 56, height: 56, borderRadius: 12, marginRight: 12 },
   selectedThumbPlaceholder: { width: 56, height: 56, borderRadius: 12, backgroundColor: '#121419', alignItems: 'center', justifyContent: 'center', marginRight: 12 },

@@ -44,6 +44,10 @@ export default function WorkoutBulkEditScreen({ workoutId, workoutName, items, o
   const [deletedIds, setDeletedIds] = useState([]);
   const [saving, setSaving] = useState(false);
   const [watching, setWatching] = useState(null);
+  const [showApplyAll, setShowApplyAll] = useState(false);
+  const [applySets, setApplySets] = useState('');
+  const [applyReps, setApplyReps] = useState('');
+  const [applyRest, setApplyRest] = useState('');
   const tempCounter = useRef(0);
   const initialSnapshot = useRef(JSON.stringify(items.map(toDraftRow).map(({ exercise, ...rest }) => rest)));
 
@@ -75,6 +79,24 @@ export default function WorkoutBulkEditScreen({ workoutId, workoutName, items, o
     }
     setDraft((prev) => prev.filter((r) => r.key !== row.key));
     if (row.id) setDeletedIds((prev) => [...prev, row.id]);
+  };
+
+  // "Aplicar a todos": copies whichever of séries/reps/descanso are filled into
+  // every row of the draft. Nothing is saved until "Salvar treino".
+  const handleApplyAll = () => {
+    const patch = {};
+    if (applySets.trim() !== '') {
+      if (parseInteger(applySets) == null || parseInteger(applySets) < 1) { showAlert('Confere os dados', 'Séries inválidas. Use um número inteiro.'); return; }
+      patch.sets = String(parseInteger(applySets));
+    }
+    if (applyReps.trim() !== '') patch.reps = applyReps.trim();
+    if (applyRest.trim() !== '') {
+      if (parseInteger(applyRest) == null || parseInteger(applyRest) < 0) { showAlert('Confere os dados', 'Descanso inválido. Use segundos (ex: 60).'); return; }
+      patch.rest = String(parseInteger(applyRest));
+    }
+    if (Object.keys(patch).length === 0) { showAlert('Nada pra aplicar', 'Preenche séries, reps ou descanso.'); return; }
+    setDraft((prev) => prev.map((r) => ({ ...r, ...patch })));
+    setShowApplyAll(false);
   };
 
   const handleClose = () => {
@@ -250,6 +272,34 @@ export default function WorkoutBulkEditScreen({ workoutId, workoutName, items, o
           {workoutName} · {draft.length} exercício{draft.length !== 1 ? 's' : ''}
         </Text>
 
+        <View style={styles.applyAllWrap}>
+          <TouchableOpacity onPress={() => setShowApplyAll((v) => !v)} style={styles.applyAllToggle} accessibilityLabel="Aplicar a todos">
+            <Ionicons name={showApplyAll ? 'chevron-up' : 'chevron-down'} size={14} color={COLORS.textSecondary} />
+            <Text style={styles.applyAllToggleText}>Aplicar a todos</Text>
+          </TouchableOpacity>
+          {showApplyAll && (
+            <View style={styles.applyAllPanel}>
+              <View style={styles.fieldsRow}>
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Séries</Text>
+                  <TextInput style={styles.input} value={applySets} onChangeText={setApplySets} keyboardType="number-pad" placeholder="4" placeholderTextColor="#525252" />
+                </View>
+                <View style={[styles.field, { flex: 1.4 }]}>
+                  <Text style={styles.fieldLabel}>Reps</Text>
+                  <TextInput style={styles.input} value={applyReps} onChangeText={setApplyReps} placeholder="8-10" placeholderTextColor="#525252" />
+                </View>
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Descanso (s)</Text>
+                  <TextInput style={styles.input} value={applyRest} onChangeText={setApplyRest} keyboardType="number-pad" placeholder="60" placeholderTextColor="#525252" />
+                </View>
+              </View>
+              <TouchableOpacity style={styles.applyAllButton} onPress={handleApplyAll}>
+                <Text style={styles.applyAllButtonText}>Aplicar a todos os exercícios</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
         <DraggableFlatList
           data={draft}
           keyExtractor={(r) => r.key}
@@ -295,6 +345,12 @@ const styles = StyleSheet.create({
   methodChipText: { color: COLORS.textSecondary, fontSize: 11, fontWeight: '600' },
   methodChipTextActive: { color: COLORS.onAccent, fontWeight: '800' },
 
+  applyAllWrap: { marginHorizontal: 16, marginBottom: 10 },
+  applyAllToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4 },
+  applyAllToggleText: { color: COLORS.textSecondary, fontSize: 12, fontWeight: '700' },
+  applyAllPanel: { backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border, borderRadius: 12, padding: 12, marginTop: 6 },
+  applyAllButton: { borderWidth: 1, borderColor: COLORS.accent, borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginTop: 10 },
+  applyAllButtonText: { color: COLORS.text, fontSize: 12, fontWeight: '800' },
   notesInput: { fontSize: 12 },
   watchLink: { color: COLORS.text, fontSize: 11, fontWeight: '700', marginTop: 10, textDecorationLine: 'underline' },
 
