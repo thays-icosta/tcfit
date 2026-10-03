@@ -21,7 +21,7 @@ import {
 import { useSpeechToText } from './useSpeechToText';
 import PromptModal from './PromptModal';
 import { HeaderBack } from './Header';
-import { METHOD_LABELS } from './exerciseMethods';
+import { METHOD_LABELS, DEFAULT_EXERCISE_CONFIG } from './exerciseMethods';
 import WorkoutBulkEditScreen from './WorkoutBulkEditScreen';
 
 const FICHA_NAME_SUGGESTIONS = [
@@ -528,14 +528,17 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     }
   };
 
-  // Called once per exercise picked in the library, which stays open
-  // (multiAdd). Resolves to true when the row was written, false when not, so
-  // the library only marks "Adicionado" what actually landed in the ficha.
-  const handleConfirmAddExercise = async (exercise, config) => {
+  // "Adicionar à Ficha" in the library: writes every selected exercise in one
+  // insert, appended after the current last exercise in tap order, with the
+  // default config (the numbers are set afterwards in "Editar treino"). On
+  // success the library closes and the list refreshes; on failure it resolves
+  // to false so the library stays open with the selection intact.
+  const handleConfirmAddMany = async (exercises) => {
     if (!activeWorkoutId) {
       showAlert('Ops', 'Cria ou seleciona uma ficha primeiro.');
       return false;
     }
+    if (!exercises || exercises.length === 0) return false;
 
     const { data: maxRow } = await supabase
       .from('workout_exercises')
@@ -545,17 +548,20 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       .limit(1);
     const nextOrder = maxRow && maxRow.length > 0 ? maxRow[0].order_index + 1 : 0;
 
-    const { error } = await supabase.from('workout_exercises').insert({
+    const rows = exercises.map((exercise, i) => ({
       workout_id: activeWorkoutId,
       exercise_id: exercise.id,
-      order_index: nextOrder,
-      ...config,
-    });
+      order_index: nextOrder + i,
+      ...DEFAULT_EXERCISE_CONFIG,
+    }));
+    const { error } = await supabase.from('workout_exercises').insert(rows);
     if (error) {
       showAlert('Erro ao adicionar', error.message);
       return false;
     }
+    setShowAddModal(false);
     await loadItems(activeWorkoutId);
+    loadWorkouts();
     return true;
   };
 
@@ -744,8 +750,8 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         quickAdd
         multiAdd
         existingExerciseIds={items.map((it) => it.exercises?.id).filter(Boolean)}
-        onConfirm={handleConfirmAddExercise}
-        onClose={() => { setShowAddModal(false); loadWorkouts(); }}
+        onConfirmMany={handleConfirmAddMany}
+        onClose={() => setShowAddModal(false)}
       />
     );
   }

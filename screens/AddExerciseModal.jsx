@@ -4,6 +4,7 @@ import { supabase } from './supabaseClient';
 import CustomExerciseFormScreen from './CustomExerciseFormScreen';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { METHODS, METHOD_LABELS, DEFAULT_EXERCISE_CONFIG } from './exerciseMethods';
+import { showAlert } from './alertUtils';
 
 const MUSCLE_CHIPS = [
   { value: 'todos', label: 'Todos' },
@@ -28,11 +29,14 @@ function isGifUrl(url) {
 // returns to the ficha, instead of opening the per-exercise configure step.
 // Used by the ficha builder, where the numbers are then set for the whole
 // ficha at once; without it (e.g. the Modelos builder) nothing changes.
-// multiAdd (with quickAdd): the library stays open after each pick. onConfirm
-// must resolve to false if the exercise could NOT be added; anything else
-// counts as added and the row is marked "Adicionado". The user leaves with
-// "Concluir seleção" (onClose). existingExerciseIds only drives a "Na ficha" tag.
-export default function AddExerciseModal({ personalId, studentId, editingItem, replaceItem, suggestedMuscleGroup, quickAdd, multiAdd, existingExerciseIds, onConfirm, onClose }) {
+// multiAdd (with quickAdd): the library stays open. Tapping an exercise only
+// SELECTS it (✓ Selecionado; tap again to unselect) — nothing is written yet.
+// A fixed bottom bar shows how many are selected and "Adicionar à Ficha" hands
+// the whole list, in tap order, to onConfirmMany, which must resolve to false
+// if it could not add them (the library then stays open with the selection
+// intact); otherwise the caller closes it. existingExerciseIds only drives a
+// "Na ficha" tag.
+export default function AddExerciseModal({ personalId, studentId, editingItem, replaceItem, suggestedMuscleGroup, quickAdd, multiAdd, existingExerciseIds, onConfirm, onConfirmMany, onClose }) {
   const [mode, setMode] = useState(editingItem ? 'configure' : 'browse');
   const [allExercises, setAllExercises] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,9 +46,11 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
   const [previewExercise, setPreviewExercise] = useState(null);
   const [gifPreviewExercise, setGifPreviewExercise] = useState(null);
   const [recentExerciseIds, setRecentExerciseIds] = useState([]);
-  const [addedIds, setAddedIds] = useState({}); // exercise ids added during this visit
-  const [addingId, setAddingId] = useState(null); // one write at a time keeps order_index sequential
-  const addedCount = Object.keys(addedIds).length;
+  const [selectedList, setSelectedList] = useState([]); // exercises picked so far, in tap order
+  const [savingSelection, setSavingSelection] = useState(false);
+  const selectedIds = {};
+  selectedList.forEach((e) => { selectedIds[e.id] = true; });
+  const selectedCount = selectedList.length;
 
   const [sets, setSets] = useState(editingItem?.sets != null ? String(editingItem.sets) : '3');
   const [reps, setReps] = useState(editingItem?.reps || '10');
@@ -104,13 +110,10 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
     ? allExercises.filter((e) => e.muscle_group === suggestedMuscleGroup && !recentExerciseIds.includes(e.id)).slice(0, 8)
     : [];
 
-  const handleSelectExercise = async (exercise) => {
+  const handleSelectExercise = (exercise) => {
     if (quickAdd && multiAdd && !replaceItem) {
-      if (addingId || addedIds[exercise.id]) return; // double tap / already added this visit
-      setAddingId(exercise.id);
-      const ok = await onConfirm(exercise, { ...DEFAULT_EXERCISE_CONFIG });
-      setAddingId(null);
-      if (ok !== false) setAddedIds((prev) => ({ ...prev, [exercise.id]: true }));
+      if (savingSelection) return;
+      setSelectedList((prev) => (prev.some((e) => e.id === exercise.id) ? prev.filter((e) => e.id !== exercise.id) : [...prev, exercise]));
       return;
     }
     if (quickAdd) {
@@ -148,6 +151,26 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
       setNotes('');
     }
     setMode('configure');
+  };
+
+  const handleConfirmSelection = async () => {
+    if (selectedCount === 0 || savingSelection) return;
+    setSavingSelection(true);
+    await onConfirmMany(selectedList);
+    setSavingSelection(false);
+  };
+
+  // Closing with a selection pending asks first, so a misplaced tap on
+  // "Fechar" doesn't throw away a list that took a while to pick.
+  const handleClose = () => {
+    if (multiAdd && selectedCount > 0 && !savingSelection) {
+      showAlert('Descartar seleção?', `Você escolheu ${selectedCount} exercício${selectedCount !== 1 ? 's' : ''} e ainda não adicionou à ficha.`, [
+        { text: 'Continuar escolhendo', style: 'cancel' },
+        { text: 'Descartar', style: 'destructive', onPress: onClose },
+      ]);
+      return;
+    }
+    onClose();
   };
 
   const handlePreview = (exercise) => {
@@ -301,7 +324,7 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
   }
 
   const renderCuratedCard = (item) => (
-    <TouchableOpacity key={item.id} style={[styles.curatedCard, addedIds[item.id] && styles.curatedCardAdded]} onPress={() => handleSelectExercise(item)}>
+    <TouchableOpacity key={item.id} style={[styles.curatedCard, selectedIds[item.id] && styles.curatedCardSelected]} onPress={() => handleSelectExercise(item)}>
       {item.thumbnail_url ? (
         <Image source={{ uri: item.thumbnail_url }} style={styles.curatedThumb} />
       ) : (
@@ -310,7 +333,7 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
         </View>
       )}
       <Text style={styles.curatedCardName} numberOfLines={2}>{item.name}</Text>
-      {addedIds[item.id] && <Text style={styles.curatedAddedTag}>✓ Adicionado</Text>}
+      {selectedIds[item.id] && <Text style={styles.curatedAddedTag}>✓ Selecionado</Text>}
     </TouchableOpacity>
   );
 
@@ -340,7 +363,7 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
     <View style={styles.container}>
       <View style={styles.topBar}>
         <Text style={styles.title}>{replaceItem ? 'Trocar Exercício' : 'Adicionar Exercício'}</Text>
-        <TouchableOpacity onPress={onClose}>
+        <TouchableOpacity onPress={handleClose}>
           <Text style={styles.closeText}>{multiAdd ? 'Fechar' : 'Cancelar'}</Text>
         </TouchableOpacity>
       </View>
@@ -383,15 +406,15 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
           data={filtered}
           keyExtractor={(item) => item.id}
           style={{ flex: 1, paddingHorizontal: 16, marginTop: 8 }}
-          contentContainerStyle={{ paddingBottom: multiAdd ? 110 : 20 }}
-          extraData={[addedIds, addingId]}
+          contentContainerStyle={{ paddingBottom: multiAdd ? 140 : 20 }}
+          extraData={selectedList}
           keyboardShouldPersistTaps="handled"
           ListHeaderComponent={curatedHeader}
           ListEmptyComponent={<Text style={styles.emptyText}>Nenhum exercício encontrado com esses filtros.</Text>}
           renderItem={({ item }) => {
             const isCustom = item.personal_id === personalId;
             const hasVideo = !!item.video_url;
-            const added = !!addedIds[item.id];
+            const added = !!selectedIds[item.id];
             const inFicha = !added && Array.isArray(existingExerciseIds) && existingExerciseIds.includes(item.id);
             return (
               <View style={[styles.exerciseRow, added && styles.exerciseRowAdded]}>
@@ -419,14 +442,8 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
                     <Text style={styles.previewButtonText}>▶</Text>
                   </TouchableOpacity>
                 )}
-                <TouchableOpacity onPress={() => handleSelectExercise(item)} disabled={added}>
-                  {added ? (
-                    <Text style={styles.addedTag}>✓ Adicionado</Text>
-                  ) : addingId === item.id ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" style={{ paddingHorizontal: 8 }} />
-                  ) : (
-                    <Text style={styles.addIcon}>+</Text>
-                  )}
+                <TouchableOpacity onPress={() => handleSelectExercise(item)} accessibilityLabel={added ? 'Desmarcar exercício' : 'Selecionar exercício'}>
+                  {added ? <Text style={styles.addedTag}>✓ Selecionado</Text> : <Text style={styles.addIcon}>+</Text>}
                 </TouchableOpacity>
               </View>
             );
@@ -436,8 +453,18 @@ export default function AddExerciseModal({ personalId, studentId, editingItem, r
 
       {multiAdd && (
         <View style={styles.doneBar}>
-          <TouchableOpacity style={styles.doneButton} onPress={onClose} accessibilityLabel="Concluir seleção">
-            <Text style={styles.doneButtonText}>{addedCount > 0 ? `Concluir seleção (${addedCount})` : 'Concluir seleção'}</Text>
+          <Text style={styles.selectionCount}>
+            {selectedCount === 0
+              ? 'Nenhum exercício selecionado'
+              : `${selectedCount} exercício${selectedCount !== 1 ? 's' : ''} selecionado${selectedCount !== 1 ? 's' : ''}`}
+          </Text>
+          <TouchableOpacity
+            style={[styles.doneButton, (selectedCount === 0 || savingSelection) && styles.doneButtonDisabled]}
+            onPress={handleConfirmSelection}
+            disabled={selectedCount === 0 || savingSelection}
+            accessibilityLabel="Adicionar à Ficha"
+          >
+            {savingSelection ? <ActivityIndicator color="#08090B" /> : <Text style={styles.doneButtonText}>Adicionar à Ficha</Text>}
           </TouchableOpacity>
         </View>
       )}
@@ -481,7 +508,9 @@ const styles = StyleSheet.create({
   addedTag: { color: '#22c55e', fontSize: 11, fontWeight: '800', paddingHorizontal: 4 },
   exerciseRowAdded: { borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.06)' },
   inFichaTag: { color: '#A7AAB0', fontSize: 9, fontWeight: '700', borderWidth: 1, borderColor: '#292D34', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 },
-  curatedCardAdded: { opacity: 0.55 },
+  curatedCardSelected: { opacity: 0.6 },
+  selectionCount: { color: '#A7AAB0', fontSize: 12, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
+  doneButtonDisabled: { opacity: 0.35 },
   curatedAddedTag: { color: '#22c55e', fontSize: 10, fontWeight: '800', marginTop: 2 },
   doneBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 22, backgroundColor: '#08090B', borderTopWidth: 1, borderTopColor: '#292D34' },
   doneButton: { backgroundColor: '#FFFFFF', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
