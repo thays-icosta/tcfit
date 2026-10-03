@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import WorkoutBuilderScreen from './WorkoutBuilderScreen';
+import WeeklyPlanScreen from './WeeklyPlanScreen';
 import { showAlert } from './alertUtils';
 import { HeaderBack } from './Header';
 import {
@@ -33,6 +34,12 @@ export default function WorkoutProgramManagerScreen({ studentId, studentName, pe
   const [summaries, setSummaries] = useState({});
   const [history, setHistory] = useState([]);
   const [view, setView] = useState('overview'); // 'overview' | 'builder' | 'history-detail'
+  // which ficha the builder opens on / whether it opens straight into "Nova Ficha"
+  const [builderTarget, setBuilderTarget] = useState({ workoutId: null, creating: false });
+  const openBuilder = (workoutId = null, creating = false) => {
+    setBuilderTarget({ workoutId, creating });
+    setView('builder');
+  };
   const [creatingWeek, setCreatingWeek] = useState(false);
   const [showOtherWeekPicker, setShowOtherWeekPicker] = useState(false);
 
@@ -55,6 +62,10 @@ export default function WorkoutProgramManagerScreen({ studentId, studentName, pe
   useEffect(() => {
     loadAll();
   }, [studentId]);
+
+  // The days the student actually trains = the weekdays assigned to the active fichas
+  // (the same weekday column Planejamento da Semana and the aluno's "Minha Semana" read).
+  const trainingDays = [1, 2, 3, 4, 5, 6, 0].filter((d) => currentWeek.some((w) => w.weekday === d));
 
   const handleNewWeek = () => {
     if (currentWeek.length === 0) {
@@ -117,12 +128,25 @@ export default function WorkoutProgramManagerScreen({ studentId, studentName, pe
     setLoadingHistoryDetail(false);
   };
 
+  if (view === 'weekly') {
+    return (
+      <WeeklyPlanScreen
+        studentId={studentId}
+        studentName={studentName}
+        personalId={personalId}
+        onClose={() => { setView('overview'); loadAll(); }}
+      />
+    );
+  }
+
   if (view === 'builder') {
     return (
       <WorkoutBuilderScreen
         studentId={studentId}
         studentName={studentName}
         personalId={personalId}
+        initialWorkoutId={builderTarget.workoutId || undefined}
+        startCreating={builderTarget.creating}
         onClose={() => { setView('overview'); loadAll(); }}
       />
     );
@@ -175,13 +199,28 @@ export default function WorkoutProgramManagerScreen({ studentId, studentName, pe
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
           <Text style={styles.sectionTitle}>SEMANA ATUAL</Text>
 
+          <TouchableOpacity style={styles.daysCard} onPress={() => setView('weekly')} activeOpacity={0.7}>
+            <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.daysCardTitle}>
+                {trainingDays.length > 0
+                  ? `Treina ${trainingDays.length} dia${trainingDays.length !== 1 ? 's' : ''} por semana`
+                  : 'Dias de treino não definidos'}
+              </Text>
+              <Text style={styles.daysCardMeta}>
+                {trainingDays.length > 0 ? trainingDays.map((d) => WEEKDAY_SHORT[d]).join(' · ') : 'Toque pra escolher os dias da semana'}
+              </Text>
+            </View>
+            <Text style={styles.daysCardAction}>Ajustar dias</Text>
+          </TouchableOpacity>
+
           {currentWeek.length === 0 ? (
             <Text style={styles.emptyText}>Nenhuma ficha ativa ainda. Toque em &quot;Editar Semana Atual&quot; pra criar a primeira.</Text>
           ) : (
             currentWeek.map((w) => {
               const s = summaries[w.id] || { exerciseCount: 0, setCount: 0, muscleGroups: [] };
               return (
-                <View key={w.id} style={styles.fichaCard}>
+                <TouchableOpacity key={w.id} style={styles.fichaCard} onPress={() => openBuilder(w.id)} activeOpacity={0.7}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.fichaCardName}>{w.name}</Text>
                     <Text style={styles.fichaCardMeta}>
@@ -196,14 +235,20 @@ export default function WorkoutProgramManagerScreen({ studentId, studentName, pe
                     <View style={styles.statusDot} />
                     <Text style={styles.statusBadgeText}>ATIVO</Text>
                   </View>
-                </View>
+                  <Ionicons name="chevron-forward-outline" size={16} color="#525252" style={{ marginLeft: 8 }} />
+                </TouchableOpacity>
               );
             })
           )}
 
-          <TouchableOpacity style={styles.primaryButton} onPress={() => setView('builder')}>
+          <TouchableOpacity style={styles.primaryButton} onPress={() => openBuilder()}>
             <Ionicons name="barbell-outline" size={16} color="#08090B" />
             <Text style={styles.primaryButtonText}>Editar Semana Atual</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.secondaryButton, { marginBottom: 10 }]} onPress={() => openBuilder(null, true)}>
+            <Ionicons name="add-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.secondaryButtonText}>Criar treino</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.secondaryButton} onPress={handleNewWeek} disabled={creatingWeek}>
@@ -276,6 +321,10 @@ const styles = StyleSheet.create({
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(34,197,94,0.1)', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 },
   statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#22c55e' },
   statusBadgeText: { color: '#22c55e', fontSize: 9, fontWeight: '800' },
+  daysCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 12 },
+  daysCardTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  daysCardMeta: { color: '#A7AAB0', fontSize: 11, marginTop: 3 },
+  daysCardAction: { color: '#FFFFFF', fontSize: 11, fontWeight: '700', textDecorationLine: 'underline' },
   primaryButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, marginTop: 6, marginBottom: 10 },
   primaryButtonText: { color: '#08090B', fontSize: 14, fontWeight: '800' },
   secondaryButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 12, paddingVertical: 13 },

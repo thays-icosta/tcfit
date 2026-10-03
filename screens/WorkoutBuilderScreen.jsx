@@ -45,7 +45,7 @@ const WEEKDAY_OPTIONS = [
 ];
 const WEEKDAY_SHORT = { 0: 'Dom', 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb' };
 
-export default function WorkoutBuilderScreen({ studentId, studentName, personalId, onClose, initialWorkoutId }) {
+export default function WorkoutBuilderScreen({ studentId, studentName, personalId, onClose, initialWorkoutId, startCreating }) {
   const [workouts, setWorkouts] = useState([]);
   const [activeWorkoutId, setActiveWorkoutId] = useState(initialWorkoutId || null);
   const [items, setItems] = useState([]);
@@ -199,6 +199,11 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       setLoading(false);
     })();
   }, [studentId]);
+
+  // Opened from "Criar treino": go straight to the new-ficha name prompt once loaded.
+  useEffect(() => {
+    if (startCreating && !loading) setShowCreateFichaModal(true);
+  }, [startCreating, loading]);
 
   useEffect(() => {
     if (activeWorkoutId) loadItems(activeWorkoutId);
