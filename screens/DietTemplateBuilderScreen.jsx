@@ -315,7 +315,7 @@ export default function DietTemplateBuilderScreen({ personalId, onClose }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#FF6B00" />
+        <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
@@ -328,7 +328,7 @@ export default function DietTemplateBuilderScreen({ personalId, onClose }) {
         style={{ paddingHorizontal: 16 }}
         rightSlot={
           <TouchableOpacity onPress={() => setShowCreateModal(true)} hitSlop={8}>
-            <Ionicons name="add-circle-outline" size={22} color="#FF6B00" />
+            <Ionicons name="add-circle-outline" size={22} color="#FFFFFF" />
           </TouchableOpacity>
         }
       />
@@ -339,7 +339,7 @@ export default function DietTemplateBuilderScreen({ personalId, onClose }) {
           <Text style={styles.emptyStateTitle}>Nenhum modelo ainda</Text>
           <Text style={styles.emptyStateSubtitle}>Crie um plano alimentar reutilizável pra aplicar rápido em qualquer aluno.</Text>
           <TouchableOpacity style={styles.emptyStatePrimaryButton} onPress={() => setShowCreateModal(true)}>
-            <Ionicons name="add" size={18} color="#0F0F12" />
+            <Ionicons name="add" size={18} color="#08090B" />
             <Text style={styles.emptyStatePrimaryButtonText}>Criar Modelo</Text>
           </TouchableOpacity>
         </View>
@@ -385,13 +385,13 @@ export default function DietTemplateBuilderScreen({ personalId, onClose }) {
                     <TextInput style={styles.metaInput} keyboardType="number-pad" placeholder="60" placeholderTextColor="#525252" value={goalFat} onChangeText={setGoalFat} />
                   </View>
                   <TouchableOpacity style={styles.metaSaveButton} onPress={handleSaveGoals} disabled={savingGoals}>
-                    {savingGoals ? <ActivityIndicator color="#FF6B00" size="small" /> : <Text style={styles.metaSaveButtonText}>Salvar</Text>}
+                    {savingGoals ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={styles.metaSaveButtonText}>Salvar</Text>}
                   </TouchableOpacity>
                 </View>
               </View>
 
               <TouchableOpacity style={styles.applyButton} onPress={handleOpenApply}>
-                <Ionicons name="person-add-outline" size={18} color="#0F0F12" />
+                <Ionicons name="person-add-outline" size={18} color="#08090B" />
                 <Text style={styles.applyButtonText}>Aplicar a um Aluno</Text>
               </TouchableOpacity>
 
@@ -409,7 +409,7 @@ export default function DietTemplateBuilderScreen({ personalId, onClose }) {
               </View>
 
               {loadingMeals ? (
-                <ActivityIndicator color="#FF6B00" style={{ marginTop: 10 }} />
+                <ActivityIndicator color="#FFFFFF" style={{ marginTop: 10 }} />
               ) : meals.length === 0 ? (
                 <Text style={styles.emptyText}>Adicione a primeira refeição acima.</Text>
               ) : (
@@ -418,7 +418,7 @@ export default function DietTemplateBuilderScreen({ personalId, onClose }) {
                     <TouchableOpacity style={styles.mealHeader} onLongPress={() => handleLongPressMeal(meal)}>
                       <Text style={styles.mealName}>{meal.name}</Text>
                       <TouchableOpacity onPress={() => handleOpenAddFood(meal.id)} hitSlop={8}>
-                        <Ionicons name="add-circle-outline" size={20} color="#FF6B00" />
+                        <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
                       </TouchableOpacity>
                     </TouchableOpacity>
 
@@ -493,7 +493,7 @@ export default function DietTemplateBuilderScreen({ personalId, onClose }) {
               </View>
             </View>
             <TouchableOpacity style={styles.saveMetaButton} onPress={handleSaveFood} disabled={savingFood}>
-              {savingFood ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.saveMetaButtonText}>Adicionar</Text>}
+              {savingFood ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.saveMetaButtonText}>Adicionar</Text>}
             </TouchableOpacity>
             <TouchableOpacity style={styles.modalCloseButton} onPress={() => setAddingFoodFor(null)}>
               <Text style={styles.modalCloseButtonText}>Cancelar</Text>
@@ -508,7 +508,7 @@ export default function DietTemplateBuilderScreen({ personalId, onClose }) {
             <Text style={styles.modalTitle}>Aplicar a um Aluno</Text>
             <Text style={styles.modalSubtitle}>Cria uma dieta ativa nova pro aluno com todas as refeições desse modelo. O modelo original não é alterado.</Text>
             {loadingStudents ? (
-              <ActivityIndicator color="#FF6B00" style={{ marginVertical: 20 }} />
+              <ActivityIndicator color="#FFFFFF" style={{ marginVertical: 20 }} />
             ) : students.length === 0 ? (
               <Text style={styles.emptyText}>Você ainda não tem alunos.</Text>
             ) : (
@@ -516,7 +516,7 @@ export default function DietTemplateBuilderScreen({ personalId, onClose }) {
                 {students.map((s) => (
                   <TouchableOpacity key={s.id} style={styles.studentPickerRow} onPress={() => handleApplyToStudent(s.id)} disabled={applyingStudentId === s.id}>
                     <Text style={styles.studentPickerName}>{s.name}</Text>
-                    {applyingStudentId === s.id ? <ActivityIndicator color="#FF6B00" size="small" /> : <Text style={styles.chevron}>›</Text>}
+                    {applyingStudentId === s.id ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={styles.chevron}>›</Text>}
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -550,49 +550,49 @@ export default function DietTemplateBuilderScreen({ personalId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
-  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
+  center: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 8 },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 20, paddingHorizontal: 16 },
   emptyStateBox: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 8 },
-  emptyStateTitle: { color: '#F5F5F7', fontSize: 15, fontWeight: '700', marginTop: 4 },
+  emptyStateTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', marginTop: 4 },
   emptyStateSubtitle: { color: '#737373', fontSize: 12, textAlign: 'center', lineHeight: 18, marginBottom: 10 },
-  emptyStatePrimaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 20, alignItems: 'center' },
-  emptyStatePrimaryButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
-  templateTab: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 18, paddingHorizontal: 14, height: 36, alignItems: 'center', justifyContent: 'center' },
-  templateTabActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  templateTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
-  templateTabTextActive: { color: '#0F0F12' },
-  bigCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 14 },
-  bigCardTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '800', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+  emptyStatePrimaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 20, alignItems: 'center' },
+  emptyStatePrimaryButtonText: { color: '#08090B', fontSize: 13, fontWeight: '700' },
+  templateTab: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 18, paddingHorizontal: 14, height: 36, alignItems: 'center', justifyContent: 'center' },
+  templateTabActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  templateTabText: { color: '#A7AAB0', fontSize: 12, fontWeight: '700' },
+  templateTabTextActive: { color: '#08090B' },
+  bigCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginBottom: 14 },
+  bigCardTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '800', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
   metaInputsRow: { flexDirection: 'row', gap: 6, alignItems: 'flex-end', marginTop: 8 },
   metaField: { flex: 1 },
   metaFieldLabel: { color: '#525252', fontSize: 9, marginBottom: 4 },
-  metaInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 8, color: '#F5F5F7', fontSize: 12, textAlign: 'center' },
+  metaInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 8, color: '#FFFFFF', fontSize: 12, textAlign: 'center' },
   metaSaveButton: { paddingHorizontal: 10, paddingVertical: 9 },
-  metaSaveButtonText: { color: '#FF6B00', fontSize: 11, fontWeight: '700' },
+  metaSaveButtonText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
   applyButton: { flexDirection: 'row', gap: 8, backgroundColor: '#22c55e', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  applyButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
+  applyButtonText: { color: '#08090B', fontSize: 13, fontWeight: '700' },
   newMealRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  newMealInput: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
-  addMealButton: { backgroundColor: '#FF6B00', width: 40, height: 40, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  addMealButtonText: { color: '#0F0F12', fontSize: 20, fontWeight: '700' },
-  mealCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 12 },
+  newMealInput: { flex: 1, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#FFFFFF', fontSize: 13 },
+  addMealButton: { backgroundColor: '#FFFFFF', width: 40, height: 40, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  addMealButtonText: { color: '#08090B', fontSize: 20, fontWeight: '700' },
+  mealCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 12, marginBottom: 12 },
   mealHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  mealName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  mealName: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   emptyFoodText: { color: '#525252', fontSize: 11 },
-  foodRow: { paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#0F0F12' },
-  foodName: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
+  foodRow: { paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#08090B' },
+  foodName: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
   foodMacros: { color: '#737373', fontSize: 10, marginTop: 2 },
   chevron: { color: '#525252', fontSize: 20, fontWeight: '300' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
-  modalTitle: { color: '#F5F5F7', fontSize: 18, fontWeight: '800', marginBottom: 6 },
-  modalSubtitle: { color: '#a3a3a3', fontSize: 12, marginBottom: 16, lineHeight: 17 },
-  saveMetaButton: { backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 13, alignItems: 'center', marginTop: 16 },
-  saveMetaButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
+  modalSheet: { backgroundColor: '#121419', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
+  modalTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '800', marginBottom: 6 },
+  modalSubtitle: { color: '#A7AAB0', fontSize: 12, marginBottom: 16, lineHeight: 17 },
+  saveMetaButton: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 13, alignItems: 'center', marginTop: 16 },
+  saveMetaButtonText: { color: '#08090B', fontSize: 14, fontWeight: '700' },
   modalCloseButton: { paddingVertical: 12, alignItems: 'center', marginTop: 8 },
-  modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  studentPickerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
-  studentPickerName: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  modalCloseButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
+  studentPickerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
+  studentPickerName: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
 });

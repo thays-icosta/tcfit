@@ -682,7 +682,7 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#FF6B00" />
+        <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
@@ -724,15 +724,15 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
                 <View style={styles.headerActionsRow}>
                   {activeTemplateId ? (
                     <TouchableOpacity onPress={() => setShowSettingsSheet(true)} hitSlop={8}>
-                      <Ionicons name="settings-outline" size={22} color="#FF6B00" />
+                      <Ionicons name="settings-outline" size={22} color="#FFFFFF" />
                     </TouchableOpacity>
                   ) : (
                     <>
                       <TouchableOpacity onPress={() => setShowAiTemplateModal(true)} hitSlop={8}>
-                        <Ionicons name="sparkles-outline" size={22} color="#FF6B00" />
+                        <Ionicons name="sparkles-outline" size={22} color="#FFFFFF" />
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => setShowCreateTypeSheet(true)} hitSlop={8}>
-                        <Ionicons name="add-circle-outline" size={22} color="#FF6B00" />
+                        <Ionicons name="add-circle-outline" size={22} color="#FFFFFF" />
                       </TouchableOpacity>
                     </>
                   )}
@@ -776,7 +776,7 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
                   <Text style={styles.sectionToggleLabel}>Exibir seção “Programas” na vitrine {savingSectionToggle && '(salvando...)'}</Text>
                   <Text style={styles.helperText}>Desligue pra esconder a seção inteira da página pública sem apagar os templates.</Text>
                 </View>
-                <Switch value={sectionEnabled} onValueChange={handleToggleSection} trackColor={{ false: '#2B2B36', true: '#22c55e' }} thumbColor="#F5F5F7" />
+                <Switch value={sectionEnabled} onValueChange={handleToggleSection} trackColor={{ false: '#292D34', true: '#22c55e' }} thumbColor="#FFFFFF" />
               </View>
 
               <Text style={styles.metaLabel}>Descrição</Text>
@@ -854,7 +854,7 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
 
               <View style={styles.publicRow}>
                 <Text style={styles.publicLabel}>Vender esse template na vitrine</Text>
-                <Switch value={editIsPublic} onValueChange={setEditIsPublic} trackColor={{ false: '#2B2B36', true: '#FF6B00' }} thumbColor="#F5F5F7" />
+                <Switch value={editIsPublic} onValueChange={setEditIsPublic} trackColor={{ false: '#292D34', true: '#FFFFFF' }} thumbColor="#FFFFFF" />
               </View>
 
               {editIsPublic && (
@@ -867,7 +867,7 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
                     disabled={uploadingCover}
                   >
                     {uploadingCover ? (
-                      <ActivityIndicator color="#FF6B00" />
+                      <ActivityIndicator color="#FFFFFF" />
                     ) : editCoverImageUrl ? (
                       <Image source={{ uri: editCoverImageUrl }} style={coverFocalImageStyle(editCoverFocalPosition)} resizeMode="cover" />
                     ) : (
@@ -954,7 +954,7 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
               )}
 
               <TouchableOpacity style={styles.saveMetaButton} onPress={handleSaveMeta} disabled={savingMeta}>
-                {savingMeta ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.saveMetaButtonText}>Salvar informações</Text>}
+                {savingMeta ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.saveMetaButtonText}>Salvar informações</Text>}
               </TouchableOpacity>
             </ScrollView>
 
@@ -977,7 +977,7 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
                 setShowCreateTemplateModal(true);
               }}
             >
-              <View style={[styles.createTypeDot, { backgroundColor: '#FF6B00' }]} />
+              <View style={[styles.createTypeDot, { backgroundColor: '#FFFFFF' }]} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.createTypeTitle}>Programa Pronto</Text>
                 <Text style={styles.createTypeSubtitle}>Criar um treino para vender ou atribuir aos alunos.</Text>
@@ -1065,11 +1065,11 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
                 style={[styles.aiMicButton, aiTemplateRecording && styles.aiMicButtonActive]}
                 onPress={handleToggleAiTemplateRecording}
               >
-                <Ionicons name={aiTemplateRecording ? 'stop' : 'mic-outline'} size={18} color={aiTemplateRecording ? '#0F0F12' : '#FF6B00'} />
+                <Ionicons name={aiTemplateRecording ? 'stop' : 'mic-outline'} size={18} color={aiTemplateRecording ? '#08090B' : '#FFFFFF'} />
               </TouchableOpacity>
             </View>
             <TouchableOpacity style={styles.saveMetaButton} onPress={handleGenerateTemplateWithAi} disabled={aiTemplateProcessing}>
-              {aiTemplateProcessing ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.saveMetaButtonText}>Gerar Template</Text>}
+              {aiTemplateProcessing ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.saveMetaButtonText}>Gerar Template</Text>}
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.modalCloseButton}
@@ -1092,12 +1092,12 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
             <Text style={styles.emptyStateSubtitle}>Crie o primeiro modelo de treino da sua biblioteca pra reaproveitar com seus alunos.</Text>
 
             <TouchableOpacity style={styles.emptyStatePrimaryButton} onPress={() => setShowCreateTemplateModal(true)}>
-              <Ionicons name="add" size={18} color="#0F0F12" />
+              <Ionicons name="add" size={18} color="#08090B" />
               <Text style={styles.emptyStatePrimaryButtonText}>Criar Template Manualmente</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.emptyStateAiButton} onPress={() => setShowAiTemplateModal(true)}>
-              <Ionicons name="sparkles" size={18} color="#FF6B00" />
+              <Ionicons name="sparkles" size={18} color="#FFFFFF" />
               <Text style={styles.emptyStateAiButtonText}>Gerar Template com IA</Text>
             </TouchableOpacity>
           </View>
@@ -1108,21 +1108,21 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
                 style={[styles.scopeTabButton, templateScope === 'modelos' && styles.scopeTabButtonActive]}
                 onPress={() => setTemplateScope('modelos')}
               >
-                <Ionicons name="albums-outline" size={14} color={templateScope === 'modelos' ? '#0F0F12' : '#a3a3a3'} />
+                <Ionicons name="albums-outline" size={14} color={templateScope === 'modelos' ? '#08090B' : '#A7AAB0'} />
                 <Text style={[styles.scopeTabText, templateScope === 'modelos' && styles.scopeTabTextActive]}>Modelos</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.scopeTabButton, templateScope === 'prontos' && styles.scopeTabButtonActive]}
                 onPress={() => setTemplateScope('prontos')}
               >
-                <Ionicons name="storefront-outline" size={14} color={templateScope === 'prontos' ? '#0F0F12' : '#a3a3a3'} />
+                <Ionicons name="storefront-outline" size={14} color={templateScope === 'prontos' ? '#08090B' : '#A7AAB0'} />
                 <Text style={[styles.scopeTabText, templateScope === 'prontos' && styles.scopeTabTextActive]}>Programas</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.scopeTabButton, templateScope === 'arquivados' && styles.scopeTabButtonActive]}
                 onPress={() => setTemplateScope('arquivados')}
               >
-                <Ionicons name="archive-outline" size={14} color={templateScope === 'arquivados' ? '#0F0F12' : '#a3a3a3'} />
+                <Ionicons name="archive-outline" size={14} color={templateScope === 'arquivados' ? '#08090B' : '#A7AAB0'} />
                 <Text style={[styles.scopeTabText, templateScope === 'arquivados' && styles.scopeTabTextActive]}>Arquivados</Text>
               </TouchableOpacity>
             </View>
@@ -1224,7 +1224,7 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
       ) : (
         <>
           <TouchableOpacity style={styles.backToProgramsRow} onPress={() => setActiveTemplateId(null)}>
-            <Ionicons name="arrow-back" size={16} color="#FF6B00" />
+            <Ionicons name="arrow-back" size={16} color="#FFFFFF" />
             <Text style={styles.backToProgramsText} numberOfLines={1}>
               {templates.find((t) => t.id === activeTemplateId)?.name || 'Voltar aos Programas'}
             </Text>
@@ -1247,7 +1247,7 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
                         {sessionCounts[session.id] || 0} exercício{(sessionCounts[session.id] || 0) !== 1 ? 's' : ''}
                       </Text>
                     </View>
-                    <Ionicons name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={18} color="#a3a3a3" />
+                    <Ionicons name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={18} color="#A7AAB0" />
                   </TouchableOpacity>
 
                   {isExpanded && (
@@ -1296,18 +1296,18 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
 
                                 <View style={styles.reorderHandle}>
                                   <TouchableOpacity onPress={() => handleMove(index, -1)} disabled={index === 0} hitSlop={4}>
-                                    <Ionicons name="chevron-up" size={14} color={index === 0 ? '#2B2B36' : '#a3a3a3'} />
+                                    <Ionicons name="chevron-up" size={14} color={index === 0 ? '#292D34' : '#A7AAB0'} />
                                   </TouchableOpacity>
                                   <Ionicons name="reorder-three-outline" size={16} color="#525252" />
                                   <TouchableOpacity onPress={() => handleMove(index, 1)} disabled={index === items.length - 1} hitSlop={4}>
-                                    <Ionicons name="chevron-down" size={14} color={index === items.length - 1 ? '#2B2B36' : '#a3a3a3'} />
+                                    <Ionicons name="chevron-down" size={14} color={index === items.length - 1 ? '#292D34' : '#A7AAB0'} />
                                   </TouchableOpacity>
                                 </View>
                               </View>
 
                               <View style={styles.exerciseQuickActions}>
                                 <TouchableOpacity style={styles.quickActionButton} onPress={() => setEditingItem(item)}>
-                                  <Ionicons name="pencil-outline" size={14} color="#a3a3a3" />
+                                  <Ionicons name="pencil-outline" size={14} color="#A7AAB0" />
                                   <Text style={styles.quickActionText}>Editar</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={styles.quickActionButton} onPress={() => handleRemoveItem(item.id)}>
@@ -1321,7 +1321,7 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
                       )}
 
                       <TouchableOpacity style={styles.addExerciseButtonInline} onPress={() => setShowAddModal(true)}>
-                        <Ionicons name="add-circle" size={16} color="#0F0F12" />
+                        <Ionicons name="add-circle" size={16} color="#08090B" />
                         <Text style={styles.addExerciseButtonText}>Adicionar Exercício</Text>
                       </TouchableOpacity>
                     </View>
@@ -1331,7 +1331,7 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
             })}
 
             <TouchableOpacity style={styles.addSessionButton} onPress={handleAddSession}>
-              <Ionicons name="add" size={16} color="#FF6B00" />
+              <Ionicons name="add" size={16} color="#FFFFFF" />
               <Text style={styles.addSessionButtonText}>Nova Sessão</Text>
             </TouchableOpacity>
           </ScrollView>
@@ -1344,100 +1344,100 @@ export default function TemplateBuilderScreen({ personalId, onClose, onCreateFor
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
-  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
-  mainTabRow: { flexDirection: 'row', backgroundColor: '#1C1C22', borderRadius: 10, padding: 3, marginHorizontal: 16, marginBottom: 16, gap: 4 },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
+  center: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
+  mainTabRow: { flexDirection: 'row', backgroundColor: '#121419', borderRadius: 10, padding: 3, marginHorizontal: 16, marginBottom: 16, gap: 4 },
   mainTabButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
-  mainTabButtonActive: { backgroundColor: '#FF6B00' },
-  mainTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700', textAlign: 'center' },
-  mainTabTextActive: { color: '#0F0F12' },
-  sectionToggleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 14 },
-  sectionToggleLabel: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', marginBottom: 4 },
+  mainTabButtonActive: { backgroundColor: '#FFFFFF' },
+  mainTabText: { color: '#A7AAB0', fontSize: 12, fontWeight: '700', textAlign: 'center' },
+  mainTabTextActive: { color: '#08090B' },
+  sectionToggleBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 14 },
+  sectionToggleLabel: { color: '#FFFFFF', fontSize: 12, fontWeight: '700', marginBottom: 4 },
   backToProgramsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, marginBottom: 10 },
-  backToProgramsText: { color: '#FF6B00', fontSize: 15, fontWeight: '700', flexShrink: 1 },
-  programCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 10, marginBottom: 8 },
+  backToProgramsText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', flexShrink: 1 },
+  programCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 10, marginBottom: 8 },
   programCardCover: { width: 44, height: 44, borderRadius: 10 },
-  programCardCoverPlaceholder: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
-  programCardTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
-  programCardMeta: { color: '#a3a3a3', fontSize: 11, marginTop: 2, fontWeight: '600' },
+  programCardCoverPlaceholder: { width: 44, height: 44, borderRadius: 10, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
+  programCardTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  programCardMeta: { color: '#A7AAB0', fontSize: 11, marginTop: 2, fontWeight: '600' },
   programCardSubtitle: { color: '#737373', fontSize: 11, marginTop: 2 },
   programCardUsage: { color: '#22c55e', fontSize: 10, marginTop: 3, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '80%' },
-  modalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 14 },
-  modalSubtitle: { color: '#a3a3a3', fontSize: 12, marginBottom: 16, marginTop: -8 },
+  modalSheet: { backgroundColor: '#121419', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '80%' },
+  modalTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', marginBottom: 14 },
+  modalSubtitle: { color: '#A7AAB0', fontSize: 12, marginBottom: 16, marginTop: -8 },
   headerActionsRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   aiInputRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', marginBottom: 16 },
-  aiMicButton: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: '#FF6B00', alignItems: 'center', justifyContent: 'center' },
-  aiMicButtonActive: { backgroundColor: '#FF6B00' },
+  aiMicButton: { width: 40, height: 40, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  aiMicButtonActive: { backgroundColor: '#FFFFFF' },
   templateGroupLabel: { color: '#737373', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', marginBottom: 8 },
-  pickerFilterChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 18, paddingHorizontal: 12, height: 36, alignItems: 'center', justifyContent: 'center' },
-  pickerFilterChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  pickerFilterChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
-  pickerFilterChipTextActive: { color: '#0F0F12' },
-  pickerFilterDivider: { width: 1, height: 20, backgroundColor: '#2B2B36', marginHorizontal: 2 },
+  pickerFilterChip: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 18, paddingHorizontal: 12, height: 36, alignItems: 'center', justifyContent: 'center' },
+  pickerFilterChipActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  pickerFilterChipText: { color: '#A7AAB0', fontSize: 11, fontWeight: '700' },
+  pickerFilterChipTextActive: { color: '#08090B' },
+  pickerFilterDivider: { width: 1, height: 20, backgroundColor: '#292D34', marginHorizontal: 2 },
   modalCloseButton: { paddingVertical: 12, alignItems: 'center', marginTop: 8 },
-  modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  createTypeOption: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
+  modalCloseButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
+  createTypeOption: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 10 },
   createTypeDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#525252' },
-  createTypeTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
-  createTypeSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
+  createTypeTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  createTypeSubtitle: { color: '#A7AAB0', fontSize: 11, marginTop: 2 },
   scopeTabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 8 },
-  scopeTabButton: { flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 10 },
-  scopeTabButtonActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  scopeTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
-  scopeTabTextActive: { color: '#0F0F12' },
+  scopeTabButton: { flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 10 },
+  scopeTabButtonActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  scopeTabText: { color: '#A7AAB0', fontSize: 12, fontWeight: '700' },
+  scopeTabTextActive: { color: '#08090B' },
   scopeHelperText: { color: '#737373', fontSize: 11, lineHeight: 15, paddingHorizontal: 16, marginBottom: 12 },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 8 },
   newRow: { flexDirection: 'row', marginBottom: 16, gap: 8 },
-  newInput: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#F5F5F7', fontSize: 12 },
+  newInput: { flex: 1, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#FFFFFF', fontSize: 12 },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
   emptyStateBox: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 8 },
-  emptyStateTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginTop: 8 },
+  emptyStateTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', marginTop: 8 },
   emptyStateSubtitle: { color: '#737373', fontSize: 13, textAlign: 'center', marginBottom: 16 },
-  emptyStatePrimaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center', width: '100%' },
-  emptyStatePrimaryButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
-  emptyStateAiButton: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255,107,0,0.1)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: 10 },
-  emptyStateAiButtonText: { color: '#FF6B00', fontSize: 14, fontWeight: '800' },
+  emptyStatePrimaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FFFFFF', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center', width: '100%' },
+  emptyStatePrimaryButtonText: { color: '#08090B', fontSize: 14, fontWeight: '800' },
+  emptyStateAiButton: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: 10 },
+  emptyStateAiButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
   metaLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 8 },
   helperText: { color: '#525252', fontSize: 11, marginBottom: 8 },
-  metaInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 13, minHeight: 50, textAlignVertical: 'top' },
+  metaInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#FFFFFF', fontSize: 13, minHeight: 50, textAlignVertical: 'top' },
   publicRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 },
-  publicLabel: { color: '#F5F5F7', fontSize: 13, fontWeight: '600', flexShrink: 1, marginRight: 8 },
-  saveMetaButton: { backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginTop: 16 },
-  saveMetaButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
-  coverPicker: { width: '100%', aspectRatio: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  coverPickerRequired: { borderColor: '#FF6B00', borderStyle: 'dashed' },
+  publicLabel: { color: '#FFFFFF', fontSize: 13, fontWeight: '600', flexShrink: 1, marginRight: 8 },
+  saveMetaButton: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginTop: 16 },
+  saveMetaButtonText: { color: '#08090B', fontSize: 13, fontWeight: '700' },
+  coverPicker: { width: '100%', aspectRatio: 1, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  coverPickerRequired: { borderColor: '#FFFFFF', borderStyle: 'dashed' },
   coverPreview: { width: '100%', height: '100%' },
-  coverPickerText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  coverPickerText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  categoryChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  categoryChipActive: { backgroundColor: '#a855f7', borderColor: '#a855f7' },
-  categoryChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  categoryChipTextActive: { color: '#0F0F12' },
-  sessionAccordionCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden' },
+  categoryChip: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  categoryChipActive: { backgroundColor: '#D1D5DB', borderColor: '#D1D5DB' },
+  categoryChipText: { color: '#A7AAB0', fontSize: 11, fontWeight: '600' },
+  categoryChipTextActive: { color: '#08090B' },
+  sessionAccordionCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, marginHorizontal: 16, marginBottom: 10, overflow: 'hidden' },
   sessionAccordionHeader: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 8 },
-  sessionAccordionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
+  sessionAccordionTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   sessionAccordionSubtitle: { color: '#737373', fontSize: 11, marginTop: 2 },
-  sessionAccordionBody: { paddingHorizontal: 10, paddingBottom: 10, borderTopWidth: 1, borderTopColor: '#0F0F12' },
-  addExerciseButtonInline: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 12, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  addExerciseButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '800' },
-  addSessionButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(255,107,0,0.1)', borderWidth: 1, borderColor: '#FF6B00', borderStyle: 'dashed', borderRadius: 14, paddingVertical: 14, marginHorizontal: 16, marginTop: 4 },
-  addSessionButtonText: { color: '#FF6B00', fontSize: 13, fontWeight: '700' },
+  sessionAccordionBody: { paddingHorizontal: 10, paddingBottom: 10, borderTopWidth: 1, borderTopColor: '#08090B' },
+  addExerciseButtonInline: { flexDirection: 'row', gap: 8, backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 12, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  addExerciseButtonText: { color: '#08090B', fontSize: 13, fontWeight: '800' },
+  addSessionButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1, borderColor: '#FFFFFF', borderStyle: 'dashed', borderRadius: 14, paddingVertical: 14, marginHorizontal: 16, marginTop: 4 },
+  addSessionButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   exerciseCard: { backgroundColor: '#1E1E1E', borderWidth: 1, borderColor: '#2a2a2a', borderRadius: 16, marginTop: 10, padding: 12 },
   exerciseCardTop: { flexDirection: 'row', alignItems: 'center' },
   exerciseThumbWrap: { marginRight: 10 },
   exerciseThumbImage: { width: 52, height: 52, borderRadius: 10 },
-  exerciseThumbPlaceholder: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
-  exerciseThumbMuscle: { color: '#FF6B00', fontSize: 11, fontWeight: '800' },
+  exerciseThumbPlaceholder: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
+  exerciseThumbMuscle: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
   exerciseInfo: { flex: 1 },
-  exerciseName: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
+  exerciseName: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   exercisePillsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 6 },
-  exercisePill: { backgroundColor: 'rgba(255,107,0,0.12)', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
-  exercisePillText: { color: '#FF6B00', fontSize: 10, fontWeight: '700' },
+  exercisePill: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
+  exercisePillText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
   reorderHandle: { alignItems: 'center', gap: 2, marginLeft: 8, paddingLeft: 8, borderLeftWidth: 1, borderLeftColor: '#2a2a2a' },
   exerciseQuickActions: { flexDirection: 'row', gap: 16, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#2a2a2a' },
   quickActionButton: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  quickActionText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  quickActionText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
   quickActionTextDanger: { color: '#ef4444' },
 });

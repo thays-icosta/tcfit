@@ -1,9 +1,9 @@
 import React from 'react';
+import { ACCENT } from './theme';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GLASS_CARD } from './vitrineStyles';
 
-const ACCENT = '#FF6B00';
 
 function MetricCard({ icon, label, valueText, percent, subtitle, onPress }) {
   const Wrapper = onPress ? TouchableOpacity : View;
@@ -97,9 +97,9 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
   card: { width: '47%', borderWidth: 1, borderRadius: 14, padding: 12, ...GLASS_CARD },
   cardTopRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  cardLabel: { color: '#a3a3a3', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
-  cardValue: { color: '#F5F5F7', fontSize: 14, fontWeight: '800' },
+  cardLabel: { color: '#A7AAB0', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
+  cardValue: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
   cardSubtitle: { color: '#737373', fontSize: 9, fontWeight: '600', marginTop: 3, marginBottom: 2 },
-  track: { height: 4, backgroundColor: '#0F0F12', borderRadius: 2, overflow: 'hidden', marginTop: 8 },
+  track: { height: 4, backgroundColor: '#08090B', borderRadius: 2, overflow: 'hidden', marginTop: 8 },
   fill: { height: '100%', borderRadius: 2, backgroundColor: ACCENT },
 });

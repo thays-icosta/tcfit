@@ -69,7 +69,7 @@ export default function WorkoutPreviewScreen({ workout, muscleSummary, onStart, 
         <Text style={styles.sectionTitle}>Exercícios ({items.length})</Text>
 
         {loading ? (
-          <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
+          <ActivityIndicator color="#FFFFFF" style={{ marginTop: 20 }} />
         ) : items.length === 0 ? (
           <Text style={styles.emptyText}>Nenhum exercício nessa ficha ainda.</Text>
         ) : (
@@ -115,7 +115,7 @@ export default function WorkoutPreviewScreen({ workout, muscleSummary, onStart, 
       </ScrollView>
 
       <TouchableOpacity style={styles.startButton} onPress={onStart}>
-        <Ionicons name="play" size={18} color="#0F0F12" />
+        <Ionicons name="play" size={18} color="#08090B" />
         <Text style={styles.startButtonText}>Iniciar Treino</Text>
       </TouchableOpacity>
     </View>
@@ -123,27 +123,27 @@ export default function WorkoutPreviewScreen({ workout, muscleSummary, onStart, 
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
   topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12 },
-  closeText: { color: '#FF6B00', fontSize: 14, fontWeight: '600' },
-  title: { color: '#F5F5F7', fontSize: 20, fontWeight: '800', marginTop: 6 },
+  closeText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+  title: { color: '#FFFFFF', fontSize: 20, fontWeight: '800', marginTop: 6 },
   subtitle: { color: '#737373', fontSize: 12, marginTop: 4 },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
-  summaryBadge: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
-  summaryBadgeText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginTop: 22, marginBottom: 10 },
+  summaryBadge: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
+  summaryBadgeText: { color: '#A7AAB0', fontSize: 11, fontWeight: '600' },
+  sectionTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginTop: 22, marginBottom: 10 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 20 },
-  exerciseCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 10, marginBottom: 10 },
+  exerciseCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 10, marginBottom: 10 },
   exerciseThumbWrap: { position: 'relative' },
   exerciseThumbImage: { width: 52, height: 52, borderRadius: 10 },
-  exerciseThumbPlaceholder: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
-  exerciseThumbMuscle: { color: '#FF6B00', fontSize: 15, fontWeight: '800' },
-  playBadge: { position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, borderRadius: 9, backgroundColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#1C1C22' },
-  playBadgeText: { color: '#0F0F12', fontSize: 7, fontWeight: '800' },
-  exerciseName: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
+  exerciseThumbPlaceholder: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
+  exerciseThumbMuscle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  playBadge: { position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, borderRadius: 9, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#121419' },
+  playBadgeText: { color: '#08090B', fontSize: 7, fontWeight: '800' },
+  exerciseName: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   pillsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 6 },
-  pill: { backgroundColor: 'rgba(255,107,0,0.12)', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
-  pillText: { color: '#FF6B00', fontSize: 10, fontWeight: '700' },
-  startButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 14, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginHorizontal: 16, marginBottom: 20 },
-  startButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '800' },
+  pill: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
+  pillText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
+  startButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FFFFFF', borderRadius: 14, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginHorizontal: 16, marginBottom: 20 },
+  startButtonText: { color: '#08090B', fontSize: 15, fontWeight: '800' },
 });

@@ -124,7 +124,7 @@ export default function CreatePeriodizationScreen({ studentId, studentName, pers
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#FF6B00" />
+        <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
@@ -211,7 +211,7 @@ export default function CreatePeriodizationScreen({ studentId, studentName, pers
         </View>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar Plano</Text>}
+          {saving ? <ActivityIndicator color="#08090B" /> : <Text style={styles.saveButtonText}>Salvar Plano</Text>}
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -219,32 +219,32 @@ export default function CreatePeriodizationScreen({ studentId, studentName, pers
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
-  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50, paddingHorizontal: 16 },
+  center: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
   studentLabel: { color: '#737373', fontSize: 12, marginBottom: 14 },
-  card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 12 },
+  card: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 12 },
   cardLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8 },
-  totalWeeksInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  totalWeeksInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#FFFFFF', fontSize: 16, fontWeight: '700', textAlign: 'center' },
   indicatorCard: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 10, padding: 12, marginBottom: 16 },
   indicatorCardOk: { backgroundColor: 'rgba(34,197,94,0.1)' },
   indicatorCardWarning: { backgroundColor: 'rgba(234,179,8,0.1)' },
   indicatorText: { fontSize: 12, fontWeight: '700' },
-  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 10 },
+  sectionTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginBottom: 10 },
   emptyText: { color: '#525252', fontSize: 12, marginBottom: 12 },
-  phaseCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 8 },
-  phaseOrderBadge: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  phaseOrderText: { color: '#FF6B00', fontSize: 12, fontWeight: '800' },
-  phaseName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  phaseCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 12, marginBottom: 8 },
+  phaseOrderBadge: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  phaseOrderText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' },
+  phaseName: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   phaseWeeks: { color: '#737373', fontSize: 11, marginTop: 2 },
   phaseActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  moveArrow: { color: '#a3a3a3', fontSize: 12 },
-  moveArrowDisabled: { color: '#2B2B36' },
+  moveArrow: { color: '#A7AAB0', fontSize: 12 },
+  moveArrowDisabled: { color: '#292D34' },
   removeX: { color: '#ef4444', fontSize: 14 },
-  addPhaseCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 16, marginTop: 8 },
+  addPhaseCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 16, marginTop: 8 },
   addPhaseRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
-  input: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 13 },
-  addPhaseButton: { borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
-  addPhaseButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
-  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 20 },
-  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
+  input: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#FFFFFF', fontSize: 13 },
+  addPhaseButton: { borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  addPhaseButtonText: { color: '#A7AAB0', fontSize: 12, fontWeight: '700' },
+  saveButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 20 },
+  saveButtonText: { color: '#08090B', fontSize: 15, fontWeight: '700' },
 });

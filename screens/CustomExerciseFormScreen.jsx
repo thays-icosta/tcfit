@@ -268,7 +268,7 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
                   <Text style={styles.dbResultMeta}>{r.bodyPart} · {r.target}{r.equipment ? ` · ${r.equipment}` : ''}</Text>
                 </View>
                 {dbImportingId === r.id ? (
-                  <ActivityIndicator color="#FF6B00" size="small" />
+                  <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : dbImportedId === r.id ? (
                   <Text style={styles.dbResultUseTextActive}>✓ Usando</Text>
                 ) : (
@@ -297,7 +297,7 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
           <>
             <TouchableOpacity style={styles.videoPickerButton} onPress={handlePickVideo} disabled={uploadingVideo}>
               {uploadingVideo ? (
-                <ActivityIndicator color="#FF6B00" />
+                <ActivityIndicator color="#FFFFFF" />
               ) : videoUrl ? (
                 <Text style={styles.videoPickerButtonText}>✓ Vídeo enviado — toque pra trocar</Text>
               ) : (
@@ -308,7 +308,7 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
         )}
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>{isEditing ? 'Salvar Alterações' : 'Criar Exercício'}</Text>}
+          {saving ? <ActivityIndicator color="#08090B" /> : <Text style={styles.saveButtonText}>{isEditing ? 'Salvar Alterações' : 'Criar Exercício'}</Text>}
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -316,36 +316,36 @@ export default function CustomExerciseFormScreen({ personalId, exercise, onClose
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
-  formCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14 },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50, paddingHorizontal: 16 },
+  formCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14 },
   dbSelectedBox: { marginTop: 8 },
   dbSelectedText: { color: '#22c55e', fontSize: 11, fontWeight: '700', marginTop: 6 },
-  muscleFallbackBox: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 8 },
-  muscleFallbackLabel: { color: '#FF6B00', fontSize: 14, fontWeight: '800', textTransform: 'capitalize', marginBottom: 4 },
-  dbResultRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, padding: 8, marginTop: 8 },
+  muscleFallbackBox: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 8 },
+  muscleFallbackLabel: { color: '#FFFFFF', fontSize: 14, fontWeight: '800', textTransform: 'capitalize', marginBottom: 4 },
+  dbResultRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, padding: 8, marginTop: 8 },
   dbResultRowActive: { borderColor: '#22c55e' },
-  dbResultThumb: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#1C1C22' },
-  dbResultName: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
+  dbResultThumb: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#121419' },
+  dbResultName: { color: '#FFFFFF', fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
   dbResultMeta: { color: '#737373', fontSize: 10, marginTop: 2, textTransform: 'capitalize' },
-  dbResultUseText: { color: '#FF6B00', fontSize: 11, fontWeight: '700' },
+  dbResultUseText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
   dbResultUseTextActive: { color: '#22c55e', fontSize: 11, fontWeight: '700' },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 12 },
-  input: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 13 },
+  input: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#FFFFFF', fontSize: 13 },
   textArea: { height: 80, textAlignVertical: 'top' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
-  chipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  chipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', textTransform: 'capitalize' },
-  chipTextActive: { color: '#0F0F12' },
+  chip: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+  chipActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  chipText: { color: '#A7AAB0', fontSize: 11, fontWeight: '600', textTransform: 'capitalize' },
+  chipTextActive: { color: '#08090B' },
   helperText: { color: '#525252', fontSize: 10, marginTop: 4 },
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  modeButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 9, alignItems: 'center' },
-  modeButtonActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  modeButtonText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  modeButtonTextActive: { color: '#0F0F12' },
-  videoPreview: { width: '100%', height: 140, borderRadius: 8, marginTop: 8, backgroundColor: '#0F0F12' },
-  videoPickerButton: { backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-  videoPickerButtonText: { color: '#3b82f6', fontSize: 12, fontWeight: '700' },
-  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 20 },
-  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
+  modeButton: { flex: 1, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingVertical: 9, alignItems: 'center' },
+  modeButtonActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  modeButtonText: { color: '#A7AAB0', fontSize: 11, fontWeight: '600' },
+  modeButtonTextActive: { color: '#08090B' },
+  videoPreview: { width: '100%', height: 140, borderRadius: 8, marginTop: 8, backgroundColor: '#08090B' },
+  videoPickerButton: { backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
+  videoPickerButtonText: { color: '#D1D5DB', fontSize: 12, fontWeight: '700' },
+  saveButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 20 },
+  saveButtonText: { color: '#08090B', fontSize: 15, fontWeight: '700' },
 });

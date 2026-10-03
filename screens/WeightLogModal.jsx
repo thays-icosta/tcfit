@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { ACCENT } from './theme';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 
-const ACCENT = '#FF6B00';
 
 // Quick "log today's weight" popup, opened from the "Registrar peso" task on
 // the aluno's Home. One row per student per day (weight_entries), separate
@@ -56,7 +56,7 @@ export default function WeightLogModal({ visible, studentId, currentWeightKg, on
           />
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-            {saving ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.saveButtonText}>Salvar</Text>}
+            {saving ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.saveButtonText}>Salvar</Text>}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -70,13 +70,13 @@ export default function WeightLogModal({ visible, studentId, currentWeightKg, on
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40 },
-  title: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 6 },
+  sheet: { backgroundColor: '#121419', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40 },
+  title: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', marginBottom: 6 },
   helperText: { color: '#737373', fontSize: 12, lineHeight: 17, marginBottom: 16 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6 },
-  input: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12, color: '#F5F5F7', fontSize: 16, fontWeight: '700', marginBottom: 16 },
+  input: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12, color: '#FFFFFF', fontSize: 16, fontWeight: '700', marginBottom: 16 },
   saveButton: { backgroundColor: ACCENT, borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-  saveButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
+  saveButtonText: { color: '#08090B', fontSize: 14, fontWeight: '800' },
   closeButton: { paddingVertical: 12, alignItems: 'center', marginTop: 8 },
-  closeButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
+  closeButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
 });

@@ -27,6 +27,6 @@ export default function CollapsibleSection({ title, headerRight, collapsed, onTo
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', flexShrink: 1 },
+  title: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', flexShrink: 1 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 });

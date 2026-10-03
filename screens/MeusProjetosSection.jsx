@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { ACCENT } from './theme';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { supabase } from './supabaseClient';
 
-const ACCENT = '#FF6B00';
 
 // "Meus Projetos" — active multi-day programs (e.g. "Quadríceps Grandes e
 // Fortes — 90 Dias") the student is currently running. Lives at the top of
@@ -60,13 +60,13 @@ export default function MeusProjetosSection({ studentId, onOpenProject }) {
 const styles = StyleSheet.create({
   container: { marginBottom: 20 },
   sectionTitle: { color: '#737373', fontSize: 11, fontWeight: '800', letterSpacing: 0.5, marginBottom: 8 },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 12, marginBottom: 10 },
-  cover: { width: 48, height: 48, borderRadius: 10, backgroundColor: '#1C1C22' },
-  coverPlaceholder: { width: 48, height: 48, borderRadius: 10, backgroundColor: '#1C1C22' },
-  name: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
-  dayLabel: { color: '#a3a3a3', fontSize: 11, marginTop: 2, marginBottom: 6 },
-  track: { height: 4, backgroundColor: '#0F0F12', borderRadius: 2, overflow: 'hidden' },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 16, padding: 12, marginBottom: 10 },
+  cover: { width: 48, height: 48, borderRadius: 10, backgroundColor: '#121419' },
+  coverPlaceholder: { width: 48, height: 48, borderRadius: 10, backgroundColor: '#121419' },
+  name: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  dayLabel: { color: '#A7AAB0', fontSize: 11, marginTop: 2, marginBottom: 6 },
+  track: { height: 4, backgroundColor: '#08090B', borderRadius: 2, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 2, backgroundColor: ACCENT },
   continueButton: { backgroundColor: ACCENT, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
-  continueButtonText: { color: '#0F0F12', fontSize: 11, fontWeight: '700' },
+  continueButtonText: { color: '#08090B', fontSize: 11, fontWeight: '700' },
 });

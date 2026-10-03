@@ -567,7 +567,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
               ))}
             </View>
             <TouchableOpacity style={styles.moreFiltersButton} onPress={() => setShowMoreFilters(true)}>
-              <Ionicons name="options-outline" size={18} color={studentFilter !== 'todos' || attendanceFilter !== 'todos' ? '#FF6B00' : '#a3a3a3'} />
+              <Ionicons name="options-outline" size={18} color={studentFilter !== 'todos' || attendanceFilter !== 'todos' ? '#FFFFFF' : '#A7AAB0'} />
               {(studentFilter !== 'todos' || attendanceFilter !== 'todos') && <View style={styles.moreFiltersDot} />}
             </TouchableOpacity>
           </View>
@@ -635,7 +635,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
           </Modal>
 
           {loading ? (
-            <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
+            <ActivityIndicator color="#FFFFFF" style={{ marginTop: 20 }} />
           ) : students.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum aluno ainda. Toque em &quot;+ Aluno&quot; na Início pra começar.</Text>
           ) : filteredStudents.length === 0 ? (
@@ -712,7 +712,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
                 style={[styles.nutricaoScopeTab, nutricaoScope === tab.value && styles.nutricaoScopeTabActive]}
                 onPress={() => setNutricaoScope(tab.value)}
               >
-                <Ionicons name={tab.icon} size={13} color={nutricaoScope === tab.value ? '#0F0F12' : '#a3a3a3'} />
+                <Ionicons name={tab.icon} size={13} color={nutricaoScope === tab.value ? '#08090B' : '#A7AAB0'} />
                 <Text style={[styles.nutricaoScopeTabText, nutricaoScope === tab.value && styles.nutricaoScopeTabTextActive]}>{tab.label}</Text>
               </TouchableOpacity>
             ))}
@@ -721,7 +721,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
           {nutricaoScope === 'planos' && (
             <>
               <TouchableOpacity style={styles.aiShortcutCard} onPress={() => setShowStudentPicker(true)}>
-                <Ionicons name="sparkles" size={20} color="#FF6B00" />
+                <Ionicons name="sparkles" size={20} color="#FFFFFF" />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.aiShortcutTitle}>Gerar Dieta com IA</Text>
                   <Text style={styles.aiShortcutSubtitle}>Escolha um aluno e monte um plano alimentar automaticamente</Text>
@@ -757,7 +757,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
 
           {nutricaoScope === 'modelos' && (
             <TouchableOpacity style={styles.aiShortcutCard} onPress={() => setShowDietTemplates(true)}>
-              <Ionicons name="albums-outline" size={20} color="#FF6B00" />
+              <Ionicons name="albums-outline" size={20} color="#FFFFFF" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.aiShortcutTitle}>Modelos de Dieta</Text>
                 <Text style={styles.aiShortcutSubtitle}>Crie planos alimentares reutilizáveis e aplique rápido em qualquer aluno</Text>
@@ -770,13 +770,13 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
             <View style={styles.shortcutGrid}>
               <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowFoodCatalog(true)}>
                 <View style={styles.shortcutIconCircle}>
-                  <Ionicons name="nutrition-outline" size={20} color="#FF6B00" />
+                  <Ionicons name="nutrition-outline" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.shortcutText}>Catálogo de Alimentos</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.shortcutCard} onPress={() => setShowRecipeManager(true)}>
                 <View style={styles.shortcutIconCircle}>
-                  <Ionicons name="book-outline" size={20} color="#FF6B00" />
+                  <Ionicons name="book-outline" size={20} color="#FFFFFF" />
                 </View>
                 <Text style={styles.shortcutText}>Receitas e E-books</Text>
               </TouchableOpacity>
@@ -785,7 +785,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
 
           {nutricaoScope === 'produtos' && (
             <TouchableOpacity style={styles.aiShortcutCard} onPress={() => setShowProductsManager(true)}>
-              <Ionicons name="bag-handle-outline" size={20} color="#FF6B00" />
+              <Ionicons name="bag-handle-outline" size={20} color="#FFFFFF" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.aiShortcutTitle}>Produtos Adicionais</Text>
                 <Text style={styles.aiShortcutSubtitle}>E-books, guias e outros produtos de nutrição à venda</Text>
@@ -862,13 +862,13 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       <View style={styles.shortcutGrid}>
         <TouchableOpacity style={[styles.shortcutCard, { width: '100%' }]} onPress={() => setShowProductsManager(true)}>
           <View style={styles.shortcutIconCircle}>
-            <Ionicons name="bag-handle-outline" size={20} color="#FF6B00" />
+            <Ionicons name="bag-handle-outline" size={20} color="#FFFFFF" />
           </View>
           <Text style={styles.shortcutText}>Produtos Adicionais</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.shortcutCard, { width: '100%' }]} onPress={() => setShowProjectBuilder(true)}>
           <View style={styles.shortcutIconCircle}>
-            <Ionicons name="rocket-outline" size={20} color="#FF6B00" />
+            <Ionicons name="rocket-outline" size={20} color="#FFFFFF" />
           </View>
           <Text style={styles.shortcutText}>Projetos</Text>
         </TouchableOpacity>
@@ -877,7 +877,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       {students.length > 0 && (
         <View style={styles.bannerRow}>
           <TouchableOpacity style={[styles.agendaBanner, { flex: 1, marginRight: 8 }]} onPress={() => setShowAgenda(true)}>
-            <Ionicons name="calendar-outline" size={16} color="#a855f7" />
+            <Ionicons name="calendar-outline" size={16} color="#D1D5DB" />
             <Text style={styles.agendaBannerTitle}>Agenda</Text>
             <Text style={styles.agendaBannerSubtitle}>Ver sessões</Text>
           </TouchableOpacity>
@@ -908,7 +908,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
                 </Text>
               </View>
               <TouchableOpacity style={styles.appointmentButton} onPress={() => setPresencialFor(a.student)} disabled={!a.student}>
-                <Ionicons name="play-circle" size={16} color="#0F0F12" />
+                <Ionicons name="play-circle" size={16} color="#08090B" />
                 <Text style={styles.appointmentButtonText}>Iniciar Atendimento</Text>
               </TouchableOpacity>
             </View>
@@ -989,7 +989,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
       )}
 
       <TouchableOpacity style={styles.viewStudentsRow} onPress={() => setActiveTab('alunos')}>
-        <Ionicons name="people-outline" size={18} color="#FF6B00" />
+        <Ionicons name="people-outline" size={18} color="#FFFFFF" />
         <View style={{ flex: 1 }}>
           <Text style={styles.viewStudentsTitle}>Meus Alunos</Text>
           <Text style={styles.viewStudentsSubtitle}>
@@ -1112,7 +1112,7 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
                 />
 
                 <TouchableOpacity style={styles.modalButton} onPress={handleCreateStudentDirect} disabled={creatingStudent}>
-                  {creatingStudent ? <ActivityIndicator color="#F5F5F7" /> : <Text style={styles.modalButtonText}>Cadastrar Aluno</Text>}
+                  {creatingStudent ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.modalButtonText}>Cadastrar Aluno</Text>}
                 </TouchableOpacity>
               </ScrollView>
             )}
@@ -1130,119 +1130,119 @@ export default function PersonalHomeScreen({ user, onLogout, initialChatStudentI
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
-  inviteButton: { backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-  inviteButtonText: { color: '#FF6B00', fontSize: 12, fontWeight: '600' },
-  summaryCard: { flexDirection: 'row', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 14, marginBottom: 12 },
+  container: { flex: 1, backgroundColor: '#08090B', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
+  inviteButton: { backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  inviteButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
+  summaryCard: { flexDirection: 'row', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, paddingVertical: 14, marginBottom: 12 },
   summaryItem: { flex: 1, alignItems: 'center' },
-  summaryDivider: { width: 1, backgroundColor: '#2B2B36' },
-  summaryValue: { color: '#F5F5F7', fontSize: 16, fontWeight: '800' },
+  summaryDivider: { width: 1, backgroundColor: '#292D34' },
+  summaryValue: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
   summaryLabel: { color: '#737373', fontSize: 9, marginTop: 4, textAlign: 'center' },
-  overviewRow: { flexDirection: 'row', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 14, marginTop: 8, marginBottom: 8 },
+  overviewRow: { flexDirection: 'row', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, paddingVertical: 14, marginTop: 8, marginBottom: 8 },
   overviewItem: { flex: 1, alignItems: 'center' },
-  overviewDivider: { width: 1, backgroundColor: '#2B2B36' },
+  overviewDivider: { width: 1, backgroundColor: '#292D34' },
   overviewValue: { color: '#22c55e', fontSize: 18, fontWeight: '800' },
   overviewValueAlert: { color: '#f59e0b' },
   overviewLabel: { color: '#737373', fontSize: 10, marginTop: 4, textAlign: 'center', fontWeight: '600' },
   shortcutGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
-  shortcutCard: { width: '47%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, paddingVertical: 16, alignItems: 'center', gap: 8 },
-  shortcutIconCircle: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
-  shortcutText: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', textAlign: 'center' },
+  shortcutCard: { width: '47%', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, paddingVertical: 16, alignItems: 'center', gap: 8 },
+  shortcutIconCircle: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
+  shortcutText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700', textAlign: 'center' },
   bannerRow: { flexDirection: 'row', marginBottom: 10 },
-  agendaBanner: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#a855f7', borderRadius: 12, padding: 14 },
-  agendaBannerTitle: { color: '#a855f7', fontSize: 13, fontWeight: '700', marginTop: 4 },
-  agendaBannerSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
-  chatBanner: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#22c55e', borderRadius: 12, padding: 14 },
+  agendaBanner: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 12, padding: 14 },
+  agendaBannerTitle: { color: '#D1D5DB', fontSize: 13, fontWeight: '700', marginTop: 4 },
+  agendaBannerSubtitle: { color: '#A7AAB0', fontSize: 11, marginTop: 2 },
+  chatBanner: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#22c55e', borderRadius: 12, padding: 14 },
   chatBannerTitle: { color: '#22c55e', fontSize: 13, fontWeight: '700', marginTop: 4 },
-  chatBannerSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
-  sectionTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '700', marginBottom: 12 },
+  chatBannerSubtitle: { color: '#A7AAB0', fontSize: 11, marginTop: 2 },
+  sectionTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '700', marginBottom: 12 },
   sectionTitleSpaced: { marginTop: 20 },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12 },
-  checkinRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 8 },
-  checkinAvatarCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  checkinRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 12, marginBottom: 8 },
+  checkinAvatarCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   checkinAvatarImage: { width: 36, height: 36 },
-  checkinAvatarLetter: { color: '#FF6B00', fontSize: 13, fontWeight: '800' },
-  checkinName: { flex: 1, color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  checkinAvatarLetter: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  checkinName: { flex: 1, color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
   checkinDoneTag: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   checkinDoneTagText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
-  viewStudentsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginTop: 4 },
-  viewStudentsTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
-  viewStudentsSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
+  viewStudentsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginTop: 4 },
+  viewStudentsTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  viewStudentsSubtitle: { color: '#A7AAB0', fontSize: 11, marginTop: 2 },
   nutricaoScopeTabs: { flexDirection: 'row', gap: 6, marginBottom: 16 },
-  nutricaoScopeTab: { flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 10 },
-  nutricaoScopeTabActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  nutricaoScopeTabText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
-  nutricaoScopeTabTextActive: { color: '#0F0F12' },
-  aiShortcutCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,107,0,0.1)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, padding: 16, marginBottom: 8 },
-  aiShortcutTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
-  aiShortcutSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
-  recentDietCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
-  recentDietName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  nutricaoScopeTab: { flex: 1, flexDirection: 'row', gap: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 10 },
+  nutricaoScopeTabActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  nutricaoScopeTabText: { color: '#A7AAB0', fontSize: 11, fontWeight: '700' },
+  nutricaoScopeTabTextActive: { color: '#08090B' },
+  aiShortcutCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 14, padding: 16, marginBottom: 8 },
+  aiShortcutTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  aiShortcutSubtitle: { color: '#A7AAB0', fontSize: 11, marginTop: 2 },
+  recentDietCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 10 },
+  recentDietName: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   recentDietStudent: { color: '#737373', fontSize: 11, marginTop: 2 },
   recentDietActiveBadge: { backgroundColor: 'rgba(34,197,94,0.12)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
   recentDietActiveBadgeText: { color: '#22c55e', fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
-  studentPickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2B2B36' },
-  studentPickerName: { color: '#F5F5F7', fontSize: 14, fontWeight: '600' },
+  studentPickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#292D34' },
+  studentPickerName: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
   attentionBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(245,158,11,0.1)', borderWidth: 1, borderColor: '#f59e0b', borderRadius: 12, padding: 14, marginBottom: 12 },
-  attentionBannerTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  attentionBannerTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   attentionBannerSubtitle: { color: '#f59e0b', fontSize: 11, fontWeight: '700', marginTop: 2 },
   alunosFilterRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  moreFiltersButton: { width: 38, height: 38, borderRadius: 10, backgroundColor: '#1C1C22', alignItems: 'center', justifyContent: 'center' },
-  moreFiltersDot: { position: 'absolute', top: 6, right: 6, width: 7, height: 7, borderRadius: 4, backgroundColor: '#FF6B00' },
-  studentFilterTabs: { flexDirection: 'row', backgroundColor: '#1C1C22', borderRadius: 10, padding: 3, marginBottom: 10, gap: 4 },
+  moreFiltersButton: { width: 38, height: 38, borderRadius: 10, backgroundColor: '#121419', alignItems: 'center', justifyContent: 'center' },
+  moreFiltersDot: { position: 'absolute', top: 6, right: 6, width: 7, height: 7, borderRadius: 4, backgroundColor: '#FFFFFF' },
+  studentFilterTabs: { flexDirection: 'row', backgroundColor: '#121419', borderRadius: 10, padding: 3, marginBottom: 10, gap: 4 },
   studentFilterTab: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 8 },
-  studentFilterTabActive: { backgroundColor: '#FF6B00' },
-  studentFilterTabText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', textAlign: 'center' },
-  studentFilterTabTextActive: { color: '#0F0F12' },
-  studentSearchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 14 },
-  studentSearchInput: { flex: 1, color: '#F5F5F7', fontSize: 13 },
-  studentCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 10 },
-  avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center', marginRight: 12, overflow: 'hidden' },
+  studentFilterTabActive: { backgroundColor: '#FFFFFF' },
+  studentFilterTabText: { color: '#A7AAB0', fontSize: 11, fontWeight: '600', textAlign: 'center' },
+  studentFilterTabTextActive: { color: '#08090B' },
+  studentSearchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 14 },
+  studentSearchInput: { flex: 1, color: '#FFFFFF', fontSize: 13 },
+  studentCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginBottom: 10 },
+  avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', alignItems: 'center', justifyContent: 'center', marginRight: 12, overflow: 'hidden' },
   avatarImage: { width: 44, height: 44 },
-  avatarLetter: { color: '#FF6B00', fontSize: 17, fontWeight: '800' },
-  studentName: { color: '#F5F5F7', fontSize: 15, fontWeight: '600' },
-  studentPlanLine: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', marginTop: 2 },
+  avatarLetter: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
+  studentName: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
+  studentPlanLine: { color: '#A7AAB0', fontSize: 11, fontWeight: '600', marginTop: 2 },
   studentLastTrained: { color: '#525252', fontSize: 10, marginTop: 6 },
   alertTag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(239,68,68,0.12)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 3, marginTop: 4 },
   alertTagText: { color: '#ef4444', fontSize: 9, fontWeight: '700' },
-  alertRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', borderRadius: 12, padding: 12, marginBottom: 8 },
-  appointmentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, padding: 12, marginBottom: 8 },
-  appointmentTime: { color: '#a3a3a3', fontSize: 11, marginTop: 2 },
-  appointmentButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FF6B00', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 10 },
-  appointmentButtonText: { color: '#0F0F12', fontSize: 11, fontWeight: '800' },
-  attentionRowMuted: { borderColor: '#2B2B36' },
+  alertRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#121419', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', borderRadius: 12, padding: 12, marginBottom: 8 },
+  appointmentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#121419', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 12, padding: 12, marginBottom: 8 },
+  appointmentTime: { color: '#A7AAB0', fontSize: 11, marginTop: 2 },
+  appointmentButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FFFFFF', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 10 },
+  appointmentButtonText: { color: '#08090B', fontSize: 11, fontWeight: '800' },
+  attentionRowMuted: { borderColor: '#292D34' },
   attentionTagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
   attentionTagPending: { backgroundColor: 'rgba(245,158,11,0.12)' },
   attentionTagPendingText: { color: '#f59e0b' },
   chevron: { color: '#525252', fontSize: 22, fontWeight: '300' },
-  button: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 20 },
-  buttonText: { color: '#FF6B00', fontSize: 15, fontWeight: '700' },
+  button: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 20 },
+  buttonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
-  modalTitle: { color: '#F5F5F7', fontSize: 18, fontWeight: '800', marginBottom: 6 },
-  modalSubtitle: { color: '#a3a3a3', fontSize: 12, marginBottom: 16 },
+  modalSheet: { backgroundColor: '#121419', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
+  modalTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '800', marginBottom: 6 },
+  modalSubtitle: { color: '#A7AAB0', fontSize: 12, marginBottom: 16 },
   accessLevelLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, fontWeight: '700' },
-  modalCodeBox: { backgroundColor: '#0F0F12', borderRadius: 10, padding: 14, marginBottom: 16 },
-  modalCodeText: { color: '#FF6B00', fontSize: 11, fontFamily: 'Courier' },
+  modalCodeBox: { backgroundColor: '#08090B', borderRadius: 10, padding: 14, marginBottom: 16 },
+  modalCodeText: { color: '#FFFFFF', fontSize: 11, fontFamily: 'Courier' },
   modalLinkText: { color: '#737373', fontSize: 11, marginBottom: 16, marginTop: -8 },
-  modalButton: { backgroundColor: '#0F0F12', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
+  modalButton: { backgroundColor: '#08090B', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
   modalButtonDone: { backgroundColor: 'rgba(34,197,94,0.15)' },
-  modalButtonText: { color: '#FF6B00', fontSize: 13, fontWeight: '700' },
+  modalButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   modalCloseButton: { paddingVertical: 10, alignItems: 'center', marginTop: 4 },
-  modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
+  modalCloseButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
   accessSuccessBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  accessSuccessTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800' },
-  addStudentTabRow: { flexDirection: 'row', backgroundColor: '#0F0F12', borderRadius: 10, padding: 3, marginBottom: 16 },
+  accessSuccessTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  addStudentTabRow: { flexDirection: 'row', backgroundColor: '#08090B', borderRadius: 10, padding: 3, marginBottom: 16 },
   addStudentTabButton: { flex: 1, paddingVertical: 9, alignItems: 'center', borderRadius: 8 },
-  addStudentTabButtonActive: { backgroundColor: '#FF6B00' },
-  addStudentTabText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
-  addStudentTabTextActive: { color: '#0F0F12' },
+  addStudentTabButtonActive: { backgroundColor: '#FFFFFF' },
+  addStudentTabText: { color: '#A7AAB0', fontSize: 11, fontWeight: '700' },
+  addStudentTabTextActive: { color: '#08090B' },
   addStudentLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 12 },
-  addStudentInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
+  addStudentInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#FFFFFF', fontSize: 13 },
   addStudentTextArea: { height: 70, textAlignVertical: 'top' },
   addStudentModeRow: { flexDirection: 'row', gap: 8 },
-  addStudentModeChip: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 9, alignItems: 'center' },
-  addStudentModeChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  addStudentModeChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  addStudentModeChipTextActive: { color: '#0F0F12' },
+  addStudentModeChip: { flex: 1, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingVertical: 9, alignItems: 'center' },
+  addStudentModeChipActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  addStudentModeChipText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
+  addStudentModeChipTextActive: { color: '#08090B' },
 });

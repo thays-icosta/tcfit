@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { ACCENT } from './theme';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
@@ -13,7 +14,6 @@ import ProjectCelebrationScreen from './ProjectCelebrationScreen';
 import ProjectTimelineScreen from './ProjectTimelineScreen';
 import WeightEvolutionChart from './WeightEvolutionChart';
 
-const ACCENT = '#FF6B00';
 
 // The "Dia X de Total" dashboard for one student's run of a Projeto. Never
 // duplicates workout/exercise data — "Começar Treino" copies a ficha into the
@@ -309,7 +309,7 @@ export default function ProjectDashboardScreen({ studentProjectId, studentId, on
                 <Text style={styles.cardTitle}>Próxima Atividade</Text>
                 <Text style={styles.activityName}>{nextActivity.title}</Text>
                 <TouchableOpacity style={styles.primaryButton} onPress={() => handleStartTreino(nextActivity)} disabled={startingActivityId === nextActivity.id}>
-                  {startingActivityId === nextActivity.id ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.primaryButtonText}>Começar Treino</Text>}
+                  {startingActivityId === nextActivity.id ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.primaryButtonText}>Começar Treino</Text>}
                 </TouchableOpacity>
               </View>
             )}
@@ -395,29 +395,29 @@ export default function ProjectDashboardScreen({ studentProjectId, studentId, on
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
-  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
-  card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 16, marginBottom: 14 },
-  dayLabel: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 10 },
-  track: { height: 6, backgroundColor: '#0F0F12', borderRadius: 3, overflow: 'hidden' },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
+  center: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
+  card: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 16, marginBottom: 14 },
+  dayLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', marginBottom: 10 },
+  track: { height: 6, backgroundColor: '#08090B', borderRadius: 3, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 3, backgroundColor: ACCENT },
-  pctLabel: { color: '#a3a3a3', fontSize: 12, marginTop: 6, fontWeight: '600' },
-  cardTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
+  pctLabel: { color: '#A7AAB0', fontSize: 12, marginTop: 6, fontWeight: '600' },
+  cardTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
   cardSubtitle: { color: '#737373', fontSize: 12, marginTop: 4 },
-  activityName: { color: '#F5F5F7', fontSize: 15, fontWeight: '700', marginBottom: 12 },
+  activityName: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', marginBottom: 12 },
   primaryButton: { backgroundColor: ACCENT, borderRadius: 10, paddingVertical: 13, alignItems: 'center' },
-  primaryButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
+  primaryButtonText: { color: '#08090B', fontSize: 14, fontWeight: '700' },
   secondaryButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: ACCENT, borderRadius: 10, paddingVertical: 12 },
   secondaryButtonText: { color: ACCENT, fontSize: 13, fontWeight: '700' },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between' },
   statItem: { alignItems: 'center', flex: 1 },
-  statValue: { color: '#F5F5F7', fontSize: 20, fontWeight: '800' },
+  statValue: { color: '#FFFFFF', fontSize: 20, fontWeight: '800' },
   statLabel: { color: '#737373', fontSize: 10, marginTop: 4, textAlign: 'center' },
   badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  badge: { flexDirection: 'row', gap: 6, alignItems: 'center', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7 },
+  badge: { flexDirection: 'row', gap: 6, alignItems: 'center', backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7 },
   badgeAchieved: { borderColor: ACCENT },
   badgeText: { color: '#525252', fontSize: 11, fontWeight: '600' },
-  badgeTextAchieved: { color: '#F5F5F7' },
+  badgeTextAchieved: { color: '#FFFFFF' },
   timelineLink: { flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', paddingVertical: 14, marginBottom: 20 },
   timelineLinkText: { color: ACCENT, fontSize: 13, fontWeight: '700' },
 });

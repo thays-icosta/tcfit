@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { ACCENT } from './theme';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { HeaderBack } from './Header';
 import { buildFullTimeline } from './projectUtils';
 
-const ACCENT = '#FF6B00';
 
 const TYPE_ICON = {
   treino: 'barbell-outline',
@@ -95,14 +95,14 @@ export default function ProjectTimelineScreen({ studentProjectId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
-  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
+  center: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
   phaseBlock: { marginBottom: 20 },
-  phaseTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '800', letterSpacing: 0.5 },
+  phaseTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '800', letterSpacing: 0.5 },
   phaseSubtitle: { color: '#525252', fontSize: 11, marginBottom: 10 },
-  dayRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#1C1C22' },
-  dayRowCurrent: { backgroundColor: 'rgba(255,107,0,0.08)', borderRadius: 8, paddingHorizontal: 6 },
-  dayNumber: { color: '#a3a3a3', fontSize: 12, fontWeight: '700', width: 56 },
-  dayLabel: { color: '#F5F5F7', fontSize: 12, flex: 1 },
+  dayRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#121419' },
+  dayRowCurrent: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 8, paddingHorizontal: 6 },
+  dayNumber: { color: '#A7AAB0', fontSize: 12, fontWeight: '700', width: 56 },
+  dayLabel: { color: '#FFFFFF', fontSize: 12, flex: 1 },
   dayLabelLocked: { color: '#525252', fontSize: 12, flex: 1 },
 });

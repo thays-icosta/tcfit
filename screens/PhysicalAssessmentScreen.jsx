@@ -37,13 +37,13 @@ export default function PhysicalAssessmentScreen({ studentId, studentName, perso
       <Text style={styles.studentLabel}>{studentName}</Text>
 
       <TouchableOpacity style={styles.optionCard} onPress={() => setMode('form')}>
-        <Ionicons name="clipboard-outline" size={28} color="#3b82f6" />
+        <Ionicons name="clipboard-outline" size={28} color="#D1D5DB" />
         <Text style={styles.optionTitle}>Nova Avaliação</Text>
         <Text style={styles.optionSubtitle}>Registrar bioimpedância ou dobras cutâneas</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.optionCard} onPress={() => setMode('history')}>
-        <Ionicons name="trending-up-outline" size={28} color="#a855f7" />
+        <Ionicons name="trending-up-outline" size={28} color="#D1D5DB" />
         <Text style={styles.optionTitle}>Ver Evolução</Text>
         <Text style={styles.optionSubtitle}>Gráficos e comparação com avaliações anteriores</Text>
       </TouchableOpacity>
@@ -52,9 +52,9 @@ export default function PhysicalAssessmentScreen({ studentId, studentName, perso
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50, paddingHorizontal: 16 },
   studentLabel: { color: '#737373', fontSize: 12, marginBottom: 24 },
-  optionCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 20, alignItems: 'center', marginBottom: 14 },
-  optionTitle: { color: '#F5F5F7', fontSize: 15, fontWeight: '700', marginTop: 10 },
-  optionSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 4, textAlign: 'center' },
+  optionCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 20, alignItems: 'center', marginBottom: 14 },
+  optionTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', marginTop: 10 },
+  optionSubtitle: { color: '#A7AAB0', fontSize: 11, marginTop: 4, textAlign: 'center' },
 });

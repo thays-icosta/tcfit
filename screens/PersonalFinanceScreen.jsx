@@ -6,11 +6,11 @@ import { showAlert } from './alertUtils';
 import { HeaderBack } from './Header';
 
 const CATEGORIES = [
-  { value: 'treino', label: 'Treino', color: '#FF6B00' },
+  { value: 'treino', label: 'Treino', color: '#FFFFFF' },
   { value: 'dieta', label: 'Dieta', color: '#22c55e' },
-  { value: 'consultoria', label: 'Consultoria', color: '#a855f7' },
-  { value: 'receita', label: 'Receitas', color: '#3b82f6' },
-  { value: 'desafio', label: 'Desafio', color: '#ec4899' },
+  { value: 'consultoria', label: 'Consultoria', color: '#D1D5DB' },
+  { value: 'receita', label: 'Receitas', color: '#D1D5DB' },
+  { value: 'desafio', label: 'Desafio', color: '#D1D5DB' },
   { value: 'outro', label: 'Outro', color: '#737373' },
 ];
 
@@ -24,8 +24,8 @@ const EXPENSE_CATEGORIES = [
 ];
 
 const ACCESS_LEVEL_META = {
-  plataforma_base: { label: 'Acesso App', color: '#3b82f6' },
-  consultoria_vip: { label: 'Consultoria VIP', color: '#a855f7' },
+  plataforma_base: { label: 'Acesso App', color: '#D1D5DB' },
+  consultoria_vip: { label: 'Consultoria VIP', color: '#D1D5DB' },
 };
 
 function toDateInputValue(d) {
@@ -34,11 +34,11 @@ function toDateInputValue(d) {
 
 const webDateInputStyle = {
   flex: 1,
-  backgroundColor: '#0F0F12',
-  border: '1px solid #2B2B36',
+  backgroundColor: '#08090B',
+  border: '1px solid #292D34',
   borderRadius: 10,
   padding: 12,
-  color: '#F5F5F7',
+  color: '#FFFFFF',
   fontSize: 14,
   fontFamily: 'inherit',
 };
@@ -305,7 +305,7 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
       <HeaderBack title={filterStudentId ? `Financeiro · ${filterStudentName}` : 'Financeiro'} onBack={onClose} />
 
       {loading ? (
-        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FFFFFF" style={{ marginTop: 20 }} />
       ) : (
         <>
           <View style={styles.statsRow}>
@@ -552,7 +552,7 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
 
               <View style={styles.recurringRow}>
                 <Text style={styles.recurringLabel}>Repetir mensalmente</Text>
-                <Switch value={isRecurring} onValueChange={setIsRecurring} trackColor={{ false: '#2B2B36', true: '#FF6B00' }} thumbColor="#F5F5F7" />
+                <Switch value={isRecurring} onValueChange={setIsRecurring} trackColor={{ false: '#292D34', true: '#FFFFFF' }} thumbColor="#FFFFFF" />
               </View>
               {isRecurring && (
                 <Text style={styles.recurringHint}>Toda vez que você marcar como pago, uma nova cobrança do mês seguinte é criada automaticamente.</Text>
@@ -563,7 +563,7 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
                   <Text style={styles.modalCancelButtonText}>Cancelar</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalConfirmButton} onPress={handleConfirmAdd} disabled={saving}>
-                  {saving ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>Adicionar</Text>}
+                  {saving ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.modalConfirmButtonText}>Adicionar</Text>}
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -601,7 +601,7 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
                 {(entryType === 'entrada' ? CATEGORIES : EXPENSE_CATEGORIES).map((c) => (
                   <TouchableOpacity
                     key={c.value}
-                    style={[styles.categoryPickerChip, entryCategory === c.value && { backgroundColor: c.color || '#FF6B00', borderColor: c.color || '#FF6B00' }]}
+                    style={[styles.categoryPickerChip, entryCategory === c.value && { backgroundColor: c.color || '#FFFFFF', borderColor: c.color || '#FFFFFF' }]}
                     onPress={() => setEntryCategory(c.value)}
                   >
                     <Text style={[styles.categoryPickerChipText, entryCategory === c.value && styles.categoryPickerChipTextActive]}>{c.label}</Text>
@@ -648,7 +648,7 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
                   <Text style={styles.modalCancelButtonText}>Cancelar</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalConfirmButton} onPress={handleConfirmAddEntry} disabled={savingEntry}>
-                  {savingEntry ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>Adicionar</Text>}
+                  {savingEntry ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.modalConfirmButtonText}>Adicionar</Text>}
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -660,90 +660,90 @@ export default function PersonalFinanceScreen({ personalId, onClose, filterStude
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50, paddingHorizontal: 16 },
   statsRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
-  statBox: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  statBox: { flex: 1, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   statValue: { color: '#22c55e', fontSize: 15, fontWeight: '800' },
-  statLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 4, textAlign: 'center' },
-  breakdownCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 14 },
+  statLabel: { color: '#A7AAB0', fontSize: 9, marginTop: 4, textAlign: 'center' },
+  breakdownCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 14 },
   breakdownHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  breakdownTitle: { color: '#F5F5F7', fontSize: 12, fontWeight: '700' },
+  breakdownTitle: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
   breakdownTotal: { color: '#22c55e', fontSize: 14, fontWeight: '800' },
   breakdownRow: { marginBottom: 10 },
   breakdownLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   breakdownDot: { width: 8, height: 8, borderRadius: 4 },
-  breakdownLabel: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  breakdownBarTrack: { height: 8, backgroundColor: '#0F0F12', borderRadius: 4, overflow: 'hidden', marginBottom: 4 },
+  breakdownLabel: { color: '#A7AAB0', fontSize: 11, fontWeight: '600' },
+  breakdownBarTrack: { height: 8, backgroundColor: '#08090B', borderRadius: 4, overflow: 'hidden', marginBottom: 4 },
   breakdownBarFill: { height: '100%', borderRadius: 4 },
-  breakdownValue: { color: '#F5F5F7', fontSize: 10, fontWeight: '700' },
-  summaryCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 14 },
-  summaryTitle: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', marginBottom: 10 },
+  breakdownValue: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
+  summaryCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 14 },
+  summaryTitle: { color: '#FFFFFF', fontSize: 12, fontWeight: '700', marginBottom: 10 },
   summaryRow: { flexDirection: 'row' },
   summaryItem: { flex: 1, alignItems: 'center' },
-  summaryValue: { color: '#F5F5F7', fontSize: 15, fontWeight: '800' },
-  summaryLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 4, textAlign: 'center' },
-  subscriberDivider: { height: 1, backgroundColor: '#2B2B36', marginVertical: 14 },
+  summaryValue: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  summaryLabel: { color: '#A7AAB0', fontSize: 9, marginTop: 4, textAlign: 'center' },
+  subscriberDivider: { height: 1, backgroundColor: '#292D34', marginVertical: 14 },
   addButtonRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
-  addButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  addButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
-  addEntryButton: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  addEntryButtonText: { color: '#FF6B00', fontSize: 14, fontWeight: '700' },
+  addButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  addButtonText: { color: '#08090B', fontSize: 14, fontWeight: '700' },
+  addEntryButton: { flex: 1, backgroundColor: '#121419', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  addEntryButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   sectionLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, fontWeight: '700' },
-  entryCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 8 },
-  entryDescription: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  entryCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 12, marginBottom: 8 },
+  entryDescription: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
   entryMeta: { color: '#737373', fontSize: 10, marginTop: 2 },
   entryAmount: { fontSize: 13, fontWeight: '800' },
   entryTypeRow: { flexDirection: 'row', gap: 8 },
-  entryTypeChip: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  entryTypeChip: { flex: 1, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   entryTypeChipEntradaActive: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
   entryTypeChipSaidaActive: { backgroundColor: '#ef4444', borderColor: '#ef4444' },
-  entryTypeChipText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700' },
-  entryTypeChipTextActive: { color: '#0F0F12' },
+  entryTypeChipText: { color: '#A7AAB0', fontSize: 13, fontWeight: '700' },
+  entryTypeChipTextActive: { color: '#08090B' },
   filterRow: { flexDirection: 'row', gap: 6, marginBottom: 14 },
-  filterChip: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
-  filterChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  filterChipText: { color: '#a3a3a3', fontSize: 10, fontWeight: '700' },
-  filterChipTextActive: { color: '#0F0F12' },
+  filterChip: { flex: 1, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  filterChipActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  filterChipText: { color: '#A7AAB0', fontSize: 10, fontWeight: '700' },
+  filterChipTextActive: { color: '#08090B' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 20 },
-  card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
+  card: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 10 },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  studentName: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
+  studentName: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   amountText: { color: '#22c55e', fontSize: 16, fontWeight: '800' },
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 6 },
-  dueDateText: { color: '#a3a3a3', fontSize: 11 },
+  dueDateText: { color: '#A7AAB0', fontSize: 11 },
   dueDateOverdue: { color: '#ef4444' },
   categoryTag: { borderWidth: 1, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
   categoryTagText: { fontSize: 9, fontWeight: '700' },
   overdueTag: { color: '#ef4444', fontSize: 9, fontWeight: '800', backgroundColor: 'rgba(239,68,68,0.12)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   paidTag: { color: '#22c55e', fontSize: 9, fontWeight: '800', backgroundColor: 'rgba(34,197,94,0.12)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   descriptionText: { color: '#737373', fontSize: 11, marginTop: 6, fontStyle: 'italic' },
-  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0F0F12' },
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#08090B' },
   markPaidButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
   markPaidButtonText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
   whatsappButton: { backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
   whatsappButtonText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
   deleteText: { fontSize: 14, marginLeft: 'auto' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '88%' },
-  modalTitle: { color: '#F5F5F7', fontSize: 17, fontWeight: '800', marginBottom: 16 },
+  modalSheet: { backgroundColor: '#121419', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '88%' },
+  modalTitle: { color: '#FFFFFF', fontSize: 17, fontWeight: '800', marginBottom: 16 },
   modalLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 4 },
-  studentChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
-  studentChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  studentChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  studentChipTextActive: { color: '#0F0F12' },
-  modalInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
+  studentChip: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
+  studentChipActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  studentChipText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
+  studentChipTextActive: { color: '#08090B' },
+  modalInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#FFFFFF', fontSize: 13 },
   categoryPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  categoryPickerChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7 },
-  categoryPickerChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  categoryPickerChipTextActive: { color: '#0F0F12' },
-  dateButton: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
-  dateButtonText: { color: '#F5F5F7', fontSize: 14, fontWeight: '600' },
+  categoryPickerChip: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7 },
+  categoryPickerChipText: { color: '#A7AAB0', fontSize: 11, fontWeight: '600' },
+  categoryPickerChipTextActive: { color: '#08090B' },
+  dateButton: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
+  dateButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
   recurringRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 },
-  recurringLabel: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  recurringLabel: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
   recurringHint: { color: '#525252', fontSize: 10, marginTop: 6, lineHeight: 14 },
   modalButtonRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
-  modalCancelButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  modalCancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  modalConfirmButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  modalConfirmButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
+  modalCancelButton: { flex: 1, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalCancelButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
+  modalConfirmButton: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalConfirmButtonText: { color: '#08090B', fontSize: 13, fontWeight: '700' },
 });

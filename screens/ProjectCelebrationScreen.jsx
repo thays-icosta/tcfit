@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { ACCENT } from './theme';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking } from 'react-native';
 import { supabase } from './supabaseClient';
 import { computeStreaks } from './projectUtils';
 import { WHATSAPP_NUMBER } from './ProgramDetailScreen';
 
-const ACCENT = '#FF6B00';
 
 // 🏆 Final screen shown once a student's Projeto run reaches its last day.
 export default function ProjectCelebrationScreen({ studentProject, template, onClose }) {
@@ -109,21 +109,21 @@ export default function ProjectCelebrationScreen({ studentProject, template, onC
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12' },
+  container: { flex: 1, backgroundColor: '#08090B' },
   content: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 70, paddingBottom: 40 },
   trophy: { fontSize: 56, marginBottom: 8 },
-  title: { color: '#F5F5F7', fontSize: 22, fontWeight: '800', marginBottom: 16 },
-  subtitle: { color: '#a3a3a3', fontSize: 13 },
+  title: { color: '#FFFFFF', fontSize: 22, fontWeight: '800', marginBottom: 16 },
+  subtitle: { color: '#A7AAB0', fontSize: 13 },
   projectName: { color: ACCENT, fontSize: 18, fontWeight: '800', marginTop: 4, textAlign: 'center' },
   days: { color: '#737373', fontSize: 12, fontWeight: '700', marginTop: 8, letterSpacing: 1 },
-  statsCard: { width: '100%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 16, marginTop: 24 },
-  statRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#0F0F12' },
-  statLabel: { color: '#a3a3a3', fontSize: 12 },
-  statValue: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
-  ctaCard: { width: '100%', backgroundColor: 'rgba(255,107,0,0.1)', borderWidth: 1, borderColor: ACCENT, borderRadius: 14, padding: 16, marginTop: 20, alignItems: 'center' },
-  ctaText: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 12, textAlign: 'center' },
+  statsCard: { width: '100%', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 16, marginTop: 24 },
+  statRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#08090B' },
+  statLabel: { color: '#A7AAB0', fontSize: 12 },
+  statValue: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  ctaCard: { width: '100%', backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1, borderColor: ACCENT, borderRadius: 14, padding: 16, marginTop: 20, alignItems: 'center' },
+  ctaText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginBottom: 12, textAlign: 'center' },
   ctaButton: { backgroundColor: ACCENT, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 20 },
-  ctaButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
+  ctaButtonText: { color: '#08090B', fontSize: 13, fontWeight: '700' },
   closeButton: { marginTop: 20, paddingVertical: 10 },
   closeButtonText: { color: '#737373', fontSize: 13, fontWeight: '600' },
 });

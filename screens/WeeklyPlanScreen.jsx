@@ -269,12 +269,12 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
       <Text style={styles.subtitle}>{studentName}</Text>
 
       {loading ? (
-        <ActivityIndicator color="#FF6B00" style={{ marginTop: 30 }} />
+        <ActivityIndicator color="#FFFFFF" style={{ marginTop: 30 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           <View style={styles.weekNavRow}>
             <TouchableOpacity onPress={goPrevious} disabled={!canGoPrevious} hitSlop={10}>
-              <Ionicons name="chevron-back" size={22} color={canGoPrevious ? '#F5F5F7' : '#2B2B36'} />
+              <Ionicons name="chevron-back" size={22} color={canGoPrevious ? '#FFFFFF' : '#292D34'} />
             </TouchableOpacity>
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Text style={styles.weekRangeText}>{weekRangeLabel(viewedGroup)}</Text>
@@ -285,7 +285,7 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
               )}
             </View>
             <TouchableOpacity onPress={goNext} disabled={!canGoNext} hitSlop={10}>
-              <Ionicons name="chevron-forward" size={22} color={canGoNext ? '#F5F5F7' : '#2B2B36'} />
+              <Ionicons name="chevron-forward" size={22} color={canGoNext ? '#FFFFFF' : '#292D34'} />
             </TouchableOpacity>
           </View>
 
@@ -293,7 +293,7 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
             <View style={styles.emptyStateBox}>
               <Text style={styles.emptyText}>Esse aluno ainda não tem nenhuma ficha ativa.</Text>
               <TouchableOpacity style={styles.editFichasButton} onPress={() => setShowBuilder(true)}>
-                <Ionicons name="add-circle-outline" size={16} color="#0F0F12" />
+                <Ionicons name="add-circle-outline" size={16} color="#08090B" />
                 <Text style={styles.editFichasButtonText}>Criar Primeira Ficha</Text>
               </TouchableOpacity>
             </View>
@@ -301,7 +301,7 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
             <>
               <View style={styles.summaryPanel}>
                 {summariesLoading ? (
-                  <ActivityIndicator color="#FF6B00" size="small" />
+                  <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
                   <>
                     <View style={styles.summaryRow}>
@@ -376,16 +376,16 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
               {viewingCurrent && (
                 <>
                   <TouchableOpacity style={styles.secondaryButton} onPress={() => setShowBuilder(true)}>
-                    <Ionicons name="create-outline" size={16} color="#FF6B00" />
+                    <Ionicons name="create-outline" size={16} color="#FFFFFF" />
                     <Text style={styles.secondaryButtonText}>Editar / Criar Fichas</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity style={styles.editFichasButton} onPress={handleNewWeek} disabled={creatingWeek}>
                     {creatingWeek ? (
-                      <ActivityIndicator color="#0F0F12" size="small" />
+                      <ActivityIndicator color="#08090B" size="small" />
                     ) : (
                       <>
-                        <Ionicons name="add-circle-outline" size={16} color="#0F0F12" />
+                        <Ionicons name="add-circle-outline" size={16} color="#08090B" />
                         <Text style={styles.editFichasButtonText}>+ Criar Nova Semana</Text>
                       </>
                     )}
@@ -441,7 +441,7 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
             <View style={styles.pickerHeaderRow}>
               <Text style={styles.modalTitle}>{viewingWorkout?.workout?.name}</Text>
               <TouchableOpacity onPress={() => setViewingWorkout(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="close" size={20} color="#a3a3a3" />
+                <Ionicons name="close" size={20} color="#A7AAB0" />
               </TouchableOpacity>
             </View>
             <View style={styles.readOnlyBanner}>
@@ -449,7 +449,7 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
               <Text style={styles.readOnlyBannerText}>Semana arquivada — somente leitura, pra preservar o histórico.</Text>
             </View>
             {loadingViewDetail ? (
-              <ActivityIndicator color="#FF6B00" style={{ marginVertical: 16 }} />
+              <ActivityIndicator color="#FFFFFF" style={{ marginVertical: 16 }} />
             ) : (
               <ScrollView style={{ maxHeight: 340 }}>
                 {(viewingWorkout?.items || []).length === 0 ? (
@@ -476,7 +476,7 @@ export default function WeeklyPlanScreen({ studentId, studentName, personalId, o
             <View style={styles.pickerHeaderRow}>
               <Text style={styles.modalTitle}>Usar qual semana como base?</Text>
               <TouchableOpacity onPress={() => setShowOtherWeekPicker(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="close" size={20} color="#a3a3a3" />
+                <Ionicons name="close" size={20} color="#A7AAB0" />
               </TouchableOpacity>
             </View>
             {history.length === 0 ? (
@@ -508,60 +508,60 @@ function SummaryPill({ label, value }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
-  subtitle: { color: '#a3a3a3', fontSize: 12, paddingHorizontal: 16, marginBottom: 14 },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
+  subtitle: { color: '#A7AAB0', fontSize: 12, paddingHorizontal: 16, marginBottom: 14 },
 
   weekNavRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  weekRangeText: { color: '#F5F5F7', fontSize: 15, fontWeight: '800' },
+  weekRangeText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
   weekBadgeCurrent: { color: '#22c55e', fontSize: 9, fontWeight: '800', letterSpacing: 0.5, marginTop: 2 },
   weekBadgeArchived: { color: '#737373', fontSize: 9, fontWeight: '700', letterSpacing: 0.3, marginTop: 2 },
 
-  summaryPanel: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 16 },
+  summaryPanel: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginBottom: 16 },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   summaryPill: { flex: 1, minWidth: 70, alignItems: 'center' },
-  summaryPillValue: { color: '#FF6B00', fontSize: 17, fontWeight: '800' },
+  summaryPillValue: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
   summaryPillLabel: { color: '#737373', fontSize: 10, fontWeight: '600', marginTop: 2, textTransform: 'uppercase' },
-  summaryMuscles: { color: '#a3a3a3', fontSize: 11, marginTop: 10, textAlign: 'center', textTransform: 'capitalize' },
+  summaryMuscles: { color: '#A7AAB0', fontSize: 11, marginTop: 10, textAlign: 'center', textTransform: 'capitalize' },
 
   emptyStateBox: { alignItems: 'center', paddingVertical: 30 },
 
-  dayCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 10 },
-  dayCardToday: { borderColor: '#FF6B00' },
+  dayCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginBottom: 10 },
+  dayCardToday: { borderColor: '#FFFFFF' },
   dayCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   dayCardHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   dayLabel: { color: '#525252', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
   dayCardBody: {},
-  workoutName: { color: '#F5F5F7', fontSize: 15, fontWeight: '800' },
-  workoutMuscles: { color: '#FF6B00', fontSize: 12, fontWeight: '600', marginTop: 3, textTransform: 'capitalize' },
-  workoutMeta: { color: '#a3a3a3', fontSize: 11, marginTop: 4 },
+  workoutName: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  workoutMuscles: { color: '#FFFFFF', fontSize: 12, fontWeight: '600', marginTop: 3, textTransform: 'capitalize' },
+  workoutMeta: { color: '#A7AAB0', fontSize: 11, marginTop: 4 },
   restCard: { alignItems: 'center', paddingVertical: 6 },
   restText: { color: '#525252', fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
-  restHint: { color: '#3b82f6', fontSize: 11, fontWeight: '600', marginTop: 4 },
+  restHint: { color: '#D1D5DB', fontSize: 11, fontWeight: '600', marginTop: 4 },
 
-  secondaryButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,107,0,0.1)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, paddingVertical: 13, marginTop: 16 },
-  secondaryButtonText: { color: '#FF6B00', fontSize: 13, fontWeight: '700' },
-  editFichasButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
-  editFichasButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
+  secondaryButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 12, paddingVertical: 13, marginTop: 16 },
+  secondaryButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  editFichasButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  editFichasButtonText: { color: '#08090B', fontSize: 14, fontWeight: '800' },
 
   emptyText: { color: '#737373', fontSize: 12, textAlign: 'center', marginVertical: 10, lineHeight: 18 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
-  modalCard: { backgroundColor: '#1C1C22', borderRadius: 16, padding: 20, maxHeight: '80%' },
-  modalTitle: { color: '#F5F5F7', fontSize: 15, fontWeight: '800', marginBottom: 14 },
+  modalCard: { backgroundColor: '#121419', borderRadius: 16, padding: 20, maxHeight: '80%' },
+  modalTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800', marginBottom: 14 },
   removeDayOption: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(239,68,68,0.1)', borderWidth: 1, borderColor: '#ef4444', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 10 },
   removeDayOptionText: { color: '#ef4444', fontSize: 12, fontWeight: '700', flexShrink: 1 },
-  fichaOption: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 8 },
-  fichaOptionText: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  fichaOption: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 8 },
+  fichaOptionText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
   modalCancelButton: { paddingVertical: 12, alignItems: 'center', marginTop: 4 },
-  modalCancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
+  modalCancelButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
 
-  readOnlyBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#0F0F12', borderRadius: 8, padding: 10, marginBottom: 14 },
+  readOnlyBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#08090B', borderRadius: 8, padding: 10, marginBottom: 14 },
   readOnlyBannerText: { color: '#737373', fontSize: 10, flexShrink: 1 },
-  historyExerciseRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#0F0F12', paddingVertical: 8 },
+  historyExerciseRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#08090B', paddingVertical: 8 },
   historyExerciseName: { color: '#d4d4d4', fontSize: 12, flex: 1 },
   historyExerciseMeta: { color: '#737373', fontSize: 11, marginLeft: 8 },
   historyRowNames: { color: '#737373', fontSize: 11, marginTop: 2 },
 
   pickerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  pickerSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 36, maxHeight: '75%' },
+  pickerSheet: { backgroundColor: '#121419', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 36, maxHeight: '75%' },
   pickerHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
 });

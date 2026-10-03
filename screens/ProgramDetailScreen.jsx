@@ -157,12 +157,12 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
             <Image source={{ uri: product.cover_image_url }} style={styles.posterImage} resizeMode="cover" />
           ) : (
             <View style={styles.posterPlaceholder}>
-              <Ionicons name="barbell-outline" size={40} color="#FF6B00" />
+              <Ionicons name="barbell-outline" size={40} color="#FFFFFF" />
             </View>
           )}
           {!unlocked && (
             <View style={styles.posterLockOverlay}>
-              <Ionicons name="lock-closed" size={28} color="#F5F5F7" />
+              <Ionicons name="lock-closed" size={28} color="#FFFFFF" />
             </View>
           )}
         </View>
@@ -177,12 +177,12 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
         {product.description ? <Text style={styles.description}>{product.description}</Text> : null}
 
         {loading ? (
-          <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
+          <ActivityIndicator color="#FFFFFF" style={{ marginTop: 20 }} />
         ) : !unlocked ? (
           <>
             <Text style={styles.price}>{product.price != null ? `R$ ${Number(product.price).toFixed(2).replace('.', ',')}` : 'Consulte'}</Text>
             <TouchableOpacity style={styles.unlockButton} onPress={handleUnlockRequest}>
-              <Ionicons name="lock-open-outline" size={16} color="#0F0F12" />
+              <Ionicons name="lock-open-outline" size={16} color="#08090B" />
               <Text style={styles.unlockButtonText}>Desbloquear Conteúdo / Assinar Plano</Text>
             </TouchableOpacity>
           </>
@@ -190,7 +190,7 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
           <>
             {product.pdf_url && (
               <TouchableOpacity style={styles.pdfButton} onPress={() => setShowPdf(true)}>
-                <Ionicons name="document-text-outline" size={18} color="#FF6B00" />
+                <Ionicons name="document-text-outline" size={18} color="#FFFFFF" />
                 <Text style={styles.pdfButtonText}>Ver Guia em PDF</Text>
               </TouchableOpacity>
             )}
@@ -202,7 +202,7 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
               </View>
             ) : (
               <TouchableOpacity style={styles.unlockButton} onPress={handleAddProgram} disabled={adding}>
-                {adding ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.unlockButtonText}>{onAdded ? '▶️ Começar Este Programa' : '🏋️ Adicionar Programa aos Meus Treinos'}</Text>}
+                {adding ? <ActivityIndicator color="#08090B" /> : <Text style={styles.unlockButtonText}>{onAdded ? '▶️ Começar Este Programa' : '🏋️ Adicionar Programa aos Meus Treinos'}</Text>}
               </TouchableOpacity>
             )}
 
@@ -226,7 +226,7 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
                     {expanded && (
                       <View style={styles.divisionBody}>
                         {loadingExercisesFor === d.id ? (
-                          <ActivityIndicator color="#FF6B00" style={{ marginVertical: 10 }} />
+                          <ActivityIndicator color="#FFFFFF" style={{ marginVertical: 10 }} />
                         ) : !exercises || exercises.length === 0 ? (
                           <Text style={styles.emptyText}>Nenhum exercício nesse treino ainda.</Text>
                         ) : (
@@ -255,30 +255,30 @@ export default function ProgramDetailScreen({ product, studentId, personalId, un
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
-  posterWrap: { width: '100%', height: 220, borderRadius: 16, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', overflow: 'hidden', position: 'relative' },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
+  posterWrap: { width: '100%', height: 220, borderRadius: 16, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', overflow: 'hidden', position: 'relative' },
   posterImage: { width: '100%', height: '100%' },
   posterPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   posterLockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
   metaBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
-  metaBadge: { color: '#a3a3a3', fontSize: 11, fontWeight: '700', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
-  description: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginTop: 12 },
-  price: { color: '#FF6B00', fontSize: 22, fontWeight: '800', marginTop: 16 },
-  unlockButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
-  pdfButton: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255,107,0,0.1)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
-  pdfButtonText: { color: '#FF6B00', fontSize: 14, fontWeight: '800' },
-  unlockButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
+  metaBadge: { color: '#A7AAB0', fontSize: 11, fontWeight: '700', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  description: { color: '#A7AAB0', fontSize: 13, lineHeight: 19, marginTop: 12 },
+  price: { color: '#FFFFFF', fontSize: 22, fontWeight: '800', marginTop: 16 },
+  unlockButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
+  pdfButton: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
+  pdfButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  unlockButtonText: { color: '#08090B', fontSize: 14, fontWeight: '800' },
   addedBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(34,197,94,0.1)', borderRadius: 10, padding: 12, marginTop: 16 },
   addedBoxText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
   sectionLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginTop: 24, marginBottom: 10 },
   emptyText: { color: '#525252', fontSize: 12, textAlign: 'center', marginTop: 10 },
-  divisionCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, marginBottom: 10, overflow: 'hidden' },
+  divisionCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, marginBottom: 10, overflow: 'hidden' },
   divisionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 },
-  divisionLetterCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,107,0,0.15)', alignItems: 'center', justifyContent: 'center' },
-  divisionLetterText: { color: '#FF6B00', fontSize: 12, fontWeight: '800' },
-  divisionName: { flex: 1, color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
-  divisionBody: { paddingHorizontal: 14, paddingBottom: 12, borderTopWidth: 1, borderTopColor: '#0F0F12' },
-  exerciseRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#0F0F12' },
-  exerciseName: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
+  divisionLetterCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.11)', alignItems: 'center', justifyContent: 'center' },
+  divisionLetterText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' },
+  divisionName: { flex: 1, color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  divisionBody: { paddingHorizontal: 14, paddingBottom: 12, borderTopWidth: 1, borderTopColor: '#08090B' },
+  exerciseRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#08090B' },
+  exerciseName: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
   exerciseMeta: { color: '#737373', fontSize: 10, marginTop: 2 },
 });

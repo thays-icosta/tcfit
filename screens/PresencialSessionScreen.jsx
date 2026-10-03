@@ -22,7 +22,7 @@ const PSE_OPTIONS = [
   { value: 1, label: 'Leve', color: '#22c55e' },
   { value: 2, label: 'Moderado', color: '#84cc16' },
   { value: 3, label: 'Intenso', color: '#eab308' },
-  { value: 4, label: 'Muito Intenso', color: '#FF6B00' },
+  { value: 4, label: 'Muito Intenso', color: '#FFFFFF' },
   { value: 5, label: 'Extremo', color: '#ef4444' },
 ];
 
@@ -231,7 +231,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
     return (
       <View style={styles.container}>
         <HeaderBack title="Modo Aula Presencial" onBack={onClose} />
-        <ActivityIndicator color="#FF6B00" style={{ marginTop: 30 }} />
+        <ActivityIndicator color="#FFFFFF" style={{ marginTop: 30 }} />
       </View>
     );
   }
@@ -247,9 +247,9 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
           <ScrollView>
             {fichas.map((f) => (
               <TouchableOpacity key={f.id} style={styles.fichaCard} onPress={() => handleSelectFicha(f)} disabled={starting}>
-                <Ionicons name="barbell-outline" size={20} color="#FF6B00" />
+                <Ionicons name="barbell-outline" size={20} color="#FFFFFF" />
                 <Text style={styles.fichaCardText}>{f.name}</Text>
-                {starting ? <ActivityIndicator color="#FF6B00" size="small" /> : <Ionicons name="chevron-forward-outline" size={18} color="#525252" />}
+                {starting ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Ionicons name="chevron-forward-outline" size={18} color="#525252" />}
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -262,7 +262,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
     return (
       <View style={styles.container}>
         <HeaderBack title={workout.name} onBack={onClose} />
-        <ActivityIndicator color="#FF6B00" style={{ marginTop: 30 }} />
+        <ActivityIndicator color="#FFFFFF" style={{ marginTop: 30 }} />
       </View>
     );
   }
@@ -351,7 +351,7 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
           />
         </ScrollView>
         <TouchableOpacity style={[styles.finishButton, styles.finishButtonStandalone]} onPress={handleFinish} disabled={finishing || selectedPse == null}>
-          {finishing ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.finishButtonText}>Salvar Sessão</Text>}
+          {finishing ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.finishButtonText}>Salvar Sessão</Text>}
         </TouchableOpacity>
       </View>
     );
@@ -461,10 +461,10 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
                   disabled={savingKey === key}
                 >
                   {savingKey === key ? (
-                    <ActivityIndicator color="#0F0F12" size="small" />
+                    <ActivityIndicator color="#08090B" size="small" />
                   ) : (
                     <>
-                      <Ionicons name="checkmark" size={18} color="#0F0F12" />
+                      <Ionicons name="checkmark" size={18} color="#08090B" />
                       <Text style={styles.entryConfirmButtonText}>Registrar Série</Text>
                     </>
                   )}
@@ -519,59 +519,59 @@ export default function PresencialSessionScreen({ student, personalId, onClose }
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
-  subtitle: { color: '#a3a3a3', fontSize: 12, marginBottom: 14 },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50, paddingHorizontal: 16 },
+  subtitle: { color: '#A7AAB0', fontSize: 12, marginBottom: 14 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
   emptyInlineText: { color: '#525252', fontSize: 12 },
-  fichaCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 10 },
-  fichaCardText: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', flex: 1 },
-  focusExerciseName: { color: '#F5F5F7', fontSize: 24, fontWeight: '800', textTransform: 'uppercase' },
-  focusExerciseMeta: { color: '#a3a3a3', fontSize: 13, marginTop: 4, marginBottom: 16 },
+  fichaCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 10 },
+  fichaCardText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', flex: 1 },
+  focusExerciseName: { color: '#FFFFFF', fontSize: 24, fontWeight: '800', textTransform: 'uppercase' },
+  focusExerciseMeta: { color: '#A7AAB0', fontSize: 13, marginTop: 4, marginBottom: 16 },
   rirRow: { flexDirection: 'row', gap: 6, marginTop: 6 },
   rirLabel: { color: '#525252', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', marginTop: 10 },
-  rirChip: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
-  rirChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  rirChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
-  rirChipTextActive: { color: '#0F0F12' },
+  rirChip: { flex: 1, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  rirChipActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  rirChipText: { color: '#A7AAB0', fontSize: 12, fontWeight: '700' },
+  rirChipTextActive: { color: '#08090B' },
   pseRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 20 },
   psePill: { flexGrow: 1, borderWidth: 1.5, borderRadius: 10, paddingVertical: 14, alignItems: 'center', minWidth: '30%' },
   psePillText: { fontSize: 13, fontWeight: '800' },
   summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  summaryItem: { width: '30%', alignItems: 'center', backgroundColor: '#0F0F12', borderRadius: 8, paddingVertical: 12 },
-  summaryValue: { color: '#F5F5F7', fontSize: 16, fontWeight: '800' },
-  summaryLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 4, textAlign: 'center' },
-  notesInput: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, color: '#F5F5F7', fontSize: 14, minHeight: 100, textAlignVertical: 'top' },
-  notesSummaryText: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginTop: 6 },
-  card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 12 },
+  summaryItem: { width: '30%', alignItems: 'center', backgroundColor: '#08090B', borderRadius: 8, paddingVertical: 12 },
+  summaryValue: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  summaryLabel: { color: '#A7AAB0', fontSize: 9, marginTop: 4, textAlign: 'center' },
+  notesInput: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, color: '#FFFFFF', fontSize: 14, minHeight: 100, textAlignVertical: 'top' },
+  notesSummaryText: { color: '#A7AAB0', fontSize: 13, lineHeight: 19, marginTop: 6 },
+  card: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 12 },
   sectionLabel: { color: '#525252', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
-  lastSessionLine: { color: '#a3a3a3', fontSize: 14, fontWeight: '600', marginBottom: 4 },
-  oneRmLine: { color: '#FF6B00', fontSize: 12, fontWeight: '700', marginTop: 4 },
-  todayDoneRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#0F0F12' },
-  todayDoneText: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
+  lastSessionLine: { color: '#A7AAB0', fontSize: 14, fontWeight: '600', marginBottom: 4 },
+  oneRmLine: { color: '#FFFFFF', fontSize: 12, fontWeight: '700', marginTop: 4 },
+  todayDoneRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#08090B' },
+  todayDoneText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   entryBlock: { marginTop: 4 },
-  entryRowLabel: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  entryRowLabel: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   entryInputsRow: { flexDirection: 'row', gap: 10, marginTop: 8 },
   entryInputCol: { flex: 1, alignItems: 'center' },
-  entryInput: { width: '100%', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingVertical: 12, paddingHorizontal: 6, color: '#F5F5F7', fontSize: 16, textAlign: 'center' },
+  entryInput: { width: '100%', backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingVertical: 12, paddingHorizontal: 6, color: '#FFFFFF', fontSize: 16, textAlign: 'center' },
   entryUnit: { color: '#525252', fontSize: 11, marginTop: 4 },
-  entryConfirmButton: { flexDirection: 'row', gap: 6, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
-  entryConfirmButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
-  suggestionCard: { borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, padding: 14, marginBottom: 12 },
+  entryConfirmButton: { flexDirection: 'row', gap: 6, backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  entryConfirmButtonText: { color: '#08090B', fontSize: 14, fontWeight: '800' },
+  suggestionCard: { borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 12, padding: 14, marginBottom: 12 },
   suggestionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   suggestionStatus: { fontSize: 12, fontWeight: '800' },
-  suggestionValue: { color: '#F5F5F7', fontSize: 18, fontWeight: '800' },
+  suggestionValue: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
   suggestionButtonRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  suggestionApplyButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
-  suggestionApplyButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '800' },
-  suggestionEditButton: { flex: 1, backgroundColor: 'transparent', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
-  suggestionEditButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700' },
+  suggestionApplyButton: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  suggestionApplyButtonText: { color: '#08090B', fontSize: 13, fontWeight: '800' },
+  suggestionEditButton: { flex: 1, backgroundColor: 'transparent', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  suggestionEditButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '700' },
   navRow: { flexDirection: 'row', gap: 8, marginTop: 8, marginBottom: 16 },
-  navButton: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  navButton: { flex: 1, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   navButtonDisabled: { opacity: 0.4 },
-  navButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700' },
-  nextButton: { flex: 2, backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  nextButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
+  navButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '700' },
+  nextButton: { flex: 2, backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  nextButtonText: { color: '#08090B', fontSize: 14, fontWeight: '800' },
   finishButton: { flex: 2, backgroundColor: '#22c55e', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   finishButtonStandalone: { flex: 0, marginTop: 24 },
-  finishButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
+  finishButtonText: { color: '#08090B', fontSize: 14, fontWeight: '800' },
 });

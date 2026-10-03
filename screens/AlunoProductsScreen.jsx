@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ACCENT } from './theme';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Image, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
@@ -8,7 +9,6 @@ import CollapsibleSection from './CollapsibleSection';
 import { COVER_TOP_IMAGE, coverFocalImageStyle, GLASS_CARD } from './vitrineStyles';
 
 const WHATSAPP_NUMBER = '5537998231382';
-const ACCENT = '#FF6B00';
 
 // Training programs (Hub de Programas / Módulo Corrida) are browsed and
 // started here in Loja; nutrition guides/e-books still live in the Home
@@ -87,7 +87,7 @@ export default function AlunoProductsScreen({
       <HeaderBack title="Loja" onBack={onClose} style={{ paddingHorizontal: 16 }} />
 
       {loading ? (
-        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FFFFFF" style={{ marginTop: 20 }} />
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
           {hasAnyHubProgram && (
@@ -167,7 +167,7 @@ export default function AlunoProductsScreen({
                         )}
                         {locked && (
                           <View style={styles.categoryLockOverlay}>
-                            <Ionicons name="lock-closed" size={14} color="#F5F5F7" />
+                            <Ionicons name="lock-closed" size={14} color="#FFFFFF" />
                           </View>
                         )}
                       </View>
@@ -187,7 +187,7 @@ export default function AlunoProductsScreen({
                 {personalName ? `${personalName} pode montar` : 'Seu personal pode montar'} sua ficha de treino do zero, sob medida pras suas necessidades específicas.
               </Text>
               <TouchableOpacity style={styles.upsellButton} onPress={handleUpsellConsultoria}>
-                <Ionicons name="logo-whatsapp" size={16} color="#0F0F12" />
+                <Ionicons name="logo-whatsapp" size={16} color="#08090B" />
                 <Text style={styles.upsellButtonText}>Quero Consultoria Individual</Text>
               </TouchableOpacity>
             </View>
@@ -202,7 +202,7 @@ export default function AlunoProductsScreen({
                     {b.logo_url ? (
                       <Image source={{ uri: b.logo_url }} style={styles.partnerBannerLogoImage} resizeMode="contain" />
                     ) : (
-                      <Ionicons name="pricetag-outline" size={22} color="#FF6B00" />
+                      <Ionicons name="pricetag-outline" size={22} color="#FFFFFF" />
                     )}
                   </View>
                   <View style={{ flex: 1 }}>
@@ -216,7 +216,7 @@ export default function AlunoProductsScreen({
                     )}
                     {b.coupon_code ? (
                       <TouchableOpacity style={styles.partnerBannerCouponButton} onPress={() => handleCopyCoupon(b)}>
-                        <Ionicons name={copiedCouponId === b.id ? 'checkmark-outline' : 'copy-outline'} size={12} color="#FF6B00" />
+                        <Ionicons name={copiedCouponId === b.id ? 'checkmark-outline' : 'copy-outline'} size={12} color="#FFFFFF" />
                         <Text style={styles.partnerBannerCouponText}>
                           {copiedCouponId === b.id ? 'Copiado!' : b.coupon_code}
                         </Text>
@@ -240,35 +240,35 @@ export default function AlunoProductsScreen({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  upsellCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, padding: 16, marginBottom: 20 },
-  upsellTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '800', marginBottom: 6 },
-  upsellText: { color: '#a3a3a3', fontSize: 12, lineHeight: 17, marginBottom: 14 },
-  upsellButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
-  upsellButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '800' },
-  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 12 },
+  upsellCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 14, padding: 16, marginBottom: 20 },
+  upsellTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800', marginBottom: 6 },
+  upsellText: { color: '#A7AAB0', fontSize: 12, lineHeight: 17, marginBottom: 14 },
+  upsellButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
+  upsellButtonText: { color: '#08090B', fontSize: 13, fontWeight: '800' },
+  sectionTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginBottom: 12 },
   audienceFilterRow: { flexDirection: 'row', gap: 6, marginBottom: 10 },
-  audienceFilterChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  audienceFilterChip: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
   audienceFilterChipActive: { backgroundColor: ACCENT, borderColor: ACCENT },
-  audienceFilterChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
-  audienceFilterChipTextActive: { color: '#0F0F12' },
+  audienceFilterChipText: { color: '#A7AAB0', fontSize: 11, fontWeight: '700' },
+  audienceFilterChipTextActive: { color: '#08090B' },
   nutritionCard: { width: 176 },
   nutritionCoverWrap: { width: '100%', aspectRatio: 16 / 9, borderRadius: 16, borderWidth: 1, overflow: 'hidden', marginBottom: 6, position: 'relative', ...GLASS_CARD },
   nutritionCoverImage: { ...COVER_TOP_IMAGE },
   nutritionCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  nutritionCardName: { color: '#F5F5F7', fontSize: 11, fontWeight: '600', lineHeight: 15 },
+  nutritionCardName: { color: '#FFFFFF', fontSize: 11, fontWeight: '600', lineHeight: 15 },
   runningLevelLockedText: { color: '#525252', fontSize: 10, fontWeight: '600', marginTop: 2 },
   hubBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
-  hubBadgeChip: { backgroundColor: '#27272A', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
+  hubBadgeChip: { backgroundColor: '#292D34', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
   hubBadgeChipText: { color: '#D4D4D8', fontSize: 10, fontWeight: '600' },
   categoryLockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
-  partnerBanner: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, padding: 12, marginBottom: 10 },
-  partnerBannerLogoWrap: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  partnerBanner: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 16, padding: 12, marginBottom: 10 },
+  partnerBannerLogoWrap: { width: 52, height: 52, borderRadius: 10, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   partnerBannerLogoImage: { width: '100%', height: '100%' },
-  partnerBannerName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  partnerBannerName: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   partnerBannerTagBadge: { alignSelf: 'flex-start', backgroundColor: 'rgba(34,197,94,0.1)', borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2, marginTop: 3, marginBottom: 6 },
   partnerBannerTagBadgeText: { color: '#22c55e', fontSize: 9, fontWeight: '800', letterSpacing: 0.3 },
-  partnerBannerCouponButton: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: 'rgba(255,107,0,0.12)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5 },
-  partnerBannerCouponText: { color: '#FF6B00', fontSize: 11, fontWeight: '800' },
+  partnerBannerCouponButton: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5 },
+  partnerBannerCouponText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
 });

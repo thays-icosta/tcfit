@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { ACCENT } from './theme';
 import { View, Text, StyleSheet } from 'react-native';
 import { supabase } from './supabaseClient';
 
-const ACCENT = '#FF6B00';
 
 function formatDate(iso) {
   if (!iso) return null;
@@ -83,15 +83,15 @@ export default function PersonalProjectProgressSection({ studentId }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 14 },
-  title: { color: '#F5F5F7', fontSize: 13, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
+  card: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginBottom: 14 },
+  title: { color: '#FFFFFF', fontSize: 13, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
   row: { marginBottom: 10 },
   rowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  name: { color: '#F5F5F7', fontSize: 13, fontWeight: '700', flexShrink: 1 },
+  name: { color: '#FFFFFF', fontSize: 13, fontWeight: '700', flexShrink: 1 },
   statusActive: { color: ACCENT, fontSize: 10, fontWeight: '700' },
   statusDone: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
-  dayLabel: { color: '#a3a3a3', fontSize: 11, marginBottom: 6 },
-  track: { height: 4, backgroundColor: '#0F0F12', borderRadius: 2, overflow: 'hidden' },
+  dayLabel: { color: '#A7AAB0', fontSize: 11, marginBottom: 6 },
+  track: { height: 4, backgroundColor: '#08090B', borderRadius: 2, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 2, backgroundColor: ACCENT },
   metaLine: { color: '#737373', fontSize: 10, marginTop: 6 },
 });

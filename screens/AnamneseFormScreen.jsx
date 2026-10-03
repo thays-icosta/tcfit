@@ -154,11 +154,11 @@ function Step2Objectives({
         </>
       ) : (
         <View style={styles.lockedCard}>
-          <Ionicons name="lock-closed" size={20} color="#FF6B00" />
+          <Ionicons name="lock-closed" size={20} color="#FFFFFF" />
           <Text style={styles.lockedTitle}>Calculadora de Macros e perguntas personalizadas</Text>
           <Text style={styles.lockedText}>Exclusivo da Consultoria VIP.</Text>
           <TouchableOpacity style={styles.lockedButton} onPress={onUpgrade}>
-            <Ionicons name="logo-whatsapp" size={14} color="#0F0F12" />
+            <Ionicons name="logo-whatsapp" size={14} color="#08090B" />
             <Text style={styles.lockedButtonText}>Fazer Upgrade</Text>
           </TouchableOpacity>
         </View>
@@ -449,7 +449,7 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#FF6B00" />
+        <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
@@ -457,7 +457,7 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
   if (personalizing) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#FF6B00" size="large" />
+        <ActivityIndicator color="#FFFFFF" size="large" />
         <Text style={styles.personalizingText}>Personalizando seu plano...</Text>
       </View>
     );
@@ -528,7 +528,7 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-            {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Enviar Anamnese</Text>}
+            {saving ? <ActivityIndicator color="#08090B" /> : <Text style={styles.saveButtonText}>Enviar Anamnese</Text>}
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -537,49 +537,49 @@ export default function AnamneseFormScreen({ studentId, personalId, onClose, onC
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
-  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
+  center: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 12 },
-  closeText: { color: '#FF6B00', fontSize: 13, fontWeight: '600' },
-  title: { color: '#F5F5F7', fontSize: 16, fontWeight: '700' },
+  closeText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
+  title: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
   progressWrap: { paddingHorizontal: 16, marginBottom: 16 },
   progressLabel: { color: '#737373', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', marginBottom: 6 },
-  progressTrack: { height: 6, borderRadius: 3, backgroundColor: '#1C1C22', overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: '#FF6B00', borderRadius: 3 },
-  personalizingText: { color: '#F5F5F7', fontSize: 15, fontWeight: '700', marginTop: 16 },
-  intro: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginBottom: 16 },
-  sectionHeader: { color: '#FF6B00', fontSize: 13, fontWeight: '800', textTransform: 'uppercase', marginTop: 22, marginBottom: 4, borderTopWidth: 1, borderTopColor: '#2B2B36', paddingTop: 18 },
+  progressTrack: { height: 6, borderRadius: 3, backgroundColor: '#121419', overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: '#FFFFFF', borderRadius: 3 },
+  personalizingText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', marginTop: 16 },
+  intro: { color: '#A7AAB0', fontSize: 13, lineHeight: 19, marginBottom: 16 },
+  sectionHeader: { color: '#FFFFFF', fontSize: 13, fontWeight: '800', textTransform: 'uppercase', marginTop: 22, marginBottom: 4, borderTopWidth: 1, borderTopColor: '#292D34', paddingTop: 18 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8, marginTop: 16 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
-  chipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  chipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  chipTextActive: { color: '#0F0F12' },
-  input: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
+  chip: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
+  chipActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  chipText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
+  chipTextActive: { color: '#08090B' },
+  input: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#FFFFFF', fontSize: 13 },
   helperText: { color: '#525252', fontSize: 11, marginBottom: 10, lineHeight: 15 },
   calcFieldRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
   calcFieldSmall: { flex: 1 },
   calcFieldLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginBottom: 4 },
-  calcButton: { backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
+  calcButton: { backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
   calcButtonDisabled: { opacity: 0.4 },
-  calcButtonText: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
-  calcResultCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 12, padding: 16, marginTop: 12, alignItems: 'center' },
-  calcMetabolismLine: { color: '#a3a3a3', fontSize: 11, fontWeight: '600', marginBottom: 6 },
-  calcResultKcal: { color: '#FF6B00', fontSize: 26, fontWeight: '800' },
+  calcButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+  calcResultCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 12, padding: 16, marginTop: 12, alignItems: 'center' },
+  calcMetabolismLine: { color: '#A7AAB0', fontSize: 11, fontWeight: '600', marginBottom: 6 },
+  calcResultKcal: { color: '#FFFFFF', fontSize: 26, fontWeight: '800' },
   calcResultNote: { color: '#737373', fontSize: 10, textAlign: 'center', marginTop: 4, marginBottom: 14, lineHeight: 14 },
   calcMacroRow: { flexDirection: 'row', gap: 24 },
   calcMacroItem: { alignItems: 'center' },
-  calcMacroValue: { color: '#F5F5F7', fontSize: 15, fontWeight: '700' },
+  calcMacroValue: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
   calcMacroLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginTop: 2 },
   calcEbooksLabel: { color: '#737373', fontSize: 9, textTransform: 'uppercase', marginTop: 16, marginBottom: 8, alignSelf: 'flex-start' },
-  calcEbookRow: { backgroundColor: '#0F0F12', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, width: '100%', marginBottom: 6 },
-  calcEbookName: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
-  textArea: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#F5F5F7', fontSize: 13, minHeight: 70, textAlignVertical: 'top' },
-  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 28 },
-  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
-  lockedCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 8 },
-  lockedTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700', textAlign: 'center', marginTop: 8 },
+  calcEbookRow: { backgroundColor: '#08090B', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, width: '100%', marginBottom: 6 },
+  calcEbookName: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
+  textArea: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#FFFFFF', fontSize: 13, minHeight: 70, textAlignVertical: 'top' },
+  saveButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 28 },
+  saveButtonText: { color: '#08090B', fontSize: 15, fontWeight: '700' },
+  lockedCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 8 },
+  lockedTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '700', textAlign: 'center', marginTop: 8 },
   lockedText: { color: '#737373', fontSize: 11, textAlign: 'center', marginTop: 4, marginBottom: 14 },
-  lockedButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 11, paddingHorizontal: 20, alignItems: 'center' },
-  lockedButtonText: { color: '#0F0F12', fontSize: 12, fontWeight: '800' },
+  lockedButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 11, paddingHorizontal: 20, alignItems: 'center' },
+  lockedButtonText: { color: '#08090B', fontSize: 12, fontWeight: '800' },
 });

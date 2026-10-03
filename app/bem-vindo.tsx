@@ -60,7 +60,7 @@ export default function BemVindoLanding() {
         </Link>
 
         <View style={styles.guideCard}>
-          <Ionicons name="gift-outline" size={28} color="#FF6B00" />
+          <Ionicons name="gift-outline" size={28} color="#FFFFFF" />
           <Text style={styles.guideTitle}>Treino/Guia Grátis de Amostra</Text>
           <Text style={styles.guideText}>Deixa seu nome e WhatsApp que a gente te manda uma amostra grátis pra você sentir como funciona.</Text>
 
@@ -87,7 +87,7 @@ export default function BemVindoLanding() {
                 onChangeText={setLeadPhone}
               />
               <TouchableOpacity style={styles.guideButton} onPress={handleRequestFreeGuide} disabled={sendingLead}>
-                {sendingLead ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.guideButtonText}>Quero o Guia Grátis</Text>}
+                {sendingLead ? <ActivityIndicator color="#08090B" /> : <Text style={styles.guideButtonText}>Quero o Guia Grátis</Text>}
               </TouchableOpacity>
             </>
           )}
@@ -101,31 +101,31 @@ export default function BemVindoLanding() {
       </ScrollView>
 
       <TouchableOpacity style={styles.fab} onPress={handleWhatsappDoubt}>
-        <Ionicons name="logo-whatsapp" size={26} color="#0F0F12" />
+        <Ionicons name="logo-whatsapp" size={26} color="#08090B" />
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0F0F12' },
+  root: { flex: 1, backgroundColor: '#08090B' },
   container: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 50, paddingBottom: 60 },
   // brand-wordmark.png is 663x201 (3.3:1) — width/height keep that ratio exactly.
   logo: { width: 180, height: 55, marginBottom: 20 },
-  heroTitle: { color: '#F5F5F7', fontSize: 26, fontWeight: '800', textAlign: 'center', lineHeight: 32 },
-  heroSubtitle: { color: '#FF6B00', fontSize: 14, fontWeight: '700', marginTop: 6, letterSpacing: 0.5 },
-  heroText: { color: '#a3a3a3', fontSize: 13, textAlign: 'center', marginTop: 10, marginBottom: 24, lineHeight: 19, paddingHorizontal: 8 },
-  ctaButton: { backgroundColor: '#FF6B00', borderRadius: 14, paddingVertical: 17, paddingHorizontal: 28, width: '100%', alignItems: 'center', textAlign: 'center', marginBottom: 28 },
-  ctaButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '800' },
-  guideCard: { width: '100%', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, padding: 20, alignItems: 'center', marginBottom: 28 },
-  guideTitle: { color: '#F5F5F7', fontSize: 15, fontWeight: '800', marginTop: 10, marginBottom: 6, textAlign: 'center' },
-  guideText: { color: '#a3a3a3', fontSize: 12, textAlign: 'center', lineHeight: 17, marginBottom: 16 },
-  guideInput: { width: '100%', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11, color: '#F5F5F7', fontSize: 14, marginBottom: 10 },
-  guideButton: { width: '100%', backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
-  guideButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
+  heroTitle: { color: '#FFFFFF', fontSize: 26, fontWeight: '800', textAlign: 'center', lineHeight: 32 },
+  heroSubtitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginTop: 6, letterSpacing: 0.5 },
+  heroText: { color: '#A7AAB0', fontSize: 13, textAlign: 'center', marginTop: 10, marginBottom: 24, lineHeight: 19, paddingHorizontal: 8 },
+  ctaButton: { backgroundColor: '#FFFFFF', borderRadius: 14, paddingVertical: 17, paddingHorizontal: 28, width: '100%', alignItems: 'center', textAlign: 'center', marginBottom: 28 },
+  ctaButtonText: { color: '#08090B', fontSize: 15, fontWeight: '800' },
+  guideCard: { width: '100%', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 16, padding: 20, alignItems: 'center', marginBottom: 28 },
+  guideTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800', marginTop: 10, marginBottom: 6, textAlign: 'center' },
+  guideText: { color: '#A7AAB0', fontSize: 12, textAlign: 'center', lineHeight: 17, marginBottom: 16 },
+  guideInput: { width: '100%', backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11, color: '#FFFFFF', fontSize: 14, marginBottom: 10 },
+  guideButton: { width: '100%', backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
+  guideButtonText: { color: '#08090B', fontSize: 13, fontWeight: '700' },
   guideSentBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(34,197,94,0.1)', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14 },
   guideSentText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
   loginLink: { marginTop: 4, textAlign: 'center' },
-  loginLinkText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600', textDecorationLine: 'underline' },
+  loginLinkText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600', textDecorationLine: 'underline' },
   fab: { position: 'absolute', right: 20, bottom: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: '#22c55e', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
 });

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { ACCENT } from './theme';
 import { View, Text, StyleSheet, ActivityIndicator, Platform, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceDot } from 'recharts';
 import { supabase } from './supabaseClient';
 import { computeWeightTrend } from './weightTrendUtils';
 
-const ACCENT = '#FF6B00';
 
 const TREND_META = {
   subindo: { icon: 'trending-up', color: '#f59e0b' },
-  descendo: { icon: 'trending-down', color: '#3b82f6' },
-  estavel: { icon: 'remove', color: '#a3a3a3' },
+  descendo: { icon: 'trending-down', color: '#D1D5DB' },
+  estavel: { icon: 'remove', color: '#A7AAB0' },
 };
 
 function formatShortDate(iso) {
@@ -125,12 +125,12 @@ export default function WeightEvolutionChart({ studentId }) {
         <div style={{ width: '100%', height: 200 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 24, right: 20, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2B2B36" vertical={false} />
-              <XAxis dataKey="date" tick={{ fill: '#737373', fontSize: 10 }} axisLine={{ stroke: '#2B2B36' }} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#292D34" vertical={false} />
+              <XAxis dataKey="date" tick={{ fill: '#737373', fontSize: 10 }} axisLine={{ stroke: '#292D34' }} tickLine={false} />
               <YAxis tick={{ fill: '#737373', fontSize: 10 }} axisLine={false} tickLine={false} domain={['dataMin - 2', 'dataMax + 2']} />
               <Tooltip
-                contentStyle={{ backgroundColor: '#1C1C22', border: '1px solid #2B2B36', borderRadius: 8 }}
-                labelStyle={{ color: '#a3a3a3' }}
+                contentStyle={{ backgroundColor: '#121419', border: '1px solid #292D34', borderRadius: 8 }}
+                labelStyle={{ color: '#A7AAB0' }}
                 itemStyle={{ color: ACCENT }}
                 formatter={(value) => [`${value} kg`, 'Peso']}
               />
@@ -140,7 +140,7 @@ export default function WeightEvolutionChart({ studentId }) {
                 y={lastPoint.weight}
                 r={5}
                 fill={ACCENT}
-                stroke="#1C1C22"
+                stroke="#121419"
                 strokeWidth={2}
                 label={{ value: `${lastPoint.weight} kg`, position: 'top', fill: ACCENT, fontSize: 12, fontWeight: 700 }}
               />
@@ -153,14 +153,14 @@ export default function WeightEvolutionChart({ studentId }) {
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 16 },
+  container: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginBottom: 16 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  title: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
-  emptyBox: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 16 },
+  title: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  emptyBox: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginBottom: 16 },
   emptyText: { color: '#525252', fontSize: 12, marginTop: 8 },
   trendRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
-  trendItem: { flex: 1, backgroundColor: '#0F0F12', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
-  trendValue: { color: '#F5F5F7', fontSize: 14, fontWeight: '800' },
+  trendItem: { flex: 1, backgroundColor: '#08090B', borderRadius: 8, paddingVertical: 8, alignItems: 'center' },
+  trendValue: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
   trendArrowRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  trendLabel: { color: '#a3a3a3', fontSize: 9, marginTop: 2 },
+  trendLabel: { color: '#A7AAB0', fontSize: 9, marginTop: 2 },
 });

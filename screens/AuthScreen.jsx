@@ -201,7 +201,7 @@ export default function AuthScreen({ onAuthenticated, onBack, initialMode, initi
 
       <TouchableOpacity style={styles.submitButton} onPress={handleAuth} disabled={loading}>
         {loading ? (
-          <ActivityIndicator color="#0F0F12" />
+          <ActivityIndicator color="#08090B" />
         ) : (
           <Text style={styles.submitButtonText}>{mode === 'login' ? 'Entrar' : 'Criar conta'}</Text>
         )}
@@ -218,32 +218,32 @@ export default function AuthScreen({ onAuthenticated, onBack, initialMode, initi
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12' },
+  container: { flex: 1, backgroundColor: '#08090B' },
   webCenterWrap: Platform.OS === 'web' ? { maxWidth: 440, width: '100%', marginHorizontal: 'auto' } : {},
   backLink: { marginBottom: 20 },
-  backLinkText: { color: '#FF6B00', fontSize: 14, fontWeight: '600' },
+  backLinkText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
   brandBlock: { alignItems: 'center', marginBottom: 8 },
   // brand-wordmark.png is 663x201 (3.3:1) — width/height keep that ratio exactly.
   logo: { width: 200, height: 61, marginBottom: 12 },
-  slogan: { color: '#a3a3a3', fontSize: 12, textAlign: 'center', marginTop: 4, fontWeight: '500' },
-  tagline: { color: '#a3a3a3', fontSize: 14, textAlign: 'center', marginBottom: 28, marginTop: 20 },
-  roleRow: { flexDirection: 'row', backgroundColor: '#1C1C22', borderRadius: 10, padding: 3, marginBottom: 20 },
+  slogan: { color: '#A7AAB0', fontSize: 12, textAlign: 'center', marginTop: 4, fontWeight: '500' },
+  tagline: { color: '#A7AAB0', fontSize: 14, textAlign: 'center', marginBottom: 28, marginTop: 20 },
+  roleRow: { flexDirection: 'row', backgroundColor: '#121419', borderRadius: 10, padding: 3, marginBottom: 20 },
   roleButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
-  roleButtonActive: { backgroundColor: '#FF6B00' },
-  roleButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  roleButtonTextActive: { color: '#0F0F12' },
-  input: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 14, color: '#F5F5F7', fontSize: 14, marginBottom: 12 },
-  genderLabel: { color: '#a3a3a3', fontSize: 12, fontWeight: '600', marginBottom: 8 },
+  roleButtonActive: { backgroundColor: '#FFFFFF' },
+  roleButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
+  roleButtonTextActive: { color: '#08090B' },
+  input: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 14, color: '#FFFFFF', fontSize: 14, marginBottom: 12 },
+  genderLabel: { color: '#A7AAB0', fontSize: 12, fontWeight: '600', marginBottom: 8 },
   genderRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
-  genderButton: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-  genderButtonActiveFeminino: { borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,0.12)' },
-  genderButtonActiveMasculino: { borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.12)' },
-  genderButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
-  genderButtonTextActive: { color: '#F5F5F7' },
+  genderButton: { flex: 1, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
+  genderButtonActiveFeminino: { borderColor: '#D1D5DB', backgroundColor: 'rgba(255,255,255,0.08)' },
+  genderButtonActiveMasculino: { borderColor: '#D1D5DB', backgroundColor: 'rgba(255,255,255,0.08)' },
+  genderButtonText: { color: '#A7AAB0', fontSize: 12, fontWeight: '700' },
+  genderButtonTextActive: { color: '#FFFFFF' },
   forgotLink: { alignItems: 'flex-end', marginBottom: 16, marginTop: -4 },
-  forgotLinkText: { color: '#FF6B00', fontSize: 12, fontWeight: '600' },
-  submitButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
-  submitButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
+  forgotLinkText: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
+  submitButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
+  submitButtonText: { color: '#08090B', fontSize: 15, fontWeight: '700' },
   switchModeButton: { alignItems: 'center', marginTop: 20 },
-  switchModeText: { color: '#a3a3a3', fontSize: 13 },
+  switchModeText: { color: '#A7AAB0', fontSize: 13 },
 });

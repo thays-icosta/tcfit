@@ -44,7 +44,7 @@ export default function ForcePasswordChangeScreen({ user, onDone, onLogout }) {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.card}>
         <View style={styles.iconCircle}>
-          <Ionicons name="lock-closed" size={26} color="#FF6B00" />
+          <Ionicons name="lock-closed" size={26} color="#FFFFFF" />
         </View>
         <Text style={styles.welcome}>Bem-vindo ao TCFit, {user?.name?.split(' ')[0] || ''}!</Text>
         <Text style={styles.subtitle}>Seu personal já preparou seu espaço. Por segurança, crie sua nova senha antes de continuar.</Text>
@@ -72,7 +72,7 @@ export default function ForcePasswordChangeScreen({ user, onDone, onLogout }) {
         />
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar e continuar</Text>}
+          {saving ? <ActivityIndicator color="#08090B" /> : <Text style={styles.saveButtonText}>Salvar e continuar</Text>}
         </TouchableOpacity>
 
         {onLogout && (
@@ -86,15 +86,15 @@ export default function ForcePasswordChangeScreen({ user, onDone, onLogout }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
+  container: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
   card: { width: '100%', maxWidth: 400 },
-  iconCircle: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(255,107,0,0.12)', borderWidth: 1, borderColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', alignSelf: 'center', marginBottom: 18 },
-  welcome: { color: '#F5F5F7', fontSize: 20, fontWeight: '800', textAlign: 'center', marginBottom: 8 },
-  subtitle: { color: '#a3a3a3', fontSize: 13, textAlign: 'center', lineHeight: 19, marginBottom: 28 },
+  iconCircle: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', alignSelf: 'center', marginBottom: 18 },
+  welcome: { color: '#FFFFFF', fontSize: 20, fontWeight: '800', textAlign: 'center', marginBottom: 8 },
+  subtitle: { color: '#A7AAB0', fontSize: 13, textAlign: 'center', lineHeight: 19, marginBottom: 28 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 12 },
-  input: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, color: '#F5F5F7', fontSize: 14 },
-  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
-  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
+  input: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, color: '#FFFFFF', fontSize: 14 },
+  saveButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
+  saveButtonText: { color: '#08090B', fontSize: 15, fontWeight: '700' },
   logoutButton: { paddingVertical: 14, alignItems: 'center', marginTop: 8 },
   logoutButtonText: { color: '#525252', fontSize: 12, fontWeight: '600' },
 });

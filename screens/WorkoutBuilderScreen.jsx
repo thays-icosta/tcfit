@@ -739,7 +739,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#FF6B00" />
+        <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
@@ -828,14 +828,14 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
           <View style={styles.exerciseActionsRow}>
             <TouchableOpacity hitSlop={10} onLongPress={drag} disabled={isActive} style={styles.dragHandleButton}>
-              <Ionicons name="reorder-three-outline" size={20} color="#a3a3a3" />
+              <Ionicons name="reorder-three-outline" size={20} color="#A7AAB0" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.exerciseActionButton} onPress={() => setEditingItem(item)}>
-              <Ionicons name="pencil-outline" size={14} color="#3b82f6" />
+              <Ionicons name="pencil-outline" size={14} color="#D1D5DB" />
               <Text style={styles.exerciseActionButtonText}>Editar</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.exerciseActionButton} onPress={() => handleOpenItemActions(item)}>
-              <Ionicons name="ellipsis-horizontal" size={14} color="#a3a3a3" />
+              <Ionicons name="ellipsis-horizontal" size={14} color="#A7AAB0" />
               <Text style={styles.exerciseActionButtonText}>Mais</Text>
             </TouchableOpacity>
           </View>
@@ -884,10 +884,10 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         disabled={creatingWeek}
       >
         {creatingWeek ? (
-          <ActivityIndicator color="#0F0F12" size="small" />
+          <ActivityIndicator color="#08090B" size="small" />
         ) : (
           <>
-            <Ionicons name="add-circle-outline" size={18} color="#0F0F12" />
+            <Ionicons name="add-circle-outline" size={18} color="#08090B" />
             <Text style={styles.newWeekButtonText}>{workouts.length === 0 ? '+ Criar Primeira Ficha' : '+ NOVA SEMANA'}</Text>
           </>
         )}
@@ -917,7 +917,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const editorHeader = (
     <>
       <TouchableOpacity style={styles.backToOverviewButton} onPress={() => setActiveWorkoutId(null)}>
-        <Ionicons name="chevron-back" size={16} color="#a3a3a3" />
+        <Ionicons name="chevron-back" size={16} color="#A7AAB0" />
         <Text style={styles.backToOverviewButtonText}>Semana Atual</Text>
       </TouchableOpacity>
 
@@ -950,7 +950,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         <TouchableOpacity style={styles.weekdaySelectorRow} onPress={() => setShowWeekdayPicker(true)}>
           {activeWorkout?.weekday != null ? (
             <View style={styles.weekdayBadge}>
-              <Ionicons name="calendar-outline" size={13} color="#3b82f6" />
+              <Ionicons name="calendar-outline" size={13} color="#D1D5DB" />
               <Text style={styles.weekdayBadgeText}>{WEEKDAY_OPTIONS.find((d) => d.value === activeWorkout.weekday)?.label}</Text>
             </View>
           ) : (
@@ -1064,7 +1064,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
               onPress={handleToggleAiRecording}
               disabled={aiProcessing}
             >
-              <Ionicons name={aiRecording ? 'mic' : 'mic-outline'} size={18} color={aiRecording ? '#ef4444' : '#a3a3a3'} />
+              <Ionicons name={aiRecording ? 'mic' : 'mic-outline'} size={18} color={aiRecording ? '#ef4444' : '#A7AAB0'} />
               <Text style={[styles.aiMicButtonText, aiRecording && styles.aiMicButtonTextActive]}>
                 {aiRecording ? 'Gravando... toque pra parar' : 'Falar em vez de digitar'}
               </Text>
@@ -1075,7 +1075,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
                 <Text style={styles.modalCancelButtonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalConfirmButton} onPress={handleGenerateWorkoutWithAi} disabled={aiProcessing}>
-                {aiProcessing ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>Processar e Preencher</Text>}
+                {aiProcessing ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.modalConfirmButtonText}>Processar e Preencher</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -1147,7 +1147,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
                 <Text style={styles.modalCancelButtonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalConfirmButton} onPress={handleConfirmReplicate} disabled={replicating}>
-                {replicating ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>Aplicar a todos</Text>}
+                {replicating ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.modalConfirmButtonText}>Aplicar a todos</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -1161,7 +1161,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
             <Text style={styles.modalSubtitle}>Escolhe pra quais alunos você quer copiar essa ficha. O aluno atual não aparece na lista.</Text>
 
             {loadingOtherStudents ? (
-              <ActivityIndicator color="#FF6B00" style={{ marginVertical: 20 }} />
+              <ActivityIndicator color="#FFFFFF" style={{ marginVertical: 20 }} />
             ) : otherStudents.length === 0 ? (
               <Text style={styles.emptyText}>Você não tem outros alunos ainda.</Text>
             ) : (
@@ -1183,7 +1183,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
                 <Text style={styles.modalCancelButtonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalConfirmButton} onPress={handleConfirmSend} disabled={sendingCopy}>
-                {sendingCopy ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>Enviar</Text>}
+                {sendingCopy ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.modalConfirmButtonText}>Enviar</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -1235,7 +1235,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
             <Text style={styles.modalSubtitle}>Cria uma ficha nova pra {studentName} já com todos os exercícios do template escolhido.</Text>
 
             {loadingTemplates ? (
-              <ActivityIndicator color="#FF6B00" style={{ marginVertical: 20 }} />
+              <ActivityIndicator color="#FFFFFF" style={{ marginVertical: 20 }} />
             ) : templates.length === 0 ? (
               <Text style={styles.emptyText}>Você ainda não criou nenhum template. Vá em Perfil → Templates de Treino.</Text>
             ) : (
@@ -1246,7 +1246,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
                       <Text style={styles.templateOptionName}>{t.name}</Text>
                       {t.description ? <Text style={styles.templateOptionDesc} numberOfLines={2}>{t.description}</Text> : null}
                     </View>
-                    {applyingTemplateId === t.id ? <ActivityIndicator color="#FF6B00" size="small" /> : <Text style={styles.templateOptionArrow}>›</Text>}
+                    {applyingTemplateId === t.id ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={styles.templateOptionArrow}>›</Text>}
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -1265,7 +1265,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
             <View style={styles.pickerHeaderRow}>
               <Text style={styles.modalTitle}>Copiar qual semana?</Text>
               <TouchableOpacity onPress={() => setShowOtherWeekPicker(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="close" size={20} color="#a3a3a3" />
+                <Ionicons name="close" size={20} color="#A7AAB0" />
               </TouchableOpacity>
             </View>
             {weekHistory.length === 0 ? (
@@ -1288,102 +1288,102 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
-  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
+  center: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
   fichaRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 4 },
-  fichaTab: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
-  fichaTabActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  fichaTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  fichaTabTextActive: { color: '#0F0F12' },
-  fichaTabWeekday: { color: '#3b82f6', fontSize: 9, fontWeight: '800', textTransform: 'uppercase', marginTop: 2 },
-  fichaTabWeekdayActive: { color: '#0F0F12' },
+  fichaTab: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
+  fichaTabActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  fichaTabText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
+  fichaTabTextActive: { color: '#08090B' },
+  fichaTabWeekday: { color: '#D1D5DB', fontSize: 9, fontWeight: '800', textTransform: 'uppercase', marginTop: 2 },
+  fichaTabWeekdayActive: { color: '#08090B' },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 6 },
-  aiMicButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, marginTop: 12 },
+  aiMicButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 12, marginTop: 12 },
   aiMicButtonActive: { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
-  aiMicButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  aiMicButtonText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
   aiMicButtonTextActive: { color: '#ef4444' },
   actionsRow: { marginBottom: 8 },
   actionsRowContent: { paddingHorizontal: 16, gap: 8 },
-  actionChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
-  actionChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  actionChip: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
+  actionChipText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
   suggestionsLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginTop: 14, marginBottom: 8 },
   suggestionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  suggestionChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  suggestionChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
+  suggestionChip: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  suggestionChipText: { color: '#A7AAB0', fontSize: 11, fontWeight: '600' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
   phaseSelectorRow: { marginHorizontal: 16, marginBottom: 8 },
-  phaseBadge: { alignSelf: 'flex-start', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#a855f7', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
-  phaseBadgeCurrent: { backgroundColor: 'rgba(168,85,247,0.15)' },
-  phaseBadgeText: { color: '#a855f7', fontSize: 11, fontWeight: '700' },
+  phaseBadge: { alignSelf: 'flex-start', backgroundColor: '#121419', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  phaseBadgeCurrent: { backgroundColor: 'rgba(255,255,255,0.11)' },
+  phaseBadgeText: { color: '#D1D5DB', fontSize: 11, fontWeight: '700' },
   phaseSelectorPlaceholder: { color: '#525252', fontSize: 11, textDecorationLine: 'underline' },
   weekdaySelectorRow: { marginTop: 10 },
-  weekdayBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
-  weekdayBadgeText: { color: '#3b82f6', fontSize: 11, fontWeight: '700' },
-  summaryCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, marginHorizontal: 16, marginBottom: 6 },
+  weekdayBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', backgroundColor: '#121419', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  weekdayBadgeText: { color: '#D1D5DB', fontSize: 11, fontWeight: '700' },
+  summaryCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, marginHorizontal: 16, marginBottom: 6 },
   summaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   summaryTitle: { color: '#737373', fontSize: 9, textTransform: 'uppercase' },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
-  summaryBadge: { backgroundColor: '#0F0F12', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', minWidth: 50 },
-  summaryBadgeCount: { color: '#FF6B00', fontSize: 13, fontWeight: '700' },
-  summaryBadgeLabel: { color: '#a3a3a3', fontSize: 8, textTransform: 'capitalize', marginTop: 1 },
-  addExerciseButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 8 },
-  addExerciseButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
-  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
-  exerciseCard: { flexDirection: 'row', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, marginHorizontal: 16, marginBottom: 8, padding: 12 },
-  exerciseCardDragging: { borderColor: '#FF6B00', opacity: 0.9 },
+  summaryBadge: { backgroundColor: '#08090B', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', minWidth: 50 },
+  summaryBadgeCount: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  summaryBadgeLabel: { color: '#A7AAB0', fontSize: 8, textTransform: 'capitalize', marginTop: 1 },
+  addExerciseButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginHorizontal: 16, marginBottom: 8 },
+  addExerciseButtonText: { color: '#08090B', fontSize: 14, fontWeight: '700' },
+  sectionTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginHorizontal: 16, marginBottom: 8 },
+  exerciseCard: { flexDirection: 'row', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, marginHorizontal: 16, marginBottom: 8, padding: 12 },
+  exerciseCardDragging: { borderColor: '#FFFFFF', opacity: 0.9 },
   exerciseIndex: { color: '#525252', fontSize: 13, fontWeight: '800', width: 24, marginTop: 1 },
   exerciseInfo: { flex: 1 },
-  exerciseName: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
-  exerciseMetrics: { color: '#a3a3a3', fontSize: 12, fontWeight: '600', marginTop: 3 },
+  exerciseName: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  exerciseMetrics: { color: '#A7AAB0', fontSize: 12, fontWeight: '600', marginTop: 3 },
   exerciseNotes: { color: '#737373', fontSize: 10, marginTop: 6, fontStyle: 'italic' },
-  watchLink: { color: '#FF6B00', fontSize: 11, fontWeight: '700', marginTop: 6 },
+  watchLink: { color: '#FFFFFF', fontSize: 11, fontWeight: '700', marginTop: 6 },
   exerciseActionsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
   dragHandleButton: { padding: 6, marginLeft: -6 },
-  exerciseActionButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  exerciseActionButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
+  exerciseActionButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  exerciseActionButtonText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
 
-  weekOverviewCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 10 },
-  weekOverviewCardName: { color: '#F5F5F7', fontSize: 15, fontWeight: '800' },
-  weekOverviewCardMeta: { color: '#a3a3a3', fontSize: 11, marginTop: 3 },
-  weekOverviewCardMuscles: { color: '#FF6B00', fontSize: 11, fontWeight: '600', marginTop: 3, textTransform: 'capitalize' },
-  newWeekButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 15, marginHorizontal: 16, marginTop: 6 },
-  newWeekButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '800', letterSpacing: 0.3 },
+  weekOverviewCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginHorizontal: 16, marginBottom: 10 },
+  weekOverviewCardName: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  weekOverviewCardMeta: { color: '#A7AAB0', fontSize: 11, marginTop: 3 },
+  weekOverviewCardMuscles: { color: '#FFFFFF', fontSize: 11, fontWeight: '600', marginTop: 3, textTransform: 'capitalize' },
+  newWeekButton: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 15, marginHorizontal: 16, marginTop: 6 },
+  newWeekButtonText: { color: '#08090B', fontSize: 15, fontWeight: '800', letterSpacing: 0.3 },
   backToOverviewButton: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 16, marginBottom: 6 },
-  backToOverviewButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  compactSummaryCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginHorizontal: 16, marginTop: 6, marginBottom: 8 },
-  compactSummaryTitle: { color: '#F5F5F7', fontSize: 15, fontWeight: '800', textTransform: 'capitalize' },
-  compactSummaryMeta: { color: '#a3a3a3', fontSize: 12, marginTop: 4 },
+  backToOverviewButtonText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
+  compactSummaryCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginHorizontal: 16, marginTop: 6, marginBottom: 8 },
+  compactSummaryTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800', textTransform: 'capitalize' },
+  compactSummaryMeta: { color: '#A7AAB0', fontSize: 12, marginTop: 4 },
 
   pickerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  pickerSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 36, maxHeight: '75%' },
+  pickerSheet: { backgroundColor: '#121419', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 36, maxHeight: '75%' },
   pickerHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  fichaOption: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 8 },
-  fichaOptionText: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  fichaOption: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 8 },
+  fichaOptionText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
 
-  saveButton: { backgroundColor: '#FF6B00', margin: 16, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
+  saveButton: { backgroundColor: '#FFFFFF', margin: 16, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  saveButtonText: { color: '#08090B', fontSize: 15, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
-  modalCard: { backgroundColor: '#1C1C22', borderRadius: 16, padding: 20 },
-  modalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 6 },
-  modalSubtitle: { color: '#a3a3a3', fontSize: 11, marginBottom: 16, lineHeight: 16 },
+  modalCard: { backgroundColor: '#121419', borderRadius: 16, padding: 20 },
+  modalTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', marginBottom: 6 },
+  modalSubtitle: { color: '#A7AAB0', fontSize: 11, marginBottom: 16, lineHeight: 16 },
   modalLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 4, marginTop: 8 },
-  modalInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 13 },
+  modalInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#FFFFFF', fontSize: 13 },
   modalButtonRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
-  modalCancelButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  modalCancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  modalConfirmButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  modalConfirmButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
-  sendModalSheet: { backgroundColor: '#1C1C22', borderRadius: 16, padding: 20, marginHorizontal: 0 },
-  targetRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
-  targetRowSelected: { borderColor: '#3b82f6' },
-  targetRowText: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
-  targetRowCheck: { color: '#3b82f6', fontSize: 15, fontWeight: '800' },
-  phaseOption: { borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginBottom: 8 },
-  phaseOptionText: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  modalCancelButton: { flex: 1, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalCancelButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
+  modalConfirmButton: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalConfirmButtonText: { color: '#08090B', fontSize: 13, fontWeight: '700' },
+  sendModalSheet: { backgroundColor: '#121419', borderRadius: 16, padding: 20, marginHorizontal: 0 },
+  targetRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
+  targetRowSelected: { borderColor: '#D1D5DB' },
+  targetRowText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
+  targetRowCheck: { color: '#D1D5DB', fontSize: 15, fontWeight: '800' },
+  phaseOption: { borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginBottom: 8 },
+  phaseOptionText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
   phaseOptionNone: { paddingVertical: 10, alignItems: 'center', marginBottom: 4 },
   phaseOptionNoneText: { color: '#525252', fontSize: 12, fontWeight: '600' },
-  templateOption: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, padding: 14, marginBottom: 8 },
-  templateOptionName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  templateOption: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, padding: 14, marginBottom: 8 },
+  templateOptionName: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   templateOptionDesc: { color: '#737373', fontSize: 11, marginTop: 3 },
-  templateOptionArrow: { color: '#a855f7', fontSize: 20, fontWeight: '700' },
+  templateOptionArrow: { color: '#D1D5DB', fontSize: 20, fontWeight: '700' },
 });

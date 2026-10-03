@@ -45,7 +45,7 @@ export default function InstallBanner() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalIconCircle}>
-              <Ionicons name={guide ? GUIDES[guide].icon : 'share-outline'} size={22} color="#FF6B00" />
+              <Ionicons name={guide ? GUIDES[guide].icon : 'share-outline'} size={22} color="#FFFFFF" />
             </View>
             <Text style={styles.modalTitle}>Adicionar à Tela de Início</Text>
             <Text style={styles.modalText}>{guide ? GUIDES[guide].text : ''}</Text>
@@ -87,9 +87,9 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 280,
     height: 48,
-    backgroundColor: '#18181B',
+    backgroundColor: '#121419',
     borderWidth: 1,
-    borderColor: '#27272A',
+    borderColor: '#292D34',
     borderRadius: 12,
   },
   installButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
@@ -97,15 +97,15 @@ const styles = StyleSheet.create({
   modalCard: {
     backgroundColor: 'rgba(23,23,28,0.9)',
     borderWidth: 1,
-    borderColor: 'rgba(255,107,0,0.18)',
+    borderColor: 'rgba(255,255,255,0.13)',
     borderRadius: 24,
     padding: 26,
     alignItems: 'center',
     ...(Platform.OS === 'web' ? { backdropFilter: 'blur(20px)' } : {}),
   },
-  modalIconCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
-  modalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 10, textAlign: 'center' },
-  modalText: { color: '#a3a3a3', fontSize: 13, lineHeight: 20, textAlign: 'center', marginBottom: 20 },
-  modalCloseButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 32, alignItems: 'center' },
+  modalIconCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  modalTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', marginBottom: 10, textAlign: 'center' },
+  modalText: { color: '#A7AAB0', fontSize: 13, lineHeight: 20, textAlign: 'center', marginBottom: 20 },
+  modalCloseButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 32, alignItems: 'center' },
   modalCloseButtonText: { color: '#000000', fontSize: 14, fontWeight: '800' },
 });

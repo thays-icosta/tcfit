@@ -15,9 +15,9 @@ export default function HomeScreen({ user, onLogout }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center', padding: 24 },
-  greeting: { color: '#F5F5F7', fontSize: 24, fontWeight: '700', marginBottom: 8 },
-  subtitle: { color: '#a3a3a3', fontSize: 14, marginBottom: 32 },
-  button: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 32 },
-  buttonText: { color: '#FF6B00', fontSize: 15, fontWeight: '700' },
+  container: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  greeting: { color: '#FFFFFF', fontSize: 24, fontWeight: '700', marginBottom: 8 },
+  subtitle: { color: '#A7AAB0', fontSize: 14, marginBottom: 32 },
+  button: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 32 },
+  buttonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
 });

@@ -10,7 +10,7 @@ import { registerAlertHost } from './alertUtils';
 //
 // Two layouts, chosen from the buttons themselves:
 //   - decision sheet (2+ non-cancel options): bottom sheet, big stacked
-//     buttons, first option highlighted in the brand orange
+//     buttons, first option highlighted in the white accent
 //   - dialog (0–1 options): centered card, Cancelar + confirm side by side
 
 const ERROR_RE = /^(erro|ops\b|não\b|nao\b|falha|sessão|sessao)/i;
@@ -22,7 +22,7 @@ const TONES = {
   error: { icon: 'alert-circle', color: '#ef4444' },
   warning: { icon: 'warning', color: '#f59e0b' },
   success: { icon: 'checkmark-circle', color: '#22c55e' },
-  info: { icon: 'information-circle', color: '#FF6B00' },
+  info: { icon: 'information-circle', color: '#FFFFFF' },
 };
 
 function inferTone(title, actions) {
@@ -151,31 +151,31 @@ const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.72)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
   overlaySheet: { justifyContent: 'flex-end', paddingHorizontal: 0 },
 
-  card: { width: '100%', maxWidth: 400, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 22, padding: 22, alignItems: 'center' },
+  card: { width: '100%', maxWidth: 400, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 22, padding: 22, alignItems: 'center' },
   iconCircle: { width: 52, height: 52, borderRadius: 26, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
-  title: { color: '#F5F5F7', fontSize: 17, fontWeight: '800', textAlign: 'center' },
+  title: { color: '#FFFFFF', fontSize: 17, fontWeight: '800', textAlign: 'center' },
   titleLeft: { textAlign: 'left', alignSelf: 'stretch' },
   messageScroll: { maxHeight: 240, alignSelf: 'stretch', marginTop: 8 },
-  message: { color: '#a3a3a3', fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  message: { color: '#A7AAB0', fontSize: 14, lineHeight: 20, textAlign: 'center' },
   messageLeft: { textAlign: 'left' },
 
   buttonRow: { flexDirection: 'row', gap: 10, alignSelf: 'stretch', marginTop: 22 },
-  cancelButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
-  cancelButtonText: { color: '#a3a3a3', fontSize: 14, fontWeight: '700' },
-  confirmButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
-  confirmButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
+  cancelButton: { flex: 1, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
+  cancelButtonText: { color: '#A7AAB0', fontSize: 14, fontWeight: '700' },
+  confirmButton: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
+  confirmButtonText: { color: '#08090B', fontSize: 14, fontWeight: '800' },
   confirmButtonDanger: { backgroundColor: '#ef4444' },
   confirmButtonTextDanger: { color: '#FFFFFF' },
 
-  sheet: { width: '100%', maxWidth: 480, backgroundColor: '#1C1C22', borderTopLeftRadius: 26, borderTopRightRadius: 26, borderWidth: 1, borderColor: '#2B2B36', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 30 },
+  sheet: { width: '100%', maxWidth: 480, backgroundColor: '#121419', borderTopLeftRadius: 26, borderTopRightRadius: 26, borderWidth: 1, borderColor: '#292D34', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 30 },
   sheetHandle: { width: 38, height: 4, borderRadius: 2, backgroundColor: '#3a3a46', alignSelf: 'center', marginBottom: 16 },
   optionList: { gap: 10, marginTop: 18 },
-  option: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 16, alignItems: 'center' },
-  optionPrimary: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
+  option: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 16, alignItems: 'center' },
+  optionPrimary: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
   optionDanger: { backgroundColor: 'rgba(239,68,68,0.1)', borderColor: '#ef4444' },
-  optionText: { color: '#F5F5F7', fontSize: 15, fontWeight: '700', textAlign: 'center' },
-  optionTextPrimary: { color: '#0F0F12', fontWeight: '800' },
+  optionText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', textAlign: 'center' },
+  optionTextPrimary: { color: '#08090B', fontWeight: '800' },
   optionTextDanger: { color: '#ef4444' },
   sheetCancel: { paddingVertical: 16, alignItems: 'center', marginTop: 4 },
-  sheetCancelText: { color: '#a3a3a3', fontSize: 14, fontWeight: '700' },
+  sheetCancelText: { color: '#A7AAB0', fontSize: 14, fontWeight: '700' },
 });

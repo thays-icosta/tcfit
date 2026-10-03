@@ -478,7 +478,7 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#FF6B00" />
+        <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
@@ -494,7 +494,7 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
           style={{ paddingHorizontal: 16 }}
           rightSlot={
             <TouchableOpacity onPress={handleSaveBlocks} disabled={savingBlocks} hitSlop={8}>
-              {savingBlocks ? <ActivityIndicator color="#FF6B00" size="small" /> : <Text style={styles.saveLink}>Salvar</Text>}
+              {savingBlocks ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={styles.saveLink}>Salvar</Text>}
             </TouchableOpacity>
           }
         />
@@ -548,7 +548,7 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
             </View>
           ))}
           <TouchableOpacity style={styles.addBlockButton} onPress={() => setShowBlockTypePicker(true)}>
-            <Ionicons name="add" size={18} color="#FF6B00" />
+            <Ionicons name="add" size={18} color="#FFFFFF" />
             <Text style={styles.addBlockButtonText}>Adicionar Bloco</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -584,7 +584,7 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Ciclo repetido</Text>
               <TouchableOpacity onPress={() => openCreateActivity('cycle')} hitSlop={8}>
-                <Ionicons name="add-circle-outline" size={20} color="#FF6B00" />
+                <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
             <Text style={styles.sectionSubtitle}>Repete a cada {activePhase?.cycle_length_days} dia(s) da fase (ex: dia 1 do ciclo = Treino A).</Text>
@@ -607,7 +607,7 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Dias fixos</Text>
               <TouchableOpacity onPress={() => openCreateActivity('fixed')} hitSlop={8}>
-                <Ionicons name="add-circle-outline" size={20} color="#FF6B00" />
+                <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
             <Text style={styles.sectionSubtitle}>Fixado num dia específico da fase, não repete (ex: módulo educacional no dia 8).</Text>
@@ -664,7 +664,7 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
                   <Text style={styles.sectionSubtitle}>Sem referência — dia de descanso ativo, sem ação obrigatória.</Text>
                 ) : (
                 <TouchableOpacity style={styles.refButton} onPress={openRefPicker}>
-                  <Ionicons name="link-outline" size={16} color="#FF6B00" />
+                  <Ionicons name="link-outline" size={16} color="#FFFFFF" />
                   <Text style={styles.refButtonText}>{activityForm?.ref_name || 'Escolher referência'}</Text>
                 </TouchableOpacity>
                 )}
@@ -754,7 +754,7 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
         style={{ paddingHorizontal: 16 }}
         rightSlot={
           <TouchableOpacity onPress={() => setShowTemplateModal(true)} hitSlop={8}>
-            <Ionicons name="add-circle-outline" size={22} color="#FF6B00" />
+            <Ionicons name="add-circle-outline" size={22} color="#FFFFFF" />
           </TouchableOpacity>
         }
       />
@@ -765,7 +765,7 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
           <Text style={styles.emptyStateTitle}>Nenhum projeto ainda</Text>
           <Text style={styles.emptyStateSubtitle}>Crie um programa reutilizável de várias fases e dias (ex: &quot;Quadríceps Grandes e Fortes — 90 Dias&quot;).</Text>
           <TouchableOpacity style={styles.emptyStatePrimaryButton} onPress={() => setShowTemplateModal(true)}>
-            <Ionicons name="add" size={18} color="#0F0F12" />
+            <Ionicons name="add" size={18} color="#08090B" />
             <Text style={styles.emptyStatePrimaryButtonText}>Criar Projeto</Text>
           </TouchableOpacity>
         </View>
@@ -797,11 +797,11 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
                   <TextInput style={[styles.metaInput, { flex: 1, textAlign: 'left' }]} keyboardType="number-pad" placeholder="90" placeholderTextColor="#525252" value={totalDaysDraft} onChangeText={setTotalDaysDraft} />
                   <Text style={styles.metaFieldLabel}>dias</Text>
                   <TouchableOpacity style={styles.metaSaveButton} onPress={handleSaveTemplateMeta} disabled={savingTemplateMeta}>
-                    {savingTemplateMeta ? <ActivityIndicator color="#FF6B00" size="small" /> : <Text style={styles.metaSaveButtonText}>Salvar</Text>}
+                    {savingTemplateMeta ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={styles.metaSaveButtonText}>Salvar</Text>}
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity style={styles.ebookButton} onPress={handlePickEbookPdf} disabled={uploadingEbook}>
-                  <Ionicons name="document-attach-outline" size={16} color="#FF6B00" />
+                  <Ionicons name="document-attach-outline" size={16} color="#FFFFFF" />
                   <Text style={styles.ebookButtonText}>
                     {uploadingEbook ? 'Enviando...' : activeTemplate?.ebook_pdf_url ? 'E-book enviado — trocar PDF' : 'Anexar e-book complementar (PDF)'}
                   </Text>
@@ -812,7 +812,7 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
                 title={`Fases (${phases.length})`}
                 collapsed={collapsedPhases}
                 onToggle={() => setCollapsedPhases((v) => !v)}
-                headerRight={<TouchableOpacity onPress={openCreatePhase} hitSlop={8}><Ionicons name="add-circle-outline" size={20} color="#FF6B00" /></TouchableOpacity>}
+                headerRight={<TouchableOpacity onPress={openCreatePhase} hitSlop={8}><Ionicons name="add-circle-outline" size={20} color="#FFFFFF" /></TouchableOpacity>}
                 style={{ marginBottom: 16 }}
               >
                 {phases.length === 0 ? (
@@ -834,7 +834,7 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
                 title={`Conteúdos (${contents.length})`}
                 collapsed={collapsedContents}
                 onToggle={() => setCollapsedContents((v) => !v)}
-                headerRight={<TouchableOpacity onPress={() => setShowCreateContentModal(true)} hitSlop={8}><Ionicons name="add-circle-outline" size={20} color="#FF6B00" /></TouchableOpacity>}
+                headerRight={<TouchableOpacity onPress={() => setShowCreateContentModal(true)} hitSlop={8}><Ionicons name="add-circle-outline" size={20} color="#FFFFFF" /></TouchableOpacity>}
               >
                 {contents.length === 0 ? (
                   <Text style={styles.emptyText}>Nenhum módulo educacional ainda.</Text>
@@ -920,68 +920,68 @@ export default function ProjectTemplateBuilderScreen({ personalId, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
-  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
+  center: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 8 },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
   emptyStateBox: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 8 },
-  emptyStateTitle: { color: '#F5F5F7', fontSize: 15, fontWeight: '700', marginTop: 4 },
+  emptyStateTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', marginTop: 4 },
   emptyStateSubtitle: { color: '#737373', fontSize: 12, textAlign: 'center', lineHeight: 18, marginBottom: 10 },
-  emptyStatePrimaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 20, alignItems: 'center' },
-  emptyStatePrimaryButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
-  templateTab: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 18, paddingHorizontal: 14, height: 36, alignItems: 'center', justifyContent: 'center' },
-  templateTabActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
+  emptyStatePrimaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 20, alignItems: 'center' },
+  emptyStatePrimaryButtonText: { color: '#08090B', fontSize: 13, fontWeight: '700' },
+  templateTab: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 18, paddingHorizontal: 14, height: 36, alignItems: 'center', justifyContent: 'center' },
+  templateTabActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
   templateTabArchived: { opacity: 0.5 },
-  templateTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
-  templateTabTextActive: { color: '#0F0F12' },
-  bigCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 16 },
-  bigCardTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '800', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+  templateTabText: { color: '#A7AAB0', fontSize: 12, fontWeight: '700' },
+  templateTabTextActive: { color: '#08090B' },
+  bigCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginBottom: 16 },
+  bigCardTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '800', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
   metaInputsRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   metaFieldLabel: { color: '#525252', fontSize: 11 },
-  metaInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 13 },
+  metaInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#FFFFFF', fontSize: 13 },
   metaSaveButton: { paddingHorizontal: 10, paddingVertical: 9 },
-  metaSaveButtonText: { color: '#FF6B00', fontSize: 11, fontWeight: '700' },
-  ebookButton: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#2B2B36' },
-  ebookButtonText: { color: '#FF6B00', fontSize: 12, fontWeight: '600', flexShrink: 1 },
-  listRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginTop: 8 },
-  listRowTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  metaSaveButtonText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  ebookButton: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#292D34' },
+  ebookButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '600', flexShrink: 1 },
+  listRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 12, marginTop: 8 },
+  listRowTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   listRowSubtitle: { color: '#737373', fontSize: 11, marginTop: 2 },
   chevron: { color: '#525252', fontSize: 20, fontWeight: '300' },
-  sectionCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 14 },
+  sectionCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginBottom: 14 },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '800' },
+  sectionTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
   sectionSubtitle: { color: '#737373', fontSize: 11, marginTop: 4, marginBottom: 8, lineHeight: 15 },
-  activityRow: { flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: '#0F0F12', borderRadius: 10, padding: 10, marginTop: 6 },
-  activityDay: { color: '#FF6B00', fontSize: 11, fontWeight: '800', width: 52 },
-  activityTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  activityRow: { flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: '#08090B', borderRadius: 10, padding: 10, marginTop: 6 },
+  activityDay: { color: '#FFFFFF', fontSize: 11, fontWeight: '800', width: 52 },
+  activityTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
   activityType: { color: '#737373', fontSize: 10, marginTop: 2 },
   typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  typePill: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
-  typePillActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  typePillText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
-  typePillTextActive: { color: '#0F0F12' },
-  refButton: { flexDirection: 'row', gap: 6, alignItems: 'center', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, padding: 12, marginTop: 12 },
-  refButtonText: { color: '#F5F5F7', fontSize: 12, fontWeight: '600', flexShrink: 1 },
-  newInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
-  saveMetaButton: { backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 13, alignItems: 'center', marginTop: 16 },
-  saveMetaButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
+  typePill: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
+  typePillActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  typePillText: { color: '#A7AAB0', fontSize: 11, fontWeight: '700' },
+  typePillTextActive: { color: '#08090B' },
+  refButton: { flexDirection: 'row', gap: 6, alignItems: 'center', backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, padding: 12, marginTop: 12 },
+  refButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '600', flexShrink: 1 },
+  newInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#FFFFFF', fontSize: 13 },
+  saveMetaButton: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 13, alignItems: 'center', marginTop: 16 },
+  saveMetaButtonText: { color: '#08090B', fontSize: 14, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
-  modalTitle: { color: '#F5F5F7', fontSize: 18, fontWeight: '800', marginBottom: 6 },
-  modalSubtitle: { color: '#a3a3a3', fontSize: 12, marginBottom: 16, lineHeight: 17 },
+  modalSheet: { backgroundColor: '#121419', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 40 },
+  modalTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '800', marginBottom: 6 },
+  modalSubtitle: { color: '#A7AAB0', fontSize: 12, marginBottom: 16, lineHeight: 17 },
   modalCloseButton: { paddingVertical: 12, alignItems: 'center', marginTop: 8 },
-  modalCloseButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  pickerRow: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
-  pickerRowText: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  modalCloseButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
+  pickerRow: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
+  pickerRowText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
   pickerRowSubtext: { color: '#737373', fontSize: 10, marginTop: 2 },
-  saveLink: { color: '#FF6B00', fontSize: 13, fontWeight: '700' },
-  blockCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 10 },
+  saveLink: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  blockCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 12, marginBottom: 10 },
   blockHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  blockTypeLabel: { color: '#FF6B00', fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
-  blockInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 13 },
+  blockTypeLabel: { color: '#FFFFFF', fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
+  blockInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#FFFFFF', fontSize: 13 },
   blockItemRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginBottom: 6 },
   addItemButton: { alignSelf: 'flex-start', marginTop: 2 },
-  addItemButtonText: { color: '#FF6B00', fontSize: 11, fontWeight: '700' },
-  addBlockButton: { flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#2B2B36', borderStyle: 'dashed', borderRadius: 12, paddingVertical: 14, marginTop: 4 },
-  addBlockButtonText: { color: '#FF6B00', fontSize: 13, fontWeight: '700' },
+  addItemButtonText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  addBlockButton: { flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#292D34', borderStyle: 'dashed', borderRadius: 12, paddingVertical: 14, marginTop: 4 },
+  addBlockButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
 });

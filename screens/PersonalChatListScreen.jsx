@@ -83,7 +83,7 @@ export default function PersonalChatListScreen({ personalId, onClose, initialStu
       <HeaderBack title="Mensagens" onBack={onClose} />
 
       {loading ? (
-        <ActivityIndicator color="#FF6B00" style={{ marginTop: 30 }} />
+        <ActivityIndicator color="#FFFFFF" style={{ marginTop: 30 }} />
       ) : students.length === 0 ? (
         <Text style={styles.emptyText}>Convide alunos pra começar a trocar mensagens.</Text>
       ) : (
@@ -117,14 +117,14 @@ export default function PersonalChatListScreen({ personalId, onClose, initialStu
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50, paddingHorizontal: 16 },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 8 },
-  avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center', marginRight: 12, overflow: 'hidden' },
+  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 12, marginBottom: 8 },
+  avatarCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', alignItems: 'center', justifyContent: 'center', marginRight: 12, overflow: 'hidden' },
   avatarImage: { width: 44, height: 44 },
-  avatarLetter: { color: '#FF6B00', fontSize: 17, fontWeight: '800' },
-  name: { color: '#F5F5F7', fontSize: 14, fontWeight: '700' },
+  avatarLetter: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
+  name: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   preview: { color: '#737373', fontSize: 12, marginTop: 2 },
-  unreadBadge: { backgroundColor: '#FF6B00', borderRadius: 12, minWidth: 22, height: 22, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
-  unreadBadgeText: { color: '#0F0F12', fontSize: 11, fontWeight: '800' },
+  unreadBadge: { backgroundColor: '#FFFFFF', borderRadius: 12, minWidth: 22, height: 22, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+  unreadBadgeText: { color: '#08090B', fontSize: 11, fontWeight: '800' },
 });

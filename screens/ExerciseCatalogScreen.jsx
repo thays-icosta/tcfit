@@ -303,9 +303,9 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
         </TouchableOpacity>
         <TouchableOpacity style={styles.syncIconButton} onPress={handleBulkLinkVideos} disabled={bulkLinking}>
           {bulkLinking ? (
-            <ActivityIndicator color="#3b82f6" size="small" />
+            <ActivityIndicator color="#D1D5DB" size="small" />
           ) : (
-            <Ionicons name="sync-outline" size={18} color="#3b82f6" />
+            <Ionicons name="sync-outline" size={18} color="#D1D5DB" />
           )}
         </TouchableOpacity>
         <TouchableOpacity style={styles.photoIconButton} onPress={handleBulkLinkPhotos} disabled={bulkLinkingPhotos}>
@@ -391,7 +391,7 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
       </Modal>
 
       {loading ? (
-        <ActivityIndicator color="#FF6B00" style={{ marginTop: 20 }} />
+        <ActivityIndicator color="#FFFFFF" style={{ marginTop: 20 }} />
       ) : (
         <FlatList
           data={filtered}
@@ -438,7 +438,7 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
 
       {bulkLinking && (
         <View style={styles.syncToast}>
-          <ActivityIndicator color="#3b82f6" size="small" />
+          <ActivityIndicator color="#D1D5DB" size="small" />
           <Text style={styles.syncToastText}>
             Vinculando vídeos {bulkProgress.done}/{bulkProgress.total} ({bulkProgress.linked} encontrados)
           </Text>
@@ -458,56 +458,56 @@ export default function ExerciseCatalogScreen({ personalId, onFullScreenChange }
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingHorizontal: 16, paddingTop: 12 },
-  closeText: { color: '#FF6B00', fontSize: 14, fontWeight: '600' },
+  container: { flex: 1, backgroundColor: '#08090B', paddingHorizontal: 16, paddingTop: 12 },
+  closeText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
   topActionsRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   createButton: { flex: 1, backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   createButtonText: { color: '#22c55e', fontSize: 12, fontWeight: '700' },
-  syncIconButton: { width: 40, backgroundColor: 'rgba(59,130,246,0.1)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  syncIconButton: { width: 40, backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   photoIconButton: { width: 40, backgroundColor: 'rgba(34,197,94,0.1)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  syncToast: { position: 'absolute', bottom: 16, left: 16, right: 16, flexDirection: 'row', gap: 8, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
-  syncToastText: { color: '#3b82f6', fontSize: 11, fontWeight: '700', flexShrink: 1 },
-  searchInput: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: '#F5F5F7', fontSize: 13, marginBottom: 10 },
-  originToggleRow: { flexDirection: 'row', gap: 8, backgroundColor: '#0F0F12', borderRadius: 10, padding: 4, marginBottom: 10 },
+  syncToast: { position: 'absolute', bottom: 16, left: 16, right: 16, flexDirection: 'row', gap: 8, backgroundColor: '#121419', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
+  syncToastText: { color: '#D1D5DB', fontSize: 11, fontWeight: '700', flexShrink: 1 },
+  searchInput: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: '#FFFFFF', fontSize: 13, marginBottom: 10 },
+  originToggleRow: { flexDirection: 'row', gap: 8, backgroundColor: '#08090B', borderRadius: 10, padding: 4, marginBottom: 10 },
   originToggleChip: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
-  originToggleChipActive: { backgroundColor: '#FF6B00' },
-  originToggleText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
-  originToggleTextActive: { color: '#0F0F12' },
+  originToggleChipActive: { backgroundColor: '#FFFFFF' },
+  originToggleText: { color: '#A7AAB0', fontSize: 11, fontWeight: '700' },
+  originToggleTextActive: { color: '#08090B' },
   searchRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
-  filterButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 14, justifyContent: 'center' },
-  filterButtonText: { color: '#F5F5F7', fontSize: 12, fontWeight: '700' },
-  filterBadge: { backgroundColor: '#FF6B00', borderRadius: 9, width: 18, height: 18, alignItems: 'center', justifyContent: 'center' },
-  filterBadgeText: { color: '#0F0F12', fontSize: 10, fontWeight: '800' },
+  filterButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingHorizontal: 14, justifyContent: 'center' },
+  filterButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+  filterBadge: { backgroundColor: '#FFFFFF', borderRadius: 9, width: 18, height: 18, alignItems: 'center', justifyContent: 'center' },
+  filterBadgeText: { color: '#08090B', fontSize: 10, fontWeight: '800' },
   filterLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 4, marginTop: 14 },
   chipWrapRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, paddingHorizontal: 9, paddingVertical: 4, marginRight: 5, height: 24, justifyContent: 'center' },
-  chipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  chipText: { color: '#a3a3a3', fontSize: 10, fontWeight: '600' },
-  chipTextActive: { color: '#0F0F12' },
+  chip: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 16, paddingHorizontal: 9, paddingVertical: 4, marginRight: 5, height: 24, justifyContent: 'center' },
+  chipActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  chipText: { color: '#A7AAB0', fontSize: 10, fontWeight: '600' },
+  chipTextActive: { color: '#08090B' },
   filterSheetButtonRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
-  filterClearButton: { flex: 1, borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  filterClearButtonText: { color: '#a3a3a3', fontSize: 12, fontWeight: '700' },
-  filterApplyButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  filterApplyButtonText: { color: '#0F0F12', fontSize: 12, fontWeight: '700' },
+  filterClearButton: { flex: 1, borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  filterClearButtonText: { color: '#A7AAB0', fontSize: 12, fontWeight: '700' },
+  filterApplyButton: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  filterApplyButtonText: { color: '#08090B', fontSize: 12, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '85%' },
-  modalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800' },
+  modalSheet: { backgroundColor: '#121419', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '85%' },
+  modalTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
   emptyText: { color: '#525252', fontSize: 13, textAlign: 'center', marginTop: 30 },
-  exerciseCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 10, marginBottom: 8 },
+  exerciseCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 10, marginBottom: 8 },
   editHintText: { color: '#525252', fontSize: 9, fontWeight: '600', textAlign: 'center', marginLeft: 8, maxWidth: 50 },
   thumbWrap: { position: 'relative' },
   thumb: { width: 56, height: 56, borderRadius: 10 },
-  thumbPlaceholder: { width: 56, height: 56, borderRadius: 10, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
-  playBadge: { position: 'absolute', bottom: -2, right: -2, width: 20, height: 20, borderRadius: 10, backgroundColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#1C1C22' },
-  playBadgeText: { color: '#0F0F12', fontSize: 8, fontWeight: '800' },
+  thumbPlaceholder: { width: 56, height: 56, borderRadius: 10, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
+  playBadge: { position: 'absolute', bottom: -2, right: -2, width: 20, height: 20, borderRadius: 10, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#121419' },
+  playBadgeText: { color: '#08090B', fontSize: 8, fontWeight: '800' },
   exerciseNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  exerciseName: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', flexShrink: 1 },
+  exerciseName: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', flexShrink: 1 },
   customTag: { color: '#22c55e', fontSize: 9, fontWeight: '700', borderWidth: 1, borderColor: '#22c55e', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 },
   exerciseMeta: { color: '#737373', fontSize: 11, marginTop: 3, textTransform: 'capitalize' },
-  execucaoLink: { color: '#FF6B00', fontSize: 10, fontWeight: '700', marginTop: 4 },
-  gifContainer: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  execucaoLink: { color: '#FFFFFF', fontSize: 10, fontWeight: '700', marginTop: 4 },
+  gifContainer: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
   gifTopBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 16 },
-  gifTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '700', marginLeft: 16 },
+  gifTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '700', marginLeft: 16 },
   gifImageWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
-  gifImage: { width: '100%', height: 320, borderRadius: 12, backgroundColor: '#1C1C22' },
+  gifImage: { width: '100%', height: 320, borderRadius: 12, backgroundColor: '#121419' },
 });

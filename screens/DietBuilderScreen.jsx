@@ -29,7 +29,7 @@ function getMonday(d) {
 
 function buildDietHtml(studentName, dietName, meals, goals, branding) {
   const formatDate = () => new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const brandColor = '#FF6B00';
+  const brandColor = '#111111'; // printed on white paper: ink, not the on-screen white accent
 
   const mealBlocks = meals.map((meal) => {
     const foodRows = (meal.diet_meal_foods || [])
@@ -107,7 +107,7 @@ function buildDietHtml(studentName, dietName, meals, goals, branding) {
           .food-name { padding: 4px; font-size: 12px; color: #333; }
           .substitute-name { padding-left: 16px; color: #777; font-style: italic; }
           .food-macros { padding: 4px; font-size: 10px; color: #888; text-align: right; }
-          .footer { margin-top: 32px; color: #a3a3a3; font-size: 10px; text-align: center; border-top: 1px solid #eee; padding-top: 12px; }
+          .footer { margin-top: 32px; color: #A7AAB0; font-size: 10px; text-align: center; border-top: 1px solid #eee; padding-top: 12px; }
         </style>
       </head>
       <body>
@@ -539,7 +539,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#FF6B00" />
+        <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
@@ -630,7 +630,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
                 <TextInput style={styles.metaInput} keyboardType="number-pad" placeholder="60" placeholderTextColor="#525252" value={goalFat} onChangeText={setGoalFat} />
               </View>
               <TouchableOpacity style={styles.metaSaveButton} onPress={handleSaveGoals} disabled={savingGoals}>
-                {savingGoals ? <ActivityIndicator color="#FF6B00" size="small" /> : <Text style={styles.metaSaveButtonText}>Salvar</Text>}
+                {savingGoals ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={styles.metaSaveButtonText}>Salvar</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -676,7 +676,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
             )}
 
             {loadingDiary ? (
-              <ActivityIndicator color="#FF6B00" size="small" style={{ marginVertical: 10 }} />
+              <ActivityIndicator color="#FFFFFF" size="small" style={{ marginVertical: 10 }} />
             ) : checklistItems.length === 0 ? (
               <Text style={styles.emptyInnerText}>Cadastre refeições na dieta pra acompanhar aqui.</Text>
             ) : (
@@ -731,8 +731,8 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
               <Switch
                 value={exportWithBranding}
                 onValueChange={setExportWithBranding}
-                trackColor={{ false: '#2B2B36', true: '#22c55e' }}
-                thumbColor="#F5F5F7"
+                trackColor={{ false: '#292D34', true: '#22c55e' }}
+                thumbColor="#FFFFFF"
                 disabled={!branding?.logoUrl}
               />
             </View>
@@ -758,7 +758,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
             <Text style={styles.modalSubtitle}>Escolhe pra quais alunos você quer copiar essa dieta inteira (refeições, alimentos e substituições).</Text>
 
             {loadingOtherStudents ? (
-              <ActivityIndicator color="#FF6B00" style={{ marginVertical: 20 }} />
+              <ActivityIndicator color="#FFFFFF" style={{ marginVertical: 20 }} />
             ) : otherStudents.length === 0 ? (
               <Text style={styles.emptyText}>Você não tem outros alunos ainda.</Text>
             ) : (
@@ -780,7 +780,7 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
                 <Text style={styles.modalCancelButtonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalConfirmButton} onPress={handleConfirmSendDiet} disabled={sendingDiet}>
-                {sendingDiet ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>Enviar</Text>}
+                {sendingDiet ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.modalConfirmButtonText}>Enviar</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -791,73 +791,73 @@ export default function DietBuilderScreen({ studentId, studentName, personalId, 
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
-  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
+  center: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
   dietRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 4 },
-  dietTab: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
+  dietTab: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8 },
   dietTabActive: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
-  dietTabText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  dietTabTextActive: { color: '#0F0F12' },
+  dietTabText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
+  dietTabTextActive: { color: '#08090B' },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 8 },
   newDietRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 16, gap: 8 },
-  newDietInput: { flex: 1, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#F5F5F7', fontSize: 12 },
+  newDietInput: { flex: 1, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#FFFFFF', fontSize: 12 },
   addDietButton: { backgroundColor: '#22c55e', width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  addDietButtonText: { color: '#0F0F12', fontSize: 20, fontWeight: '700' },
+  addDietButtonText: { color: '#08090B', fontSize: 20, fontWeight: '700' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
   emptyInnerText: { color: '#525252', fontSize: 12, marginTop: 4, marginBottom: 4 },
   pdfRow: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginHorizontal: 16, marginBottom: 14 },
   pdfLink: { alignItems: 'center' },
   pdfLinkText: { color: '#22c55e', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
-  sendLinkText: { color: '#3b82f6', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
-  bigCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginHorizontal: 16, marginBottom: 14 },
-  bigCardTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '800', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+  sendLinkText: { color: '#D1D5DB', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
+  bigCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginHorizontal: 16, marginBottom: 14 },
+  bigCardTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '800', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
   metaInputsRow: { flexDirection: 'row', gap: 6, alignItems: 'flex-end' },
   metaField: { flex: 1 },
   metaFieldLabel: { color: '#525252', fontSize: 9, marginBottom: 4 },
-  metaInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 8, color: '#F5F5F7', fontSize: 12, textAlign: 'center' },
+  metaInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 8, color: '#FFFFFF', fontSize: 12, textAlign: 'center' },
   metaSaveButton: { paddingHorizontal: 10, paddingVertical: 9 },
-  metaSaveButtonText: { color: '#FF6B00', fontSize: 11, fontWeight: '700' },
+  metaSaveButtonText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
   dietSummaryRow: { flexDirection: 'row', alignItems: 'center' },
   dietSummaryName: { color: '#22c55e', fontSize: 15, fontWeight: '700', marginBottom: 2 },
   dietSummaryMeta: { color: '#737373', fontSize: 11 },
   editDietBadge: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  editDietBadgeText: { color: '#FF6B00', fontSize: 11, fontWeight: '700' },
-  editDietArrow: { color: '#FF6B00', fontSize: 18, fontWeight: '700' },
+  editDietBadgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  editDietArrow: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
   diaryCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  refreshLink: { color: '#FF6B00', fontSize: 10, fontWeight: '700' },
+  refreshLink: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
   trendBox: { marginBottom: 16, marginTop: 4 },
   trendTitle: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 8 },
   trendBarsRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end', height: 70 },
   trendBarColumn: { alignItems: 'center', flex: 1 },
-  trendBarTrack: { width: 20, height: 50, backgroundColor: '#0F0F12', borderRadius: 4, justifyContent: 'flex-end', overflow: 'hidden' },
-  trendBarFill: { width: '100%', backgroundColor: '#3b82f6', borderRadius: 4 },
+  trendBarTrack: { width: 20, height: 50, backgroundColor: '#08090B', borderRadius: 4, justifyContent: 'flex-end', overflow: 'hidden' },
+  trendBarFill: { width: '100%', backgroundColor: '#D1D5DB', borderRadius: 4 },
   trendBarPct: { color: '#525252', fontSize: 9, marginTop: 4 },
-  adherenceText: { color: '#F5F5F7', fontSize: 12, fontWeight: '600', marginBottom: 8 },
-  adherenceBarTrack: { height: 8, backgroundColor: '#0F0F12', borderRadius: 4, overflow: 'hidden', marginBottom: 14 },
+  adherenceText: { color: '#FFFFFF', fontSize: 12, fontWeight: '600', marginBottom: 8 },
+  adherenceBarTrack: { height: 8, backgroundColor: '#08090B', borderRadius: 4, overflow: 'hidden', marginBottom: 14 },
   adherenceBarFill: { height: '100%', backgroundColor: '#22c55e', borderRadius: 4 },
   checklistRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  checklistDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center' },
+  checklistDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#292D34', alignItems: 'center', justifyContent: 'center' },
   checklistDotDone: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
-  checklistCheck: { color: '#0F0F12', fontSize: 12, fontWeight: '800' },
-  checklistMealName: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
+  checklistCheck: { color: '#08090B', fontSize: 12, fontWeight: '800' },
+  checklistMealName: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
   checklistDetail: { color: '#525252', fontSize: 10, marginTop: 1 },
-  saveButton: { backgroundColor: '#FF6B00', margin: 16, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
+  saveButton: { backgroundColor: '#FFFFFF', margin: 16, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  saveButtonText: { color: '#08090B', fontSize: 15, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
-  modalCard: { backgroundColor: '#1C1C22', borderRadius: 16, padding: 20 },
-  modalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 12 },
+  modalCard: { backgroundColor: '#121419', borderRadius: 16, padding: 20 },
+  modalTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', marginBottom: 12 },
   brandingToggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  brandingToggleLabel: { color: '#F5F5F7', fontSize: 13, fontWeight: '600', flexShrink: 1, marginRight: 8 },
+  brandingToggleLabel: { color: '#FFFFFF', fontSize: 13, fontWeight: '600', flexShrink: 1, marginRight: 8 },
   brandingToggleHint: { color: '#525252', fontSize: 10, marginTop: 8, lineHeight: 14 },
-  modalSubtitle: { color: '#a3a3a3', fontSize: 11, marginBottom: 16, lineHeight: 16 },
+  modalSubtitle: { color: '#A7AAB0', fontSize: 11, marginBottom: 16, lineHeight: 16 },
   modalButtonRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
-  modalCancelButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  modalCancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  modalConfirmButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  modalConfirmButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
-  sendModalSheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '80%' },
-  targetRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
-  targetRowSelected: { borderColor: '#3b82f6' },
-  targetRowText: { color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
-  targetRowCheck: { color: '#3b82f6', fontSize: 15, fontWeight: '800' },
+  modalCancelButton: { flex: 1, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalCancelButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
+  modalConfirmButton: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalConfirmButtonText: { color: '#08090B', fontSize: 13, fontWeight: '700' },
+  sendModalSheet: { backgroundColor: '#121419', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxHeight: '80%' },
+  targetRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
+  targetRowSelected: { borderColor: '#D1D5DB' },
+  targetRowText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
+  targetRowCheck: { color: '#D1D5DB', fontSize: 15, fontWeight: '800' },
 });

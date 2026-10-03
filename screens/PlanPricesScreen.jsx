@@ -159,7 +159,7 @@ export default function PlanPricesScreen({ onClose }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#FF6B00" />
+        <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
@@ -188,7 +188,7 @@ export default function PlanPricesScreen({ onClose }) {
           <Text style={styles.fieldLabel}>Foto de Banner (topo do card na vitrine)</Text>
           <TouchableOpacity style={styles.coverPicker} onPress={() => handlePickCover(plan.plan_key)} disabled={uploadingPlanKey === plan.plan_key}>
             {uploadingPlanKey === plan.plan_key ? (
-              <ActivityIndicator color="#FF6B00" />
+              <ActivityIndicator color="#FFFFFF" />
             ) : plan.coverImageUrl ? (
               <Image source={{ uri: plan.coverImageUrl }} style={styles.coverPreview} resizeMode="cover" />
             ) : (
@@ -311,8 +311,8 @@ export default function PlanPricesScreen({ onClose }) {
             <Switch
               value={plan.isFeatured}
               onValueChange={(v) => handleChange(plan.plan_key, 'isFeatured', v)}
-              trackColor={{ false: '#2B2B36', true: '#a855f7' }}
-              thumbColor="#F5F5F7"
+              trackColor={{ false: '#292D34', true: '#D1D5DB' }}
+              thumbColor="#FFFFFF"
             />
           </View>
 
@@ -321,8 +321,8 @@ export default function PlanPricesScreen({ onClose }) {
             <Switch
               value={plan.isPublic}
               onValueChange={(v) => handleChange(plan.plan_key, 'isPublic', v)}
-              trackColor={{ false: '#2B2B36', true: '#22c55e' }}
-              thumbColor="#F5F5F7"
+              trackColor={{ false: '#292D34', true: '#22c55e' }}
+              thumbColor="#FFFFFF"
             />
           </View>
         </View>
@@ -333,40 +333,40 @@ export default function PlanPricesScreen({ onClose }) {
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.saveButton} onPress={handleSaveWithLoading} disabled={saving}>
-        {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar Tudo</Text>}
+        {saving ? <ActivityIndicator color="#08090B" /> : <Text style={styles.saveButtonText}>Salvar Tudo</Text>}
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
-  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50, paddingHorizontal: 16 },
+  center: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
   hint: { color: '#737373', fontSize: 11, marginBottom: 20, lineHeight: 16 },
-  planCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 16 },
+  planCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 16 },
   planCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  nameInput: { flex: 1, color: '#F5F5F7', fontSize: 15, fontWeight: '800', borderBottomWidth: 1, borderBottomColor: '#2B2B36', paddingBottom: 6 },
+  nameInput: { flex: 1, color: '#FFFFFF', fontSize: 15, fontWeight: '800', borderBottomWidth: 1, borderBottomColor: '#292D34', paddingBottom: 6 },
   deleteLink: { fontSize: 16 },
   fieldLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6, marginTop: 14 },
-  coverPicker: { width: '100%', height: 120, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  coverPicker: { width: '100%', height: 120, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   coverPreview: { width: '100%', height: '100%' },
-  coverPickerText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  input: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, color: '#F5F5F7', fontSize: 14 },
+  coverPickerText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
+  input: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, color: '#FFFFFF', fontSize: 14 },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  currencyPrefix: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  priceInput: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, color: '#F5F5F7', fontSize: 14 },
-  bulletsInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13, minHeight: 70, textAlignVertical: 'top' },
-  messageInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 13, minHeight: 50, textAlignVertical: 'top' },
+  currencyPrefix: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
+  priceInput: { flex: 1, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, color: '#FFFFFF', fontSize: 14 },
+  bulletsInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#FFFFFF', fontSize: 13, minHeight: 70, textAlignVertical: 'top' },
+  messageInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#FFFFFF', fontSize: 13, minHeight: 50, textAlignVertical: 'top' },
   smallHint: { color: '#525252', fontSize: 9, marginTop: 4, lineHeight: 13 },
   audienceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  audienceChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  audienceChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  audienceChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  audienceChipTextActive: { color: '#0F0F12' },
+  audienceChip: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  audienceChipActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  audienceChipText: { color: '#A7AAB0', fontSize: 11, fontWeight: '600' },
+  audienceChipTextActive: { color: '#08090B' },
   featuredRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 },
-  featuredLabel: { color: '#F5F5F7', fontSize: 12, fontWeight: '600', flexShrink: 1, marginRight: 8 },
-  addPlanButton: { borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 16 },
-  addPlanButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700' },
-  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
-  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
+  featuredLabel: { color: '#FFFFFF', fontSize: 12, fontWeight: '600', flexShrink: 1, marginRight: 8 },
+  addPlanButton: { borderWidth: 1, borderColor: '#292D34', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 16 },
+  addPlanButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '700' },
+  saveButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
+  saveButtonText: { color: '#08090B', fontSize: 15, fontWeight: '700' },
 });

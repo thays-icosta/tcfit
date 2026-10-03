@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import { ACCENT } from './theme';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 
-const ACCENT = '#FF6B00';
 
 // Shared "quick-add water + adjust daily goal" popup, opened from the
 // Água mini-card on both the aluno's own Home and the personal's
@@ -59,7 +59,7 @@ export default function WaterLogModal({ visible, studentId, currentMl, goalMl, o
               placeholderTextColor="#525252"
             />
             <TouchableOpacity style={styles.saveGoalButton} onPress={handleSaveGoal} disabled={savingGoal}>
-              {savingGoal ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.saveGoalButtonText}>Salvar</Text>}
+              {savingGoal ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.saveGoalButtonText}>Salvar</Text>}
             </TouchableOpacity>
           </View>
 
@@ -74,17 +74,17 @@ export default function WaterLogModal({ visible, studentId, currentMl, goalMl, o
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#1C1C22', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40 },
-  title: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 6 },
-  currentText: { color: '#5EC8D8', fontSize: 13, fontWeight: '700', marginBottom: 16 },
+  sheet: { backgroundColor: '#121419', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40 },
+  title: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', marginBottom: 6 },
+  currentText: { color: '#D1D5DB', fontSize: 13, fontWeight: '700', marginBottom: 16 },
   buttonsRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  addButton: { flex: 1, backgroundColor: 'rgba(94,200,216,0.12)', borderWidth: 1, borderColor: '#5EC8D8', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  addButtonText: { color: '#5EC8D8', fontSize: 13, fontWeight: '700' },
+  addButton: { flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  addButtonText: { color: '#D1D5DB', fontSize: 13, fontWeight: '700' },
   goalLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 6 },
   goalRow: { flexDirection: 'row', gap: 8 },
-  goalInput: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#F5F5F7', fontSize: 13 },
+  goalInput: { flex: 1, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, color: '#FFFFFF', fontSize: 13 },
   saveGoalButton: { backgroundColor: ACCENT, borderRadius: 8, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
-  saveGoalButtonText: { color: '#0F0F12', fontSize: 12, fontWeight: '700' },
+  saveGoalButtonText: { color: '#08090B', fontSize: 12, fontWeight: '700' },
   closeButton: { paddingVertical: 12, alignItems: 'center', marginTop: 16 },
-  closeButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
+  closeButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
 });

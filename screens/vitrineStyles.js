@@ -4,7 +4,8 @@ import { Platform } from 'react-native';
 // (WelcomeScreen, PlansSection, MaterialsSection, WorkoutsSection),
 // so every section/card uses the same typography scale and card shell.
 
-export const ACCENT = '#FF6B00';
+import { ACCENT } from './theme';
+export { ACCENT };
 
 export const TRANSITION = Platform.OS === 'web'
   ? { transitionProperty: 'all', transitionDuration: '200ms', transitionTimingFunction: 'ease' }
@@ -30,16 +31,16 @@ export function coverFocalImageStyle(focalPosition) {
 // transparent fill, which still reads fine over the dark background). Spread
 // this after a style's own backgroundColor/borderColor so it wins.
 export const GLASS_CARD = {
-  backgroundColor: 'rgba(28,28,34,0.65)',
+  backgroundColor: 'rgba(18,20,25,0.65)',
   borderColor: 'rgba(255,255,255,0.08)',
   backdropFilter: 'blur(16px)',
 };
 
-// Flat, uniform card shell: #18181B background, 1px #27272A border, 16px radius, 20px padding.
+// Flat, uniform card shell: #121419 background, 1px #292D34 border, 16px radius, 20px padding.
 export const FLAT_CARD = {
-  backgroundColor: '#18181B',
+  backgroundColor: '#121419',
   borderWidth: 1,
-  borderColor: '#27272A',
+  borderColor: '#292D34',
   borderRadius: 16,
   padding: 20,
 };
@@ -70,7 +71,7 @@ export const SUPPORT_TEXT = {
 export const CARD_DESCRIPTION = { fontSize: 12, fontWeight: '400', color: '#A1A1AA', lineHeight: 17 };
 
 export const CARD_BADGE = {
-  backgroundColor: 'rgba(255,107,0,0.12)',
+  backgroundColor: 'rgba(255,255,255,0.08)',
   borderRadius: 8,
   paddingHorizontal: 8,
   paddingVertical: 3,

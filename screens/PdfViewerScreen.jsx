@@ -23,10 +23,10 @@ export default function PdfViewerScreen({ fileUrl, title, onClose }) {
       </View>
       <View style={{ flex: 1 }}>
         {useInlineViewer ? (
-          <iframe src={fileUrl} style={{ width: '100%', height: '100%', border: 'none', background: '#0F0F12' }} title={title || 'PDF'} />
+          <iframe src={fileUrl} style={{ width: '100%', height: '100%', border: 'none', background: '#08090B' }} title={title || 'PDF'} />
         ) : (
           <View style={styles.fallbackWrap}>
-            <Ionicons name="document-text-outline" size={40} color="#FF6B00" />
+            <Ionicons name="document-text-outline" size={40} color="#FFFFFF" />
             <Text style={styles.fallbackText}>Esse guia abre melhor no visualizador do seu celular.</Text>
             <TouchableOpacity style={styles.fallbackButton} onPress={() => Linking.openURL(fileUrl).catch(() => {})}>
               <Text style={styles.fallbackButtonText}>Abrir Guia</Text>
@@ -39,12 +39,12 @@ export default function PdfViewerScreen({ fileUrl, title, onClose }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12' },
+  container: { flex: 1, backgroundColor: '#08090B' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingTop: 50, paddingHorizontal: 16, paddingBottom: 14 },
-  backText: { color: '#FF6B00', fontSize: 15, fontWeight: '700' },
-  title: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', flex: 1 },
+  backText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  title: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', flex: 1 },
   fallbackWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30 },
-  fallbackText: { color: '#a3a3a3', fontSize: 13, textAlign: 'center', marginTop: 14, marginBottom: 20, lineHeight: 19 },
-  fallbackButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 28, alignItems: 'center' },
-  fallbackButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
+  fallbackText: { color: '#A7AAB0', fontSize: 13, textAlign: 'center', marginTop: 14, marginBottom: 20, lineHeight: 19 },
+  fallbackButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 28, alignItems: 'center' },
+  fallbackButtonText: { color: '#08090B', fontSize: 14, fontWeight: '800' },
 });

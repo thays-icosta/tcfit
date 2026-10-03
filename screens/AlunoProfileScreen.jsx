@@ -300,7 +300,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#FF6B00" />
+        <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
@@ -313,7 +313,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
         <TouchableOpacity onPress={handlePickAvatar} disabled={uploadingAvatar}>
           <View style={styles.avatarCircle}>
             {uploadingAvatar ? (
-              <ActivityIndicator color="#FF6B00" />
+              <ActivityIndicator color="#FFFFFF" />
             ) : avatarUrl ? (
               <Image key={avatarUrl} source={{ uri: avatarUrl }} style={styles.avatarImage} resizeMode="cover" />
             ) : (
@@ -328,18 +328,18 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
       </View>
 
       <View style={styles.shortcutsGrid}>
-        <TouchableOpacity style={[styles.shortcutCard, styles.shortcutCardOrange, styles.shortcutCardWide]} onPress={() => setShowVolume(true)}>
-          <Ionicons name="barbell-outline" size={24} color="#FF6B00" />
+        <TouchableOpacity style={[styles.shortcutCard, styles.shortcutCardHighlight, styles.shortcutCardWide]} onPress={() => setShowVolume(true)}>
+          <Ionicons name="barbell-outline" size={24} color="#FFFFFF" />
           <Text style={styles.shortcutCardText}>Meu Histórico de Treinos</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.shortcutCard, styles.shortcutCardPurple, styles.shortcutCardWide]} onPress={() => setShowPeriodization(true)}>
-          <Ionicons name="calendar-outline" size={24} color="#a855f7" />
+          <Ionicons name="calendar-outline" size={24} color="#D1D5DB" />
           <Text style={styles.shortcutCardText}>Minha Periodização de Treino</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.shortcutCard, styles.shortcutCardOrange, styles.shortcutCardWide]} onPress={() => setShowAnamnese(true)}>
-          <Ionicons name="clipboard-outline" size={24} color="#FF6B00" />
+        <TouchableOpacity style={[styles.shortcutCard, styles.shortcutCardHighlight, styles.shortcutCardWide]} onPress={() => setShowAnamnese(true)}>
+          <Ionicons name="clipboard-outline" size={24} color="#FFFFFF" />
           <Text style={styles.shortcutCardText}>Minha Anamnese</Text>
         </TouchableOpacity>
       </View>
@@ -355,7 +355,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
             </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.referralShareButton} onPress={handleShareReferral}>
-            <Ionicons name="share-social-outline" size={14} color="#FF6B00" />
+            <Ionicons name="share-social-outline" size={14} color="#FFFFFF" />
             <Text style={styles.referralShareButtonText}>Compartilhar código</Text>
           </TouchableOpacity>
         </View>
@@ -363,7 +363,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
 
       {accessLevel !== 'consultoria_vip' && (
         <TouchableOpacity style={styles.upsellBanner} onPress={() => setLockModalFeature('a Consultoria Individualizada')}>
-          <Ionicons name="star-outline" size={16} color="#FF6B00" />
+          <Ionicons name="star-outline" size={16} color="#FFFFFF" />
           <Text style={styles.upsellBannerText}>Quer um treino 100% personalizado{personalName ? ` feito por ${personalName}` : ''}? Fazer Upgrade para Consultoria</Text>
         </TouchableOpacity>
       )}
@@ -371,14 +371,14 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
       <View style={styles.reminderCard}>
         <View style={styles.reminderHeader}>
           <View style={styles.reminderTitleRow}>
-            <Ionicons name="notifications-outline" size={16} color="#F5F5F7" />
+            <Ionicons name="notifications-outline" size={16} color="#FFFFFF" />
             <Text style={styles.reminderTitle}>Lembrete diário de treino</Text>
           </View>
           <Switch
             value={reminderEnabled}
             onValueChange={handleToggleReminder}
-            trackColor={{ false: '#2B2B36', true: '#FF6B00' }}
-            thumbColor="#F5F5F7"
+            trackColor={{ false: '#292D34', true: '#FFFFFF' }}
+            thumbColor="#FFFFFF"
           />
         </View>
 
@@ -400,7 +400,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
               ))}
             </View>
             <TouchableOpacity style={styles.reminderSaveButton} onPress={handleSaveReminder} disabled={savingReminder}>
-              {savingReminder ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.reminderSaveButtonText}>Salvar horário</Text>}
+              {savingReminder ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.reminderSaveButtonText}>Salvar horário</Text>}
             </TouchableOpacity>
           </>
         )}
@@ -437,7 +437,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
         <Text style={styles.helperText}>Usado para calcular calorias reais gastas no treino. Também é atualizado automaticamente quando o personal registra uma avaliação física.</Text>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator color="#0F0F12" /> : <Text style={styles.saveButtonText}>Salvar Alterações</Text>}
+          {saving ? <ActivityIndicator color="#08090B" /> : <Text style={styles.saveButtonText}>Salvar Alterações</Text>}
         </TouchableOpacity>
       </View>
 
@@ -465,7 +465,7 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
                 <Text style={styles.modalCancelButtonText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalConfirmButton} onPress={handleChangePassword} disabled={savingPassword}>
-                {savingPassword ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.modalConfirmButtonText}>Salvar</Text>}
+                {savingPassword ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.modalConfirmButtonText}>Salvar</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -519,73 +519,73 @@ export default function AlunoProfileScreen({ user, onClose, onLogout }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50, paddingHorizontal: 16 },
-  center: { flex: 1, backgroundColor: '#0F0F12', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50, paddingHorizontal: 16 },
+  center: { flex: 1, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center' },
   avatarBox: { alignItems: 'center', marginBottom: 20 },
-  avatarCircle: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#1C1C22', borderWidth: 2, borderColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarCircle: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#121419', borderWidth: 2, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImage: { width: 88, height: 88 },
-  avatarLetter: { color: '#FF6B00', fontSize: 32, fontWeight: '800' },
-  avatarEditBadge: { position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: '#FF6B00', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#0F0F12' },
+  avatarLetter: { color: '#FFFFFF', fontSize: 32, fontWeight: '800' },
+  avatarEditBadge: { position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#08090B' },
   avatarEditIcon: { fontSize: 12 },
   avatarHint: { color: '#525252', fontSize: 10, marginTop: 8 },
   shortcutsGrid: { gap: 10, marginBottom: 16 },
-  referralCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#FF6B00', borderRadius: 14, padding: 16, marginBottom: 16 },
-  referralTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '800' },
-  referralSubtitle: { color: '#a3a3a3', fontSize: 11, marginTop: 6, marginBottom: 14, lineHeight: 16 },
-  referralCodeRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#0F0F12', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12 },
-  referralCodeText: { flex: 1, color: '#FF6B00', fontSize: 18, fontWeight: '800', letterSpacing: 2 },
-  referralCopyButton: { backgroundColor: '#FF6B00', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
-  referralCopyButtonText: { color: '#0F0F12', fontSize: 11, fontWeight: '700' },
+  referralCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 14, padding: 16, marginBottom: 16 },
+  referralTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  referralSubtitle: { color: '#A7AAB0', fontSize: 11, marginTop: 6, marginBottom: 14, lineHeight: 16 },
+  referralCodeRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#08090B', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12 },
+  referralCodeText: { flex: 1, color: '#FFFFFF', fontSize: 18, fontWeight: '800', letterSpacing: 2 },
+  referralCopyButton: { backgroundColor: '#FFFFFF', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
+  referralCopyButtonText: { color: '#08090B', fontSize: 11, fontWeight: '700' },
   referralShareButton: { flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', marginTop: 10, paddingVertical: 8 },
-  referralShareButtonText: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
-  upsellBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(255,107,0,0.08)', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 16 },
-  upsellBannerText: { flex: 1, color: '#a3a3a3', fontSize: 11, fontWeight: '600', lineHeight: 16 },
+  referralShareButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+  upsellBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 16 },
+  upsellBannerText: { flex: 1, color: '#A7AAB0', fontSize: 11, fontWeight: '600', lineHeight: 16 },
   shortcutCard: { flex: 1, borderWidth: 1, borderRadius: 14, paddingVertical: 18, alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 90, position: 'relative' },
   shortcutCardWide: { flex: undefined, width: '100%' },
-  shortcutCardPurple: { backgroundColor: 'rgba(168,85,247,0.12)', borderColor: '#a855f7' },
-  shortcutCardOrange: { backgroundColor: 'rgba(255,107,0,0.12)', borderColor: '#FF6B00' },
-  shortcutCardText: { color: '#F5F5F7', fontSize: 12, fontWeight: '700', textAlign: 'center' },
-  reminderCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 16 },
+  shortcutCardPurple: { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: '#D1D5DB' },
+  shortcutCardHighlight: { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: '#FFFFFF' },
+  shortcutCardText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700', textAlign: 'center' },
+  reminderCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 16 },
   reminderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   reminderTitleRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  reminderTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  reminderTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   reminderLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 4, marginTop: 12 },
-  reminderInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 14, textAlign: 'center' },
+  reminderInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#FFFFFF', fontSize: 14, textAlign: 'center' },
   presetRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
-  presetChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 },
-  presetChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  reminderSaveButton: { backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginTop: 12 },
-  reminderSaveButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
-  formCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14 },
+  presetChip: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 },
+  presetChipText: { color: '#A7AAB0', fontSize: 11, fontWeight: '600' },
+  reminderSaveButton: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 11, alignItems: 'center', marginTop: 12 },
+  reminderSaveButtonText: { color: '#08090B', fontSize: 13, fontWeight: '700' },
+  formCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14 },
   label: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 4, marginTop: 12 },
-  input: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 14 },
+  input: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#FFFFFF', fontSize: 14 },
   inputDisabled: { color: '#525252' },
   helperText: { color: '#525252', fontSize: 10, marginTop: 4, lineHeight: 14 },
-  saveButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
-  saveButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '700' },
+  saveButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 24 },
+  saveButtonText: { color: '#08090B', fontSize: 15, fontWeight: '700' },
   securitySection: { marginTop: 24 },
   securityTitle: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 10 },
-  changePasswordButton: { borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
-  changePasswordButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '700' },
+  changePasswordButton: { borderWidth: 1, borderColor: '#292D34', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
+  changePasswordButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '700' },
   deleteAccountButton: { borderWidth: 1, borderColor: '#ef4444', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   deleteAccountButtonText: { color: '#ef4444', fontSize: 13, fontWeight: '700' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', paddingHorizontal: 24 },
-  modalCard: { backgroundColor: '#1C1C22', borderRadius: 16, padding: 20 },
-  modalTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '800', marginBottom: 12 },
+  modalCard: { backgroundColor: '#121419', borderRadius: 16, padding: 20 },
+  modalTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', marginBottom: 12 },
   modalLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase', marginBottom: 4, marginTop: 8 },
-  modalInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 14 },
+  modalInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#FFFFFF', fontSize: 14 },
   modalButtonRow: { flexDirection: 'row', gap: 8, marginTop: 20 },
-  modalCancelButton: { flex: 1, backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  modalCancelButtonText: { color: '#a3a3a3', fontSize: 13, fontWeight: '600' },
-  modalConfirmButton: { flex: 1, backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
-  modalConfirmButtonText: { color: '#0F0F12', fontSize: 13, fontWeight: '700' },
+  modalCancelButton: { flex: 1, backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalCancelButtonText: { color: '#A7AAB0', fontSize: 13, fontWeight: '600' },
+  modalConfirmButton: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  modalConfirmButtonText: { color: '#08090B', fontSize: 13, fontWeight: '700' },
   deleteModalCard: { borderWidth: 1, borderColor: '#ef4444' },
   deleteModalTitle: { color: '#ef4444', fontSize: 16, fontWeight: '800', textAlign: 'center', marginBottom: 10 },
-  deleteModalText: { color: '#a3a3a3', fontSize: 12, textAlign: 'center', lineHeight: 18, marginBottom: 14 },
-  deleteModalInstruction: { color: '#F5F5F7', fontSize: 12, textAlign: 'center', marginBottom: 10 },
+  deleteModalText: { color: '#A7AAB0', fontSize: 12, textAlign: 'center', lineHeight: 18, marginBottom: 14 },
+  deleteModalInstruction: { color: '#FFFFFF', fontSize: 12, textAlign: 'center', marginBottom: 10 },
   deleteModalWord: { color: '#ef4444', fontWeight: '800' },
-  deleteModalInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#ef4444', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#F5F5F7', fontSize: 14, textAlign: 'center', fontWeight: '700', letterSpacing: 1 },
+  deleteModalInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#ef4444', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 10, color: '#FFFFFF', fontSize: 14, textAlign: 'center', fontWeight: '700', letterSpacing: 1 },
   deleteFinalButton: { backgroundColor: '#ef4444' },
   deleteFinalButtonDisabled: { backgroundColor: '#3a1414', opacity: 0.5 },
-  deleteFinalButtonText: { color: '#F5F5F7', fontSize: 12, fontWeight: '800' },
+  deleteFinalButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' },
 });

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ACCENT } from './theme';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, FlatList, ScrollView, Image, TextInput, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
@@ -33,7 +34,6 @@ import ProductDetailModal from './ProductDetailModal';
 import CollapsibleSection, { animateNextLayout } from './CollapsibleSection';
 import { getJsonPref, setJsonPref } from './localPrefs';
 
-const ACCENT = '#FF6B00';
 
 // Same convention as WeeklyPlanScreen/WorkoutBuilderScreen: value matches JS
 // Date.getDay() (0 = Sunday), ordered Mon→Sun here only for display.
@@ -794,7 +794,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                     )}
                     {!unlocked && (
                       <View style={styles.categoryLockOverlay}>
-                        <Ionicons name="lock-closed" size={14} color="#F5F5F7" />
+                        <Ionicons name="lock-closed" size={14} color="#FFFFFF" />
                       </View>
                     )}
                   </View>
@@ -853,7 +853,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                     )}
                     {!unlocked && (
                       <View style={styles.categoryLockOverlay}>
-                        <Ionicons name="lock-closed" size={14} color="#F5F5F7" />
+                        <Ionicons name="lock-closed" size={14} color="#FFFFFF" />
                       </View>
                     )}
                   </View>
@@ -914,7 +914,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                       )}
                       {!unlocked && (
                         <View style={styles.categoryLockOverlay}>
-                          <Ionicons name="lock-closed" size={14} color="#F5F5F7" />
+                          <Ionicons name="lock-closed" size={14} color="#FFFFFF" />
                         </View>
                       )}
                     </View>
@@ -1064,7 +1064,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                               )}
                               {locked && (
                                 <View style={styles.categoryLockOverlay}>
-                                  <Ionicons name="lock-closed" size={14} color="#F5F5F7" />
+                                  <Ionicons name="lock-closed" size={14} color="#FFFFFF" />
                                 </View>
                               )}
                             </View>
@@ -1183,7 +1183,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
 
             <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
               {loadingMeals ? (
-                <ActivityIndicator color="#FF6B00" style={{ marginTop: 10 }} />
+                <ActivityIndicator color="#FFFFFF" style={{ marginTop: 10 }} />
               ) : mealsForActiveDiet.length === 0 ? (
                 <Text style={styles.emptyText}>Nenhuma refeição prescrita ainda.</Text>
               ) : (
@@ -1245,10 +1245,10 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                                     disabled={registeringKey === mainKey}
                                   >
                                     {registeringKey === mainKey ? (
-                                      <ActivityIndicator color="#FF6B00" size="small" />
+                                      <ActivityIndicator color="#FFFFFF" size="small" />
                                     ) : (
                                       <View style={styles.consumedBadge}>
-                                        <Ionicons name="checkmark-outline" size={12} color="#FF6B00" />
+                                        <Ionicons name="checkmark-outline" size={12} color="#FFFFFF" />
                                         <Text style={styles.consumedBadgeText}>Consumi</Text>
                                       </View>
                                     )}
@@ -1272,10 +1272,10 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                                               disabled={registeringKey === subKey}
                                             >
                                               {registeringKey === subKey ? (
-                                                <ActivityIndicator color="#FF6B00" size="small" />
+                                                <ActivityIndicator color="#FFFFFF" size="small" />
                                               ) : (
                                                 <View style={styles.consumedBadge}>
-                                                  <Ionicons name="checkmark-outline" size={12} color="#FF6B00" />
+                                                  <Ionicons name="checkmark-outline" size={12} color="#FFFFFF" />
                                                   <Text style={styles.consumedBadgeText}>Consumi</Text>
                                                 </View>
                                               )}
@@ -1321,7 +1321,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
               >
                 <View style={styles.resumoDoDiaBody}>
                   {[
-                    { label: 'Proteína', value: consumedTotals.protein, goal: diets[0]?.goal_protein_g, unit: 'g', color: '#a3a3a3' },
+                    { label: 'Proteína', value: consumedTotals.protein, goal: diets[0]?.goal_protein_g, unit: 'g', color: '#A7AAB0' },
                     { label: 'Carboidrato', value: consumedTotals.carbs, goal: diets[0]?.goal_carbs_g, unit: 'g', color: '#eab308' },
                     { label: 'Gordura', value: consumedTotals.fat, goal: diets[0]?.goal_fat_g, unit: 'g', color: '#ef4444' },
                   ].map((macro) => (
@@ -1356,7 +1356,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                       </Text>
                     </View>
                     <TouchableOpacity style={styles.mealDiaryAddButton} onPress={() => setAddingFoodForMeal(m.value)}>
-                      <Ionicons name="add" size={14} color="#FF6B00" />
+                      <Ionicons name="add" size={14} color="#FFFFFF" />
                       <Text style={styles.mealDiaryAddButtonText}>Adicionar</Text>
                     </TouchableOpacity>
                   </View>
@@ -1388,7 +1388,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
               >
                 <View style={{ marginTop: 10 }}>
                   <View style={styles.macroBarTrack}>
-                    <View style={[styles.macroBarFill, { width: `${Math.min(100, (waterMl / (waterGoalMl || 2000)) * 100)}%`, backgroundColor: '#5EC8D8' }]} />
+                    <View style={[styles.macroBarFill, { width: `${Math.min(100, (waterMl / (waterGoalMl || 2000)) * 100)}%`, backgroundColor: '#D1D5DB' }]} />
                   </View>
                   <View style={styles.waterButtonsRow}>
                     <TouchableOpacity style={styles.waterButton} onPress={() => handleAddWater(250)}>
@@ -1418,7 +1418,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                     multiline
                   />
                   <TouchableOpacity style={styles.noteSaveButton} onPress={handleSaveNote} disabled={savingNote}>
-                    {savingNote ? <ActivityIndicator color="#0F0F12" size="small" /> : <Text style={styles.noteSaveButtonText}>Salvar</Text>}
+                    {savingNote ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.noteSaveButtonText}>Salvar</Text>}
                   </TouchableOpacity>
                 </>
               ) : (
@@ -1621,7 +1621,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
         rightSlot={
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TouchableOpacity style={styles.iconButton} onPress={() => setMode('agenda')}>
-              <Ionicons name="calendar-outline" size={20} color="#a3a3a3" />
+              <Ionicons name="calendar-outline" size={20} color="#A7AAB0" />
             </TouchableOpacity>
           </View>
         }
@@ -1660,7 +1660,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 <Text style={styles.heroWorkoutMeta}>{heroWorkoutExerciseCount} exercício{heroWorkoutExerciseCount !== 1 ? 's' : ''}</Text>
               )}
               <TouchableOpacity style={styles.heroWorkoutButton} onPress={() => setPlayingWorkout(heroWorkout)}>
-                <Ionicons name="play" size={18} color="#0F0F12" />
+                <Ionicons name="play" size={18} color="#08090B" />
                 <Text style={styles.heroWorkoutButtonText}>Começar Treino</Text>
               </TouchableOpacity>
             </TouchableOpacity>
@@ -1682,7 +1682,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 </View>
               )}
               <TouchableOpacity style={styles.heroWorkoutButton} onPress={() => setPlayingWorkout(heroWorkout)}>
-                <Ionicons name="play" size={18} color="#0F0F12" />
+                <Ionicons name="play" size={18} color="#08090B" />
                 <Text style={styles.heroWorkoutButtonText}>Continuar</Text>
               </TouchableOpacity>
             </TouchableOpacity>
@@ -1701,7 +1701,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                 {heroSessionDurationMin != null ? ` · ${heroSessionDurationMin} min` : ''}
               </Text>
               <TouchableOpacity style={[styles.heroWorkoutButton, styles.heroWorkoutButtonDone]} onPress={() => setPreviewWorkout(heroWorkout)}>
-                <Ionicons name="checkmark-circle" size={18} color="#0F0F12" />
+                <Ionicons name="checkmark-circle" size={18} color="#08090B" />
                 <Text style={styles.heroWorkoutButtonText}>Ver Resumo</Text>
               </TouchableOpacity>
             </TouchableOpacity>
@@ -1715,7 +1715,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
                   <Text style={styles.heroWorkoutName}>Escolha seu primeiro treino</Text>
                   <Text style={styles.heroWorkoutMeta}>Veja a biblioteca de programas na aba Treinos e comece agora.</Text>
                   <TouchableOpacity style={styles.heroWorkoutButton} onPress={() => setActiveTab('treinos')}>
-                    <Ionicons name="albums-outline" size={18} color="#0F0F12" />
+                    <Ionicons name="albums-outline" size={18} color="#08090B" />
                     <Text style={styles.heroWorkoutButtonText}>Ver Programas</Text>
                   </TouchableOpacity>
                 </>
@@ -1731,7 +1731,7 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
           {showRotationOffer && (
             <View style={styles.rotationBanner}>
               <View style={styles.financeBannerRow}>
-                <Ionicons name="refresh-outline" size={16} color="#3b82f6" />
+                <Ionicons name="refresh-outline" size={16} color="#D1D5DB" />
                 <Text style={styles.rotationBannerText}>
                   Você está há {programWeeksActive} semanas no mesmo ciclo de treino. Bora renovar sua ficha?
                 </Text>
@@ -1775,12 +1775,12 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
               <View style={styles.payButtonsRow}>
                 {personalPixKey && (
                   <TouchableOpacity style={styles.copyPixButton} onPress={handleCopyPix}>
-                    <Ionicons name={pixCopied ? 'checkmark-outline' : 'copy-outline'} size={14} color="#3b82f6" />
+                    <Ionicons name={pixCopied ? 'checkmark-outline' : 'copy-outline'} size={14} color="#D1D5DB" />
                     <Text style={styles.copyPixButtonText}>{pixCopied ? 'Copiado!' : 'Copiar Pix'}</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity style={[styles.payButton, isOverdue && styles.payButtonOverdue]} onPress={handleRealizarPagamento}>
-                  <Ionicons name="logo-whatsapp" size={14} color="#0F0F12" />
+                  <Ionicons name="logo-whatsapp" size={14} color="#08090B" />
                   <Text style={styles.payButtonText}>Realizar Pagamento</Text>
                 </TouchableOpacity>
               </View>
@@ -1865,27 +1865,27 @@ export default function AlunoHomeScreen({ user, onLogout, openChatOnMount, onCon
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
-  iconButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', alignItems: 'center', justifyContent: 'center' },
-  financeBanner: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#eab308', borderRadius: 12, padding: 12, marginBottom: 16 },
+  container: { flex: 1, backgroundColor: '#08090B', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
+  iconButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', alignItems: 'center', justifyContent: 'center' },
+  financeBanner: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#eab308', borderRadius: 12, padding: 12, marginBottom: 16 },
   financeBannerOverdue: { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
   financeBannerOk: { borderColor: '#22c55e' },
   financeBannerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   financeBannerText: { color: '#eab308', fontSize: 11, fontWeight: '600', flexShrink: 1 },
   financeBannerTextOverdue: { color: '#ef4444' },
   payButtonsRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  copyPixButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(59,130,246,0.12)', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 10, paddingVertical: 10 },
-  copyPixButtonText: { color: '#3b82f6', fontSize: 11, fontWeight: '800' },
+  copyPixButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, paddingVertical: 10 },
+  copyPixButtonText: { color: '#D1D5DB', fontSize: 11, fontWeight: '800' },
   payButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#22c55e', borderRadius: 10, paddingVertical: 10 },
   payButtonOverdue: { backgroundColor: '#ef4444' },
-  payButtonText: { color: '#0F0F12', fontSize: 11, fontWeight: '800' },
-  rotationBanner: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 12, padding: 12, marginBottom: 16 },
-  rotationBannerText: { color: '#3b82f6', fontSize: 11, fontWeight: '600', flexShrink: 1 },
-  rotationBannerButton: { backgroundColor: '#3b82f6', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
-  rotationBannerButtonText: { color: '#0F0F12', fontSize: 11, fontWeight: '800' },
+  payButtonText: { color: '#08090B', fontSize: 11, fontWeight: '800' },
+  rotationBanner: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 12, padding: 12, marginBottom: 16 },
+  rotationBannerText: { color: '#D1D5DB', fontSize: 11, fontWeight: '600', flexShrink: 1 },
+  rotationBannerButton: { backgroundColor: '#D1D5DB', borderRadius: 10, paddingVertical: 10, alignItems: 'center', marginTop: 10 },
+  rotationBannerButtonText: { color: '#08090B', fontSize: 11, fontWeight: '800' },
   sectionTitleSpaced: { marginTop: 4 },
-  evolutionRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#18181B', borderWidth: 1, borderColor: '#27272A', borderRadius: 16, padding: 16, marginBottom: 24 },
-  evolutionRowTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  evolutionRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 16, padding: 16, marginBottom: 24 },
+  evolutionRowTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   evolutionRowSubtitle: { color: '#A1A1AA', fontSize: 11, marginTop: 2 },
   progressSectionLabel: { color: '#737373', fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4, marginBottom: 10 },
   heroWorkoutCard: { borderWidth: 1, borderRadius: 20, padding: 20, marginBottom: 16, ...GLASS_CARD, borderColor: ACCENT },
@@ -1895,146 +1895,146 @@ const styles = StyleSheet.create({
   heroStatusDotGreen: { backgroundColor: '#22c55e' },
   heroWorkoutEyebrow: { color: ACCENT, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
   heroWorkoutEyebrowGreen: { color: '#22c55e' },
-  heroWorkoutName: { color: '#F5F5F7', fontSize: 24, fontWeight: '800' },
-  heroWorkoutMeta: { color: '#a3a3a3', fontSize: 13, marginTop: 6, lineHeight: 18 },
+  heroWorkoutName: { color: '#FFFFFF', fontSize: 24, fontWeight: '800' },
+  heroWorkoutMeta: { color: '#A7AAB0', fontSize: 13, marginTop: 6, lineHeight: 18 },
   heroWorkoutButton: { flexDirection: 'row', gap: 8, backgroundColor: ACCENT, borderRadius: 14, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', marginTop: 18 },
-  heroWorkoutButtonDone: { backgroundColor: '#2B2B36' },
-  heroWorkoutButtonText: { color: '#0F0F12', fontSize: 15, fontWeight: '800' },
-  track: { height: 4, backgroundColor: '#0F0F12', borderRadius: 2, overflow: 'hidden', marginTop: 10 },
+  heroWorkoutButtonDone: { backgroundColor: '#292D34' },
+  heroWorkoutButtonText: { color: '#08090B', fontSize: 15, fontWeight: '800' },
+  track: { height: 4, backgroundColor: '#08090B', borderRadius: 2, overflow: 'hidden', marginTop: 10 },
   fill: { height: '100%', borderRadius: 2, backgroundColor: ACCENT },
   contactCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 24, ...GLASS_CARD },
-  contactCardIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,107,0,0.12)', alignItems: 'center', justifyContent: 'center' },
-  contactCardTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  contactCardIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
+  contactCardTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   contactCardSubtitle: { color: '#737373', fontSize: 11, marginTop: 2 },
   evolutionShortcutRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   evolutionShortcutCard: { flex: 1, borderWidth: 1, borderRadius: 14, padding: 14, alignItems: 'center', gap: 8, ...GLASS_CARD },
-  evolutionShortcutText: { color: '#F5F5F7', fontSize: 11, fontWeight: '700', textAlign: 'center' },
+  evolutionShortcutText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700', textAlign: 'center' },
   hubBadgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
-  hubBadgeChip: { backgroundColor: '#27272A', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
+  hubBadgeChip: { backgroundColor: '#292D34', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
   hubBadgeChipText: { color: '#D4D4D8', fontSize: 10, fontWeight: '600' },
   audienceFilterRow: { flexDirection: 'row', gap: 6, marginBottom: 10 },
-  audienceFilterChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
+  audienceFilterChip: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
   audienceFilterChipActive: { backgroundColor: ACCENT, borderColor: ACCENT },
-  audienceFilterChipText: { color: '#a3a3a3', fontSize: 11, fontWeight: '700' },
-  audienceFilterChipTextActive: { color: '#0F0F12' },
+  audienceFilterChipText: { color: '#A7AAB0', fontSize: 11, fontWeight: '700' },
+  audienceFilterChipTextActive: { color: '#08090B' },
   nutritionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   nutritionCard: { width: 176 },
   nutritionCoverWrap: { width: '100%', aspectRatio: 16 / 9, borderRadius: 16, borderWidth: 1, overflow: 'hidden', marginBottom: 6, position: 'relative', ...GLASS_CARD },
   nutritionCoverImage: { ...COVER_TOP_IMAGE },
   nutritionCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  nutritionCardName: { color: '#F5F5F7', fontSize: 11, fontWeight: '600', lineHeight: 15 },
+  nutritionCardName: { color: '#FFFFFF', fontSize: 11, fontWeight: '600', lineHeight: 15 },
   runningLevelLockedText: { color: '#525252', fontSize: 10, fontWeight: '600', marginTop: 2 },
   categoryListCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 16, padding: 10, marginBottom: 10, ...GLASS_CARD },
-  categoryListCoverWrap: { width: 72, aspectRatio: 16 / 9, borderRadius: 10, backgroundColor: '#0F0F12', overflow: 'hidden', position: 'relative' },
+  categoryListCoverWrap: { width: 72, aspectRatio: 16 / 9, borderRadius: 10, backgroundColor: '#08090B', overflow: 'hidden', position: 'relative' },
   categoryListCoverImage: { width: '100%', height: '100%' },
   categoryListCoverPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  categoryListName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700', flex: 1 },
+  categoryListName: { color: '#FFFFFF', fontSize: 13, fontWeight: '700', flex: 1 },
   collectionDescription: { color: '#A1A1AA', fontSize: 12, lineHeight: 17, marginBottom: 14 },
   categoryLockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
   emptyText: { color: '#737373', fontSize: 13, textAlign: 'center', marginTop: 12 },
-  libraryIntro: { color: '#a3a3a3', fontSize: 13, lineHeight: 19, marginTop: 4, marginBottom: 16 },
-  button: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 24 },
-  buttonText: { color: '#FF6B00', fontSize: 15, fontWeight: '700' },
-  subContainer: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
+  libraryIntro: { color: '#A7AAB0', fontSize: 13, lineHeight: 19, marginTop: 4, marginBottom: 16 },
+  button: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 24 },
+  buttonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  subContainer: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
   subTopBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginBottom: 16 },
-  subCloseText: { color: '#FF6B00', fontSize: 14, fontWeight: '600' },
-  subTitle: { color: '#F5F5F7', fontSize: 16, fontWeight: '700', marginLeft: 16 },
-  workoutCard: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 16, marginBottom: 12 },
+  subCloseText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+  subTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '700', marginLeft: 16 },
+  workoutCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 16, marginBottom: 12 },
   workoutTopRow: { flexDirection: 'row', alignItems: 'center' },
-  workoutName: { color: '#F5F5F7', fontSize: 16, fontWeight: '700' },
+  workoutName: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
   workoutDate: { color: '#525252', fontSize: 10, marginTop: 3 },
   statusDot: { width: 10, height: 10, borderRadius: 5, marginLeft: 8 },
   statusDotDone: { backgroundColor: '#22c55e' },
   statusDotPending: { backgroundColor: '#525252' },
   summaryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
-  summaryBadge: { backgroundColor: '#0F0F12', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
-  summaryBadgeText: { color: '#a3a3a3', fontSize: 10, fontWeight: '600', textTransform: 'capitalize' },
-  startButton: { backgroundColor: '#FF6B00', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 14 },
-  startButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
-  dietSubTabRow: { flexDirection: 'row', backgroundColor: '#1C1C22', borderRadius: 10, padding: 3, marginHorizontal: 16, marginBottom: 14 },
+  summaryBadge: { backgroundColor: '#08090B', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  summaryBadgeText: { color: '#A7AAB0', fontSize: 10, fontWeight: '600', textTransform: 'capitalize' },
+  startButton: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 14 },
+  startButtonText: { color: '#08090B', fontSize: 14, fontWeight: '700' },
+  dietSubTabRow: { flexDirection: 'row', backgroundColor: '#121419', borderRadius: 10, padding: 3, marginHorizontal: 16, marginBottom: 14 },
   dietSubTabButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
-  dietSubTabButtonActive: { backgroundColor: '#FF6B00' },
-  dietSubTabText: { color: '#a3a3a3', fontSize: 10, fontWeight: '700', textAlign: 'center' },
-  dietSubTabTextActive: { color: '#0F0F12' },
+  dietSubTabButtonActive: { backgroundColor: '#FFFFFF' },
+  dietSubTabText: { color: '#A7AAB0', fontSize: 10, fontWeight: '700', textAlign: 'center' },
+  dietSubTabTextActive: { color: '#08090B' },
   dietTabScroll: { maxHeight: 46, marginBottom: 8 },
-  dietTabChip: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginRight: 8 },
-  dietTabChipActive: { backgroundColor: '#FF6B00', borderColor: '#FF6B00' },
-  dietTabChipText: { color: '#a3a3a3', fontSize: 12, fontWeight: '600' },
-  dietTabChipTextActive: { color: '#0F0F12' },
+  dietTabChip: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginRight: 8 },
+  dietTabChipActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  dietTabChipText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
+  dietTabChipTextActive: { color: '#08090B' },
   mealAccordionCard: { borderWidth: 1, borderRadius: 12, marginBottom: 8, overflow: 'hidden', ...GLASS_CARD },
   mealAccordionHeader: { flexDirection: 'row', alignItems: 'center', padding: 12 },
-  mealAccordionName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  mealAccordionName: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   mealAccordionMeta: { color: '#737373', fontSize: 11, marginTop: 2 },
-  mealAccordionBody: { paddingHorizontal: 12, paddingBottom: 12, borderTopWidth: 1, borderTopColor: '#0F0F12' },
+  mealAccordionBody: { paddingHorizontal: 12, paddingBottom: 12, borderTopWidth: 1, borderTopColor: '#08090B' },
   diarioMealHeader: { padding: 12 },
-  diarioMealBody: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#0F0F12' },
-  foodItemBox: { marginTop: 8, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: '#0F0F12' },
+  diarioMealBody: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#08090B' },
+  foodItemBox: { marginTop: 8, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: '#08090B' },
   foodOptionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  foodText: { color: '#a3a3a3', fontSize: 12, flexShrink: 1 },
+  foodText: { color: '#A7AAB0', fontSize: 12, flexShrink: 1 },
   registerButton: { padding: 2 },
-  consumedBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,107,0,0.12)', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 },
-  consumedBadgeText: { color: '#FF6B00', fontSize: 10, fontWeight: '700' },
+  consumedBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 },
+  consumedBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
   orConnector: { color: '#525252', fontSize: 9, fontWeight: '700', marginVertical: 4, marginLeft: 8 },
   substitutesBox: { marginLeft: 8, marginTop: 2 },
   substituteText: { color: '#737373', fontSize: 11, flexShrink: 1 },
   nutriTopCard: { borderWidth: 1, borderRadius: 12, marginTop: 14, marginBottom: 14, overflow: 'hidden', ...GLASS_CARD },
   nutriTopHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
-  nutriLibraryShortcut: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 14 },
-  nutriLibraryShortcutText: { flex: 1, color: '#F5F5F7', fontSize: 13, fontWeight: '600' },
+  nutriLibraryShortcut: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 14 },
+  nutriLibraryShortcutText: { flex: 1, color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
   completeMealButton: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(34,197,94,0.12)', borderWidth: 1, borderColor: '#22c55e', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, marginRight: 8 },
   completeMealButtonText: { color: '#22c55e', fontSize: 10, fontWeight: '700' },
   hojeCard: { borderWidth: 1, borderRadius: 12, marginBottom: 14, overflow: 'hidden', ...GLASS_CARD },
   hojeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
-  hojeTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  hojeTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   hojeHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  hojeSummary: { color: '#FF6B00', fontSize: 12, fontWeight: '700' },
-  hojeBody: { paddingHorizontal: 14, paddingBottom: 14, borderTopWidth: 1, borderTopColor: '#0F0F12' },
-  resumoDoDiaBody: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#0F0F12' },
+  hojeSummary: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+  hojeBody: { paddingHorizontal: 14, paddingBottom: 14, borderTopWidth: 1, borderTopColor: '#08090B' },
+  resumoDoDiaBody: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#08090B' },
   macroRow: { marginTop: 12 },
   macroLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
-  macroLabel: { color: '#a3a3a3', fontSize: 11, fontWeight: '600' },
-  macroValue: { color: '#F5F5F7', fontSize: 11, fontWeight: '700' },
-  macroBarTrack: { height: 6, backgroundColor: '#0F0F12', borderRadius: 3, overflow: 'hidden' },
+  macroLabel: { color: '#A7AAB0', fontSize: 11, fontWeight: '600' },
+  macroValue: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  macroBarTrack: { height: 6, backgroundColor: '#08090B', borderRadius: 3, overflow: 'hidden' },
   macroBarFill: { height: '100%', borderRadius: 3 },
   waterCard: { borderWidth: 1, borderRadius: 12, padding: 14, marginBottom: 14, ...GLASS_CARD },
   waterHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  waterTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
-  waterValue: { color: '#5EC8D8', fontSize: 12, fontWeight: '700' },
+  waterTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
+  waterValue: { color: '#D1D5DB', fontSize: 12, fontWeight: '700' },
   waterButtonsRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  waterButton: { flex: 1, backgroundColor: 'rgba(94,200,216,0.12)', borderWidth: 1, borderColor: '#5EC8D8', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
-  waterButtonText: { color: '#5EC8D8', fontSize: 12, fontWeight: '700' },
+  waterButton: { flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  waterButtonText: { color: '#D1D5DB', fontSize: 12, fontWeight: '700' },
   noteCard: { borderWidth: 1, borderRadius: 12, padding: 14, marginBottom: 14, ...GLASS_CARD },
-  noteCardTitle: { color: '#F5F5F7', fontSize: 13, fontWeight: '700', marginBottom: 8 },
+  noteCardTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '700', marginBottom: 8 },
   noteText: { color: '#737373', fontSize: 12, fontStyle: 'italic' },
-  noteInput: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#F5F5F7', fontSize: 12, minHeight: 60, textAlignVertical: 'top', marginBottom: 8 },
-  noteSaveButton: { backgroundColor: '#FF6B00', borderRadius: 8, paddingVertical: 9, alignItems: 'center' },
-  noteSaveButtonText: { color: '#0F0F12', fontSize: 12, fontWeight: '700' },
-  addExtraButton: { backgroundColor: '#FF6B00', borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginBottom: 16 },
-  addExtraButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '800' },
-  mealPickerBox: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 14, marginBottom: 16 },
+  noteInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: '#FFFFFF', fontSize: 12, minHeight: 60, textAlignVertical: 'top', marginBottom: 8 },
+  noteSaveButton: { backgroundColor: '#FFFFFF', borderRadius: 8, paddingVertical: 9, alignItems: 'center' },
+  noteSaveButtonText: { color: '#08090B', fontSize: 12, fontWeight: '700' },
+  addExtraButton: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginBottom: 16 },
+  addExtraButtonText: { color: '#08090B', fontSize: 14, fontWeight: '800' },
+  mealPickerBox: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 14, marginBottom: 16 },
   mealPickerHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   mealPickerLabel: { color: '#737373', fontSize: 10, textTransform: 'uppercase' },
   mealPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  mealPickerChip: { backgroundColor: '#0F0F12', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
-  mealPickerChipText: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
-  sectionTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 10 },
+  mealPickerChip: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8 },
+  mealPickerChipText: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
+  sectionTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginBottom: 10 },
   minhaSemanaSection: { marginBottom: 24 },
-  minhaSemanaCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
-  minhaSemanaCardToday: { borderColor: '#FF6B00' },
+  minhaSemanaCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8 },
+  minhaSemanaCardToday: { borderColor: '#FFFFFF' },
   minhaSemanaDayLabel: { color: '#737373', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, width: 92 },
-  minhaSemanaWorkoutText: { flex: 1, color: '#F5F5F7', fontSize: 13, fontWeight: '700', textAlign: 'right' },
+  minhaSemanaWorkoutText: { flex: 1, color: '#FFFFFF', fontSize: 13, fontWeight: '700', textAlign: 'right' },
   minhaSemanaRestText: { flex: 1, color: '#525252', fontSize: 12, fontWeight: '600', textAlign: 'right' },
-  entryRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, padding: 12, marginBottom: 8 },
-  entryFoodName: { color: '#F5F5F7', fontSize: 12, fontWeight: '600' },
+  entryRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, padding: 12, marginBottom: 8 },
+  entryFoodName: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
   entryMeta: { color: '#737373', fontSize: 10, marginTop: 2 },
   entryDelete: { color: '#ef4444', fontSize: 14, marginLeft: 8 },
-  nutritionStateText: { color: '#a3a3a3', fontSize: 13, marginTop: 14, marginBottom: 6, lineHeight: 18 },
+  nutritionStateText: { color: '#A7AAB0', fontSize: 13, marginTop: 14, marginBottom: 6, lineHeight: 18 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
   sectionViewAllText: { color: ACCENT, fontSize: 12, fontWeight: '700' },
-  mealDiaryCard: { borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 8, ...GLASS_CARD },
+  mealDiaryCard: { borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 12, marginBottom: 8, ...GLASS_CARD },
   mealDiaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  mealDiaryName: { color: '#F5F5F7', fontSize: 13, fontWeight: '700' },
+  mealDiaryName: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
   mealDiaryMeta: { color: '#737373', fontSize: 11, marginTop: 2 },
-  mealDiaryAddButton: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,107,0,0.12)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7 },
+  mealDiaryAddButton: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 7 },
   mealDiaryAddButtonText: { color: ACCENT, fontSize: 11, fontWeight: '700' },
 });

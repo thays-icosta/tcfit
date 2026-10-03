@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { ACCENT } from './theme';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { HeaderBack } from './Header';
 import PdfViewerScreen from './PdfViewerScreen';
 
-const ACCENT = '#FF6B00';
 
 function Block({ block }) {
   switch (block.type) {
@@ -100,25 +100,25 @@ export default function ProjectContentScreen({ content, template, onClose, onMar
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F12', paddingTop: 50 },
-  subtitle: { color: '#a3a3a3', fontSize: 13, marginBottom: 12 },
-  heading: { color: '#F5F5F7', fontSize: 18, fontWeight: '800', marginTop: 8, marginBottom: 8 },
+  container: { flex: 1, backgroundColor: '#08090B', paddingTop: 50 },
+  subtitle: { color: '#A7AAB0', fontSize: 13, marginBottom: 12 },
+  heading: { color: '#FFFFFF', fontSize: 18, fontWeight: '800', marginTop: 8, marginBottom: 8 },
   paragraph: { color: '#d4d4d4', fontSize: 14, lineHeight: 21, marginBottom: 12 },
-  card: { backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 14, padding: 14, marginBottom: 12 },
-  cardTitle: { color: '#F5F5F7', fontSize: 14, fontWeight: '700', marginBottom: 6 },
+  card: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginBottom: 12 },
+  cardTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginBottom: 6 },
   cardText: { color: '#d4d4d4', fontSize: 13, lineHeight: 19 },
   topicRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginBottom: 8 },
   topicDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: ACCENT, marginTop: 6 },
   topicText: { color: '#d4d4d4', fontSize: 13, flex: 1, lineHeight: 19 },
-  highlight: { backgroundColor: 'rgba(255,107,0,0.1)', borderLeftWidth: 3, borderLeftColor: ACCENT, borderRadius: 10, padding: 14, marginBottom: 12 },
-  highlightText: { color: '#F5F5F7', fontSize: 14, fontWeight: '600', lineHeight: 20 },
-  tip: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', backgroundColor: '#1C1C22', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 12, padding: 12, marginBottom: 12 },
+  highlight: { backgroundColor: 'rgba(255,255,255,0.07)', borderLeftWidth: 3, borderLeftColor: ACCENT, borderRadius: 10, padding: 14, marginBottom: 12 },
+  highlightText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600', lineHeight: 20 },
+  tip: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 12, padding: 12, marginBottom: 12 },
   tipText: { color: '#d4d4d4', fontSize: 12, flex: 1, lineHeight: 18 },
   checklistRow: { flexDirection: 'row', gap: 10, alignItems: 'center', paddingVertical: 6 },
   checklistText: { color: '#d4d4d4', fontSize: 13, flex: 1 },
   checklistTextDone: { color: '#737373', textDecorationLine: 'line-through' },
-  ebookButton: { flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#2B2B36', borderRadius: 10, paddingVertical: 12, marginTop: 6, marginBottom: 16 },
+  ebookButton: { flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 12, marginTop: 6, marginBottom: 16 },
   ebookButtonText: { color: ACCENT, fontSize: 12, fontWeight: '600' },
   doneButton: { backgroundColor: ACCENT, borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginBottom: 20 },
-  doneButtonText: { color: '#0F0F12', fontSize: 14, fontWeight: '700' },
+  doneButtonText: { color: '#08090B', fontSize: 14, fontWeight: '700' },
 });
