@@ -28,6 +28,15 @@ function parseReps(repsStr) {
   return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
 }
 
+const isNumericReps = (v) => v != null && /^\d+$/.test(String(v).trim());
+
+// decimal-pad shows a comma on pt-BR keyboards ("62,5"); Number() only knows the dot.
+function parseLoad(v) {
+  if (v == null || v === '') return null;
+  const n = Number(String(v).replace(',', '.'));
+  return Number.isFinite(n) ? n : null;
+}
+
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
@@ -76,7 +85,10 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
   const [sessionId, setSessionId] = useState(null);
   const [startedAt, setStartedAt] = useState(null);
   const [studentWeight, setStudentWeight] = useState(null);
-  const [previousLoads, setPreviousLoads] = useState({});
+  // What the student did the last time, per `${workout_exercise_id}-${set_number}`
+  // ({ load, reps }), plus `${workout_exercise_id}-last` (its last set) as the
+  // reference for a set number that didn't exist last time.
+  const [previousSets, setPreviousSets] = useState({});
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
@@ -190,7 +202,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
           const exerciseIds = exData.map((e) => e.id);
           const { data: pastSets } = await supabase
             .from('workout_session_sets')
-            .select('workout_exercise_id, set_number, load_used_kg, completed_at')
+            .select('workout_exercise_id, session_id, set_number, load_used_kg, reps_done, completed_at')
             .in('workout_exercise_id', exerciseIds)
             .order('completed_at', { ascending: false });
           pastSetsData = pastSets;
@@ -215,12 +227,22 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
       setExercises(ex);
       setStudentWeight(userRow?.weight_kg || null);
 
+      // Rows come newest first; "last time" is the most recent session that
+      // logged each exercise, so sets from different days never get mixed.
       const map = {};
+      const latestSessionOf = {};
       (pastSetsData || []).forEach((row) => {
-        const key = `${row.workout_exercise_id}-${row.set_number}`;
-        if (!map[key]) map[key] = row.load_used_kg;
+        const exId = row.workout_exercise_id;
+        if (!(exId in latestSessionOf)) latestSessionOf[exId] = row.session_id;
+        if (row.session_id !== latestSessionOf[exId]) return;
+        const key = `${exId}-${row.set_number}`;
+        if (!map[key]) map[key] = { load: row.load_used_kg, reps: row.reps_done };
+        const lastKey = `${exId}-last`;
+        if (!map[lastKey] || row.set_number > map[lastKey].setNumber) {
+          map[lastKey] = { load: row.load_used_kg, reps: row.reps_done, setNumber: row.set_number };
+        }
       });
-      setPreviousLoads(map);
+      setPreviousSets(map);
 
       const newSessionId = uuidv4();
       const newStartedAt = new Date().toISOString();
@@ -297,15 +319,44 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
     });
   };
 
+  const referenceFor = (exercise, setNumber) => {
+    const ref = previousSets[`${exercise.id}-${setNumber}`] || previousSets[`${exercise.id}-last`] || null;
+    return ref && (ref.load != null || ref.reps) ? ref : null;
+  };
+
+  // The load shown in a set's Kg field when the student hasn't typed one:
+  // what they just logged on the previous set of this exercise (so it doesn't
+  // have to be retyped every set), else what they used last time, else the
+  // prescribed load.
+  const getLoadValue = (exercise, setNumber) => {
+    const own = setLoads[`${exercise.id}-${setNumber}`];
+    if (own !== undefined) return own;
+    for (let i = setNumber - 1; i >= 1; i--) {
+      const k = `${exercise.id}-${i}`;
+      if (completedSets[k] && setLoads[k] !== undefined && setLoads[k] !== '') return setLoads[k];
+    }
+    const ref = referenceFor(exercise, setNumber);
+    if (ref && ref.load != null) return String(ref.load);
+    return exercise.load_kg != null ? String(exercise.load_kg) : '';
+  };
+
+  const handleUseReference = (exercise, setNumber) => {
+    const ref = referenceFor(exercise, setNumber);
+    if (!ref) return;
+    const key = `${exercise.id}-${setNumber}`;
+    if (ref.load != null) setSetLoads((prev) => ({ ...prev, [key]: String(ref.load) }));
+    if (isNumericReps(ref.reps)) setSetReps((prev) => ({ ...prev, [key]: String(ref.reps).trim() }));
+  };
+
   const handleCompleteSet = async (exercise, setNumber) => {
     Keyboard.dismiss();
     const key = `${exercise.id}-${setNumber}`;
-    const loadValue = setLoads[key] !== undefined ? setLoads[key] : (exercise.load_kg != null ? String(exercise.load_kg) : '');
-    const repsValue = setReps[key] !== undefined ? setReps[key] : (exercise.reps || '');
-    // decimal-pad shows a comma on pt-BR keyboards (e.g. "62,5") — Number()
-    // only understands a dot, so without this a decimal load would silently
-    // fail to parse and get saved as null.
-    const loadNum = loadValue ? Number(String(loadValue).replace(',', '.')) : null;
+    const loadValue = getLoadValue(exercise, setNumber);
+    // Reps left empty are recorded as the prescription (e.g. "8-10"), same as
+    // before — existing data keeps its meaning.
+    const typedReps = setReps[key] !== undefined ? String(setReps[key]).trim() : '';
+    const repsValue = typedReps !== '' ? typedReps : (exercise.reps || '');
+    const loadNum = parseLoad(loadValue);
     const substitute = substitutions[exercise.id];
 
     const setPayload = {
@@ -353,21 +404,52 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
     );
   };
 
+  const totalSetCount = exercises.reduce((sum, ex) => sum + (ex.sets || 3), 0);
+  const doneSetCount = Object.keys(completedSets).filter((k) => completedSets[k]).length;
+  // The first set not done yet, in ficha order — highlighted as "PRÓXIMA".
+  let nextKey = null;
+  for (const ex of exercises) {
+    for (let i = 1; i <= (ex.sets || 3) && !nextKey; i++) {
+      if (!completedSets[`${ex.id}-${i}`]) nextKey = `${ex.id}-${i}`;
+    }
+    if (nextKey) break;
+  }
+
+  const handleFinishPress = () => {
+    const missing = totalSetCount - doneSetCount;
+    if (missing > 0) {
+      showAlert(
+        'Finalizar treino?',
+        `Faltam ${missing} série${missing !== 1 ? 's' : ''}. Se finalizar agora, elas não serão registradas.`,
+        [
+          { text: 'Continuar treinando', style: 'cancel' },
+          { text: 'Finalizar mesmo assim', onPress: handleFinish },
+        ]
+      );
+      return;
+    }
+    handleFinish();
+  };
+
   const handleFinish = async () => {
     Keyboard.dismiss();
     const now = new Date();
     const elapsedMin = Math.max(1, Math.round((now - new Date(startedAt)) / 60000));
 
+    // Tonnage uses the reps the student actually did when they entered a
+    // number; a set finished with the prescription ("8-10") falls back to the
+    // prescription's average, as before.
     let tonnage = 0;
     let totalSetsCompleted = 0;
     exercises.forEach((ex) => {
-      const repsNum = parseReps(ex.reps);
+      const prescribedReps = parseReps(ex.reps);
       const setCount = ex.sets || 3;
       for (let i = 1; i <= setCount; i++) {
         const key = `${ex.id}-${i}`;
         if (completedSets[key]) {
           totalSetsCompleted += 1;
-          const load = Number(setLoads[key] || ex.load_kg || 0);
+          const load = parseLoad(setLoads[key]) || 0;
+          const repsNum = isNumericReps(setReps[key]) ? Number(setReps[key]) : prescribedReps;
           tonnage += load * repsNum;
         }
       }
@@ -569,6 +651,16 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
             </View>
           )}
 
+          <View style={styles.progressWrap}>
+            <View style={styles.progressTop}>
+              <Text style={styles.progressLabel}>Progresso do treino</Text>
+              <Text style={styles.progressCount}>{doneSetCount}/{totalSetCount} séries</Text>
+            </View>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${totalSetCount > 0 ? Math.round((doneSetCount / totalSetCount) * 100) : 0}%` }]} />
+            </View>
+          </View>
+
           <ScrollView
             style={{ flex: 1 }}
             contentContainerStyle={{ paddingBottom: restSecondsLeft !== null ? 90 : 20 }}
@@ -580,9 +672,12 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
               const isSubOpen = substituteOpenFor === ex.id;
               const alternatives = alternativesCache[ex.id] || [];
               const setCount = ex.sets || 3;
+              let exDone = 0;
+              for (let i = 1; i <= setCount; i++) if (completedSets[`${ex.id}-${i}`]) exDone += 1;
+              const exAllDone = exDone === setCount;
 
               return (
-                <View key={ex.id} style={styles.exerciseCard}>
+                <View key={ex.id} style={[styles.exerciseCard, exAllDone && styles.exerciseCardDone]}>
                   <View style={styles.exerciseHeader}>
                     {ex.exercises?.thumbnail_url ? (
                       <Image source={{ uri: ex.exercises.thumbnail_url }} style={styles.thumb} />
@@ -607,6 +702,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                       <Text style={styles.exerciseSubtitle}>
                         {METHOD_LABELS[ex.execution_method] || ex.execution_method}
                         {ex.rest_time_seconds != null ? ` · ${ex.rest_time_seconds}s descanso` : ''}
+                        {ex.reps ? ` · meta ${ex.reps} reps` : ''}
                       </Text>
                       {substitute && (
                         <View style={styles.subTagRow}>
@@ -617,8 +713,11 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                         </View>
                       )}
                     </View>
+                    <View style={[styles.exCountChip, exAllDone && styles.exCountChipDone]}>
+                      <Text style={[styles.exCountText, exAllDone && styles.exCountTextDone]}>{exAllDone ? '✓ ' : ''}{exDone}/{setCount}</Text>
+                    </View>
                     {!isOffline && (
-                      <TouchableOpacity onPress={() => handleToggleSubstitute(ex)}>
+                      <TouchableOpacity onPress={() => handleToggleSubstitute(ex)} style={{ marginLeft: 10 }}>
                         <Ionicons name="swap-horizontal-outline" size={20} color="#A7AAB0" />
                       </TouchableOpacity>
                     )}
@@ -644,9 +743,8 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
 
                   <View style={styles.tableHeader}>
                     <Text style={[styles.tableHeaderText, styles.colSet]}>Série</Text>
-                    <Text style={[styles.tableHeaderText, styles.colPrev]}>Anterior</Text>
-                    <Text style={[styles.tableHeaderText, styles.colKg]}>Kg</Text>
-                    <Text style={[styles.tableHeaderText, styles.colReps]}>Reps</Text>
+                    <Text style={[styles.tableHeaderText, styles.colKg]}>Carga (kg)</Text>
+                    <Text style={[styles.tableHeaderText, styles.colReps]}>Reps feitas</Text>
                     <Text style={[styles.tableHeaderText, styles.colCheck]}> </Text>
                   </View>
 
@@ -654,43 +752,45 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                     const setNumber = i + 1;
                     const key = `${ex.id}-${setNumber}`;
                     const done = completedSets[key];
-                    const prevLoad = previousLoads[key];
+                    const isNext = key === nextKey;
+                    const ref = !done ? referenceFor(ex, setNumber) : null;
+                    const loadValue = getLoadValue(ex, setNumber);
+                    const repsValue = setReps[key] !== undefined ? setReps[key] : '';
                     return (
-                      <View key={key} style={styles.tableRow}>
-                        <Text style={[styles.setNumberText, styles.colSet]}>{setNumber}</Text>
-                        <TouchableOpacity
-                          style={styles.colPrev}
-                          disabled={prevLoad == null || done}
-                          onPress={() => setSetLoads((prev) => ({ ...prev, [key]: String(prevLoad) }))}
-                        >
-                          <Text style={styles.prevText} numberOfLines={1}>
-                            {prevLoad != null ? `${prevLoad}kg×${ex.reps}` : '—'}
-                          </Text>
-                        </TouchableOpacity>
-                        <TextInput
-                          style={[styles.cellInput, styles.colKg, done && styles.cellInputDone]}
-                          keyboardType="decimal-pad"
-                          editable={!done}
-                          placeholder={ex.load_kg != null ? String(ex.load_kg) : '-'}
-                          placeholderTextColor="#525252"
-                          value={setLoads[key] !== undefined ? setLoads[key] : (ex.load_kg != null ? String(ex.load_kg) : '')}
-                          onChangeText={(t) => setSetLoads((prev) => ({ ...prev, [key]: t }))}
-                          inputAccessoryViewID={Platform.OS === 'ios' ? KEYBOARD_TOOLBAR_ID : undefined}
-                        />
-                        <TextInput
-                          style={[styles.cellInput, styles.colReps, done && styles.cellInputDone]}
-                          editable={!done}
-                          placeholder={ex.reps || '-'}
-                          placeholderTextColor="#525252"
-                          value={setReps[key] !== undefined ? setReps[key] : (ex.reps || '')}
-                          onChangeText={(t) => setSetReps((prev) => ({ ...prev, [key]: t }))}
-                          inputAccessoryViewID={Platform.OS === 'ios' ? KEYBOARD_TOOLBAR_ID : undefined}
-                        />
-                        <View style={styles.colCheck}>
+                      <View key={key} style={[styles.setRow, done && styles.setRowDone, isNext && styles.setRowNext]}>
+                        <View style={styles.setMain}>
+                          <View style={[styles.setBadge, done && styles.setBadgeDone]}>
+                            <Text style={[styles.setNumberText, done && styles.setNumberTextDone]}>{setNumber}</Text>
+                          </View>
+                          <TextInput
+                            style={[styles.cellInput, styles.colKg, done && styles.cellInputDone]}
+                            keyboardType="decimal-pad"
+                            editable={!done}
+                            selectTextOnFocus
+                            placeholder="-"
+                            placeholderTextColor="#525252"
+                            value={loadValue}
+                            onChangeText={(t) => setSetLoads((prev) => ({ ...prev, [key]: t.replace(/[^0-9.,]/g, '') }))}
+                            inputAccessoryViewID={Platform.OS === 'ios' ? KEYBOARD_TOOLBAR_ID : undefined}
+                            accessibilityLabel={`Carga da série ${setNumber}`}
+                          />
+                          <TextInput
+                            style={[styles.cellInput, styles.colReps, done && styles.cellInputDone]}
+                            keyboardType="numeric"
+                            editable={!done}
+                            selectTextOnFocus
+                            placeholder={ex.reps || '-'}
+                            placeholderTextColor="#525252"
+                            value={repsValue}
+                            onChangeText={(t) => setSetReps((prev) => ({ ...prev, [key]: t.replace(/[^0-9]/g, '') }))}
+                            inputAccessoryViewID={Platform.OS === 'ios' ? KEYBOARD_TOOLBAR_ID : undefined}
+                            accessibilityLabel={`Repetições da série ${setNumber}`}
+                          />
                           <TouchableOpacity
                             style={[styles.checkCircle, done && styles.checkCircleDone]}
                             onPress={() => !done && handleCompleteSet(ex, setNumber)}
                             disabled={done || savingKey === key}
+                            accessibilityLabel={done ? `Série ${setNumber} concluída` : `Concluir série ${setNumber}`}
                           >
                             {savingKey === key ? (
                               <ActivityIndicator color="#08090B" size="small" />
@@ -699,6 +799,22 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
                             )}
                           </TouchableOpacity>
                         </View>
+                        {!done && (isNext || ref) && (
+                          <View style={styles.setSubRow}>
+                            {isNext ? <Text style={styles.nextTag}>PRÓXIMA</Text> : <View />}
+                            {ref && (
+                              <TouchableOpacity
+                                onPress={() => handleUseReference(ex, setNumber)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                accessibilityLabel="Usar valores da última vez"
+                              >
+                                <Text style={styles.refText}>
+                                  Última vez: {[ref.load != null ? `${String(ref.load).replace('.', ',')} kg` : null, ref.reps ? `${ref.reps} reps` : null].filter(Boolean).join(' × ')}  ·  usar
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        )}
                       </View>
                     );
                   })}
@@ -724,7 +840,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
             </View>
           )}
 
-          <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
+          <TouchableOpacity style={styles.finishButton} onPress={handleFinishPress}>
             <Text style={styles.finishButtonText}>Finalizar Treino</Text>
           </TouchableOpacity>
         </View>
@@ -814,21 +930,39 @@ const styles = StyleSheet.create({
   subOption: { paddingVertical: 8, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#121419' },
   subOptionText: { color: '#FFFFFF', fontSize: 12 },
   exerciseNotes: { color: '#737373', fontSize: 10, marginTop: 8, fontStyle: 'italic' },
-  tableHeader: { flexDirection: 'row', marginTop: 14, marginBottom: 6, borderBottomWidth: 1, borderBottomColor: '#08090B', paddingBottom: 6 },
-  tableHeaderText: { color: '#525252', fontSize: 9, textTransform: 'uppercase', fontWeight: '700', textAlign: 'center' },
-  tableRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  colSet: { width: 28 },
-  colPrev: { width: 56, overflow: 'hidden' },
-  colKg: { flex: 1, minWidth: 0, marginHorizontal: 3 },
-  colReps: { flex: 1, minWidth: 0, marginHorizontal: 3 },
-  colCheck: { width: 36, alignItems: 'center' },
-  setNumberText: { color: '#A7AAB0', fontSize: 13, fontWeight: '700', textAlign: 'center' },
-  prevText: { color: '#525252', fontSize: 9, textAlign: 'center' },
-  cellInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#292D34', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 2, minWidth: 0, color: '#FFFFFF', fontSize: 13, textAlign: 'center' },
-  cellInputDone: { opacity: 0.5 },
-  checkCircle: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: '#292D34', alignItems: 'center', justifyContent: 'center' },
+  progressWrap: { marginHorizontal: 16, marginBottom: 10 },
+  progressTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  progressLabel: { color: '#A7AAB0', fontSize: 11, fontWeight: '600' },
+  progressCount: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' },
+  progressTrack: { height: 6, borderRadius: 3, backgroundColor: '#292D34', overflow: 'hidden' },
+  progressFill: { height: 6, borderRadius: 3, backgroundColor: '#22c55e' },
+  exerciseCardDone: { borderColor: '#22c55e' },
+  exCountChip: { borderWidth: 1, borderColor: '#292D34', borderRadius: 12, paddingHorizontal: 9, paddingVertical: 3, marginLeft: 8 },
+  exCountChipDone: { borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.12)' },
+  exCountText: { color: '#A7AAB0', fontSize: 11, fontWeight: '800' },
+  exCountTextDone: { color: '#22c55e' },
+  tableHeader: { flexDirection: 'row', alignItems: 'center', marginTop: 14, marginBottom: 6, paddingHorizontal: 8 },
+  tableHeaderText: { color: '#737373', fontSize: 10, textTransform: 'uppercase', fontWeight: '700', textAlign: 'center' },
+  setRow: { borderWidth: 1, borderColor: 'transparent', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 6, marginBottom: 6 },
+  setRowDone: { backgroundColor: 'rgba(34,197,94,0.10)', borderColor: 'rgba(34,197,94,0.45)' },
+  setRowNext: { borderColor: '#FFFFFF', backgroundColor: '#181B21' },
+  setMain: { flexDirection: 'row', alignItems: 'center' },
+  setSubRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, paddingLeft: 38 },
+  nextTag: { color: '#FFFFFF', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  refText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
+  colSet: { width: 30 },
+  colKg: { flex: 1, minWidth: 0, marginHorizontal: 4 },
+  colReps: { flex: 1, minWidth: 0, marginHorizontal: 4 },
+  colCheck: { width: 44, alignItems: 'center' },
+  setBadge: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#08090B', alignItems: 'center', justifyContent: 'center', marginRight: 4 },
+  setBadgeDone: { backgroundColor: 'rgba(34,197,94,0.2)' },
+  setNumberText: { color: '#A7AAB0', fontSize: 14, fontWeight: '800' },
+  setNumberTextDone: { color: '#22c55e' },
+  cellInput: { backgroundColor: '#08090B', borderWidth: 1, borderColor: '#3A3F48', borderRadius: 10, height: 48, paddingHorizontal: 4, minWidth: 0, color: '#FFFFFF', fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  cellInputDone: { backgroundColor: 'transparent', borderColor: 'transparent', color: '#FFFFFF' },
+  checkCircle: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: '#5A6070', alignItems: 'center', justifyContent: 'center' },
   checkCircleDone: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
-  checkText: { color: '#08090B', fontSize: 15, fontWeight: '800' },
+  checkText: { color: '#08090B', fontSize: 20, fontWeight: '800' },
   restFloating: { position: 'absolute', bottom: 70, left: 16, right: 16, backgroundColor: '#121419', borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 14, paddingHorizontal: 18, paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   restLabel: { color: '#FFFFFF', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
   restCountdown: { color: '#FFFFFF', fontSize: 22, fontWeight: '800' },
