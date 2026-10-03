@@ -49,7 +49,7 @@ export default function BemVindoLanding() {
   return (
     <View style={styles.root}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
-        <Image source={require('../assets/images/brand-logo.png')} style={styles.logo} resizeMode="contain" />
+        <Image source={require('../assets/images/brand-wordmark.png')} style={styles.logo} resizeMode="contain" accessibilityLabel="TcFit" />
 
         <Text style={styles.heroTitle}>Sua transformação começa aqui</Text>
         <Text style={styles.heroSubtitle}>Plataforma TcFit</Text>
@@ -110,7 +110,8 @@ export default function BemVindoLanding() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0F0F12' },
   container: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 50, paddingBottom: 60 },
-  logo: { width: 190, height: 86, marginBottom: 16 },
+  // brand-wordmark.png is 663x201 (3.3:1) — width/height keep that ratio exactly.
+  logo: { width: 180, height: 55, marginBottom: 20 },
   heroTitle: { color: '#F5F5F7', fontSize: 26, fontWeight: '800', textAlign: 'center', lineHeight: 32 },
   heroSubtitle: { color: '#FF6B00', fontSize: 14, fontWeight: '700', marginTop: 6, letterSpacing: 0.5 },
   heroText: { color: '#a3a3a3', fontSize: 13, textAlign: 'center', marginTop: 10, marginBottom: 24, lineHeight: 19, paddingHorizontal: 8 },
