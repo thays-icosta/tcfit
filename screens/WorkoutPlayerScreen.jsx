@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, ActivityIndicator, Vibration, Image, Keyboard, KeyboardAvoidingView, Pressable, Platform, InputAccessoryView, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { dismissKeyboardUnlessTyping } from './keyboardUtils';
 import NetInfo from '@react-native-community/netinfo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from './supabaseClient';
@@ -543,7 +544,7 @@ export default function WorkoutPlayerScreen({ workout, studentId, onExit, onNavi
           some RN versions/platforms, which is exactly why tapping the Kg/Reps
           TextInputs below wasn't focusing them. Pressable negotiates properly and
           lets the TextInputs claim their own taps first. */}
-      <Pressable onPress={Keyboard.dismiss} style={{ flex: 1 }}>
+      <Pressable onPress={dismissKeyboardUnlessTyping} style={{ flex: 1 }}>
         <View style={styles.container}>
           <HeaderBack backLabel="← Sair" title={workout.name} onBack={handleExit} style={{ paddingHorizontal: 16 }} />
 

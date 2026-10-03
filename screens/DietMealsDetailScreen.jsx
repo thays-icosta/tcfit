@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import FoodCatalogScreen from './FoodCatalogScreen';
 import { showAlert, describeFunctionError } from './alertUtils';
+import { dismissKeyboardUnlessTyping } from './keyboardUtils';
 import { useSpeechToText } from './useSpeechToText';
 
 const KEYBOARD_TOOLBAR_ID = 'dietDetailKeyboardToolbar';
@@ -410,7 +411,7 @@ export default function DietMealsDetailScreen({ dietId, dietName, studentId, per
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <TouchableWithoutFeedback onPress={dismissKeyboardUnlessTyping} accessible={false}>
         <View style={styles.container}>
           <View style={styles.topBar}>
             <TouchableOpacity onPress={onClose}>
