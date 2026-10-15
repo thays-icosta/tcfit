@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, TextInput, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
@@ -11,6 +11,11 @@ const CONFIDENCE_LABEL = { alta: 'Confiança alta', media: 'Confiança média', 
 const CONFIDENCE_COLOR = { alta: '#22c55e', media: '#f59e0b', baixa: '#A7AAB0' };
 
 const KEYBOARD_BY_FIELD = { series: 'number-pad', descansoSeg: 'number-pad', cargaKg: 'decimal-pad', reps: 'numbers-and-punctuation' };
+
+function formatVerifiedDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : null;
+}
 
 function formatValue(campo, value) {
   if (value == null || value === '') return '—';
@@ -108,6 +113,49 @@ export default function WorkoutAnalysisScreen({ studentId, workoutName, items, o
     handleApply(adj, value);
   };
 
+  const referenceByNumber = (n) => (analysis?.referencias || []).find((r) => r.n === n);
+
+  const openReference = (n) => {
+    const ref = referenceByNumber(n);
+    if (!ref) return;
+    Linking.openURL(ref.url).catch(() => showAlert('Não consegui abrir o link', ref.url));
+  };
+
+  // Source chips: each opens that study's PubMed page.
+  const renderSources = (numbers) => (
+    numbers && numbers.length > 0 ? (
+      <View style={styles.sourcesRow}>
+        <Text style={styles.adjLabel}>Base científica</Text>
+        <View style={styles.sourceChips}>
+          {numbers.map((n) => (
+            <TouchableOpacity key={n} style={styles.sourceChip} onPress={() => openReference(n)} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }} accessibilityLabel={`Abrir referência ${n} no PubMed`}>
+              <Text style={styles.sourceChipText}>[{n}] {referenceByNumber(n)?.tipo?.split(' (')[0] || 'Estudo'} ↗</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    ) : null
+  );
+
+  const renderImprovement = (m, i) => (
+    <View key={`m${i}`} style={styles.improvementCard}>
+      <View style={styles.adjHeader}>
+        <Text style={styles.adjExercise}>{m.titulo}</Text>
+        <Text style={[styles.confChip, { color: CONFIDENCE_COLOR[m.confianca], borderColor: CONFIDENCE_COLOR[m.confianca] }]}>
+          {CONFIDENCE_LABEL[m.confianca]}
+        </Text>
+      </View>
+      <Text style={styles.adjSuggestion}>{m.recomendacao}</Text>
+      {!!m.porQue && (
+        <View style={styles.adjBlock}>
+          <Text style={styles.adjLabel}>Por quê</Text>
+          <Text style={styles.adjText}>{m.porQue}</Text>
+        </View>
+      )}
+      {renderSources(m.fontes)}
+    </View>
+  );
+
   const renderList = (title, list, icon, color) => (
     list && list.length > 0 ? (
       <View style={styles.card}>
@@ -161,6 +209,7 @@ export default function WorkoutAnalysisScreen({ studentId, workoutName, items, o
             <Text style={styles.adjText}>{adj.impacto}</Text>
           </View>
         )}
+        {renderSources(adj.fontes)}
 
         {applied ? (
           <View style={styles.statusRow}>
@@ -266,6 +315,15 @@ export default function WorkoutAnalysisScreen({ studentId, workoutName, items, o
             {renderList('Pontos de atenção', analysis.pontosDeAtencao, 'alert-circle', '#f59e0b')}
             {renderList('Dados insuficientes', analysis.dadosInsuficientes, 'help-circle', '#A7AAB0')}
 
+            {analysis.melhoriasParaObjetivo?.length > 0 && (
+              <>
+                <Text style={styles.adjustmentsTitle}>
+                  Para atingir o objetivo{analysis.objetivo ? `: ${analysis.objetivo}` : ''}
+                </Text>
+                {analysis.melhoriasParaObjetivo.map(renderImprovement)}
+              </>
+            )}
+
             <Text style={styles.adjustmentsTitle}>
               {analysis.ajustes.length > 0 ? `Ajustes sugeridos (${analysis.ajustes.length})` : 'Nenhum ajuste sugerido'}
             </Text>
@@ -273,6 +331,28 @@ export default function WorkoutAnalysisScreen({ studentId, workoutName, items, o
               <Text style={styles.stateText}>A IA não encontrou nada a mudar com os dados disponíveis.</Text>
             )}
             {analysis.ajustes.map(renderAdjustment)}
+
+            {analysis.referencias?.length > 0 && (
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Referências</Text>
+                {analysis.referencias.map((r) => (
+                  <View key={r.id} style={styles.refItem}>
+                    <Text style={styles.refTipo}>[{r.n}] {r.tipo}</Text>
+                    <Text style={styles.refCitacao}>{r.citacao}</Text>
+                    <Text style={styles.adjLabel}>O que o estudo conclui</Text>
+                    <Text style={styles.adjText}>{r.achado}</Text>
+                    <TouchableOpacity onPress={() => openReference(r.n)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel={`Ver referência ${r.n} no PubMed`}>
+                      <Text style={[styles.linkText, { marginTop: 6 }]}>Ver no PubMed ↗</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                {!!formatVerifiedDate(analysis.fontesVerificadasEm) && (
+                  <Text style={styles.refNote}>
+                    Referências conferidas no PubMed em {formatVerifiedDate(analysis.fontesVerificadasEm)}. Os resultados são médias de estudos com adultos saudáveis: a resposta individual varia.
+                  </Text>
+                )}
+              </View>
+            )}
 
             <Text style={styles.disclaimer}>
               Sugestões geradas por IA a partir dos dados do aluno. Elas não substituem a sua avaliação — nada é alterado sem você tocar em &ldquo;Aplicar&rdquo;.
@@ -327,4 +407,13 @@ const styles = StyleSheet.create({
   methodChipText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
   methodChipTextActive: { color: '#08090B' },
   disclaimer: { color: '#737373', fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: 14 },
+  improvementCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#3A3F48', borderRadius: 14, padding: 14, marginBottom: 10 },
+  sourcesRow: { marginTop: 4 },
+  sourceChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
+  sourceChip: { borderWidth: 1, borderColor: '#3A3F48', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#08090B' },
+  sourceChipText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  refItem: { borderTopWidth: 1, borderTopColor: '#292D34', paddingTop: 10, marginTop: 10 },
+  refTipo: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', marginBottom: 4 },
+  refCitacao: { color: '#A7AAB0', fontSize: 11, lineHeight: 16, marginBottom: 8 },
+  refNote: { color: '#737373', fontSize: 11, lineHeight: 16, marginTop: 12 },
 });

@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   RESPONSE_SCHEMA_ANALYZE,
-  SYSTEM_PROMPT_ANALYZE,
+  buildSystemPrompt,
   buildAnalyzeUserText,
   sanitizeAnalysis,
   validatePayload,
@@ -95,7 +95,7 @@ Deno.serve(async (req: Request) => {
     const gemini = await callGemini(
       JSON.stringify({
         contents: [{ role: "user", parts: [{ text: buildAnalyzeUserText(payload.context, payload.ficha) }] }],
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT_ANALYZE }] },
+        systemInstruction: { parts: [{ text: buildSystemPrompt() }] },
         generationConfig: {
           responseMimeType: "application/json",
           responseSchema: RESPONSE_SCHEMA_ANALYZE,
@@ -129,7 +129,8 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Não consegui interpretar a resposta da IA." }, 502);
     }
 
-    return json({ analysis: sanitizeAnalysis(parsed, payload.ficha) });
+    const objetivo = typeof payload.context?.perfil?.objetivo === "string" ? payload.context.perfil.objetivo : null;
+    return json({ analysis: sanitizeAnalysis(parsed, payload.ficha, { objetivo }) });
   } catch (e) {
     console.error("ai-copilot: erro inesperado:", e);
     return json({ error: "Algo deu errado. Tenta de novo em instantes." }, 500);
