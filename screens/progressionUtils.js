@@ -3,7 +3,7 @@
 // does by eye (bump the load once the prescribed reps are hit, hold
 // otherwise), just reading data that's already saved in workout_session_sets.
 
-function parseRepsNumber(repsStr) {
+export function parseRepsNumber(repsStr) {
   if (!repsStr) return null;
   const numbers = String(repsStr).match(/\d+/g);
   if (!numbers || numbers.length === 0) return null;
