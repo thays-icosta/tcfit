@@ -81,7 +81,13 @@ export const SYSTEM_PROMPT_ANALYZE =
   "7. Só sugira uma carga se houver 'proximaCargaSugeridaKg' ou histórico no contexto que a sustente; caso contrário não sugira carga.\n" +
   "8. Escreva em português do Brasil, em linguagem direta de profissional para profissional.\n" +
   "9. confianca: 'alta' só quando vários dados concordam; 'media' quando há um dado claro; 'baixa' quando é inferência.\n" +
-  "10. Se a ficha já está coerente com os dados, diga isso em 'resumo' e devolva poucos ou nenhum ajuste. Não force sugestões.";
+  "10. Se a ficha já está coerente com os dados, diga isso em 'resumo' e devolva poucos ou nenhum ajuste. Não force sugestões.\n" +
+  "11. DADOS INSUFICIENTES NÃO SÃO EVIDÊNCIA. Se 'frequenciaReal' for nulo, tiver dadosSuficientes = false, ou 'lacunas' contiver 'poucas_sessoes_registradas' ou 'historico_de_execucao': " +
+  "NÃO avalie aderência, frequência real nem tendência de progressão, não classifique a frequência como baixa ou alta, e registre em 'dadosInsuficientes' que há poucas sessões registradas. " +
+  "Um exercício com menos de 3 sessões registradas (sessoesRegistradas) ou com tendencia 'insuficiente' não prova progressão: não o cite como ponto positivo nem baseie ajuste de carga nele. " +
+  "Nesse caso, baseie a análise só na própria ficha (volume por sessão, equilíbrio entre grupos, descanso, coerência com o objetivo e as restrições, quando existirem).\n" +
+  "12. 'resumo' deve ter no máximo 3 frases curtas.\n" +
+  "13. Trate o aluno no gênero do perfil: 'a aluna' se perfil.sexo for feminino, 'o aluno' se masculino; se ausente, use 'o(a) aluno(a)'.";
 
 export const RESPONSE_SCHEMA_ANALYZE = {
   type: "OBJECT",

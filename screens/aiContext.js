@@ -35,6 +35,12 @@ const PREVIOUS_WEEKS = 3;
 const SESSION_ID_CHUNK = 40; // keeps the `in.(…)` URL short
 const PAGE_SIZE = 1000; // PostgREST default row cap
 const MAX_CONTEXT_CHARS = 24000;
+// Below these, a number is an anecdote, not evidence: two sessions logged on
+// consecutive days say nothing about adherence, and two data points are not a
+// progression trend. The AI is told (via `dadosSuficientes` / `lacunas`) not to
+// judge on them.
+const MIN_SESSIONS_FOR_FREQUENCY = 6;
+const MIN_SESSIONS_FOR_TREND = 3;
 
 const WEEKDAY_LABEL = { 0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado' };
 
@@ -96,7 +102,7 @@ async function fetchAllPages(makePage) {
 function trendFrom(history) {
   // history: topSetsBySession output, newest first.
   const e1rms = history.map((h) => estimate1RM(h.load, h.repsNum)).filter((v) => v != null);
-  if (e1rms.length < 2) return { tendencia: 'insuficiente', deltaPct: null, e1RM: e1rms[0] ?? null };
+  if (e1rms.length < MIN_SESSIONS_FOR_TREND) return { tendencia: 'insuficiente', deltaPct: null, e1RM: e1rms[0] ?? null };
   const latest = e1rms[0];
   const baseline = average(e1rms.slice(1, 4));
   const deltaPct = baseline ? round1(((latest - baseline) / baseline) * 100) : null;
@@ -125,7 +131,7 @@ export async function buildStudentContext(client, { studentId, now = new Date() 
 
   const [userRow, anamneseRows, assessmentRows, periodization, activeWorkouts, weekHistory, targets, sessionRows, noteRows] = await Promise.all([
     run('users', client.from('users')
-      .select('birth_date, gender, attendance_mode, student_type, personal_notes, weight_kg, anamnese_completed_at')
+      .select('birth_date, gender, attendance_mode, student_type, personal_notes, weight_kg, anamnese_completed_at, created_at')
       .eq('id', studentId).maybeSingle()),
     run('anamnese_responses', client.from('anamnese_responses')
       .select('main_goal, experience_level, days_per_week, session_duration_min, training_location, activity_level, sleep_quality, focus_muscle_group, health_issues, pain_zones, sex, weight_kg, height_cm, age, completed_at')
@@ -310,6 +316,10 @@ export async function buildStudentContext(client, { studentId, now = new Date() 
     ultimasPse: sessions.slice(0, 5).map((s) => s.pse).filter((p) => p != null),
     rirMedio4Semanas: round1(average(rirValues)),
     sessoesNos90Dias: sessions.length,
+    primeiraSessaoEm: isoDay(sessions[sessions.length - 1].started_at),
+    dadosSuficientes: sessions.length >= MIN_SESSIONS_FOR_FREQUENCY,
+    aviso: sessions.length >= MIN_SESSIONS_FOR_FREQUENCY ? null
+      : `Só ${sessions.length} sessão(ões) registrada(s) nos últimos 90 dias: não dá para avaliar aderência, frequência real nem tendência de progressão.`,
   };
 
   // --- perfil, avaliação, periodização, restrições ----------------------------
@@ -328,6 +338,7 @@ export async function buildStudentContext(client, { studentId, now = new Date() 
     alturaCm: anamnese?.height_cm ?? null,
     modalidade: user?.attendance_mode || null,
     tipoAluno: user?.student_type || null,
+    alunoHaDias: user?.created_at ? Math.max(0, Math.floor((now.getTime() - new Date(user.created_at).getTime()) / DAY_MS)) : null,
   };
   const hasPerfil = !!anamnese;
 
@@ -374,6 +385,7 @@ export async function buildStudentContext(client, { studentId, now = new Date() 
   if (fichas.length === 0) lacunas.push('ficha_ativa');
   else if (fichas.some((f) => f.diaSemana == null)) lacunas.push('dias_da_semana_nao_definidos');
   if (sessions.length === 0) lacunas.push('historico_de_execucao');
+  else if (sessions.length < MIN_SESSIONS_FOR_FREQUENCY) lacunas.push('poucas_sessoes_registradas');
   if (!restricoes.problemasDeSaude && pain.length === 0) lacunas.push('restricoes_nao_informadas');
 
   const ctx = {
