@@ -12,7 +12,7 @@ begin
     url := 'https://hcsoaqeqqussszgjfhnb.supabase.co/functions/v1/send-message-push',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'x-webhook-secret', '63ed39d298b780ed2c4b64bc8b08193ee4456625219807a5'
+      'x-webhook-secret', 'REDACTED_ROTATED'
     ),
     body := jsonb_build_object('record', to_jsonb(new))
   );

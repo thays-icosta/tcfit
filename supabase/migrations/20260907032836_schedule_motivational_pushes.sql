@@ -8,7 +8,7 @@ select cron.schedule(
       'Content-Type', 'application/json',
       'apikey', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhjc29hcWVxcXVzc3N6Z2pmaG5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5Nzk0OTgsImV4cCI6MjEwMTU1NTQ5OH0.aG2DDeaSwgQXWRwtkC4OGqsebyaz5IrtCy2Wcx6lmc0',
       'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhjc29hcWVxcXVzc3N6Z2pmaG5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5Nzk0OTgsImV4cCI6MjEwMTU1NTQ5OH0.aG2DDeaSwgQXWRwtkC4OGqsebyaz5IrtCy2Wcx6lmc0',
-      'x-webhook-secret', 'a48df140afbbd636036ba7e60cb0a430dd09273ff3209f6a'
+      'x-webhook-secret', 'REDACTED_ROTATED'
     ),
     body := jsonb_build_object('variant', 'monday_kickoff')
   );
@@ -25,7 +25,7 @@ select cron.schedule(
       'Content-Type', 'application/json',
       'apikey', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhjc29hcWVxcXVzc3N6Z2pmaG5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5Nzk0OTgsImV4cCI6MjEwMTU1NTQ5OH0.aG2DDeaSwgQXWRwtkC4OGqsebyaz5IrtCy2Wcx6lmc0',
       'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhjc29hcWVxcXVzc3N6Z2pmaG5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5Nzk0OTgsImV4cCI6MjEwMTU1NTQ5OH0.aG2DDeaSwgQXWRwtkC4OGqsebyaz5IrtCy2Wcx6lmc0',
-      'x-webhook-secret', 'a48df140afbbd636036ba7e60cb0a430dd09273ff3209f6a'
+      'x-webhook-secret', 'REDACTED_ROTATED'
     ),
     body := jsonb_build_object('variant', 'friday_cardio')
   );
@@ -42,7 +42,7 @@ select cron.schedule(
       'Content-Type', 'application/json',
       'apikey', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhjc29hcWVxcXVzc3N6Z2pmaG5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5Nzk0OTgsImV4cCI6MjEwMTU1NTQ5OH0.aG2DDeaSwgQXWRwtkC4OGqsebyaz5IrtCy2Wcx6lmc0',
       'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhjc29hcWVxcXVzc3N6Z2pmaG5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5Nzk0OTgsImV4cCI6MjEwMTU1NTQ5OH0.aG2DDeaSwgQXWRwtkC4OGqsebyaz5IrtCy2Wcx6lmc0',
-      'x-webhook-secret', 'a48df140afbbd636036ba7e60cb0a430dd09273ff3209f6a'
+      'x-webhook-secret', 'REDACTED_ROTATED'
     ),
     body := jsonb_build_object('variant', 'monthly_checkin')
   );
