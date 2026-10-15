@@ -23,6 +23,7 @@ import PromptModal from './PromptModal';
 import { HeaderBack } from './Header';
 import { METHOD_LABELS, DEFAULT_EXERCISE_CONFIG } from './exerciseMethods';
 import WorkoutBulkEditScreen from './WorkoutBulkEditScreen';
+import WorkoutAnalysisScreen from './WorkoutAnalysisScreen';
 
 const FICHA_NAME_SUGGESTIONS = [
   'Treino A - Quadríceps',
@@ -97,6 +98,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
 
   // "Editar treino": set the whole ficha's numbers on one screen (step 2 of building a ficha).
   const [bulkEditing, setBulkEditing] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
 
   const loadWorkouts = async () => {
     const { data } = await supabase
@@ -741,6 +743,23 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     );
   }
 
+  if (analyzing) {
+    return (
+      <WorkoutAnalysisScreen
+        studentId={studentId}
+        workoutName={workouts.find((w) => w.id === activeWorkoutId)?.name || ''}
+        items={items}
+        onClose={async (changed) => {
+          setAnalyzing(false);
+          if (changed) {
+            await loadItems(activeWorkoutId);
+            loadWorkouts();
+          }
+        }}
+      />
+    );
+  }
+
   if (showAddModal) {
     return (
       <AddExerciseModal
@@ -994,6 +1013,18 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
       )}
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.actionsRow} contentContainerStyle={styles.actionsRowContent}>
+        <TouchableOpacity
+          style={styles.actionChip}
+          onPress={() => {
+            if (items.length === 0) {
+              showAlert('Ficha vazia', 'Adicione alguns exercícios à ficha antes de pedir a análise.');
+              return;
+            }
+            setAnalyzing(true);
+          }}
+        >
+          <Text style={styles.actionChipText}>🧠 Analisar Treino</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.actionChip} onPress={() => activeWorkout && handleDuplicateFicha(activeWorkout)} disabled={saving}>
           <Text style={styles.actionChipText}>📑 Duplicar este treino</Text>
         </TouchableOpacity>
