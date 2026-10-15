@@ -12,6 +12,7 @@ export type Confidence = "alta" | "media" | "baixa";
 export const MAX_ADJUSTMENTS = 6;
 export const MAX_IMPROVEMENTS = 4;
 export const MAX_PAYLOAD_CHARS = 60000;
+export const MIN_SESSIONS_FOR_TREND = 3;
 
 export type FichaExercise = {
   ref: string;
@@ -175,11 +176,20 @@ export const EVIDENCE_LIBRARY: EvidenceSource[] = [
 
 export const pubmedUrl = (pmid: string) => `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`;
 
-export function validatePayload(body: any): { ok: true; action: string; context: any; ficha: Ficha } | { ok: false; error: string } {
+export type Payload =
+  | { ok: true; action: "analyze_workout"; context: any; ficha: Ficha }
+  | { ok: true; action: "review_student"; context: any; ficha?: undefined }
+  | { ok: false; error: string };
+
+export function validatePayload(body: any): Payload {
   if (!body || typeof body !== "object") return { ok: false, error: "Requisição inválida." };
   const { action, context, ficha } = body;
-  if (action !== "analyze_workout") return { ok: false, error: "Ação não disponível." };
+  if (action !== "analyze_workout" && action !== "review_student") return { ok: false, error: "Ação não disponível." };
   if (!context || typeof context !== "object") return { ok: false, error: "Faltou o contexto do aluno." };
+  if (action === "review_student") {
+    if (JSON.stringify({ context }).length > MAX_PAYLOAD_CHARS) return { ok: false, error: "Dados grandes demais para analisar." };
+    return { ok: true, action, context };
+  }
   if (!ficha || typeof ficha !== "object" || typeof ficha.nome !== "string") return { ok: false, error: "Faltou a ficha a analisar." };
   if (!Array.isArray(ficha.exercicios) || ficha.exercicios.length === 0) return { ok: false, error: "A ficha ainda não tem exercícios para analisar." };
   if (ficha.exercicios.length > 30) return { ok: false, error: "Ficha grande demais para analisar." };
@@ -190,48 +200,112 @@ export function validatePayload(body: any): { ok: true; action: string; context:
   return { ok: true, action, context, ficha };
 }
 
+// Safety/quality rules shared by every copilot feature, so "Analisar Treino" and
+// "Revisar Aluno" can never drift apart on what the AI may or may not claim.
+const RULE = {
+  dataOnly:
+    "Use SOMENTE os dados do JSON fornecido (o 'contexto' do aluno e, quando houver, a 'ficha'). Nunca invente cargas, medidas, histórico, lesões ou resultados. " +
+    "Se um dado necessário não existe (veja a lista 'lacunas' e os campos nulos), diga isso em 'dadosInsuficientes' e NÃO faça sugestão que dependa dele.",
+  restrictions:
+    "Respeite as restrições: se houver problemas de saúde ou zonas de dor, não sugira nada que os agrave; na dúvida, recomende que o personal avalie (confiança baixa). Você não faz diagnóstico médico.",
+  insufficient:
+    "DADOS INSUFICIENTES NÃO SÃO EVIDÊNCIA. Se 'frequenciaReal' for nulo, tiver dadosSuficientes = false, ou 'lacunas' contiver 'poucas_sessoes_registradas' ou 'historico_de_execucao': " +
+    "NÃO avalie aderência, frequência real nem tendência de progressão, não classifique a frequência como baixa ou alta, e registre em 'dadosInsuficientes' que há poucas sessões registradas. " +
+    "Um exercício com menos de 3 sessões registradas (sessoesRegistradas) ou com tendencia 'insuficiente' não prova progressão: não o cite como ponto positivo nem baseie ajuste de carga nele. " +
+    "Nesse caso, baseie a análise só no que existe (a própria ficha, o perfil, as restrições, quando existirem).",
+  summary: "'resumo' deve ter no máximo 3 frases curtas.",
+  gender: "Trate o aluno no gênero do perfil: 'a aluna' se perfil.sexo for feminino, 'o aluno' se masculino; se ausente, use 'o(a) aluno(a)'.",
+  language: "Escreva em português do Brasil, em linguagem direta de profissional para profissional.",
+  confidence: "confianca: 'alta' só quando vários dados concordam; 'media' quando há um dado claro; 'baixa' quando é inferência.",
+  sources: (list: string) =>
+    `FONTES: fundamente cada item de '${list}' SOMENTE nas FONTES PERMITIDAS listadas abaixo, citando os ids (F1, F2...) em 'fontes'. ` +
+    "NUNCA cite estudo, autor, ano, número, doi ou link que não esteja nessas fontes, e não invente referências. " +
+    `Se nenhuma fonte permitida sustenta uma ideia, NÃO a inclua em '${list}'.`,
+  caution:
+    "Descreva a evidência com cautela ('as evidências indicam', 'sugerem'), sem afirmar mais do que o 'achado' da fonte diz e sem inventar números além dos que constam nele. " +
+    "As fontes tratam de adultos saudáveis e de médias de grupos: a resposta individual varia. Não extrapole para lesões, dores ou condições de saúde; nesses casos recomende avaliação do personal ou de um profissional de saúde.",
+  failure:
+    "Não recomende treinar até a falha muscular, nem periodização específica, como regra: as fontes não mostram vantagem consistente nisso. Use as fontes para o que elas de fato mostram " +
+    "(volume semanal, carga para força, descanso entre séries, frequência com volume igualado, proteína, atividade aeróbica, etc.).",
+  pickSources:
+    "Escolha as fontes pelo objetivo e pelo que o aluno precisa: hipertrofia/ganho de massa (F1, F2, F3, F4, F5, F6, F7, F8); força (F1, F2, F5); emagrecimento e definição (F9, F11, F10, F8, F1); condicionamento (F10, F11, F1). " +
+    "Não force fontes só para preencher a lista.",
+  nutrition:
+    "O contexto NÃO traz dados de dieta. Sobre proteína (F8), só sugira CONFERIR se a ingestão da dieta do aluno está adequada, sem prescrever quantidade como meta e sem afirmar que 'a literatura demonstra'; " +
+    "use confiança baixa. Não afirme nada sobre massa livre de gordura além do 'achado' da fonte.",
+};
+
+const numbered = (rules: string[]) => rules.map((r, i) => `${i + 1}. ${r}`).join("\n");
+
+const RULES_ANALYZE = [
+  RULE.dataOnly,
+  RULE.restrictions,
+  "Seja conservador: ajustes pequenos, no máximo " + MAX_ADJUSTMENTS + ". Priorize o que tem mais evidência nos dados " +
+    "(progressão de carga, volume semanal vs meta, frequência real vs declarada, PSE/RIR, fase da periodização).",
+  "Cada ajuste deve citar o dado concreto que o motivou (ex.: 'média de 8 séries/semana contra meta de 12').",
+  "Um ajuste APLICÁVEL refere um exercício da ficha pelo campo 'ref' (e1, e2...) e um 'campo' entre: series, reps, cargaKg, descansoSeg, metodo, observacao, " +
+    "com 'valorSugerido' coerente: series = inteiro de 1 a 10; reps = texto como '8-10' ou '12'; cargaKg = número em kg; descansoSeg = inteiro de 15 a 600; " +
+    "metodo = um de [" + METHODS.join(", ") + "]; observacao = texto curto. " +
+    "Se a recomendação NÃO é uma alteração de campo de um exercício (ex.: 'incluir um exercício de posterior', 'rever a frequência semanal'), " +
+    "deixe ref, campo e valorSugerido nulos — será mostrada só como recomendação.",
+  "Prefira ajustar parâmetros a sugerir trocar ou remover exercícios que já têm histórico de carga.",
+  "Só sugira uma carga se houver 'proximaCargaSugeridaKg' ou histórico no contexto que a sustente; caso contrário não sugira carga.",
+  RULE.language,
+  RULE.confidence,
+  "Se a ficha já está coerente com os dados, diga isso em 'resumo' e devolva poucos ou nenhum ajuste. Não force sugestões.",
+  RULE.insufficient,
+  RULE.summary,
+  RULE.gender,
+  "MELHORIAS PARA O OBJETIVO: se 'perfil.objetivo' existir, preencha 'melhoriasParaObjetivo' (de 1 a 4 itens) com recomendações para aproximar ESTA ficha do objetivo declarado, " +
+    "sempre ancoradas nos dados do aluno e da ficha (ex.: séries semanais por grupo muscular, metas de volume, frequência, descanso, carga). " +
+    "Se 'perfil.objetivo' for nulo, deixe 'melhoriasParaObjetivo' vazio e registre em 'dadosInsuficientes' que o objetivo do aluno não foi informado.",
+  RULE.sources("melhoriasParaObjetivo") +
+    " (Uma ideia sem fonte pode aparecer como ajuste comum, com confiança baixa, sem fontes.) Em 'ajustes', 'fontes' é opcional e só vale se a fonte realmente sustenta aquele ajuste.",
+  RULE.caution,
+  RULE.failure,
+  RULE.pickSources,
+  RULE.nutrition,
+];
+
 export const SYSTEM_PROMPT_ANALYZE =
   "Você é o copiloto de um personal trainer. Sua tarefa é analisar UMA ficha de treino de um aluno, a partir dos dados fornecidos, " +
   "e sugerir ajustes pontuais. Quem decide é o personal; você apenas sugere.\n\n" +
-  "REGRAS:\n" +
-  "1. Use SOMENTE os dados do JSON ('contexto' e 'ficha'). Nunca invente cargas, medidas, histórico, lesões ou resultados. " +
-  "Se um dado necessário não existe (veja a lista 'lacunas' e os campos nulos), diga isso em 'dadosInsuficientes' e NÃO faça sugestão que dependa dele.\n" +
-  "2. Respeite as restrições: se houver problemas de saúde ou zonas de dor, não sugira nada que os agrave; na dúvida, recomende que o personal avalie (confiança baixa). Você não faz diagnóstico médico.\n" +
-  "3. Seja conservador: ajustes pequenos, no máximo " + MAX_ADJUSTMENTS + ". Priorize o que tem mais evidência nos dados " +
-  "(progressão de carga, volume semanal vs meta, frequência real vs declarada, PSE/RIR, fase da periodização).\n" +
-  "4. Cada ajuste deve citar o dado concreto que o motivou (ex.: 'média de 8 séries/semana contra meta de 12').\n" +
-  "5. Um ajuste APLICÁVEL refere um exercício da ficha pelo campo 'ref' (e1, e2...) e um 'campo' entre: series, reps, cargaKg, descansoSeg, metodo, observacao, " +
-  "com 'valorSugerido' coerente: series = inteiro de 1 a 10; reps = texto como '8-10' ou '12'; cargaKg = número em kg; descansoSeg = inteiro de 15 a 600; " +
-  "metodo = um de [" + METHODS.join(", ") + "]; observacao = texto curto. " +
-  "Se a recomendação NÃO é uma alteração de campo de um exercício (ex.: 'incluir um exercício de posterior', 'rever a frequência semanal'), " +
-  "deixe ref, campo e valorSugerido nulos — será mostrada só como recomendação.\n" +
-  "6. Prefira ajustar parâmetros a sugerir trocar ou remover exercícios que já têm histórico de carga.\n" +
-  "7. Só sugira uma carga se houver 'proximaCargaSugeridaKg' ou histórico no contexto que a sustente; caso contrário não sugira carga.\n" +
-  "8. Escreva em português do Brasil, em linguagem direta de profissional para profissional.\n" +
-  "9. confianca: 'alta' só quando vários dados concordam; 'media' quando há um dado claro; 'baixa' quando é inferência.\n" +
-  "10. Se a ficha já está coerente com os dados, diga isso em 'resumo' e devolva poucos ou nenhum ajuste. Não force sugestões.\n" +
-  "11. DADOS INSUFICIENTES NÃO SÃO EVIDÊNCIA. Se 'frequenciaReal' for nulo, tiver dadosSuficientes = false, ou 'lacunas' contiver 'poucas_sessoes_registradas' ou 'historico_de_execucao': " +
-  "NÃO avalie aderência, frequência real nem tendência de progressão, não classifique a frequência como baixa ou alta, e registre em 'dadosInsuficientes' que há poucas sessões registradas. " +
-  "Um exercício com menos de 3 sessões registradas (sessoesRegistradas) ou com tendencia 'insuficiente' não prova progressão: não o cite como ponto positivo nem baseie ajuste de carga nele. " +
-  "Nesse caso, baseie a análise só na própria ficha (volume por sessão, equilíbrio entre grupos, descanso, coerência com o objetivo e as restrições, quando existirem).\n" +
-  "12. 'resumo' deve ter no máximo 3 frases curtas.\n" +
-  "13. Trate o aluno no gênero do perfil: 'a aluna' se perfil.sexo for feminino, 'o aluno' se masculino; se ausente, use 'o(a) aluno(a)'.\n" +
-  "14. MELHORIAS PARA O OBJETIVO: se 'perfil.objetivo' existir, preencha 'melhoriasParaObjetivo' (de 1 a 4 itens) com recomendações para aproximar ESTA ficha do objetivo declarado, " +
-  "sempre ancoradas nos dados do aluno e da ficha (ex.: séries semanais por grupo muscular, metas de volume, frequência, descanso, carga). " +
-  "Se 'perfil.objetivo' for nulo, deixe 'melhoriasParaObjetivo' vazio e registre em 'dadosInsuficientes' que o objetivo do aluno não foi informado.\n" +
-  "15. FONTES: fundamente cada item de 'melhoriasParaObjetivo' SOMENTE nas FONTES PERMITIDAS listadas abaixo, citando os ids (F1, F2...) em 'fontes'. " +
-  "NUNCA cite estudo, autor, ano, número, doi ou link que não esteja nessas fontes, e não invente referências. Se nenhuma fonte permitida sustenta uma ideia, NÃO a inclua em 'melhoriasParaObjetivo' " +
-  "(ela pode aparecer como ajuste comum, com confiança baixa, sem fontes). Em 'ajustes', 'fontes' é opcional e só vale se a fonte realmente sustenta aquele ajuste.\n" +
-  "16. Descreva a evidência com cautela ('as evidências indicam', 'sugerem'), sem afirmar mais do que o 'achado' da fonte diz e sem inventar números além dos que constam nele. " +
-  "As fontes tratam de adultos saudáveis e de médias de grupos: a resposta individual varia. Não extrapole para lesões, dores ou condições de saúde; nesses casos recomende avaliação do personal ou de um profissional de saúde.\n" +
-  "17. Não recomende treinar até a falha muscular, nem periodização específica, como regra: as fontes não mostram vantagem consistente nisso. Use as fontes para o que elas de fato mostram " +
-  "(volume semanal, carga para força, descanso entre séries, frequência com volume igualado, proteína, atividade aeróbica, etc.).\n" +
-  "18. Escolha as fontes pelo objetivo e pelo que a ficha precisa: hipertrofia/ganho de massa (F1, F2, F3, F4, F5, F6, F7, F8); força (F1, F2, F5); emagrecimento e definição (F9, F11, F10, F8, F1); condicionamento (F10, F11, F1). " +
-  "Não force fontes só para preencher a lista.";
+  "REGRAS:\n" + numbered(RULES_ANALYZE);
 
-export function buildSystemPrompt(): string {
-  const sources = EVIDENCE_LIBRARY.map((s) => `${s.id} — ${s.tipo}. ${s.citacao}\nAchado: ${s.achado}`).join("\n\n");
-  return SYSTEM_PROMPT_ANALYZE + "\n\nFONTES PERMITIDAS (as únicas que você pode citar):\n\n" + sources;
+const RULES_REVIEW = [
+  RULE.dataOnly,
+  RULE.restrictions,
+  "Preencha 'secoes' com quatro blocos — objetivo, frequencia, volume e progressao —, cada um com 'status' ('ok' = coerente com os dados; 'atencao' = merece atenção; 'insuficiente' = sem dados suficientes para avaliar) " +
+    "e um 'texto' curto (1 a 2 frases) citando o dado concreto. objetivo: o objetivo declarado frente à ficha e ao perfil. frequencia: sessões reais frente ao declarado. " +
+    "volume: séries por grupo muscular frente às metas e ao planejado. progressao: evolução das cargas.",
+  RULE.insufficient,
+  RULE.summary,
+  RULE.gender,
+  RULE.language,
+  RULE.confidence,
+  "'pontosPositivos' e 'pontosDeAtencao': no máximo 5 itens cada, curtos, cada um apoiado em um dado concreto do contexto. " +
+    "'restricoes': resuma problemas de saúde, zonas de dor e observações do personal que EXISTAM no contexto, sem interpretar clinicamente; se não houver, deixe a lista vazia.",
+  "'sugestoes' (de 0 a " + MAX_IMPROVEMENTS + " itens): melhorias para aproximar o aluno do objetivo declarado, ancoradas nos dados. " +
+    "Se 'perfil.objetivo' for nulo, deixe 'sugestoes' vazio e registre em 'dadosInsuficientes' que o objetivo não foi informado.",
+  RULE.sources("sugestoes"),
+  RULE.caution,
+  RULE.failure,
+  RULE.pickSources,
+  RULE.nutrition,
+];
+
+export const SYSTEM_PROMPT_REVIEW =
+  "Você é o copiloto de um personal trainer. Sua tarefa é fazer o RAIO-X de um aluno ('Revisar Aluno'): avaliar, com base APENAS nos dados fornecidos, " +
+  "como ele está em relação ao objetivo, à frequência, ao volume e à progressão, destacar pontos positivos, pontos de atenção e restrições, e sugerir melhorias. " +
+  "É uma leitura informativa: nada será alterado automaticamente. Quem decide é o personal.\n\n" +
+  "REGRAS:\n" + numbered(RULES_REVIEW);
+
+const sourcesBlock = () =>
+  "\n\nFONTES PERMITIDAS (as únicas que você pode citar):\n\n" +
+  EVIDENCE_LIBRARY.map((s) => `${s.id} — ${s.tipo}. ${s.citacao}\nAchado: ${s.achado}`).join("\n\n");
+
+export function buildSystemPrompt(action: string = "analyze_workout"): string {
+  return (action === "review_student" ? SYSTEM_PROMPT_REVIEW : SYSTEM_PROMPT_ANALYZE) + sourcesBlock();
 }
 
 export const RESPONSE_SCHEMA_ANALYZE = {
@@ -312,14 +386,13 @@ export function parseSuggestedValue(campo: AdjustableField, raw: unknown): strin
   }
 }
 
-export function sanitizeAnalysis(parsed: any, ficha: Ficha, opts: { objetivo?: string | null } = {}): Analysis {
-  const byRef = new Map(ficha.exercicios.map((e) => [e.ref, e]));
+// Citations: only ids that exist in OUR library survive. Anything else the model
+// writes as a "source" (an invented id, author, year, link…) is silently discarded,
+// and the reference list the app shows is always built from the library's own text.
+function makeCiter() {
   const libraryById = new Map(EVIDENCE_LIBRARY.map((s) => [s.id, s]));
   const numberById = new Map<string, number>();
   const references: Reference[] = [];
-
-  // Only ids that exist in OUR library survive. Anything else the model writes
-  // as a "source" (an invented id, author, year, link…) is silently discarded.
   const validIds = (raw: unknown): string[] => {
     const out: string[] = [];
     for (const v of Array.isArray(raw) ? raw : []) {
@@ -328,8 +401,7 @@ export function sanitizeAnalysis(parsed: any, ficha: Ficha, opts: { objetivo?: s
     }
     return out;
   };
-  // Numbers references in order of first use and builds the list the app shows,
-  // always from the library's own text — never from the model's output.
+  // Numbers references in order of first use.
   const register = (ids: string[]): number[] =>
     ids.map((id) => {
       let n = numberById.get(id);
@@ -341,8 +413,20 @@ export function sanitizeAnalysis(parsed: any, ficha: Ficha, opts: { objetivo?: s
       }
       return n;
     });
+  return { validIds, register, references };
+}
 
-  const confidenceOf = (v: unknown): Confidence => (["alta", "media", "baixa"].includes(String(v)) ? (v as Confidence) : "baixa");
+const confidenceOf = (v: unknown): Confidence => (["alta", "media", "baixa"].includes(String(v)) ? (v as Confidence) : "baixa");
+
+// The context carries no diet data, so anything grounded in the nutrition source
+// (F8, protein) can never be shown with more than low confidence, whatever the
+// model claims.
+const NUTRITION_SOURCE_IDS = ["F8"];
+const capConfidence = (c: Confidence, ids: string[]): Confidence => (ids.some((id) => NUTRITION_SOURCE_IDS.includes(id)) ? "baixa" : c);
+
+export function sanitizeAnalysis(parsed: any, ficha: Ficha, opts: { objetivo?: string | null } = {}): Analysis {
+  const byRef = new Map(ficha.exercicios.map((e) => [e.ref, e]));
+  const { validIds, register, references } = makeCiter();
 
   // Improvements toward the student's goal: need a declared goal, a
   // recommendation, and at least one valid source — otherwise the claim has
@@ -359,7 +443,7 @@ export function sanitizeAnalysis(parsed: any, ficha: Ficha, opts: { objetivo?: s
         recomendacao,
         porQue: clip(raw?.porQue, 400),
         fontes: register(ids),
-        confianca: confidenceOf(raw?.confianca),
+        confianca: capConfidence(confidenceOf(raw?.confianca), ids),
       });
     }
   }
@@ -389,6 +473,7 @@ export function sanitizeAnalysis(parsed: any, ficha: Ficha, opts: { objetivo?: s
       aplicavel = valor != null;
     }
 
+    const adjIds = validIds(raw?.fontes);
     adjustments.push({
       id: `a${adjustments.length + 1}`,
       ref: aplicavel ? exercise!.ref : null,
@@ -400,8 +485,8 @@ export function sanitizeAnalysis(parsed: any, ficha: Ficha, opts: { objetivo?: s
       sugestao,
       motivo: clip(raw?.motivo, 400),
       impacto: clip(raw?.impacto, 200),
-      confianca: confidenceOf(raw?.confianca),
-      fontes: register(validIds(raw?.fontes)),
+      confianca: capConfidence(confidenceOf(raw?.confianca), adjIds),
+      fontes: register(adjIds),
     });
   }
 
@@ -413,6 +498,135 @@ export function sanitizeAnalysis(parsed: any, ficha: Ficha, opts: { objetivo?: s
     dadosInsuficientes: clipList(parsed?.dadosInsuficientes, 6, 200),
     melhoriasParaObjetivo: improvements,
     ajustes: adjustments,
+    referencias: references,
+    fontesVerificadasEm: EVIDENCE_VERIFIED_ON,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// "Revisar Aluno": a read-only x-ray of the student. Nothing here is applied
+// anywhere; it only informs the personal.
+// ---------------------------------------------------------------------------
+export type SectionStatus = "ok" | "atencao" | "insuficiente";
+export type ReviewSection = { status: SectionStatus; texto: string };
+export type Review = {
+  resumo: string;
+  objetivo: string | null;
+  secoes: { objetivo: ReviewSection; frequencia: ReviewSection; volume: ReviewSection; progressao: ReviewSection };
+  pontosPositivos: string[];
+  pontosDeAtencao: string[];
+  restricoes: string[];
+  dadosInsuficientes: string[];
+  sugestoes: Improvement[];
+  referencias: Reference[];
+  fontesVerificadasEm: string;
+};
+
+const SECTION_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    status: { type: "STRING", enum: ["ok", "atencao", "insuficiente"] },
+    texto: { type: "STRING" },
+  },
+  required: ["status", "texto"],
+};
+
+export const RESPONSE_SCHEMA_REVIEW = {
+  type: "OBJECT",
+  properties: {
+    resumo: { type: "STRING" },
+    secoes: {
+      type: "OBJECT",
+      properties: { objetivo: SECTION_SCHEMA, frequencia: SECTION_SCHEMA, volume: SECTION_SCHEMA, progressao: SECTION_SCHEMA },
+      required: ["objetivo", "frequencia", "volume", "progressao"],
+    },
+    pontosPositivos: { type: "ARRAY", items: { type: "STRING" } },
+    pontosDeAtencao: { type: "ARRAY", items: { type: "STRING" } },
+    restricoes: { type: "ARRAY", items: { type: "STRING" } },
+    dadosInsuficientes: { type: "ARRAY", items: { type: "STRING" } },
+    sugestoes: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          titulo: { type: "STRING" },
+          recomendacao: { type: "STRING" },
+          porQue: { type: "STRING" },
+          fontes: { type: "ARRAY", items: { type: "STRING" } },
+          confianca: { type: "STRING", enum: ["alta", "media", "baixa"] },
+        },
+        required: ["titulo", "recomendacao", "porQue", "fontes", "confianca"],
+      },
+    },
+  },
+  required: ["resumo", "secoes", "pontosPositivos", "pontosDeAtencao", "restricoes", "dadosInsuficientes", "sugestoes"],
+};
+
+export function buildReviewUserText(context: unknown): string {
+  return "Faça o raio-x do aluno com base no contexto abaixo.\n\n" + JSON.stringify({ contexto: context });
+}
+
+export function sanitizeReview(parsed: any, context: any): Review {
+  const { validIds, register, references } = makeCiter();
+  const statusOf = (v: unknown): SectionStatus => (["ok", "atencao", "insuficiente"].includes(String(v)) ? (v as SectionStatus) : "insuficiente");
+  const section = (raw: any): ReviewSection => ({ status: statusOf(raw?.status), texto: clip(raw?.texto, 300) });
+  const secoes = {
+    objetivo: section(parsed?.secoes?.objetivo),
+    frequencia: section(parsed?.secoes?.frequencia),
+    volume: section(parsed?.secoes?.volume),
+    progressao: section(parsed?.secoes?.progressao),
+  };
+
+  // Deterministic guards: whatever the model says, a block with no real data
+  // behind it is shown as "insuficiente" (so a student with two logged sessions
+  // never gets a verdict on adherence or progression).
+  const objetivo: string | null = typeof context?.perfil?.objetivo === "string" && context.perfil.objetivo ? context.perfil.objetivo : null;
+  if (!objetivo) {
+    secoes.objetivo = { status: "insuficiente", texto: "Objetivo do aluno não informado (anamnese pendente)." };
+  }
+  const freq = context?.frequenciaReal;
+  if (!freq || freq.dadosSuficientes === false) {
+    secoes.frequencia = {
+      status: "insuficiente",
+      texto: clip(freq?.aviso, 300) || "Nenhuma sessão registrada nos últimos 90 dias: não dá para avaliar a frequência.",
+    };
+  }
+  const progression: any[] = Array.isArray(context?.progressao?.porExercicio) ? context.progressao.porExercicio : [];
+  const evaluable = progression.filter((p) => (p?.sessoesRegistradas ?? 0) >= MIN_SESSIONS_FOR_TREND && p?.tendencia && p.tendencia !== "insuficiente");
+  if (evaluable.length === 0) {
+    secoes.progressao = { status: "insuficiente", texto: `Menos de ${MIN_SESSIONS_FOR_TREND} sessões registradas por exercício: ainda não dá para avaliar a progressão.` };
+  }
+  const groups: any[] = Array.isArray(context?.volume?.porGrupo) ? context.volume.porGrupo : [];
+  if (groups.length === 0) {
+    secoes.volume = { status: "insuficiente", texto: "Sem séries planejadas nem executadas para avaliar o volume." };
+  }
+
+  const suggestions: Improvement[] = [];
+  if (objetivo) {
+    for (const raw of Array.isArray(parsed?.sugestoes) ? parsed.sugestoes : []) {
+      if (suggestions.length >= MAX_IMPROVEMENTS) break;
+      const recomendacao = clip(raw?.recomendacao, 400);
+      const ids = validIds(raw?.fontes);
+      if (!recomendacao || ids.length === 0) continue;
+      suggestions.push({
+        titulo: clip(raw?.titulo, 80) || "Sugestão",
+        recomendacao,
+        porQue: clip(raw?.porQue, 400),
+        fontes: register(ids),
+        confianca: capConfidence(confidenceOf(raw?.confianca), ids),
+      });
+    }
+  }
+
+  return {
+    resumo: clip(parsed?.resumo, 600),
+    objetivo: objetivo ? clip(objetivo, 60) : null,
+    secoes,
+    pontosPositivos: clipList(parsed?.pontosPositivos, 5, 300),
+    pontosDeAtencao: clipList(parsed?.pontosDeAtencao, 5, 300),
+    restricoes: clipList(parsed?.restricoes, 6, 300),
+    dadosInsuficientes: clipList(parsed?.dadosInsuficientes, 6, 200),
+    sugestoes: suggestions,
     referencias: references,
     fontesVerificadasEm: EVIDENCE_VERIFIED_ON,
   };

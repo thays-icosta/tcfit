@@ -15,6 +15,7 @@ import WeeklyPlanScreen from './WeeklyPlanScreen';
 import PersonalFinanceScreen from './PersonalFinanceScreen';
 import ChatScreen from './ChatScreen';
 import AnamneseViewScreen from './AnamneseViewScreen';
+import StudentReviewScreen from './StudentReviewScreen';
 import { HeaderBack } from './Header';
 import MetricsMiniCards from './MetricsMiniCards';
 import WeightEvolutionChart from './WeightEvolutionChart';
@@ -93,6 +94,7 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
   const [isOverdue, setIsOverdue] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showAnamnese, setShowAnamnese] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   const [accessLevel, setAccessLevel] = useState(student.access_level || 'plataforma_base');
   const [savingAccessLevel, setSavingAccessLevel] = useState(false);
   const [attendanceMode, setAttendanceMode] = useState(student.attendance_mode || 'online');
@@ -526,6 +528,9 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
   if (showAnamnese) {
     return <AnamneseViewScreen studentId={student.id} onClose={() => setShowAnamnese(false)} />;
   }
+  if (showReview) {
+    return <StudentReviewScreen studentId={student.id} studentName={student.name} onClose={() => setShowReview(false)} />;
+  }
 
   const plannedDaysPerWeek = anamnese?.days_per_week || null;
   const frequencyStatus = plannedDaysPerWeek
@@ -593,6 +598,10 @@ export default function AlunoDetailScreen({ student, personalId, personalName, o
         <TouchableOpacity style={styles.anamneseButton} onPress={() => setShowAnamnese(true)}>
           <Ionicons name="clipboard-outline" size={16} color="#08090B" />
           <Text style={styles.anamneseButtonText}>Abrir Anamnese</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.reviewButton} onPress={() => setShowReview(true)} accessibilityLabel="Revisar aluno com IA">
+          <Text style={styles.reviewButtonText}>🧠 Revisar Aluno</Text>
         </TouchableOpacity>
 
         {attendanceMode === 'presencial' && (
@@ -869,6 +878,8 @@ const styles = StyleSheet.create({
   chatShortcutButton: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(34,197,94,0.1)', alignItems: 'center', justifyContent: 'center' },
   anamneseButton: { flexDirection: 'row', gap: 8, backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
   anamneseButtonText: { color: '#08090B', fontSize: 12, fontWeight: '700' },
+  reviewButton: { marginTop: 8, borderWidth: 1, borderColor: '#3A3F48', backgroundColor: '#121419', borderRadius: 10, paddingVertical: 11, alignItems: 'center', justifyContent: 'center' },
+  reviewButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
   healthAlertRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
   healthAlertBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5, maxWidth: '100%' },
   healthAlertBadgeText: { color: '#ef4444', fontSize: 10, fontWeight: '700' },

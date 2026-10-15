@@ -91,6 +91,19 @@ export async function requestWorkoutAnalysis(client, { studentId, workoutName, i
   return { analysis: data.analysis, refToItemId };
 }
 
+// "Revisar Aluno": a read-only x-ray. Only the student context goes out — there
+// is no ficha and nothing is ever applied from the answer.
+export async function requestStudentReview(client, { studentId }) {
+  const context = await buildStudentContext(client, { studentId });
+  const { data, error } = await client.functions.invoke('ai-copilot', {
+    body: { action: 'review_student', context },
+  });
+  if (error || !data?.review) {
+    throw new Error(await describeFunctionError(error, data, 'Não consegui revisar o aluno agora. Tenta de novo em instantes.'));
+  }
+  return data.review;
+}
+
 // Writes ONE field of ONE exercise row — the same kind of edit the manual
 // editors make. Never touches history rows, never deletes or swaps anything.
 export async function applyAdjustment(client, { itemId, campo, valor }) {

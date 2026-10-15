@@ -1,21 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, TextInput, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from './supabaseClient';
 import { showAlert } from './alertUtils';
 import { HeaderBack } from './Header';
 import { METHODS, METHOD_LABELS } from './exerciseMethods';
 import { requestWorkoutAnalysis, applyAdjustment, parseAdjustmentValue, FIELD_LABEL } from './aiCopilot';
-
-const CONFIDENCE_LABEL = { alta: 'Confiança alta', media: 'Confiança média', baixa: 'Confiança baixa' };
-const CONFIDENCE_COLOR = { alta: '#22c55e', media: '#f59e0b', baixa: '#A7AAB0' };
+import { SourceChips, ImprovementCard, BulletListCard, ReferencesCard, CONFIDENCE_LABEL, CONFIDENCE_COLOR } from './EvidenceBlocks';
 
 const KEYBOARD_BY_FIELD = { series: 'number-pad', descansoSeg: 'number-pad', cargaKg: 'decimal-pad', reps: 'numbers-and-punctuation' };
-
-function formatVerifiedDate(iso) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : null;
-}
 
 function formatValue(campo, value) {
   if (value == null || value === '') return '—';
@@ -113,62 +106,9 @@ export default function WorkoutAnalysisScreen({ studentId, workoutName, items, o
     handleApply(adj, value);
   };
 
-  const referenceByNumber = (n) => (analysis?.referencias || []).find((r) => r.n === n);
+  const renderImprovement = (m, i) => <ImprovementCard key={`m${i}`} item={m} referencias={analysis.referencias} />;
 
-  const openReference = (n) => {
-    const ref = referenceByNumber(n);
-    if (!ref) return;
-    Linking.openURL(ref.url).catch(() => showAlert('Não consegui abrir o link', ref.url));
-  };
-
-  // Source chips: each opens that study's PubMed page.
-  const renderSources = (numbers) => (
-    numbers && numbers.length > 0 ? (
-      <View style={styles.sourcesRow}>
-        <Text style={styles.adjLabel}>Base científica</Text>
-        <View style={styles.sourceChips}>
-          {numbers.map((n) => (
-            <TouchableOpacity key={n} style={styles.sourceChip} onPress={() => openReference(n)} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }} accessibilityLabel={`Abrir referência ${n} no PubMed`}>
-              <Text style={styles.sourceChipText}>[{n}] {referenceByNumber(n)?.tipo?.split(' (')[0] || 'Estudo'} ↗</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    ) : null
-  );
-
-  const renderImprovement = (m, i) => (
-    <View key={`m${i}`} style={styles.improvementCard}>
-      <View style={styles.adjHeader}>
-        <Text style={styles.adjExercise}>{m.titulo}</Text>
-        <Text style={[styles.confChip, { color: CONFIDENCE_COLOR[m.confianca], borderColor: CONFIDENCE_COLOR[m.confianca] }]}>
-          {CONFIDENCE_LABEL[m.confianca]}
-        </Text>
-      </View>
-      <Text style={styles.adjSuggestion}>{m.recomendacao}</Text>
-      {!!m.porQue && (
-        <View style={styles.adjBlock}>
-          <Text style={styles.adjLabel}>Por quê</Text>
-          <Text style={styles.adjText}>{m.porQue}</Text>
-        </View>
-      )}
-      {renderSources(m.fontes)}
-    </View>
-  );
-
-  const renderList = (title, list, icon, color) => (
-    list && list.length > 0 ? (
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        {list.map((text, i) => (
-          <View key={i} style={styles.bulletRow}>
-            <Ionicons name={icon} size={15} color={color} style={{ marginTop: 2 }} />
-            <Text style={styles.bulletText}>{text}</Text>
-          </View>
-        ))}
-      </View>
-    ) : null
-  );
+  const renderList = (title, list, icon, color) => <BulletListCard title={title} list={list} icon={icon} color={color} />;
 
   const renderAdjustment = (adj) => {
     const st = status[adj.id];
@@ -189,9 +129,9 @@ export default function WorkoutAnalysisScreen({ studentId, workoutName, items, o
         <Text style={styles.adjSuggestion}>{adj.sugestao}</Text>
 
         {adj.aplicavel && (
-          <View style={styles.changeRow}>
+          <View style={[styles.changeRow, adj.campo === 'observacao' && styles.changeRowStack]}>
             <Text style={styles.changeField}>{FIELD_LABEL[adj.campo]}</Text>
-            <Text style={styles.changeValues}>
+            <Text style={[styles.changeValues, adj.campo === 'observacao' && styles.changeValuesStack]}>
               {formatValue(adj.campo, adj.atual)}  →  <Text style={styles.changeNew}>{formatValue(adj.campo, applied ? st.value : adj.valorSugerido)}</Text>
             </Text>
           </View>
@@ -209,7 +149,7 @@ export default function WorkoutAnalysisScreen({ studentId, workoutName, items, o
             <Text style={styles.adjText}>{adj.impacto}</Text>
           </View>
         )}
-        {renderSources(adj.fontes)}
+        <SourceChips numbers={adj.fontes} referencias={analysis.referencias} />
 
         {applied ? (
           <View style={styles.statusRow}>
@@ -332,27 +272,7 @@ export default function WorkoutAnalysisScreen({ studentId, workoutName, items, o
             )}
             {analysis.ajustes.map(renderAdjustment)}
 
-            {analysis.referencias?.length > 0 && (
-              <View style={styles.card}>
-                <Text style={styles.sectionTitle}>Referências</Text>
-                {analysis.referencias.map((r) => (
-                  <View key={r.id} style={styles.refItem}>
-                    <Text style={styles.refTipo}>[{r.n}] {r.tipo}</Text>
-                    <Text style={styles.refCitacao}>{r.citacao}</Text>
-                    <Text style={styles.adjLabel}>O que o estudo conclui</Text>
-                    <Text style={styles.adjText}>{r.achado}</Text>
-                    <TouchableOpacity onPress={() => openReference(r.n)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel={`Ver referência ${r.n} no PubMed`}>
-                      <Text style={[styles.linkText, { marginTop: 6 }]}>Ver no PubMed ↗</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-                {!!formatVerifiedDate(analysis.fontesVerificadasEm) && (
-                  <Text style={styles.refNote}>
-                    Referências conferidas no PubMed em {formatVerifiedDate(analysis.fontesVerificadasEm)}. Os resultados são médias de estudos com adultos saudáveis: a resposta individual varia.
-                  </Text>
-                )}
-              </View>
-            )}
+            <ReferencesCard referencias={analysis.referencias} verifiedAt={analysis.fontesVerificadasEm} />
 
             <Text style={styles.disclaimer}>
               Sugestões geradas por IA a partir dos dados do aluno. Elas não substituem a sua avaliação — nada é alterado sem você tocar em &ldquo;Aplicar&rdquo;.
@@ -373,8 +293,6 @@ const styles = StyleSheet.create({
   card: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginBottom: 10 },
   sectionTitle: { color: '#A7AAB0', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 },
   summaryText: { color: '#FFFFFF', fontSize: 14, lineHeight: 21 },
-  bulletRow: { flexDirection: 'row', gap: 8, marginBottom: 6 },
-  bulletText: { color: '#FFFFFF', fontSize: 13, lineHeight: 19, flex: 1 },
   adjustmentsTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', marginTop: 10, marginBottom: 10 },
   adjCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 14, padding: 14, marginBottom: 10 },
   adjCardApplied: { borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.06)' },
@@ -385,7 +303,9 @@ const styles = StyleSheet.create({
   adjSuggestion: { color: '#FFFFFF', fontSize: 14, lineHeight: 20, marginBottom: 8 },
   changeRow: { backgroundColor: '#08090B', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   changeField: { color: '#A7AAB0', fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
-  changeValues: { color: '#A7AAB0', fontSize: 14, fontWeight: '700' },
+  changeValues: { color: '#A7AAB0', fontSize: 14, fontWeight: '700', flexShrink: 1, marginLeft: 12, textAlign: 'right' },
+  changeRowStack: { flexDirection: 'column', alignItems: 'flex-start', gap: 4 },
+  changeValuesStack: { marginLeft: 0, textAlign: 'left', fontSize: 13, lineHeight: 19 },
   changeNew: { color: '#FFFFFF', fontWeight: '800' },
   adjBlock: { marginBottom: 6 },
   adjLabel: { color: '#737373', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', marginBottom: 2 },
@@ -407,13 +327,4 @@ const styles = StyleSheet.create({
   methodChipText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
   methodChipTextActive: { color: '#08090B' },
   disclaimer: { color: '#737373', fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: 14 },
-  improvementCard: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#3A3F48', borderRadius: 14, padding: 14, marginBottom: 10 },
-  sourcesRow: { marginTop: 4 },
-  sourceChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
-  sourceChip: { borderWidth: 1, borderColor: '#3A3F48', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#08090B' },
-  sourceChipText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
-  refItem: { borderTopWidth: 1, borderTopColor: '#292D34', paddingTop: 10, marginTop: 10 },
-  refTipo: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', marginBottom: 4 },
-  refCitacao: { color: '#A7AAB0', fontSize: 11, lineHeight: 16, marginBottom: 8 },
-  refNote: { color: '#737373', fontSize: 11, lineHeight: 16, marginTop: 12 },
 });
