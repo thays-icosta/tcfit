@@ -2,18 +2,22 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   RESPONSE_SCHEMA_ANALYZE,
+  RESPONSE_SCHEMA_PROPOSE,
   RESPONSE_SCHEMA_REVIEW,
   buildAnalyzeUserText,
+  buildProposeUserText,
   buildReviewUserText,
   buildSystemPrompt,
   sanitizeAnalysis,
+  sanitizeProposal,
   sanitizeReview,
   validatePayload,
 } from "./logic.ts";
 
 // AI copilot for the personal. One function, one `action` per feature, so the
 // student-context contract lives in one place. Actions: `analyze_workout`
-// ("Analisar Treino") and `review_student` ("Revisar Aluno", read-only). The app builds the student context (screens/aiContext.js,
+// ("Analisar Treino"), `review_student` ("Revisar Aluno", read-only) and
+// `propose_workout` ("Montar com IA", step 1: a structure proposal, no exercises). The app builds the student context (screens/aiContext.js,
 // no identifiers in it) and sends it with the ficha; this function only checks
 // the caller is a personal, talks to Gemini and re-validates what comes back.
 // It never writes to the database — applying a suggestion is the app's job,
@@ -95,10 +99,34 @@ Deno.serve(async (req: Request) => {
     const payload = validatePayload(body);
     if (!payload.ok) return json({ error: payload.error }, 400);
 
-    const isReview = payload.action === "review_student";
+    // How many exercises of each muscle group the personal can actually pick from
+    // (shared library + their own), so a proposal never asks for what the library
+    // cannot deliver.
+    let catalog: Record<string, number> | null = null;
+    if (payload.action === "propose_workout") {
+      const { data: exerciseRows } = await supabase
+        .from("exercises")
+        .select("muscle_group")
+        .or(`personal_id.is.null,personal_id.eq.${userData.user.id}`);
+      catalog = {};
+      for (const row of exerciseRows || []) {
+        if (row.muscle_group) catalog[row.muscle_group] = (catalog[row.muscle_group] || 0) + 1;
+      }
+      if (Object.keys(catalog).length === 0) {
+        return json({ error: "Você ainda não cadastrou nenhum exercício na biblioteca." }, 400);
+      }
+    }
+
     const userText = payload.action === "review_student"
       ? buildReviewUserText(payload.context)
-      : buildAnalyzeUserText(payload.context, payload.ficha);
+      : payload.action === "propose_workout"
+        ? buildProposeUserText(payload.context, payload.instruction, catalog!)
+        : buildAnalyzeUserText(payload.context, payload.ficha);
+    const responseSchema = payload.action === "review_student"
+      ? RESPONSE_SCHEMA_REVIEW
+      : payload.action === "propose_workout"
+        ? RESPONSE_SCHEMA_PROPOSE
+        : RESPONSE_SCHEMA_ANALYZE;
 
     const gemini = await callGemini(
       JSON.stringify({
@@ -106,7 +134,7 @@ Deno.serve(async (req: Request) => {
         systemInstruction: { parts: [{ text: buildSystemPrompt(payload.action) }] },
         generationConfig: {
           responseMimeType: "application/json",
-          responseSchema: isReview ? RESPONSE_SCHEMA_REVIEW : RESPONSE_SCHEMA_ANALYZE,
+          responseSchema,
           temperature: 0.3,
         },
       }),
@@ -139,6 +167,9 @@ Deno.serve(async (req: Request) => {
 
     if (payload.action === "review_student") {
       return json({ review: sanitizeReview(parsed, payload.context) });
+    }
+    if (payload.action === "propose_workout") {
+      return json({ proposal: sanitizeProposal(parsed, payload.context, catalog) });
     }
     const objetivo = typeof payload.context?.perfil?.objetivo === "string" ? payload.context.perfil.objetivo : null;
     return json({ analysis: sanitizeAnalysis(parsed, payload.ficha, { objetivo }) });

@@ -13,6 +13,10 @@ export const MAX_ADJUSTMENTS = 6;
 export const MAX_IMPROVEMENTS = 4;
 export const MAX_PAYLOAD_CHARS = 60000;
 export const MIN_SESSIONS_FOR_TREND = 3;
+export const MAX_TREINOS = 6;
+export const MAX_INSTRUCTION_CHARS = 600;
+// Muscle groups that exist in the exercise library (exercises.muscle_group).
+export const MUSCLE_GROUPS = ["quadriceps", "isquiotibiais", "gluteo", "panturrilha", "peito", "costas", "ombro", "biceps", "triceps", "antebraço", "trapezio", "lombar", "abdomen", "aerobico"];
 
 export type FichaExercise = {
   ref: string;
@@ -179,16 +183,23 @@ export const pubmedUrl = (pmid: string) => `https://pubmed.ncbi.nlm.nih.gov/${pm
 export type Payload =
   | { ok: true; action: "analyze_workout"; context: any; ficha: Ficha }
   | { ok: true; action: "review_student"; context: any; ficha?: undefined }
+  | { ok: true; action: "propose_workout"; context: any; instruction: string; ficha?: undefined }
   | { ok: false; error: string };
 
 export function validatePayload(body: any): Payload {
   if (!body || typeof body !== "object") return { ok: false, error: "Requisição inválida." };
   const { action, context, ficha } = body;
-  if (action !== "analyze_workout" && action !== "review_student") return { ok: false, error: "Ação não disponível." };
+  if (action !== "analyze_workout" && action !== "review_student" && action !== "propose_workout") return { ok: false, error: "Ação não disponível." };
   if (!context || typeof context !== "object") return { ok: false, error: "Faltou o contexto do aluno." };
   if (action === "review_student") {
     if (JSON.stringify({ context }).length > MAX_PAYLOAD_CHARS) return { ok: false, error: "Dados grandes demais para analisar." };
     return { ok: true, action, context };
+  }
+  if (action === "propose_workout") {
+    // The personal's free-text request is optional ("let the AI propose from the profile").
+    const instruction = typeof body.instruction === "string" ? body.instruction.trim().slice(0, MAX_INSTRUCTION_CHARS) : "";
+    if (JSON.stringify({ context, instruction }).length > MAX_PAYLOAD_CHARS) return { ok: false, error: "Dados grandes demais para analisar." };
+    return { ok: true, action, context, instruction };
   }
   if (!ficha || typeof ficha !== "object" || typeof ficha.nome !== "string") return { ok: false, error: "Faltou a ficha a analisar." };
   if (!Array.isArray(ficha.exercicios) || ficha.exercicios.length === 0) return { ok: false, error: "A ficha ainda não tem exercícios para analisar." };
@@ -300,12 +311,43 @@ export const SYSTEM_PROMPT_REVIEW =
   "É uma leitura informativa: nada será alterado automaticamente. Quem decide é o personal.\n\n" +
   "REGRAS:\n" + numbered(RULES_REVIEW);
 
+const RULES_PROPOSE = [
+  RULE.dataOnly,
+  RULE.restrictions,
+  "ETAPA 1 DE 2: você NÃO escolhe exercícios agora. Proponha apenas a ESTRUTURA (quantos treinos, o foco de cada um, os grupos musculares, a quantidade de exercícios, as séries, as repetições e o descanso). " +
+    "Depois que o personal aprovar, outro passo escolhe os exercícios da biblioteca dele.",
+  "O 'pedidoDoPersonal' manda: siga-o. Se ele conflitar com restrições, frequência declarada ou outros dados do aluno, siga o pedido mesmo assim, mas registre o conflito em 'pontosDeAtencao'. " +
+    "Sem pedido, proponha a estrutura a partir do perfil (objetivo, nível, frequência declarada, duração da sessão, local de treino).",
+  "Número de treinos: se 'perfil.frequenciaSemanalDeclarada' existir, use-o como referência e não passe disso sem justificar; se não existir, proponha 3 treinos e registre em 'dadosInsuficientes' que a frequência não foi informada. Máximo de " + MAX_TREINOS + " treinos.",
+  "Use SOMENTE os grupos que aparecem em 'bibliotecaDisponivel' (grupo: quantidade de exercícios que o personal tem). 'numExercicios' de cada treino não pode passar da soma disponível nos grupos escolhidos. " +
+    "Grupos válidos: " + MUSCLE_GROUPS.join(", ") + ".",
+  "Para cada treino preencha: 'nome' curto (ex.: 'Treino A - Quadríceps e Glúteos'), 'foco', 'grupos', 'numExercicios' (de 3 a 12; costuma ficar entre 4 e 8), 'seriesPorExercicio' (de 2 a 6), " +
+    "'repeticoes' (texto como '8-12' ou '10'), 'descansoSeg' (de 30 a 240) e 'evitar' (movimentos ou exercícios a evitar por causa de restrições ou dores do aluno; deixe vazio se o contexto não traz restrições).",
+  "'entendimento': de 3 a 6 itens curtos dizendo o que você entendeu do aluno e do pedido (objetivo, frequência, restrições, pedido do personal), citando só o que existe no contexto. " +
+    "'porQue': explique em até 4 frases a lógica da estrutura (divisão dos treinos, frequência por grupo, volume e descanso).",
+  RULE.insufficient,
+  RULE.gender,
+  RULE.language,
+  RULE.confidence,
+  RULE.sources("fontes") + " Aqui 'fontes' é opcional: cite só as que realmente sustentam a lógica da estrutura (volume semanal, frequência, descanso, carga) e deixe vazio se nenhuma sustentar.",
+  RULE.caution,
+  RULE.failure,
+  RULE.pickSources,
+  RULE.nutrition,
+];
+
+export const SYSTEM_PROMPT_PROPOSE =
+  "Você é o copiloto de um personal trainer. Sua tarefa é a ETAPA 1 do 'Montar com IA': propor a ESTRUTURA dos treinos de um aluno, a partir dos dados fornecidos e do pedido do personal, " +
+  "para o personal aprovar antes de qualquer ficha ser criada. Quem decide é o personal.\n\n" +
+  "REGRAS:\n" + numbered(RULES_PROPOSE);
+
 const sourcesBlock = () =>
   "\n\nFONTES PERMITIDAS (as únicas que você pode citar):\n\n" +
   EVIDENCE_LIBRARY.map((s) => `${s.id} — ${s.tipo}. ${s.citacao}\nAchado: ${s.achado}`).join("\n\n");
 
 export function buildSystemPrompt(action: string = "analyze_workout"): string {
-  return (action === "review_student" ? SYSTEM_PROMPT_REVIEW : SYSTEM_PROMPT_ANALYZE) + sourcesBlock();
+  const base = action === "review_student" ? SYSTEM_PROMPT_REVIEW : action === "propose_workout" ? SYSTEM_PROMPT_PROPOSE : SYSTEM_PROMPT_ANALYZE;
+  return base + sourcesBlock();
 }
 
 export const RESPONSE_SCHEMA_ANALYZE = {
@@ -627,6 +669,145 @@ export function sanitizeReview(parsed: any, context: any): Review {
     restricoes: clipList(parsed?.restricoes, 6, 300),
     dadosInsuficientes: clipList(parsed?.dadosInsuficientes, 6, 200),
     sugestoes: suggestions,
+    referencias: references,
+    fontesVerificadasEm: EVIDENCE_VERIFIED_ON,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// "Montar com IA", step 1: a STRUCTURE proposal the personal approves before any
+// ficha exists. No exercises are chosen here — step 2 (the existing
+// generate-workout function) picks them from the personal's own library.
+// ---------------------------------------------------------------------------
+export type ProposedWorkout = {
+  nome: string;
+  foco: string;
+  grupos: string[];
+  numExercicios: number;
+  seriesPorExercicio: number;
+  repeticoes: string;
+  descansoSeg: number;
+  seriesTotais: number;
+  evitar: string[];
+};
+
+export type Proposal = {
+  objetivo: string | null;
+  entendimento: string[];
+  estrutura: ProposedWorkout[];
+  porQue: string;
+  fontes: number[];
+  confianca: Confidence;
+  pontosDeAtencao: string[];
+  dadosInsuficientes: string[];
+  referencias: Reference[];
+  fontesVerificadasEm: string;
+};
+
+export const RESPONSE_SCHEMA_PROPOSE = {
+  type: "OBJECT",
+  properties: {
+    entendimento: { type: "ARRAY", items: { type: "STRING" } },
+    estrutura: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          nome: { type: "STRING" },
+          foco: { type: "STRING" },
+          grupos: { type: "ARRAY", items: { type: "STRING" } },
+          numExercicios: { type: "INTEGER" },
+          seriesPorExercicio: { type: "INTEGER" },
+          repeticoes: { type: "STRING" },
+          descansoSeg: { type: "INTEGER" },
+          evitar: { type: "ARRAY", items: { type: "STRING" } },
+        },
+        required: ["nome", "foco", "grupos", "numExercicios", "seriesPorExercicio", "repeticoes", "descansoSeg", "evitar"],
+      },
+    },
+    porQue: { type: "STRING" },
+    fontes: { type: "ARRAY", items: { type: "STRING" } },
+    confianca: { type: "STRING", enum: ["alta", "media", "baixa"] },
+    pontosDeAtencao: { type: "ARRAY", items: { type: "STRING" } },
+    dadosInsuficientes: { type: "ARRAY", items: { type: "STRING" } },
+  },
+  required: ["entendimento", "estrutura", "porQue", "fontes", "confianca", "pontosDeAtencao", "dadosInsuficientes"],
+};
+
+export function buildProposeUserText(context: unknown, instruction: string, catalog: Record<string, number>): string {
+  return "Proponha a estrutura dos treinos (etapa 1) com base no contexto do aluno, no pedido do personal e na biblioteca disponível.\n\n" +
+    JSON.stringify({ contexto: context, pedidoDoPersonal: instruction || null, bibliotecaDisponivel: catalog });
+}
+
+const clampInt = (v: unknown, min: number, max: number, fallback: number): number => {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+};
+
+export function sanitizeProposal(parsed: any, context: any, catalog: Record<string, number> | null): Proposal {
+  const { validIds, register, references } = makeCiter();
+  const allowedGroups = new Set(catalog ? Object.keys(catalog).filter((g) => (catalog[g] ?? 0) > 0) : MUSCLE_GROUPS);
+  const notes: string[] = [];
+
+  // "evitar" only makes sense if the student actually has restrictions on file.
+  const r = context?.restricoes;
+  const hasRestrictions = !!(r && (r.problemasDeSaude || (Array.isArray(r.zonasDeDor) && r.zonasDeDor.length > 0) || r.observacoesDoPersonal));
+
+  const estrutura: ProposedWorkout[] = [];
+  const letters = "ABCDEF";
+  for (const raw of Array.isArray(parsed?.estrutura) ? parsed.estrutura : []) {
+    if (estrutura.length >= MAX_TREINOS) break;
+    const grupos: string[] = [];
+    for (const g of Array.isArray(raw?.grupos) ? raw.grupos : []) {
+      const key = String(g ?? "").trim().toLowerCase();
+      if (allowedGroups.has(key) && !grupos.includes(key)) grupos.push(key);
+    }
+    if (grupos.length === 0) continue; // nothing in the library to build this workout from
+
+    const nome = clip(raw?.nome, 50) || `Treino ${letters[estrutura.length]}`;
+    const available = catalog ? grupos.reduce((sum, g) => sum + (catalog[g] ?? 0), 0) : null;
+    let numExercicios = clampInt(raw?.numExercicios, 3, 12, 6);
+    if (available !== null && numExercicios > available) {
+      notes.push(`Sua biblioteca só tem ${available} exercício(s) para ${grupos.join(" e ")}: reduzi o ${nome} para ${available}.`);
+      numExercicios = Math.max(1, available);
+    }
+    const seriesPorExercicio = clampInt(raw?.seriesPorExercicio, 2, 6, 3);
+    const repsText = String(raw?.repeticoes ?? "").trim();
+    const repeticoes = /^\d{1,2}(\s*-\s*\d{1,2})?$/.test(repsText) ? repsText.replace(/\s+/g, "") : "10-12";
+
+    estrutura.push({
+      nome,
+      foco: clip(raw?.foco, 100),
+      grupos,
+      numExercicios,
+      seriesPorExercicio,
+      repeticoes,
+      descansoSeg: clampInt(raw?.descansoSeg, 30, 240, 60),
+      seriesTotais: numExercicios * seriesPorExercicio,
+      evitar: hasRestrictions ? clipList(raw?.evitar, 4, 100) : [],
+    });
+  }
+
+  const declared = Number(context?.perfil?.frequenciaSemanalDeclarada);
+  if (Number.isFinite(declared) && declared > 0 && estrutura.length > declared) {
+    notes.push(`A estrutura propõe ${estrutura.length} treinos, mas o aluno declarou treinar ${declared} dia(s) por semana.`);
+  }
+  const activeCount = Array.isArray(context?.treinoAtual?.fichas) ? context.treinoAtual.fichas.length : 0;
+  if (estrutura.length > 0 && activeCount > 0) {
+    notes.push(`O aluno já tem ${activeCount} ficha(s) ativa(s): as novas serão criadas além delas, sem apagar nada.`);
+  }
+
+  const ids = validIds(parsed?.fontes);
+  const objetivo = typeof context?.perfil?.objetivo === "string" && context.perfil.objetivo ? context.perfil.objetivo : null;
+  return {
+    objetivo: objetivo ? clip(objetivo, 60) : null,
+    entendimento: clipList(parsed?.entendimento, 6, 200),
+    estrutura,
+    porQue: clip(parsed?.porQue, 600),
+    fontes: register(ids),
+    confianca: capConfidence(confidenceOf(parsed?.confianca), ids),
+    pontosDeAtencao: [...clipList(parsed?.pontosDeAtencao, 5, 300), ...notes].slice(0, 8),
+    dadosInsuficientes: clipList(parsed?.dadosInsuficientes, 6, 200),
     referencias: references,
     fontesVerificadasEm: EVIDENCE_VERIFIED_ON,
   };

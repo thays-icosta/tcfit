@@ -104,6 +104,77 @@ export async function requestStudentReview(client, { studentId }) {
   return data.review;
 }
 
+// "Montar com IA", step 1: the AI proposes a STRUCTURE (how many treinos, focus,
+// muscle groups, exercises/sets/reps/rest per treino) for the personal to
+// approve. No exercise is chosen and nothing is created at this point.
+export async function requestWorkoutProposal(client, { studentId, instruction }) {
+  const context = await buildStudentContext(client, { studentId });
+  const { data, error } = await client.functions.invoke('ai-copilot', {
+    body: { action: 'propose_workout', context, instruction: (instruction || '').trim() },
+  });
+  if (error || !data?.proposal) {
+    throw new Error(await describeFunctionError(error, data, 'Não consegui montar a proposta agora. Tenta de novo em instantes.'));
+  }
+  return data.proposal;
+}
+
+// The text step 2 (the existing generate-workout function) receives for one
+// approved treino. That function only ever picks exercises that exist in the
+// personal's library.
+export function buildGenerationInstruction(treino, { objetivo } = {}) {
+  const parts = [
+    `${treino.nome}. Foco: ${treino.foco || treino.grupos.join(', ')}.`,
+    `Grupos musculares: ${treino.grupos.join(', ')}.`,
+    `Monte ${treino.numExercicios} exercícios, cada um com ${treino.seriesPorExercicio} séries de ${treino.repeticoes} repetições e ${treino.descansoSeg} segundos de descanso.`,
+  ];
+  if (objetivo) parts.push(`Objetivo do aluno: ${objetivo}.`);
+  if (treino.evitar && treino.evitar.length > 0) parts.push(`Evite: ${treino.evitar.join('; ')}.`);
+  return parts.join(' ');
+}
+
+// "Montar com IA", step 2 for ONE approved treino: asks generate-workout for
+// exercises from the library, then creates the ficha. Name, sets, reps and rest
+// are exactly what the personal approved in step 1 — the AI only picks which
+// exercises (and their order). Never touches existing fichas. If saving the
+// exercises fails, the empty ficha is removed again.
+export async function createFichaFromProposal(client, { treino, objetivo, studentId, personalId, phaseId }) {
+  const { data, error } = await client.functions.invoke('generate-workout', {
+    body: { instruction: buildGenerationInstruction(treino, { objetivo }) },
+  });
+  if (error || data?.error) {
+    return { ok: false, error: await describeFunctionError(error, data, 'Tenta de novo em alguns instantes.') };
+  }
+  const found = (data?.exercises || []).slice(0, treino.numExercicios);
+  if (found.length === 0) {
+    return { ok: false, error: 'A IA não encontrou exercícios da sua biblioteca para este treino.' };
+  }
+
+  const { data: workout, error: workoutError } = await client
+    .from('workouts')
+    .insert({ student_id: studentId, personal_id: personalId, name: treino.nome, active: true, phase_id: phaseId || null })
+    .select()
+    .single();
+  if (workoutError || !workout) {
+    return { ok: false, error: workoutError?.message || 'Não foi possível criar a ficha.' };
+  }
+
+  const rows = found.map((ex, index) => ({
+    workout_id: workout.id,
+    exercise_id: ex.exercise_id,
+    order_index: index,
+    sets: treino.seriesPorExercicio,
+    reps: treino.repeticoes,
+    rest_time_seconds: treino.descansoSeg,
+  }));
+  const { error: rowsError } = await client.from('workout_exercises').insert(rows);
+  if (rowsError) {
+    await client.from('workouts').delete().eq('id', workout.id);
+    return { ok: false, error: rowsError.message || 'Não foi possível salvar os exercícios.' };
+  }
+
+  return { ok: true, workoutId: workout.id, nome: workout.name, exerciseCount: rows.length, missing: Math.max(0, treino.numExercicios - rows.length) };
+}
+
 // Writes ONE field of ONE exercise row — the same kind of edit the manual
 // editors make. Never touches history rows, never deletes or swaps anything.
 export async function applyAdjustment(client, { itemId, campo, valor }) {

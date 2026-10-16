@@ -9,7 +9,7 @@ import EditExerciseModal from './EditExerciseModal';
 import ExerciseVideoScreen from './ExerciseVideoScreen';
 import { loadPeriodizationPlan, getCurrentPhase } from './periodizationUtils';
 import { copySessionToStudentWorkout } from './workoutAssignment';
-import { showAlert, describeFunctionError } from './alertUtils';
+import { showAlert } from './alertUtils';
 import {
   loadWeekHistory,
   loadWorkoutSummaries,
@@ -18,12 +18,12 @@ import {
   hasLoggedExerciseHistory,
   estimateExerciseVolumeKg,
 } from './workoutVersioning';
-import { useSpeechToText } from './useSpeechToText';
 import PromptModal from './PromptModal';
 import { HeaderBack } from './Header';
 import { METHOD_LABELS, DEFAULT_EXERCISE_CONFIG } from './exerciseMethods';
 import WorkoutBulkEditScreen from './WorkoutBulkEditScreen';
 import WorkoutAnalysisScreen from './WorkoutAnalysisScreen';
+import AiWorkoutBuilderScreen from './AiWorkoutBuilderScreen';
 
 const FICHA_NAME_SUGGESTIONS = [
   'Treino A - Quadríceps',
@@ -77,9 +77,7 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
 
-  const [showAiModal, setShowAiModal] = useState(false);
-  const [aiInstruction, setAiInstruction] = useState('');
-  const [aiProcessing, setAiProcessing] = useState(false);
+  const [aiBuilding, setAiBuilding] = useState(false);
 
   // "Semana Atual" landing — shown whenever no specific ficha is selected
   // (activeWorkoutId null), so opening Treino never dumps the personal
@@ -443,93 +441,6 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     showAlert('Aplicado!', `"${template.name}" criado com ${sessions.length} sessão(ões) e ${totalExercises} exercício(s) no total.`);
   };
 
-  const handleOpenAiModal = () => {
-    setAiInstruction('');
-    setShowAiModal(true);
-  };
-
-  const { recording: aiRecording, toggle: handleToggleAiRecording } = useSpeechToText({
-    active: showAiModal,
-    getBaseText: () => aiInstruction,
-    onTranscriptChange: setAiInstruction,
-  });
-
-  const handleGenerateWorkoutWithAi = async () => {
-    if (!aiInstruction.trim()) {
-      showAlert('Ops', 'Descreve o treino que você quer gerar (ex: "treino de quadríceps, 5 exercícios, 4 séries de 10 a 12").');
-      return;
-    }
-    setAiProcessing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-workout', {
-        body: { instruction: aiInstruction.trim() },
-      });
-
-      if (error || data?.error) {
-        showAlert('Não deu pra gerar o treino', await describeFunctionError(error, data, 'Tenta de novo em alguns instantes.'));
-        setAiProcessing(false);
-        return;
-      }
-
-      if (!data.exercises || data.exercises.length === 0) {
-        showAlert('Nenhum exercício reconhecido', 'A IA não conseguiu combinar o pedido com exercícios da sua biblioteca. Tenta descrever de outro jeito.');
-        setAiProcessing(false);
-        return;
-      }
-
-      const currentPhase = getCurrentPhase(periodizationPlan, periodizationPhases);
-      const { data: newWorkout, error: workoutError } = await supabase
-        .from('workouts')
-        .insert({
-          student_id: studentId,
-          personal_id: personalId,
-          name: data.workout_name || 'Treino Gerado por IA',
-          active: true,
-          phase_id: currentPhase ? currentPhase.phase.id : null,
-        })
-        .select()
-        .single();
-
-      if (workoutError || !newWorkout) {
-        showAlert('Erro', workoutError?.message || 'Não foi possível criar a ficha.');
-        setAiProcessing(false);
-        return;
-      }
-
-      const rows = data.exercises.map((ex, index) => ({
-        workout_id: newWorkout.id,
-        exercise_id: ex.exercise_id,
-        order_index: index,
-        sets: ex.sets,
-        reps: ex.reps,
-        rest_time_seconds: ex.rest_time_seconds,
-      }));
-      await supabase.from('workout_exercises').insert(rows);
-
-      setAiProcessing(false);
-      setShowAiModal(false);
-      await loadWorkouts();
-      setActiveWorkoutId(newWorkout.id);
-      // requested_count can be higher than rows.length when the AI named an
-      // exercise slightly differently than the library despite instructions
-      // to copy it exactly — tell the personal instead of leaving a
-      // silently-shorter ficha for them to notice later.
-      const skipped = (data.requested_count || rows.length) - rows.length;
-      showAlert(
-        'Treino gerado!',
-        `"${newWorkout.name}" criado com ${rows.length} exercício(s). Revisa e ajusta o que quiser antes de salvar.` +
-          (skipped > 0 ? `\n\n${skipped} exercício(s) sugerido(s) pela IA não foram encontrados na sua biblioteca e ficaram de fora.` : '')
-      );
-    } catch (e) {
-      // The ficha being edited (if any) is untouched by anything above —
-      // an AI failure never costs work already in progress, only the
-      // ability to generate this one new ficha right now.
-      console.error('Erro ao gerar treino com IA:', e);
-      setAiProcessing(false);
-      showAlert('Não deu pra gerar o treino', 'Algo deu errado do nosso lado ao falar com a IA. Você pode montar esse treino manualmente enquanto isso — tenta a IA de novo daqui a pouco.');
-    }
-  };
-
   // "Adicionar à Ficha" in the library: writes every selected exercise in one
   // insert, appended after the current last exercise in tap order, with the
   // default config (the numbers are set afterwards in "Editar treino"). On
@@ -743,6 +654,22 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
     );
   }
 
+  if (aiBuilding) {
+    const currentPhase = getCurrentPhase(periodizationPlan, periodizationPhases);
+    return (
+      <AiWorkoutBuilderScreen
+        studentId={studentId}
+        personalId={personalId}
+        phaseId={currentPhase ? currentPhase.phase.id : null}
+        onClose={async (firstWorkoutId) => {
+          setAiBuilding(false);
+          await loadWorkouts();
+          if (firstWorkoutId) setActiveWorkoutId(firstWorkoutId);
+        }}
+      />
+    );
+  }
+
   if (analyzing) {
     return (
       <WorkoutAnalysisScreen
@@ -921,8 +848,8 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         <TouchableOpacity style={styles.actionChip} onPress={handleOpenTemplatePicker}>
           <Text style={styles.actionChipText}>⚡ Importar Template</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionChip} onPress={handleOpenAiModal}>
-          <Text style={styles.actionChipText}>✨ Gerar Treino com IA</Text>
+        <TouchableOpacity style={styles.actionChip} onPress={() => setAiBuilding(true)}>
+          <Text style={styles.actionChipText}>✨ Montar com IA</Text>
         </TouchableOpacity>
       </ScrollView>
     </>
@@ -1075,47 +1002,6 @@ export default function WorkoutBuilderScreen({ studentId, studentName, personalI
         ListHeaderComponent={listHeader}
         ListFooterComponent={listFooter}
       />
-
-      <Modal visible={showAiModal} transparent animationType="slide" onRequestClose={() => setShowAiModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>✨ Gerar Treino com IA</Text>
-            <Text style={styles.modalSubtitle}>
-              Descreve o treino que você quer (objetivo, grupo muscular, quantidade de exercícios, séries/reps). A IA só usa exercícios que já estão na sua biblioteca.
-            </Text>
-
-            <TextInput
-              style={[styles.modalInput, { minHeight: 90, textAlignVertical: 'top' }]}
-              placeholder='ex: "Treino de quadríceps com 5 exercícios, 4 séries de 10 a 12 repetições, 60 segundos de descanso"'
-              placeholderTextColor="#525252"
-              value={aiInstruction}
-              onChangeText={setAiInstruction}
-              multiline
-              editable={!aiProcessing}
-            />
-
-            <TouchableOpacity
-              style={[styles.aiMicButton, aiRecording && styles.aiMicButtonActive]}
-              onPress={handleToggleAiRecording}
-              disabled={aiProcessing}
-            >
-              <Ionicons name={aiRecording ? 'mic' : 'mic-outline'} size={18} color={aiRecording ? '#ef4444' : '#A7AAB0'} />
-              <Text style={[styles.aiMicButtonText, aiRecording && styles.aiMicButtonTextActive]}>
-                {aiRecording ? 'Gravando... toque pra parar' : 'Falar em vez de digitar'}
-              </Text>
-            </TouchableOpacity>
-
-            <View style={styles.modalButtonRow}>
-              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setShowAiModal(false)} disabled={aiProcessing}>
-                <Text style={styles.modalCancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalConfirmButton} onPress={handleGenerateWorkoutWithAi} disabled={aiProcessing}>
-                {aiProcessing ? <ActivityIndicator color="#08090B" size="small" /> : <Text style={styles.modalConfirmButtonText}>Processar e Preencher</Text>}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       <PromptModal
         visible={!!renamingWorkout}
@@ -1306,10 +1192,6 @@ const styles = StyleSheet.create({
   fichaTabWeekday: { color: '#D1D5DB', fontSize: 9, fontWeight: '800', textTransform: 'uppercase', marginTop: 2 },
   fichaTabWeekdayActive: { color: '#08090B' },
   hintText: { color: '#525252', fontSize: 10, paddingHorizontal: 16, marginBottom: 6 },
-  aiMicButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#292D34', borderRadius: 10, paddingVertical: 12, marginTop: 12 },
-  aiMicButtonActive: { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)' },
-  aiMicButtonText: { color: '#A7AAB0', fontSize: 12, fontWeight: '600' },
-  aiMicButtonTextActive: { color: '#ef4444' },
   actionsRow: { marginBottom: 8 },
   actionsRowContent: { paddingHorizontal: 16, gap: 8 },
   actionChip: { backgroundColor: '#121419', borderWidth: 1, borderColor: '#292D34', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
